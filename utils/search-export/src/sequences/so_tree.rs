@@ -23,6 +23,53 @@ struct SoLine {
     so_term_tree: SoTree,
 }
 
+impl SoTree {
+    pub fn entries(&self) -> &[SoTreeEntry] {
+        &self.0
+    }
+
+    /// Fetch the name of the SO term the tree is for.
+    pub fn term_name(&self) -> Option<&str> {
+        let terms = &self.0;
+        if let Some(entry) = terms.last() {
+            return Some(entry.name());
+        }
+        None
+    }
+
+    /// Fetch the SO id of the SO term the tree is for.
+    pub fn term_id(&self) -> Option<&str> {
+        let terms = &self.0;
+        if let Some(entry) = terms.last() {
+            return Some(entry.so_id());
+        }
+        None
+    }
+
+    /// Get a vector of all the names.
+    pub fn names(&self) -> Vec<String> {
+        let mut names = Vec::new();
+        for entry in self.entries() {
+            names.push(entry.name().to_string());
+        }
+        names
+    }
+}
+
+impl SoTreeEntry {
+    pub fn name(&self) -> &str {
+        &self.1
+    }
+
+    pub fn so_id(&self) -> &str {
+        &self.0
+    }
+
+    pub fn into_inner(self) -> (String, String) {
+        (self.0, self.1)
+    }
+}
+
 pub fn load(filename: &Path) -> Result<SoMapping> {
     let mut map: HashMap<String, SoTree> = HashMap::new();
     let file = File::open(filename)?;

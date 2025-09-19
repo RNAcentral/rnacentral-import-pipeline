@@ -105,14 +105,14 @@ impl Normalized {
             secondary: raw.r2dt().to_owned(),
             accessions: AccessionVec::from_iter(accessions.clone()),
             cross_references: accessions.into_iter().map(CrossReference::from).collect(),
-            crs: raw.crs().to_owned().into_iter().collect(),
-            overlaps: raw.feedback().to_owned().into_iter().collect(),
+            crs: raw.crs().iter().cloned().collect(),
+            overlaps: raw.feedback().iter().cloned().collect(),
             go_annotations: raw.go_annotations().to_vec(),
             interacting_proteins: raw.interacting_proteins().to_vec(),
             interacting_rnas: raw.interacting_rnas().to_vec(),
             references,
-            rfam_hits: raw.rfam_hits().to_owned().into_iter().collect(),
-            orfs: raw.orfs().to_vec().into_iter().collect(),
+            rfam_hits: raw.rfam_hits().iter().cloned().collect(),
+            orfs: raw.orfs().iter().cloned().collect(),
             litsumm: raw.litsumm_summaries().to_vec(),
             editing_events: raw.editing_events().to_vec(),
         })
@@ -123,7 +123,7 @@ impl Normalized {
     }
 
     pub fn urs_taxid(&self) -> &str {
-        &self.basic.urs_taxid()
+        self.basic.urs_taxid()
     }
 
     pub fn cross_references(&self) -> &Vec<CrossReference> {
@@ -147,7 +147,7 @@ impl Normalized {
     }
 
     pub fn has_lit_scan(&self) -> bool {
-        self.has_litsumm() // FIXME This isn't correct
+        self.publication_count > 0
     }
 
     pub fn has_go_annotations(&self) -> bool {
@@ -159,6 +159,13 @@ impl Normalized {
     }
 
     pub fn has_qc_warning(&self) -> bool {
-        false // FIXME This isn't correct yet
+        if let Some(qa) = &self.qa_status {
+            return qa.has_issue();
+        }
+        false
+    }
+
+    pub fn precompute_summary(&self) -> &PrecomputeSummary {
+        &self.pre_summary
     }
 }

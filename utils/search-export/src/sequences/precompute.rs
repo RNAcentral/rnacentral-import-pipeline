@@ -81,6 +81,10 @@ impl PrecomputeSummary {
     pub fn description(&self) -> &str {
         self.description.as_str()
     }
+
+    pub fn databases(&self) -> &[String] {
+        &self.databases
+    }
 }
 
 impl grouper::HasIndex for Precompute {

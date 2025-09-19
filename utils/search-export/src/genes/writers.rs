@@ -21,6 +21,7 @@ use crate::{
         gene_member::GeneMember,
         region::{RegionGrouper, UrsRegion},
     },
+    search_xml::SearchEntry,
     sequences::normalized::Normalized,
 };
 
@@ -102,7 +103,10 @@ pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
 }
 
 pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Path) -> Result<()> {
-    let gene_reader = BufReader::new(File::open(gene_file)?);
+    let open =
+        File::open(gene_file).with_context(|| format!("Failed to open gene file {gene_file:?}"))?;
+
+    let gene_reader = BufReader::new(open);
     let genes = Deserializer::from_reader(gene_reader).into_iter::<Gene>();
 
     let xml_file = File::create(xml_output)
@@ -113,8 +117,8 @@ pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Pa
     let date = now.format("%d/%m/%Y");
     writeln!(&mut xml_writer, "<database><name>RNAcentral</name><description></description><release>1.0</release><release_date>{}</release_date><entries>", &date)?;
     for gene in genes {
-        let gene = gene?;
-        let xml = gene.as_search();
+        let gene = gene.with_context(|| "Failed to deserialize a gene")?;
+        let xml = gene.search_entry();
         let element = quick_xml::se::to_string(&xml)?;
         let element = element.replace(r"", "\\b");
         writeln!(&mut xml_writer, "{}", element)?;

@@ -14,6 +14,12 @@ pub struct QaStatus {
     possible_orf: bool,
 }
 
+impl QaStatus {
+    pub fn has_issue(&self) -> bool {
+        self.has_issue
+    }
+}
+
 impl grouper::HasIndex for QaStatus {
     fn index(&self) -> usize {
         self.id

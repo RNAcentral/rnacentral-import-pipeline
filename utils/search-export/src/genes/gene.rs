@@ -1,7 +1,10 @@
 use std::{collections::HashSet, iter::FromIterator};
 
 use crate::{
-    genes::region::GeneRegion, search_xml::Entry, sequences::normalized::Normalized,
+    fields::{GeneEntry, GeneFields, SoRnaTreeField},
+    genes::region::GeneRegion,
+    search_xml::{SearchEntry, SearchValue},
+    sequences::{accession::CrossReference, normalized::Normalized},
     utils::set_or_check,
 };
 use serde::{Deserialize, Serialize};
@@ -17,60 +20,105 @@ pub struct Gene {
 }
 
 impl Gene {
-    pub fn as_search(self) -> Entry {
-        let mut entry = Entry::new(
-            format!("RNAcentral gene {}", &self.region.gene_name()),
-            self.region.gene_name(),
-            self.region.gene_description(),
-        );
-        let length = self.region.start().abs_diff(self.region.stop());
+    pub fn expert_databases(&self) -> HashSet<&String> {
+        let mut expert_dbs = HashSet::new();
+        for member in &self.members {
+            expert_dbs.extend(member.precompute_summary().databases());
+        }
+        expert_dbs
+    }
 
-        entry.add_field("description", self.region.gene_description());
-        entry.add_field("rna_type", self.region.so_rna_type());
-        entry.add_field("public_gene_name", self.region.gene_name());
-        entry.add_field("active", "True");
-        entry.add_field("taxonomy", self.taxid.to_string());
-        entry.add_field("length", length.to_string());
-        entry.add_field("standard_name", self.region.gene_name());
-        entry.add_field("gene", self.region.gene_name());
-        entry.add_field("so_rna_type", "gene");
-        entry.add_field("entry_type", "Gene");
-        entry.add_field("has_genomic_coordinates", "True");
+    pub fn length(&self) -> usize {
+        self.region.start().abs_diff(self.region.stop())
+    }
 
-        let mut has_litsumm = false;
-        let mut has_lit_scan = false;
-        let mut has_go_annotations = false;
-        let mut has_secondary_structure = false;
-        let mut qc_warning_found = false;
-        for sequence in self.members {
-            entry.add_field("gene_member", sequence.urs_taxid());
-            entry.add_field("member_description", sequence.description());
-
-            entry.add_field_values("gene", sequence.accessions().genes().iter());
-            entry.add_field_values("gene", sequence.accessions().gene_synonyms().iter());
-
-            has_litsumm |= sequence.has_litsumm();
-            has_lit_scan |= sequence.has_lit_scan();
-            has_go_annotations |= false; // FIXME Fix this once we have GO at gene level
-            has_secondary_structure |= sequence.has_secondary_structure();
-            qc_warning_found |= false; // FIXME Need to make QC at gene level
-
-            entry.add_ref("rnacentral", sequence.urs_taxid());
-            for xref in sequence.cross_references() {
-                if xref.name().is_empty() || xref.external_id().is_empty() {
-                    continue;
-                }
-                entry.add_ref(xref.name(), xref.external_id())
+    pub fn so_type_tree(&self) -> (String, Vec<String>) {
+        let target_type = self.region.so_rna_type();
+        for member in &self.members {
+            let term_id = member.so_rna_type_tree().term_id();
+            if term_id.is_none() {
+                continue;
+            }
+            if term_id.unwrap() == target_type {
+                let names = member.so_rna_type_tree().names();
+                return (names.first().unwrap().to_string(), names);
             }
         }
+        panic!("Failed to find a member with expected SO type: {}", target_type)
+    }
 
-        entry.add_field("qc_warning_found", qc_warning_found.to_string());
-        entry.add_field("has_secondary_structure", has_secondary_structure.to_string());
-        entry.add_field("has_go_annotations", has_go_annotations.to_string());
-        entry.add_field("has_lit_scan", has_lit_scan.to_string());
-        entry.add_field("has_litsumm", has_litsumm.to_string());
+    pub fn has_litsumm(&self) -> bool {
+        self.members.iter().any(|m| m.has_litsumm())
+    }
 
-        entry
+    pub fn has_lit_scan(&self) -> bool {
+        self.members.iter().any(|m| m.has_lit_scan())
+    }
+
+    pub fn boost(&self) -> usize {
+        let mut boost = 0usize;
+        if self.taxid == 9606 {
+            boost += 1;
+        }
+        boost
+    }
+
+    pub fn member_urs_taxids(&self) -> impl Iterator<Item = &str> {
+        self.members.iter().map(|m| m.urs_taxid())
+    }
+}
+
+impl SearchEntry<GeneEntry> for Gene {
+    fn id(&self) -> &str {
+        self.region.gene_name()
+    }
+
+    fn name(&self) -> &str {
+        todo!()
+    }
+
+    fn description(&self) -> &str {
+        self.region.gene_description()
+    }
+
+    fn taxid(&self) -> usize {
+        self.taxid
+    }
+
+    fn field_values(&self, field: &GeneFields) -> SearchValue {
+        match field {
+            GeneFields::Length => self.length().into(),
+            GeneFields::ExpertDb => self.expert_databases().into(),
+            GeneFields::Gene => self.region.gene_name().into(),
+            GeneFields::GeneSynonym => SearchValue::empty(),
+            GeneFields::HasGoAnnotations => false.into(),
+            GeneFields::HasGenomicCoordinates => true.into(),
+            GeneFields::Boost => self.boost().into(),
+            GeneFields::StandardName => self.region.gene_name().into(),
+            GeneFields::QcWarningFound => false.into(),
+            GeneFields::GeneMember => SearchValue::from_iter(self.member_urs_taxids()),
+            GeneFields::HasSecondaryStructure => false.into(),
+            GeneFields::HasLitScan => self.has_lit_scan().into(),
+            GeneFields::HasLitsumm => self.has_litsumm().into(),
+            GeneFields::HasEditingEvent => false.into(),
+            GeneFields::InsdcRNAType => "Gene".into(),
+            GeneFields::SoRnaTypeName => self.region.so_rna_type().into(),
+            GeneFields::PubliGeneName => self.region.gene_name().into(),
+        }
+    }
+
+    fn cross_references(&self) -> impl IntoIterator<Item = CrossReference> {
+        let mut xrefs = Vec::new();
+        for member in &self.members {
+            xrefs.extend(member.cross_references().clone());
+        }
+        xrefs
+    }
+
+    fn tree_field_values(&self, field: &SoRnaTreeField) -> (String, Vec<String>) {
+        match field {
+            SoRnaTreeField::SoRnaType => self.so_type_tree(),
+        }
     }
 }
 

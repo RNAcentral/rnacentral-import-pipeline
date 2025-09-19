@@ -5,6 +5,7 @@ use anyhow::Result;
 
 use strum_macros::{Display, EnumIter, EnumString};
 
+pub mod fields;
 pub mod genes;
 pub mod search_xml;
 pub mod sequences;
