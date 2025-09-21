@@ -14,5 +14,6 @@ JOIN rnc_rna_precomputed pre on pre.upi = hits.upi and taxid is null
 JOIN rfam_models models ON models.rfam_model_id = hits.rfam_model_id
 WHERE
     pre.is_active = true
+    AND hits.sequence_stop < hits.sequence_start
 ORDER BY hits.upi, hits.sequence_start, hits.rfam_model_id
 ) TO STDOUT
