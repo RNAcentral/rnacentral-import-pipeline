@@ -4,7 +4,11 @@ use crate::{
     fields::{GeneEntry, GeneFields, SoRnaTreeField},
     genes::region::GeneRegion,
     search_xml::{SearchEntry, SearchValue},
-    sequences::{accession::CrossReference, normalized::Normalized},
+    sequences::{
+        accession::CrossReference,
+        normalized::Normalized,
+        so_tree::{SoMapping, SoTree},
+    },
     utils::set_or_check,
 };
 use serde::{Deserialize, Serialize};
@@ -16,10 +20,54 @@ use log;
 pub struct Gene {
     region: GeneRegion,
     taxid: usize,
+    so_tree: SoTree,
     members: Vec<Normalized>,
 }
 
 impl Gene {
+    pub fn new<T: IntoIterator<Item = GeneMember>>(
+        iter: T,
+        trees: &SoMapping,
+    ) -> anyhow::Result<Self> {
+        let mut taxid = None;
+        let mut members = Vec::new();
+        let mut regions: HashSet<GeneRegion> = HashSet::new();
+
+        for locus in iter {
+            let (region, sequence) = locus.into_inner();
+            let (_, tid) = sequence.urs_taxid().split_once('_').expect("Invalid URS_taxid");
+            set_or_check(&mut taxid, tid.parse::<usize>().expect("Invalid taxid"));
+            regions.insert(region.into());
+            members.push(sequence);
+        }
+
+        assert!(!members.is_empty(), "Did not have any members");
+        assert!(!regions.is_empty(), "Somehow got no regions for: {:?}", members.first());
+        assert!(regions.len() == 1, "Somehow got >1 region for: {:?}", members.first());
+
+        // Get the first region, this is safe at this point.
+        let region = regions.iter().next().cloned().unwrap();
+
+        if members.len() != region.member_count() {
+            log::warn!(
+                "Expected to find {} members, but found: {}",
+                region.member_count(),
+                members.len()
+            );
+        }
+
+        let rna_type = region.so_rna_type();
+        let so_tree = trees
+            .tree(region.so_rna_type())
+            .ok_or_else(|| anyhow::anyhow!("Failed to get SO tree for {rna_type}"))?;
+
+        Ok(Self {
+            region,
+            taxid: taxid.unwrap(),
+            so_tree,
+            members,
+        })
+    }
     pub fn expert_databases(&self) -> HashSet<&String> {
         let mut expert_dbs = HashSet::new();
         for member in &self.members {
@@ -33,18 +81,9 @@ impl Gene {
     }
 
     pub fn so_type_tree(&self) -> (String, Vec<String>) {
-        let target_type = self.region.so_rna_type();
-        for member in &self.members {
-            let term_id = member.so_rna_type_tree().term_id();
-            if term_id.is_none() {
-                continue;
-            }
-            if term_id.unwrap() == target_type {
-                let names = member.so_rna_type_tree().names();
-                return (names.first().unwrap().to_string(), names);
-            }
-        }
-        panic!("Failed to find a member with expected SO type: {}", target_type)
+        let mut names = self.so_tree.names();
+        let root = names.remove(0);
+        (root, names)
     }
 
     pub fn has_litsumm(&self) -> bool {
@@ -118,43 +157,6 @@ impl SearchEntry<GeneEntry> for Gene {
     fn tree_field_values(&self, field: &SoRnaTreeField) -> (String, Vec<String>) {
         match field {
             SoRnaTreeField::SoRnaType => self.so_type_tree(),
-        }
-    }
-}
-
-impl FromIterator<GeneMember> for Gene {
-    fn from_iter<T: IntoIterator<Item = GeneMember>>(iter: T) -> Self {
-        let mut taxid = None;
-        let mut members = Vec::new();
-        let mut regions: HashSet<GeneRegion> = HashSet::new();
-
-        for locus in iter {
-            let (region, sequence) = locus.into_inner();
-            let (_, tid) = sequence.urs_taxid().split_once('_').expect("Invalid URS_taxid");
-            set_or_check(&mut taxid, tid.parse::<usize>().expect("Invalid taxid"));
-            regions.insert(region.into());
-            members.push(sequence);
-        }
-
-        assert!(!members.is_empty(), "Did not have any members");
-        assert!(!regions.is_empty(), "Somehow got no regions for: {:?}", members.first());
-        assert!(regions.len() == 1, "Somehow got >1 region for: {:?}", members.first());
-
-        // Get the first region, this is safe at this point.
-        let region = regions.iter().next().cloned().unwrap();
-
-        if members.len() != region.member_count() {
-            log::warn!(
-                "Expected to find {} members, but found: {}",
-                region.member_count(),
-                members.len()
-            );
-        }
-
-        Self {
-            region,
-            taxid: taxid.unwrap(),
-            members,
         }
     }
 }

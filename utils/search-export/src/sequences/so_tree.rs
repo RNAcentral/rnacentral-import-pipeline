@@ -15,12 +15,28 @@ pub struct SoTreeEntry(String, String);
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SoTree(Vec<SoTreeEntry>);
 
-pub type SoMapping = HashMap<String, SoTree>;
+pub struct SoMapping(HashMap<String, SoTree>);
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 struct SoLine {
     so_rna_type: String,
     so_term_tree: SoTree,
+}
+
+impl SoMapping {
+    pub fn has_tree<S>(&self, so_id: S) -> bool
+    where
+        S: AsRef<str>,
+    {
+        self.0.contains_key(so_id.as_ref())
+    }
+
+    pub fn tree<S>(&self, so_id: S) -> Option<SoTree>
+    where
+        S: AsRef<str>,
+    {
+        self.0.get(so_id.as_ref()).cloned()
+    }
 }
 
 impl SoTree {
@@ -80,5 +96,5 @@ pub fn load(filename: &Path) -> Result<SoMapping> {
         map.insert(entry.so_rna_type, entry.so_term_tree);
     }
 
-    Ok(map)
+    Ok(SoMapping(map))
 }

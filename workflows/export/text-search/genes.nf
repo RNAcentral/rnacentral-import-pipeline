@@ -38,8 +38,8 @@ process as_xml {
   xml = "genes_${assembly}_xml.xml"
   """
   cat raw*.json > members.json
-  search-export genes merge-assembly members.json merged.json
-  search-export genes as-xml merged.json so_tree.json $xml count
+  search-export genes merge-assembly so_tree.json members.json merged.json
+  search-export genes as-xml merged.json $xml count
   xmllint $xml --schema ${params.export.search.schema} --stream
   gzip $xml
   touch ${xml}.gz

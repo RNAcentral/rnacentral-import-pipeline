@@ -2,7 +2,6 @@ use std::{
     collections::HashMap,
     fs::{create_dir_all, File},
     io::{BufReader, BufWriter, Write},
-    iter::FromIterator,
     path::{Path, PathBuf},
 };
 
@@ -77,7 +76,7 @@ pub fn write_split_selected(locus_path: &Path, sequence_file: &Path, output: &Pa
     Ok(())
 }
 
-pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
+pub fn write_merged_members(so_file: &Path, member_file: &Path, output: &Path) -> Result<()> {
     let open_member = File::open(member_file)
         .with_context(|| format!("Failed to open member file {member_file:?}"))?;
     let member_reader = BufReader::new(open_member);
@@ -87,12 +86,16 @@ pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
     members.sort_by_key(|m| m.gene_id());
     let grouped = members.into_iter().group_by(|l| l.gene_id());
 
+    let tree = so_tree::load(so_file)
+        .with_context(|| format!("Failed to parse SO tree file {so_file:?}"))?;
+
     let create =
         File::create(output).with_context(|| format!("Failed to create output file {output:?}"))?;
     let mut writer = BufWriter::new(create);
     for (locus_id, locus) in &grouped {
         log::info!("Merging locus id {locus_id}");
-        let gene = Gene::from_iter(locus);
+        let gene = Gene::new(locus, &tree)
+            .with_context(|| format!("Failed to create gene for {locus_id}"))?;
         serde_json::to_writer(&mut writer, &gene)
             .with_context(|| format!("Failed to format to JSON: {gene:?}"))?;
         writeln!(&mut writer)?;
@@ -102,12 +105,7 @@ pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn write_search_files(
-    gene_file: &Path,
-    so_tree: &Path,
-    xml_output: &Path,
-    count_output: &Path,
-) -> Result<()> {
+pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Path) -> Result<()> {
     let open =
         File::open(gene_file).with_context(|| format!("Failed to open gene file {gene_file:?}"))?;
 
