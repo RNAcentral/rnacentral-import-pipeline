@@ -74,6 +74,10 @@ enum GenesCommand {
         #[structopt(parse(from_os_str))]
         genes: PathBuf,
 
+        /// A JSON formatted file of the known sequence ontology terms and their names
+        #[structopt(parse(from_os_str))]
+        so_tree: PathBuf,
+
         /// Filename to write the xml data to
         #[structopt(parse(from_os_str))]
         xml_output: PathBuf,
@@ -314,8 +318,9 @@ fn main() -> Result<()> {
             GenesCommand::AsXml {
                 genes,
                 xml_output,
+                so_tree,
                 count_output,
-            } => genes::writers::write_search_files(&genes, &xml_output, &count_output)?,
+            } => genes::writers::write_search_files(&genes, &so_tree, &xml_output, &count_output)?,
         },
     }
 

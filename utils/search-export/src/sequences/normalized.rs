@@ -6,23 +6,27 @@ use thiserror::Error;
 
 use rnc_core::{urs, urs_taxid};
 
-use crate::sequences::{
-    accession::{AccessionVec, CrossReference, RawAccession, ReferenceVec},
-    basic::Basic,
-    crs::CrsVec,
-    editing_events::EditingEvent,
-    feedback::FeedbackVec,
-    go_annotation::GoAnnotation,
-    interacting_protein::InteractingProtein,
-    interacting_rna::InteractingRna,
-    litsumm::LitsummSummaries,
-    orf::OrfVec,
-    precompute::PrecomputeSummary,
-    qa_status::QaStatus,
-    r2dt::R2dt,
-    raw::Raw,
-    rfam_hit::RfamHitVec,
-    so_tree,
+use crate::{
+    fields::{SequenceEntry, SequenceFields, SoRnaTreeField},
+    search_xml::{SearchEntry, SearchValue},
+    sequences::{
+        accession::{AccessionVec, CrossReference, RawAccession, ReferenceVec},
+        basic::Basic,
+        crs::CrsVec,
+        editing_events::EditingEvent,
+        feedback::FeedbackVec,
+        go_annotation::GoAnnotation,
+        interacting_protein::InteractingProtein,
+        interacting_rna::InteractingRna,
+        litsumm::LitsummSummaries,
+        orf::OrfVec,
+        precompute::PrecomputeSummary,
+        qa_status::QaStatus,
+        r2dt::R2dt,
+        raw::Raw,
+        rfam_hit::RfamHitVec,
+        so_tree,
+    },
 };
 
 #[derive(Error, Debug)]
@@ -167,5 +171,94 @@ impl Normalized {
 
     pub fn precompute_summary(&self) -> &PrecomputeSummary {
         &self.pre_summary
+    }
+}
+
+impl SearchEntry<SequenceEntry> for Normalized {
+    fn id(&self) -> &str {
+        self.urs_taxid()
+    }
+
+    fn name(&self) -> &str {
+        self.urs_taxid()
+    }
+
+    fn description(&self) -> &str {
+        self.description()
+    }
+
+    fn taxid(&self) -> usize {
+        self.taxid
+    }
+
+    fn field_values(&self, field: &SequenceFields) -> SearchValue {
+        match field {
+            SequenceFields::ShortUrs => self.short_urs.clone().into(),
+            SequenceFields::Length => self.basic.length.into(),
+            SequenceFields::Organelle => todo!(),
+            SequenceFields::ExpertDb => self.pre_summary.databases().into(),
+            SequenceFields::CommonName => todo!(),
+            SequenceFields::Function => todo!(),
+            SequenceFields::Gene => todo!(),
+            SequenceFields::GeneSynonym => todo!(),
+            SequenceFields::InsdcRNAType => todo!(),
+            SequenceFields::Product => todo!(),
+            SequenceFields::HasGenomicCoordinates => self.pre_summary.has_coordinates().into(),
+            SequenceFields::Md5 => self.basic.md5.clone().into(),
+            SequenceFields::Author => todo!(),
+            SequenceFields::Journal => todo!(),
+            SequenceFields::InsdcSubmission => todo!(),
+            SequenceFields::PubTitle => todo!(),
+            SequenceFields::PubId => todo!(),
+            SequenceFields::PopularSpecies => todo!(),
+            SequenceFields::Boost => todo!(),
+            SequenceFields::LocusTag => todo!(),
+            SequenceFields::StandardName => todo!(),
+            SequenceFields::RfamFamilyName => todo!(),
+            SequenceFields::RfamId => todo!(),
+            SequenceFields::RfamClan => todo!(),
+            SequenceFields::QcWarning => todo!(),
+            SequenceFields::QcWarningFound => todo!(),
+            SequenceFields::TaxString => todo!(),
+            SequenceFields::InvovledIn => todo!(),
+            SequenceFields::PartOf => todo!(),
+            SequenceFields::Enables => todo!(),
+            SequenceFields::ContributesTo => todo!(),
+            SequenceFields::ColocalizesWith => todo!(),
+            SequenceFields::HasGoAnnotations => todo!(),
+            SequenceFields::GoAnnotationSource => todo!(),
+            SequenceFields::HasInteractingProteins => todo!(),
+            SequenceFields::InteractingProtein => todo!(),
+            SequenceFields::HasInteractingRnas => todo!(),
+            SequenceFields::HasConservedStructure => todo!(),
+            SequenceFields::ConservedStructure => todo!(),
+            SequenceFields::OverlapsWith => todo!(),
+            SequenceFields::NoOverlapsWith => todo!(),
+            SequenceFields::HasSecondaryStructure => todo!(),
+            SequenceFields::SecondaryStructureModel => todo!(),
+            SequenceFields::SecondaryStructureSource => todo!(),
+            SequenceFields::PdbidEntityid => todo!(),
+            SequenceFields::Disease => todo!(),
+            SequenceFields::Url => todo!(),
+            SequenceFields::OrfSource => todo!(),
+            SequenceFields::HasLitScan => todo!(),
+            SequenceFields::HasLitsumm => todo!(),
+            SequenceFields::HasEditingEvent => todo!(),
+            SequenceFields::EditChromosome => todo!(),
+            SequenceFields::EditLocations => todo!(),
+            SequenceFields::EditRepeatType => todo!(),
+            SequenceFields::SoRnaTypeName => todo!(),
+            SequenceFields::SoRnaType => todo!(),
+        }
+    }
+
+    fn tree_field_values(&self, field: &SoRnaTreeField) -> (String, Vec<String>) {
+        match field {
+            SoRnaTreeField::SoRnaType => todo!(),
+        }
+    }
+
+    fn cross_references(&self) -> impl IntoIterator<Item = CrossReference> {
+        self.cross_references.clone()
     }
 }

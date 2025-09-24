@@ -22,7 +22,7 @@ use crate::{
         region::{RegionGrouper, UrsRegion},
     },
     search_xml::SearchEntry,
-    sequences::normalized::Normalized,
+    sequences::{normalized::Normalized, so_tree},
 };
 
 pub fn assembly_writer(base: &Path, assembly: &str) -> Result<BufWriter<File>> {
@@ -102,7 +102,12 @@ pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Path) -> Result<()> {
+pub fn write_search_files(
+    gene_file: &Path,
+    so_tree: &Path,
+    xml_output: &Path,
+    count_output: &Path,
+) -> Result<()> {
     let open =
         File::open(gene_file).with_context(|| format!("Failed to open gene file {gene_file:?}"))?;
 

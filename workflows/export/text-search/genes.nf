@@ -28,7 +28,7 @@ process as_xml {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly), path('raw*.json')
+  tuple val(assembly), path('raw*.json'), path('so_tree.json')
 
   output:
   path "${xml}.gz", emit: xml
@@ -39,7 +39,7 @@ process as_xml {
   """
   cat raw*.json > members.json
   search-export genes merge-assembly members.json merged.json
-  search-export genes as-xml merged.json $xml count
+  search-export genes as-xml merged.json so_tree.json $xml count
   xmllint $xml --schema ${params.export.search.schema} --stream
   gzip $xml
   touch ${xml}.gz
@@ -50,6 +50,7 @@ workflow genes {
   take:
     max_count
     sequence_json
+    so_tree
   emit:
     xml
     counts
@@ -65,6 +66,7 @@ workflow genes {
     | filter { f -> !f.isEmpty() } \
     | map { fn -> [fn.name, fn] } \
     | groupTuple \
+    | combine(so_tree) \
     | as_xml
 
     as_xml.out.xml | set { xml }

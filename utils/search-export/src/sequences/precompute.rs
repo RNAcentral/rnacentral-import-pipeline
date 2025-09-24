@@ -56,7 +56,7 @@ impl Precompute {
     }
 }
 
-impl<'a> From<&Precompute> for PrecomputeSummary {
+impl From<&Precompute> for PrecomputeSummary {
     fn from(pre: &Precompute) -> PrecomputeSummary {
         Self {
             description: pre.description.to_owned(),
@@ -84,6 +84,10 @@ impl PrecomputeSummary {
 
     pub fn databases(&self) -> &[String] {
         &self.databases
+    }
+
+    pub fn has_coordinates(&self) -> bool {
+        self.has_coordinates
     }
 }
 

@@ -74,7 +74,7 @@ impl SearchEntry<GeneEntry> for Gene {
     }
 
     fn name(&self) -> &str {
-        todo!()
+        self.region.gene_name()
     }
 
     fn description(&self) -> &str {

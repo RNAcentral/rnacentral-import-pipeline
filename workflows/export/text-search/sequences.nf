@@ -144,7 +144,7 @@ process litsumm_summaries {
 process editing_events {
   input:
   val(max_count)
-  path (query)
+  path(query)
 
   output:
   path("editing-events.json")
@@ -184,6 +184,7 @@ workflow sequences {
     counts
     search_count
     sequence_json
+    so_tree
   main:
     Channel.fromPath('files/search-export/setup.sql') | set { setup_sql }
 
@@ -215,6 +216,8 @@ workflow sequences {
 
     search_count | build_search_accessions | set { accessions_ready }
 
+    fetch_so_tree(so_sql) | set { so_tree }
+
     build_metadata(
       base_query(search_count, base_sql),
       crs_query(search_count, crs_sql),
@@ -230,7 +233,7 @@ workflow sequences {
       text_mining_query(search_count, text_sql),
       litsumm_summaries(search_count, litsumm_sql),
       editing_events(search_count, editing_events_sql),
-      fetch_so_tree(so_sql),
+      so_tree,
     )\
     | set { metadata }
 

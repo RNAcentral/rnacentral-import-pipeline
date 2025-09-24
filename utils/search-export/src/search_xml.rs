@@ -81,6 +81,16 @@ where
     }
 }
 
+impl<T> From<&[T]> for SearchValue
+where
+    T: AsSearchValue,
+{
+    fn from(value: &[T]) -> Self {
+        // value.to_vec().into()
+        Self(SearchValueInner::Many(value.iter().map(|s| s.search_value()).collect()))
+    }
+}
+
 impl<T> From<HashSet<T>> for SearchValue
 where
     T: AsSearchValue,
