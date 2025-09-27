@@ -59,6 +59,10 @@ enum GenesCommand {
     /// enough memory to fit information on all members from an assembly into memory
     /// at once.
     MergeAssembly {
+        /// A JSON formatted file of the known sequence ontology terms and their names
+        #[structopt(parse(from_os_str))]
+        so_tree: PathBuf,
+
         /// A file of all gene members for a given assembly. The file does not need to be
         /// sorted.
         #[structopt(parse(from_os_str))]
@@ -73,10 +77,6 @@ enum GenesCommand {
         /// File of the complete genes to read
         #[structopt(parse(from_os_str))]
         genes: PathBuf,
-
-        /// A JSON formatted file of the known sequence ontology terms and their names
-        #[structopt(parse(from_os_str))]
-        so_tree: PathBuf,
 
         /// Filename to write the xml data to
         #[structopt(parse(from_os_str))]
@@ -312,15 +312,15 @@ fn main() -> Result<()> {
                 output,
             } => genes::writers::write_split_selected(&locus, &sequences, &output)?,
             GenesCommand::MergeAssembly {
+                so_tree,
                 members,
                 output,
-            } => genes::writers::write_merged_members(&members, &output)?,
+            } => genes::writers::write_merged_members(&so_tree, &members, &output)?,
             GenesCommand::AsXml {
                 genes,
                 xml_output,
-                so_tree,
                 count_output,
-            } => genes::writers::write_search_files(&genes, &so_tree, &xml_output, &count_output)?,
+            } => genes::writers::write_search_files(&genes, &xml_output, &count_output)?,
         },
     }
 
