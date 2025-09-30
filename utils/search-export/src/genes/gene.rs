@@ -7,7 +7,7 @@ use crate::{
     sequences::{
         accession::CrossReference,
         normalized::Normalized,
-        so_tree::{SoMapping, SoTree},
+        so_tree::{SoMapping, SoName, SoTree},
     },
     utils::set_or_check,
 };
@@ -68,6 +68,7 @@ impl Gene {
             members,
         })
     }
+
     pub fn expert_databases(&self) -> HashSet<&String> {
         let mut expert_dbs = HashSet::new();
         for member in &self.members {
@@ -80,10 +81,14 @@ impl Gene {
         self.region.start().abs_diff(self.region.stop())
     }
 
-    pub fn so_type_tree(&self) -> (String, Vec<String>) {
-        let mut names = self.so_tree.names();
+    pub fn so_type_tree(&self) -> (SoName, Vec<SoName>) {
+        let mut names: Vec<SoName> = self.so_tree.names().into_iter().cloned().collect();
         let root = names.remove(0);
         (root, names)
+    }
+
+    pub fn so_name(&self) -> SoName {
+        self.so_tree.term_name().unwrap().clone()
     }
 
     pub fn has_litsumm(&self) -> bool {
@@ -141,7 +146,7 @@ impl SearchEntry<GeneEntry> for Gene {
             GeneFields::HasLitsumm => self.has_litsumm().into(),
             GeneFields::HasEditingEvent => false.into(),
             GeneFields::InsdcRNAType => "Gene".into(),
-            GeneFields::SoRnaTypeName => self.region.so_rna_type().into(),
+            GeneFields::SoRnaTypeName => self.so_name().into(),
             GeneFields::PubliGeneName => self.region.gene_name().into(),
         }
     }
@@ -156,7 +161,10 @@ impl SearchEntry<GeneEntry> for Gene {
 
     fn tree_field_values(&self, field: &SoRnaTreeField) -> (String, Vec<String>) {
         match field {
-            SoRnaTreeField::SoRnaType => self.so_type_tree(),
+            SoRnaTreeField::SoRnaType => {
+                let (root, children) = self.so_type_tree();
+                (root.to_string(), children.into_iter().map(|c| c.to_string()).collect())
+            },
         }
     }
 }

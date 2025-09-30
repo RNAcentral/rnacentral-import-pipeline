@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::{convert::TryFrom, path::Path};
 
 use serde_with::CommaSeparator;
 
@@ -7,13 +7,15 @@ use anyhow::Result;
 use phf::phf_map;
 use rnc_core::grouper;
 
+use crate::sequences::so_tree::SoId;
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Precompute {
     pub id: usize,
     description: String,
     rna_type: String,
     has_coordinates: bool,
-    so_rna_type: String,
+    so_rna_type: SoId,
 
     #[serde(with = "serde_with::rust::StringWithSeparator::<CommaSeparator>")]
     databases: Vec<String>,
@@ -50,9 +52,15 @@ static SO_MAPPING: phf::Map<&'static str, &'static str> = phf_map! {
 };
 
 impl Precompute {
-    pub fn so_rna_type(&self) -> &str {
-        let given: &str = &self.so_rna_type;
-        SO_MAPPING.get(given).cloned().unwrap_or(given)
+    pub fn so_rna_type(&self) -> SoId {
+        // This is absurd
+        let key: String = self.so_rna_type.clone().into();
+        let k: &str = &key;
+        let found = SO_MAPPING.get(k);
+        if let Some(raw) = found {
+            return SoId::try_from(raw.to_string()).unwrap();
+        }
+        self.so_rna_type.clone()
     }
 }
 

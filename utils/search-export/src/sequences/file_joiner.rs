@@ -313,10 +313,10 @@ impl<'de> Iterator for FileJoiner<'de> {
                 }
 
                 let pre_so_type = precompute.so_rna_type();
-                if !self.so_info.has_tree(pre_so_type) {
+                if !self.so_info.has_tree(&pre_so_type) {
                     return Some(Err(Error::MissingSoTrem(pre_so_type.to_string())));
                 }
-                let so_tree = self.so_info.tree(pre_so_type).unwrap();
+                let so_tree = self.so_info.tree(&pre_so_type).unwrap();
 
                 let raw = Raw::builder()
                     .id(id1)

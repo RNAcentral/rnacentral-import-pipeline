@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use anyhow::Result;
 use rnc_core::grouper::{self, Grouped};
 
-use crate::utils::set_or_check;
+use crate::{sequences::so_tree::SoId, utils::set_or_check};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SequenceWithRegions {
@@ -19,7 +19,7 @@ pub struct GeneRegion {
     gene_id: usize,
     gene_name: String,
     gene_description: String,
-    so_rna_type: String,
+    so_rna_type: SoId,
     short_description: String,
     start: usize,
     stop: usize,
@@ -34,7 +34,7 @@ pub struct UrsRegion {
     gene_id: usize,
     gene_name: String,
     gene_description: String,
-    so_rna_type: String,
+    so_rna_type: SoId,
     short_description: String,
     start: usize,
     stop: usize,
@@ -87,7 +87,7 @@ impl GeneRegion {
         &self.gene_description
     }
 
-    pub fn so_rna_type(&self) -> &str {
+    pub fn so_rna_type(&self) -> &SoId {
         &self.so_rna_type
     }
 
