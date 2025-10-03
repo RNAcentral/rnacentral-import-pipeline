@@ -1,6 +1,7 @@
 use core::{
     convert::{Into, TryFrom},
     num::NonZeroU16,
+    num::NonZeroU32,
 };
 use std::{
     collections::HashMap,
@@ -36,7 +37,7 @@ pub enum SoIdError {
 /// ids are used where they are meant to and names where they should be.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
 #[serde(try_from = "String", into = "String")]
-pub struct SoId(NonZeroU16);
+pub struct SoId(NonZeroU32);
 
 /// This wraps SO names.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -77,10 +78,10 @@ impl TryFrom<String> for SoId {
         }
 
         // Parse the numeric part (ParseIntError automatically converted via #[from])
-        let num = suffix.parse::<u16>()?;
+        let num = suffix.parse::<u32>()?;
 
         // Create NonZeroU16
-        let non_zero = NonZeroU16::new(num).ok_or(SoIdError::ZeroValue)?;
+        let non_zero = NonZeroU32::new(num).ok_or(SoIdError::ZeroValue)?;
 
         Ok(SoId(non_zero))
     }
