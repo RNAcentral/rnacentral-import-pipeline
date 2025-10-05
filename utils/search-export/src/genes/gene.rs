@@ -91,6 +91,10 @@ impl Gene {
         self.so_tree.term_name().unwrap().clone()
     }
 
+    pub fn so_names(&self) -> Vec<SoName> {
+        self.so_tree.names().into_iter().cloned().collect()
+    }
+
     pub fn has_litsumm(&self) -> bool {
         self.members.iter().any(|m| m.has_litsumm())
     }
@@ -146,13 +150,13 @@ impl SearchEntry<GeneEntry> for Gene {
             GeneFields::HasLitsumm => self.has_litsumm().into(),
             GeneFields::HasEditingEvent => false.into(),
             GeneFields::InsdcRNAType => "Gene".into(),
-            GeneFields::SoRnaTypeName => self.so_name().into(),
+            GeneFields::SoRnaTypeName => self.so_names().into(),
             GeneFields::PubliGeneName => self.region.gene_name().into(),
         }
     }
 
     fn cross_references(&self) -> impl IntoIterator<Item = CrossReference> {
-        let mut xrefs = Vec::new();
+        let mut xrefs = HashSet::new();
         for member in &self.members {
             xrefs.extend(member.cross_references().clone());
         }

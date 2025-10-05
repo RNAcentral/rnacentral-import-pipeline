@@ -31,7 +31,7 @@ pub struct RawAccession {
     doi: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Hash)]
 pub struct CrossReference {
     name: String,
     external_id: String,
@@ -41,7 +41,7 @@ pub struct CrossReference {
     parent_accession: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccessionVec {
     species: HashSet<String>,
     organelles: HashSet<String>,
@@ -66,7 +66,7 @@ impl AccessionVec {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReferenceVec {
     authors: HashSet<String>,
     journals: HashSet<String>,
@@ -76,36 +76,36 @@ pub struct ReferenceVec {
     dois: HashSet<String>,
 }
 
-impl Default for ReferenceVec {
-    fn default() -> Self {
-        Self {
-            authors: HashSet::new(),
-            journals: HashSet::new(),
-            pub_titles: HashSet::new(),
-            pub_ids: HashSet::new(),
-            pubmed_ids: HashSet::new(),
-            dois: HashSet::new(),
-        }
-    }
-}
+// impl Default for ReferenceVec {
+//     fn default() -> Self {
+//         Self {
+//             authors: HashSet::new(),
+//             journals: HashSet::new(),
+//             pub_titles: HashSet::new(),
+//             pub_ids: HashSet::new(),
+//             pubmed_ids: HashSet::new(),
+//             dois: HashSet::new(),
+//         }
+//     }
+// }
 
-impl Default for AccessionVec {
-    fn default() -> Self {
-        Self {
-            species: HashSet::new(),
-            organelles: HashSet::new(),
-            tax_strings: HashSet::new(),
-            functions: HashSet::new(),
-            genes: HashSet::new(),
-            gene_synonyms: HashSet::new(),
-            common_name: HashSet::new(),
-            notes: HashSet::new(),
-            locus_tags: HashSet::new(),
-            standard_names: HashSet::new(),
-            products: HashSet::new(),
-        }
-    }
-}
+// impl Default for AccessionVec {
+//     fn default() -> Self {
+//         Self {
+//             species: HashSet::new(),
+//             organelles: HashSet::new(),
+//             tax_strings: HashSet::new(),
+//             functions: HashSet::new(),
+//             genes: HashSet::new(),
+//             gene_synonyms: HashSet::new(),
+//             common_name: HashSet::new(),
+//             notes: HashSet::new(),
+//             locus_tags: HashSet::new(),
+//             standard_names: HashSet::new(),
+//             products: HashSet::new(),
+//         }
+//     }
+// }
 
 impl From<RawAccession> for CrossReference {
     fn from(raw: RawAccession) -> Self {
@@ -121,14 +121,10 @@ impl From<RawAccession> for CrossReference {
 }
 
 fn insert(current: &mut HashSet<String>, raw: Option<String>) {
-    match raw {
-        None => (),
-        Some(s) => match s.is_empty() {
-            false => {
-                current.insert(s);
-            },
-            true => (),
-        },
+    if let Some(s) = raw {
+        if !s.is_empty() {
+            current.insert(s);
+        }
     }
 }
 
