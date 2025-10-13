@@ -37,6 +37,7 @@ use crate::sequences::{
     r2dt::R2dt,
     raw::Raw,
     rfam_hit::RfamHitVec,
+    go_flow_annotations::GoFlowLLMAnnotation,
     so_tree,
 };
 
@@ -69,6 +70,7 @@ pub struct Normalized {
     publication_count: usize,
     litsumm: Vec<LitsummSummaries>,
     editing_events: Vec<EditingEvent>,
+    go_flow_llm_annotations: Vec<GoFlowLLMAnnotation>,
     so_rna_type_tree: so_tree::SoTree,
 
     #[serde(flatten)]
@@ -129,6 +131,7 @@ impl Normalized {
             rfam_hits: raw.rfam_hits().to_owned().into_iter().collect(),
             orfs: raw.orfs().to_vec().into_iter().collect(),
             litsumm: raw.litsumm_summaries().to_vec(),
+            go_flow_llm_annotations: raw.go_flow_llm_annotations().to_vec(),
             editing_events: raw.editing_events().to_vec(),
         })
     }

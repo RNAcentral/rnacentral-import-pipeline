@@ -16,5 +16,6 @@ pub mod qa_status;
 pub mod r2dt;
 pub mod raw;
 pub mod rfam_hit;
+pub mod go_flow_annotations;
 pub mod so_tree;
 pub mod writers;

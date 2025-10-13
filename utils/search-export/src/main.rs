@@ -33,6 +33,7 @@ pub enum Groupable {
     SoInfo,
     LitsummSummaries,
     EditingEvents,
+    GoFlowAnnotation,
 }
 
 #[derive(Debug, StructOpt)]
@@ -139,6 +140,10 @@ enum SequenceCommand {
         #[structopt(parse(from_os_str))]
         /// RNA editing events
         editing_events: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// GoFlowLLM annotations
+        go_flow_llm_annotations: PathBuf,
 
         // Add new arguments above this line!
         #[structopt(parse(from_os_str))]
@@ -255,6 +260,7 @@ fn main() -> Result<()> {
             Groupable::EditingEvents => {
                 sequences::editing_events::group(&path, max_count, &output)?
             },
+            Groupable::GoFlowAnnotation => sequences::go_flow_annotations::group(&path, max_count, &output)?,
         },
         Subcommand::Sequences {
             command,
@@ -275,6 +281,8 @@ fn main() -> Result<()> {
                 litsumm_summaries,
                 editing_events,
                 so_term_tree,
+                go_flow_llm_annotations,
+                // Add new arguments above this line!
                 output,
             } => sequences::writers::write_merge(
                 vec![
@@ -293,6 +301,7 @@ fn main() -> Result<()> {
                     editing_events,
                     orfs,
                     so_term_tree,
+                    go_flow_llm_annotations,
                 ],
                 &output,
             )?,
