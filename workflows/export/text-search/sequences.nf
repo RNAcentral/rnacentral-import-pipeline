@@ -141,6 +141,20 @@ process litsumm_summaries {
   """
 }
 
+process litsumm_summaries {
+  input:
+  val(max_count)
+  path (query)
+
+  output:
+  path("goflow_annotations.json")
+
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  search-export group go-flow-annotation raw.json ${max_count} goflow_annotations.json
+  """
+}
+
 process editing_events {
   input:
   val(max_count)
@@ -201,6 +215,7 @@ workflow sequences {
     Channel.fromPath('files/search-export/parts/text-mining.sql') | set { text_sql }
     Channel.fromPath('files/search-export/parts/litsumm.sql') | set { litsumm_sql }
     Channel.fromPath('files/search-export/parts/editing-events.sql') | set { editing_events_sql }
+    Channel.fromPath('files/search-export/parts/goflow.sql') | set { goflow_sql }
     Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
     Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
@@ -230,6 +245,7 @@ workflow sequences {
       text_mining_query(search_count, text_sql),
       litsumm_summaries(search_count, litsumm_sql),
       editing_events(search_count, editing_events_sql),
+      go_flow_annotations(search_count, goflow_sql),
       fetch_so_tree(so_sql),
     )\
     | set { metadata }
