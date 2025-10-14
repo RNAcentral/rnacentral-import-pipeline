@@ -153,7 +153,6 @@ def write_inspect_data(handle: ty.IO, db_url: str, output: ty.IO):
 
 
 def prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences):
-    print(urs_to_fetch.name)
     raw_xref = (
         pl.scan_csv(xref_urs.name, has_header=False, low_memory=True)
         .unique()
@@ -162,7 +161,7 @@ def prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences):
 
     raw_tracked = pl.scan_csv(
         tracked_urs.name, low_memory=True
-    ).unique()  ## May not need to be uniqued?
+    ).unique() 
 
     to_fetch = raw_xref.join(raw_tracked, on="urs", how="anti")
 

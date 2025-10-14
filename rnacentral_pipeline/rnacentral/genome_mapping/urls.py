@@ -131,10 +131,6 @@ def toplevel_file(
     toplevel = base.format(type="toplevel")
     base_result = f"ftp://{host}{directory}/{{file}}"
 
-    print(primary)
-    print(toplevel)
-    print(files)
-
     if primary in files:
         return base_result.format(file=primary)
     elif toplevel in files:
