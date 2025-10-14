@@ -30,7 +30,7 @@ def list_releases(ftp: FTP) -> ty.List[str]:
     return [f for f in ftp.nlst() if f.startswith("release-")]
 
 
-def latest_release(releases: ty.List[str], ftp: FTP) -> str:
+def latest_release(ftp: FTP) -> str:
     ## Parse the readme for the current release to avoid getting a half baked release
     readme_lines = []
     ftp.retrlines("RETR current_README", readme_lines.append)
