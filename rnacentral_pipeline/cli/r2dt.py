@@ -262,11 +262,11 @@ def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
 @click.option("--max_sequences", default=-1)
 def r2dt_prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences):
     """
-    Prepare the sequences extracted from RNAcentral
+    Prepare a list of URS identifiers to fetch sequences for.
 
-    This means we will load and deduplicate the json file before rewriting
-    a json file containing only the requested number of sequences.
-
-    The default will be to write out all sequences
+    This takes a file of all URS identifiers from cross-references and a file
+    of already tracked URS identifiers. It produces a file of URS identifiers
+    that are in the xref file but not in the tracked file. This can be limited
+    to a maximum number of sequences.
     """
     r2dt.prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences)
