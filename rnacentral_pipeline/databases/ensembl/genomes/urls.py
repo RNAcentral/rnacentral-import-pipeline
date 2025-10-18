@@ -25,11 +25,6 @@ from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 
 LOGGER = logging.getLogger(__name__)
 
-
-def list_releases(ftp: FTP) -> ty.List[str]:
-    return [f for f in ftp.nlst() if f.startswith("release-")]
-
-
 def latest_release(ftp: FTP) -> str:
     ## Parse the readme for the current release to avoid getting a half baked release
     readme_lines = []
@@ -98,8 +93,7 @@ def urls_for(division: Division, host: str) -> ty.Iterable[FtpInfo]:
         ftp.login()
         print("LOGIN")
         ftp.cwd(f"pub/{division.name}/")
-        releases = list_releases(ftp)
-        latest = latest_release(releases, ftp)
+        latest = latest_release(ftp)
         with species_info(ftp, division, latest) as info:
             url_base = f"ftp://{host}/pub/{division.name}"
             yield from generate_paths(ftp, division, url_base, latest, info)
