@@ -164,7 +164,10 @@ def url_for(species: str, assembly_id: str, kind: str, host: str, soft_masked=Fa
                 conn.retrlines("RETR current_README", readme_lines.append)
                 cur_readme = "\n".join(readme_lines)
                 pattern = r"[Cc]urrent release is (?:Ensembl )?Genomes\s*(\d+)"
-                release = re.search(pattern, cur_readme).group(1)
+                match = re.search(pattern, cur_readme)
+                if not match:
+                    raise ValueError("Could not determine latest Ensembl release from README")
+                release = match.group(1)
 
                 for path in host.paths(species, kind):
                     try:
