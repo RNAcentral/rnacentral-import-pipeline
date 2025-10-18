@@ -109,7 +109,7 @@ def parse(
                 old_model_name = model_name
                 model_name = temp_model_name_lookup.get(model_name, None)
                 if model_name is None:
-                    raise ValueError("No info for model %s", old_model_name)
+                    raise ValueError(f"No info for model {old_model_name}")
 
             minfo = model_info[model_name]
             info = data.R2DTResultInfo(urs, minfo, source, result_base)
