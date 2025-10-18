@@ -36,7 +36,10 @@ def latest_release(ftp: FTP) -> str:
     ftp.retrlines("RETR current_README", readme_lines.append)
     cur_readme = "\n".join(readme_lines)
     pattern = r"Ensembl Release (\d+) Databases."
-    release = re.search(pattern, cur_readme).group(1)
+    match = re.search(pattern, cur_readme)
+    if not match:
+        raise ValueError("Could not find release number in README")
+    release = match.group(1)
     print(f"Ensembl release {release}")
     return f"release-{release}"
 
