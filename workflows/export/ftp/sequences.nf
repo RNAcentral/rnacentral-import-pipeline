@@ -49,7 +49,7 @@ process species_specific {
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral_species_specific_ids.fasta
   """
 }

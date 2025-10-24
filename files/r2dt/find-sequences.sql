@@ -1,14 +1,14 @@
+CREATE TEMP TABLE urs_to_fetch (urs text);
+
+\copy urs_to_fetch FROM 'urs_to_fetch.csv' DELIMITER ',' CSV HEADER;
+
 COPY (
-SELECT DISTINCT ON (rna.upi)
-  json_build_object(
-    'id', rna.upi,
-    'sequence', COALESCE(rna.seq_short, rna.seq_long)
-  )
+SELECT json_build_object(
+        'id', rna.upi,
+        'sequence', COALESCE(rna.seq_short, rna.seq_long)
+      )
 FROM rna
-JOIN xref on xref.upi = rna.upi
-WHERE
-  not exists(select 1 from pipeline_tracking_traveler track where track.urs = rna.upi)
-  AND rna.len < :max_len
-  AND xref.deleted = 'N'
-  LIMIT :sequence_count
+JOIN urs_to_fetch ON rna.upi = urs_to_fetch.urs
+  where rna.len < :max_len
+LIMIT :sequence_count
 ) TO STDOUT;

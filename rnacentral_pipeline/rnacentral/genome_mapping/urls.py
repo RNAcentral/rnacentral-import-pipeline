@@ -12,10 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import csv
 import enum
 import logging
+import re
 from contextlib import contextmanager
 from ftplib import FTP
 
@@ -95,7 +95,9 @@ class FtpHost(enum.Enum):
                 return [template.format(group="fungi", kind=kind, species=species)]
             if self is FtpHost.ensembl_genomes:
                 gs = ["plants", "metazoa", "protists", "bacteria", "fungi"]
-                return [template.format(group=g, kind=kind, species=species) for g in gs]
+                return [
+                    template.format(group=g, kind=kind, species=species) for g in gs
+                ]
         raise ValueError("No paths for %s" % self)
 
 
@@ -113,7 +115,9 @@ def ftp(host):
         LOGGER.exception(err)
 
 
-def toplevel_file(host, species, assembly_id, directory, files, kind, release, dna_type="dna"):
+def toplevel_file(
+    host, species, assembly_id, directory, files, kind, release, dna_type="dna"
+):
     upper_species = species[0].upper() + species[1:]
     if kind == "fa":
         base = f"{upper_species}.{assembly_id}.{dna_type}.{{type}}.fa.gz"
@@ -154,7 +158,16 @@ def url_for(species: str, assembly_id: str, kind: str, host: str, soft_masked=Fa
         if host is not FtpHost.unknown:
             with ftp(host.host) as conn:
                 conn.cwd("pub")
-                releases = [int(f.replace("release-", "")) for f in conn.nlst() if f.startswith("release-")]
+
+                ## Parse the readme for the current release to avoid getting a half baked release
+                readme_lines = []
+                conn.retrlines("RETR current_README", readme_lines.append)
+                cur_readme = "\n".join(readme_lines)
+                pattern = r"[Cc]urrent release is (?:Ensembl )?Genomes\s*(\d+)"
+                match = re.search(pattern, cur_readme)
+                if not match:
+                    raise ValueError("Could not determine latest Ensembl release from README")
+                release = match.group(1)
 
                 for path in host.paths(species, kind):
                     try:
@@ -169,7 +182,7 @@ def url_for(species: str, assembly_id: str, kind: str, host: str, soft_masked=Fa
                         path,
                         possible,
                         kind,
-                        max(releases),
+                        release,
                         dna_type=dna_type,
                     )
 
@@ -180,7 +193,11 @@ def url_for(species: str, assembly_id: str, kind: str, host: str, soft_masked=Fa
 
                 try:
                     return url_for(
-                        species, assembly_id, kind=kind, host=specific, soft_masked=soft_masked
+                        species,
+                        assembly_id,
+                        kind=kind,
+                        host=specific,
+                        soft_masked=soft_masked,
                     )
                 except:
                     pass
