@@ -22,6 +22,9 @@ from rnacentral_pipeline.databases.europepmc import fetch
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.data import IdReference
 
+# Apply epmc marker to all tests in this module
+pytestmark = pytest.mark.epmc
+
 
 def lookup(ref_id):
     return attr.asdict(fetch.lookup(IdReference.build(ref_id)))

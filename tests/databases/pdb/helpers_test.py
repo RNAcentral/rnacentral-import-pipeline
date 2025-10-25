@@ -18,6 +18,9 @@ import pytest
 from rnacentral_pipeline.databases.pdb import fetch, helpers
 from rnacentral_pipeline.databases.pdb.data import ChainInfo
 
+# Apply pdb marker to all tests in this module
+pytestmark = pytest.mark.pdb
+
 
 def load(pdb_id: str, chain_id: str) -> ChainInfo:
     chains = fetch.chains({(pdb_id, chain_id)})
