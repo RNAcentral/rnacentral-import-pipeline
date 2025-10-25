@@ -65,6 +65,7 @@ process build_metadata {
   path(text)
   path(litsumm)
   path(editing_events)
+  path(go_flow_annotations)
   path(so_tree)
 
   output:
@@ -141,7 +142,7 @@ process litsumm_summaries {
   """
 }
 
-process litsumm_summaries {
+process go_flow_annotations {
   input:
   val(max_count)
   path (query)
