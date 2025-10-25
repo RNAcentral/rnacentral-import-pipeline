@@ -19,6 +19,9 @@ import pytest
 
 from rnacentral_pipeline.databases.pdb import fetch
 
+# Apply pdb marker to all tests in this module
+pytestmark = pytest.mark.pdb
+
 
 @pytest.mark.network
 def test_produces_correct_data():
