@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
 from furl import furl
 
@@ -49,62 +51,136 @@ def test_can_get_correct_term_url(term, url):
 
 
 @pytest.mark.ols
-@pytest.mark.network
 def test_can_fetch_a_go_term():
-    assert ols.term("GO:0005739") == OntologyTerm(
-        ontology="GO",
-        ontology_id="GO:0005739",
-        name="mitochondrion",
-        definition=(
-            "A semiautonomous, self replicating organelle that occurs in "
-            "varying numbers, shapes, and sizes in the cytoplasm of virtually "
-            "all eukaryotic cells. It is notably the site of tissue "
-            "respiration."
-        ),
-        synonyms=["mitochondria"],
-        insdc_qualifier=None,
-    )
+    # Mock OLS4 API response for GO:0005739 (mitochondrion)
+    mock_response = Mock()
+    mock_response.json.return_value = {
+        "label": "mitochondrion",
+        "annotation": {
+            "definition": [
+                "A semiautonomous, self replicating organelle that occurs in "
+                "varying numbers, shapes, and sizes in the cytoplasm of virtually "
+                "all eukaryotic cells. It is notably the site of tissue "
+                "respiration."
+            ],
+            "has_exact_synonym": ["mitochondria"],
+        },
+    }
+    mock_response.raise_for_status = Mock()
+
+    with patch("rnacentral_pipeline.databases.ols.fetch.requests.get", return_value=mock_response):
+        assert ols.term("GO:0005739") == OntologyTerm(
+            ontology="GO",
+            ontology_id="GO:0005739",
+            name="mitochondrion",
+            definition=(
+                "A semiautonomous, self replicating organelle that occurs in "
+                "varying numbers, shapes, and sizes in the cytoplasm of virtually "
+                "all eukaryotic cells. It is notably the site of tissue "
+                "respiration."
+            ),
+            synonyms=["mitochondria"],
+            insdc_qualifier=None,
+        )
 
 
 @pytest.mark.ols
 def test_can_fetch_an_so_term():
-    assert ols.term("SO:0000276") == OntologyTerm(
-        ontology="SO",
-        ontology_id="SO:0000276",
-        name="miRNA",
-        definition=(
-            "Small, ~22-nt, RNA molecule that is the endogenous "
-            "transcript of a miRNA gene (or the product of other non "
-            "coding RNA genes. Micro RNAs are produced from precursor "
-            "molecules (SO:0001244) that can form local hairpin "
-            "structures, which ordinarily are processed (usually via the "
-            "Dicer pathway) such that a single miRNA molecule "
-            "accumulates from one arm of a hairpin precursor molecule. "
-            "Micro RNAs may trigger the cleavage of their target molecules "
-            "or act as translational repressors."
-        ),
-        synonyms=[
-            "INSDC_feature:ncRNA",
-            "micro RNA",
-            "microRNA",
-            "small temporal RNA",
-            "stRNA",
-        ],
-        insdc_qualifier="miRNA",
-    )
+    # Mock OLS4 API response for SO:0000276 (miRNA)
+    mock_response = Mock()
+    mock_response.json.return_value = {
+        "label": "miRNA",
+        "annotation": {
+            "definition": [
+                "Small, ~22-nt, RNA molecule that is the endogenous "
+                "transcript of a miRNA gene (or the product of other non "
+                "coding RNA genes. Micro RNAs are produced from precursor "
+                "molecules (SO:0001244) that can form local hairpin "
+                "structures, which ordinarily are processed (usually via the "
+                "Dicer pathway) such that a single miRNA molecule "
+                "accumulates from one arm of a hairpin precursor molecule. "
+                "Micro RNAs may trigger the cleavage of their target molecules "
+                "or act as translational repressors."
+            ],
+            "has_exact_synonym": [
+                "INSDC_qualifier:miRNA",
+                "INSDC_feature:ncRNA",
+                "micro RNA",
+                "microRNA",
+                "small temporal RNA",
+                "stRNA",
+            ],
+        },
+    }
+    mock_response.raise_for_status = Mock()
+
+    with patch("rnacentral_pipeline.databases.ols.fetch.requests.get", return_value=mock_response):
+        assert ols.term("SO:0000276") == OntologyTerm(
+            ontology="SO",
+            ontology_id="SO:0000276",
+            name="miRNA",
+            definition=(
+                "Small, ~22-nt, RNA molecule that is the endogenous "
+                "transcript of a miRNA gene (or the product of other non "
+                "coding RNA genes. Micro RNAs are produced from precursor "
+                "molecules (SO:0001244) that can form local hairpin "
+                "structures, which ordinarily are processed (usually via the "
+                "Dicer pathway) such that a single miRNA molecule "
+                "accumulates from one arm of a hairpin precursor molecule. "
+                "Micro RNAs may trigger the cleavage of their target molecules "
+                "or act as translational repressors."
+            ),
+            synonyms=[
+                "INSDC_feature:ncRNA",
+                "micro RNA",
+                "microRNA",
+                "small temporal RNA",
+                "stRNA",
+            ],
+            insdc_qualifier="miRNA",
+        )
 
 
 @pytest.mark.ols
 def test_caching_works_as_expected():
-    ols.term.cache_clear()
-    assert ols.term.cache_info().hits == 0
-    assert ols.term.cache_info().misses == 0
-    assert ols.term("SO:0000276").name == "miRNA"
-    assert ols.term.cache_info().hits == 0
-    assert ols.term.cache_info().misses == 1
-    for count in range(10):
-        print(ols.term.cache_info())
-        print(count)
-        assert ols.term("SO:0000276").insdc_qualifier == "miRNA"
-        assert ols.term.cache_info().hits == count + 1
+    # Mock OLS4 API response for SO:0000276 (miRNA)
+    mock_response = Mock()
+    mock_response.json.return_value = {
+        "label": "miRNA",
+        "annotation": {
+            "definition": [
+                "Small, ~22-nt, RNA molecule that is the endogenous "
+                "transcript of a miRNA gene (or the product of other non "
+                "coding RNA genes. Micro RNAs are produced from precursor "
+                "molecules (SO:0001244) that can form local hairpin "
+                "structures, which ordinarily are processed (usually via the "
+                "Dicer pathway) such that a single miRNA molecule "
+                "accumulates from one arm of a hairpin precursor molecule. "
+                "Micro RNAs may trigger the cleavage of their target molecules "
+                "or act as translational repressors."
+            ],
+            "has_exact_synonym": [
+                "INSDC_qualifier:miRNA",
+                "INSDC_feature:ncRNA",
+                "micro RNA",
+                "microRNA",
+                "small temporal RNA",
+                "stRNA",
+            ],
+        },
+    }
+    mock_response.raise_for_status = Mock()
+
+    with patch("rnacentral_pipeline.databases.ols.fetch.requests.get", return_value=mock_response):
+        ols.term.cache_clear()
+        assert ols.term.cache_info().hits == 0
+        assert ols.term.cache_info().misses == 0
+        assert ols.term("SO:0000276").name == "miRNA"
+        assert ols.term.cache_info().hits == 0
         assert ols.term.cache_info().misses == 1
+        for count in range(10):
+            print(ols.term.cache_info())
+            print(count)
+            assert ols.term("SO:0000276").insdc_qualifier == "miRNA"
+            assert ols.term.cache_info().hits == count + 1
+            assert ols.term.cache_info().misses == 1
