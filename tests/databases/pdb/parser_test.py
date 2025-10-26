@@ -20,6 +20,9 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.pdb import fetch, parser
 
+# Apply pdb marker to all tests in this module
+pytestmark = pytest.mark.pdb
+
 
 def load(pdb_id: str, chain_id: str) -> data.Entry:
     chains = fetch.chains({(pdb_id.lower(), chain_id)})
