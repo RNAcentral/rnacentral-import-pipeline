@@ -113,15 +113,14 @@ ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
-# Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-COPY poetry.lock $RNACENTRAL_IMPORT_PIPELINE/poetry.lock
 COPY pyproject.toml $RNACENTRAL_IMPORT_PIPELINE/pyproject.toml
+COPY uv.lock $RNACENTRAL_IMPORT_PIPELINE/uv.lock
 
 WORKDIR "$RNA/rnacentral-import-pipeline"
-RUN PATH="$PATH:/root/.local/bin" poetry config virtualenvs.create false
-RUN PATH="$PATH:/root/.local/bin" poetry install
+RUN /root/.cargo/bin/uv sync --frozen
 
 RUN python3 -m nltk.downloader words
 
