@@ -23,8 +23,7 @@ from rnacentral_pipeline.databases.pdb import fetch
 pytestmark = pytest.mark.pdb
 
 
-@pytest.mark.network
-def test_produces_correct_data():
+def test_produces_correct_data(mock_pdbe_api):
     chains = fetch.chains({("1S72", "9")})
     assert len(chains) == 1
     assert chains[0] == fetch.ChainInfo(
