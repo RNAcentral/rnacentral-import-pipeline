@@ -16,6 +16,7 @@ use crate::sequences::{
     editing_events::EditingEvent,
     feedback::Feedback,
     go_annotation::GoAnnotation,
+    go_flow_annotations::GoFlowLLMAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
     litsumm::LitsummSummaries,
@@ -24,7 +25,6 @@ use crate::sequences::{
     qa_status::QaStatus,
     r2dt::R2dt,
     rfam_hit::RfamHit,
-    go_flow_annotations::GoFlowLLMAnnotation,
     so_tree,
 };
 
@@ -150,7 +150,7 @@ impl Raw {
         &self.editing_events
     }
 
-    /// Get a reference to the raw's editing events.
+    /// Get a reference to the raw's GoFlowlLM annotations
     pub fn go_flow_llm_annotations(&self) -> &[GoFlowLLMAnnotation] {
         &self.go_flow_llm_annotations
     }
