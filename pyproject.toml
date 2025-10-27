@@ -39,6 +39,7 @@ dependencies = [
     "polars>=1.14.0,<2",
     "cython>=3.0.12,<4",
     "numpy<2",
+    "setuptools", # Required by obonet==0.3.0 for pkg_resources
 ]
 
 [project.optional-dependencies]
