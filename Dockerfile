@@ -1,6 +1,6 @@
 FROM python:3.11.0-buster
 
-ENV RNA /rna
+ENV RNA=/rna
 
 WORKDIR $RNA
 
@@ -108,7 +108,7 @@ RUN \
     make install
 
 # Install python requirements
-ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
+ENV RNACENTRAL_IMPORT_PIPELINE="$RNA/rnacentral-import-pipeline"
 
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
