@@ -708,6 +708,7 @@ def has_publications(counts):
 def has_litsumm(litsumm):
     return str(bool(litsumm))
 
+
 def has_go_flow_llm_annotation(go_flow):
     return str(bool(go_flow))
 
@@ -884,7 +885,11 @@ builder = entry(
                     edit_repeat_type,
                     keys="editing_events",
                 ),
-                field("has_go_flow_llm_annotation", has_go_flow_llm_annotation, keys="goflow"),
+                field(
+                    "has_go_flow_llm_annotation",
+                    has_go_flow_llm_annotation,
+                    keys="go_flow_llm_annotations",
+                ),
                 ## Add new fields above this line! Otherwise editing the produced xml is hard.
                 tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
             ],
