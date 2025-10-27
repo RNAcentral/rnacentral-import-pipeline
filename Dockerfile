@@ -1,4 +1,4 @@
-FROM python:3.11.0-buster
+FROM python:3.11.14-trixie
 
 ENV RNA=/rna
 
@@ -27,7 +27,7 @@ RUN apt install -y \
     libncurses5-dev \
     libncursesw5-dev \
     libsqlite3-dev \
-    libssl1.1 \
+    libssl-dev \
     libxml2-utils \
     libxml2-dev \
     libzip-dev \
@@ -37,8 +37,8 @@ RUN apt install -y \
     pandoc \
     patch \
     pgloader \
-    postgresql-11 \
-    postgresql-client-11 \
+    postgresql-17 \
+    postgresql-client-17 \
     procps \
     python3 \
     python3-dev \
@@ -68,12 +68,12 @@ RUN \
 
 # Install blat
 RUN \
-    wget https://users.soe.ucsc.edu/~kent/src/blatSrc35.zip && \
-    unzip blatSrc35.zip && \
-    rm blatSrc35.zip && \
-    cd blatSrc && \
-    mkdir bin && \
-    make MACHTYPE=x86_64 BINDIR=$PWD/bin
+    wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip && \
+    mkdir blat_suite && \
+    cd blat_suite && \
+    unzip ../blatSuite.38.zip && \
+    rm ../blatSuite.38.zip
+
 
 # Install seqkit
 RUN \
@@ -115,13 +115,16 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+## Add uv install directory to the front of the path
+ENV PATH="/root/.local/bin:$PATH"
 
 COPY pyproject.toml $RNACENTRAL_IMPORT_PIPELINE/pyproject.toml
 COPY uv.lock $RNACENTRAL_IMPORT_PIPELINE/uv.lock
 
 WORKDIR "$RNA/rnacentral-import-pipeline"
-RUN /root/.cargo/bin/uv sync --frozen
-
+RUN /root/.local/bin/uv sync --no-editable --frozen
+ENV PATH="$RNA/rnacentral-import-pipeline/.venv/bin:$PATH"
+# RUN echo $PATH && ls /root/.local/bin && ls -a $RNA/rnacentral-import-pipeline/.venv/bin && exit 1
 RUN python3 -m nltk.downloader words
 
 ## Download Rust toolchain
@@ -151,7 +154,7 @@ ENV BIOEASELDIR="$RNA/Bio-Easel/blib/lib:$RNA/Bio-Easel/blib/arch:$RNA/Bio-Easel
 ENV PERL5LIB="$BIOEASELDIR:$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$PERL5LIB"
 
 ENV PATH="$RNA/infernal-1.1.2/bin:$PATH"
-ENV PATH="$RNA/blatSrc/bin:$PATH"
+ENV PATH="$RNA/blat_suite/bin:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
 
