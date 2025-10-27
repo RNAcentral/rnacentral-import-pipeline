@@ -159,9 +159,7 @@ def prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences):
         .rename({"column_1": "urs"})
     )
 
-    raw_tracked = pl.scan_csv(
-        tracked_urs.name, low_memory=True
-    ).unique() 
+    raw_tracked = pl.scan_csv(tracked_urs.name, low_memory=True).unique()
 
     to_fetch = raw_xref.join(raw_tracked, on="urs", how="anti")
 
