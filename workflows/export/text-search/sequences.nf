@@ -148,11 +148,11 @@ process go_flow_annotations {
   path (query)
 
   output:
-  path("goflow_annotations.json")
+  path("go-flow-llm-annotations.json")
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  search-export group go-flow-annotation raw.json ${max_count} goflow_annotations.json
+  search-export group go-flow-annotation raw.json ${max_count} go-flow-llm-annotations.json
   """
 }
 
