@@ -253,3 +253,20 @@ def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
     r2dt.prepare_s3(
         model_info, directory, output, file_list, allow_missing=allow_missing
     )
+
+
+@cli.command("prepare-sequences")
+@click.argument("xref_urs", type=click.File("r"))
+@click.argument("tracked_urs", type=click.File("r"))
+@click.argument("urs_to_fetch", type=click.File("w"))
+@click.option("--max_sequences", default=-1)
+def r2dt_prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences):
+    """
+    Prepare a list of URS identifiers to fetch sequences for.
+
+    This takes a file of all URS identifiers from cross-references and a file
+    of already tracked URS identifiers. It produces a file of URS identifiers
+    that are in the xref file but not in the tracked file. This can be limited
+    to a maximum number of sequences.
+    """
+    r2dt.prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences)
