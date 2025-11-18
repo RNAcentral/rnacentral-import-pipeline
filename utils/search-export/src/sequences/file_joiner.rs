@@ -37,6 +37,7 @@ use super::{
     editing_events::EditingEvent,
     feedback::Feedback,
     go_annotation::GoAnnotation,
+    go_flow_annotations::GoFlowLLMAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
     litsumm::LitsummSummaries,
@@ -49,7 +50,6 @@ use super::{
     rfam_hit::RfamHit,
     so_tree,
     so_tree::SoMapping,
-    go_flow_annotations::GoFlowLLMAnnotation,
 };
 
 #[derive(Debug, Error)]
@@ -118,7 +118,8 @@ pub struct FileJoiner<'de> {
     rfam_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<RfamHit>>,
     publication_counts: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<PublicationCount>>,
     lit_summ: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<LitsummSummaries>>,
-    go_flow_llm_annotations: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<GoFlowLLMAnnotation>>,
+    go_flow_llm_annotations:
+        StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<GoFlowLLMAnnotation>>,
     editing_events: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<EditingEvent>>,
     so_info: SoMapping,
 }
@@ -348,7 +349,8 @@ impl<'de> Iterator for FileJoiner<'de> {
                     || id1 != id15
                 {
                     return Some(Err(Error::OutofSyncData(vec![
-                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12, id13, id14, id15
+                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12, id13, id14,
+                        id15,
                     ])));
                 }
 

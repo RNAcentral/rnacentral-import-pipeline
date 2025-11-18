@@ -260,7 +260,9 @@ fn main() -> Result<()> {
             Groupable::EditingEvents => {
                 sequences::editing_events::group(&path, max_count, &output)?
             },
-            Groupable::GoFlowAnnotation => sequences::go_flow_annotations::group(&path, max_count, &output)?,
+            Groupable::GoFlowAnnotation => {
+                sequences::go_flow_annotations::group(&path, max_count, &output)?
+            },
         },
         Subcommand::Sequences {
             command,

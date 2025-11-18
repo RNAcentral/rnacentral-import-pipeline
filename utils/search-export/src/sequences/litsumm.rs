@@ -28,6 +28,7 @@ impl LitsummSummaries {
     pub fn should_show_litsumm(&self) -> bool {
         self.should_show_litsumm
     }
+
     pub fn urs_taxid(&self) -> &str {
         &self.urs_taxid
     }

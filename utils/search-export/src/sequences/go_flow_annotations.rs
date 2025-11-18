@@ -28,6 +28,7 @@ impl GoFlowLLMAnnotation {
     pub fn should_show_goflow(&self) -> bool {
         self.should_show_goflow
     }
+
     pub fn urs_taxid(&self) -> &str {
         &self.urs_taxid
     }

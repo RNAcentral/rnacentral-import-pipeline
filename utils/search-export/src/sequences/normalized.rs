@@ -28,6 +28,7 @@ use crate::sequences::{
     editing_events::EditingEvent,
     feedback::FeedbackVec,
     go_annotation::GoAnnotation,
+    go_flow_annotations::GoFlowLLMAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
     litsumm::LitsummSummaries,
@@ -37,7 +38,6 @@ use crate::sequences::{
     r2dt::R2dt,
     raw::Raw,
     rfam_hit::RfamHitVec,
-    go_flow_annotations::GoFlowLLMAnnotation,
     so_tree,
 };
 
