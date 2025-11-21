@@ -20,8 +20,7 @@ repos:
     rev: v1.0
     hooks:
     -   id: fmt
-    -   id: cargo-check
-    -   id: clippy
+        args: ['--']
 # - repo: https://github.com/python-poetry/poetry
 #   rev: '1.2.2'
 #   hooks:
