@@ -70,7 +70,7 @@ RUN mkdir -p $RNA/blatSrc/bin && \
     cd $RNA/blatSrc/bin && \
     wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.zip && \
     unzip blatSuite.zip && \
-    rm blatSuite.zip 
+    rm blatSuite.zip
 
 # Install seqkit
 RUN \
@@ -131,6 +131,7 @@ COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 ENV PATH="$PATH:/root/.cargo/bin"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+RUN pip install maturin
 RUN  make rust
 
 WORKDIR $RNA

@@ -13,6 +13,8 @@ rust:
 	mv -f target/release/ftp-export bin
 	mv -f target/release/json2dfasta bin
 	mv -f target/release/bed-expander bin
+	cd utils/genes-preprocessing && maturin develop --release
+
 
 clean:
 	rm bin/json2fasta
