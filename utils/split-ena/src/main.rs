@@ -1,8 +1,18 @@
 use std::{
     error::Error,
-    fs::{remove_file, File},
-    io::{prelude::*, BufReader, BufWriter},
-    path::{Path, PathBuf},
+    fs::{
+        remove_file,
+        File,
+    },
+    io::{
+        prelude::*,
+        BufReader,
+        BufWriter,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 use structopt::StructOpt;

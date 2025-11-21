@@ -1,11 +1,22 @@
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{
+    de::DeserializeOwned,
+    Deserialize,
+    Serialize,
+};
 
 use std::{
-    cmp::Ordering::{Equal, Greater, Less},
+    cmp::Ordering::{
+        Equal,
+        Greater,
+        Less,
+    },
     path::Path,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{
+    anyhow,
+    Result,
+};
 use itertools::Itertools;
 
 use crate::psql::PsqlJsonIterator;

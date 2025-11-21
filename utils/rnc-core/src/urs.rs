@@ -1,7 +1,16 @@
 use std::{
-    fmt::{self, Display},
-    path::{Path, PathBuf},
-    str::{self, FromStr},
+    fmt::{
+        self,
+        Display,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
+    str::{
+        self,
+        FromStr,
+    },
 };
 
 use regex::Regex;

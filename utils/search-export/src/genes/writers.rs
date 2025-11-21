@@ -1,16 +1,35 @@
 use std::{
     collections::HashMap,
-    fs::{create_dir_all, File},
-    io::{BufReader, BufWriter, Write},
-    path::{Path, PathBuf},
+    fs::{
+        create_dir_all,
+        File,
+    },
+    io::{
+        BufReader,
+        BufWriter,
+        Write,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
-use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
+use anyhow::{
+    Context,
+    Result,
+};
+use chrono::{
+    DateTime,
+    Utc,
+};
 use itertools::Itertools;
 
 use serde_json::Deserializer;
-use sorted_iter::{assume::*, SortedPairIterator};
+use sorted_iter::{
+    assume::*,
+    SortedPairIterator,
+};
 
 use rnc_core::grouper::Grouped;
 
@@ -18,10 +37,16 @@ use crate::{
     genes::{
         gene::Gene,
         gene_member::GeneMember,
-        region::{RegionGrouper, UrsRegion},
+        region::{
+            RegionGrouper,
+            UrsRegion,
+        },
     },
     search_xml::SearchEntry,
-    sequences::{normalized::Normalized, so_tree},
+    sequences::{
+        normalized::Normalized,
+        so_tree,
+    },
 };
 
 pub fn assembly_writer(base: &Path, assembly: &str) -> Result<BufWriter<File>> {

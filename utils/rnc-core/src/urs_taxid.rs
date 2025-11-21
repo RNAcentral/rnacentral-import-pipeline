@@ -1,6 +1,9 @@
 use std::{
     fmt,
-    str::{self, FromStr},
+    str::{
+        self,
+        FromStr,
+    },
 };
 
 use thiserror::Error;

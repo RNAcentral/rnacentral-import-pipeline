@@ -1,20 +1,36 @@
 use std::path::Path;
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use anyhow::Result;
 
-use sorted_iter::{assume::*, SortedPairIterator};
+use sorted_iter::{
+    assume::*,
+    SortedPairIterator,
+};
 
 use crate::{
-    accessions::{Accession, RawAccessionEntry},
+    accessions::{
+        Accession,
+        RawAccessionEntry,
+    },
     metadata::{
-        coordinate::Coordinate, merged::Metadata, orf::OrfInfo, previous::Previous,
-        r2dt_hit::R2dtHit, rfam_hit::RfamHit,
+        coordinate::Coordinate,
+        merged::Metadata,
+        orf::OrfInfo,
+        previous::Previous,
+        r2dt_hit::R2dtHit,
+        rfam_hit::RfamHit,
     },
 };
 
-use rnc_core::{grouper::Grouped, psql::PsqlJsonIterator};
+use rnc_core::{
+    grouper::Grouped,
+    psql::PsqlJsonIterator,
+};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Normalized {

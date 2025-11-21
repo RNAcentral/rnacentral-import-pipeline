@@ -1,6 +1,12 @@
-use std::{collections::HashSet, iter::FromIterator};
+use std::{
+    collections::HashSet,
+    iter::FromIterator,
+};
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct RawAccession {

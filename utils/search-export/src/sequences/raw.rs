@@ -1,14 +1,30 @@
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use typed_builder::TypedBuilder;
 
-use rnc_core::{urs, urs_taxid};
+use rnc_core::{
+    urs,
+    urs_taxid,
+};
 
 use crate::sequences::{
-    basic::Basic, crs::Crs, editing_events::EditingEvent, feedback::Feedback,
-    go_annotation::GoAnnotation, interacting_protein::InteractingProtein,
-    interacting_rna::InteractingRna, litsumm::LitsummSummaries, orf::Orf, precompute::Precompute,
-    qa_status::QaStatus, r2dt::R2dt, rfam_hit::RfamHit, so_tree,
+    basic::Basic,
+    crs::Crs,
+    editing_events::EditingEvent,
+    feedback::Feedback,
+    go_annotation::GoAnnotation,
+    interacting_protein::InteractingProtein,
+    interacting_rna::InteractingRna,
+    litsumm::LitsummSummaries,
+    orf::Orf,
+    precompute::Precompute,
+    qa_status::QaStatus,
+    r2dt::R2dt,
+    rfam_hit::RfamHit,
+    so_tree,
 };
 
 use super::publication_counts::PublicationCount;

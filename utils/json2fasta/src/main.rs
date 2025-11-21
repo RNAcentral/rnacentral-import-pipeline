@@ -1,4 +1,7 @@
-use std::{error::Error, path::PathBuf};
+use std::{
+    error::Error,
+    path::PathBuf,
+};
 
 extern crate log;
 
@@ -6,7 +9,10 @@ use bio::io::fasta;
 
 use structopt::StructOpt;
 
-use rnc_core::{json_sequence::Sequence, nhmmer::valid_sequence};
+use rnc_core::{
+    json_sequence::Sequence,
+    nhmmer::valid_sequence,
+};
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]

@@ -1,13 +1,22 @@
-use std::{collections::HashSet, iter::FromIterator, option, vec};
+use std::{
+    collections::HashSet,
+    iter::FromIterator,
+    option,
+    vec,
+};
 
 use log;
 use serde::Serialize;
 use strum::IntoEnumIterator;
 
-use crate::{fields::EntryType, sequences::accession::CrossReference};
+use crate::{
+    fields::EntryType,
+    sequences::accession::CrossReference,
+};
 
-/// This trait represents the logic for converting a rust value to the XML values. This is used
-/// rather an a simple Into<String>, because for some cases there is a specific format.
+/// This trait represents the logic for converting a rust value to the XML values. This is
+/// used rather an a simple Into<String>, because for some cases there is a specific
+/// format.
 pub trait AsSearchValue {
     fn search_value(&self) -> String;
 }
@@ -111,8 +120,8 @@ where
 }
 
 impl IntoIterator for SearchValue {
-    type Item = String;
     type IntoIter = SearchValueIter;
+    type Item = String;
 
     fn into_iter(self) -> Self::IntoIter {
         match self.0 {
@@ -137,8 +146,8 @@ pub trait SearchEntry<E>: Sized
 where
     E: EntryType,
 {
-    /// This produces the globally unique identifier for this entry. For example, this could be a
-    /// URS_taxid: `URS00000478B7_9606`.
+    /// This produces the globally unique identifier for this entry. For example, this
+    /// could be a URS_taxid: `URS00000478B7_9606`.
     fn id(&self) -> &str;
 
     /// This produces human readable 'name'.
@@ -147,8 +156,8 @@ where
     /// A human readable description of the entry.
     fn description(&self) -> &str;
 
-    /// Fetch the taxid for this entry. Should be something like `9606`, ie the NCBI Taxonomic id
-    /// for humans.
+    /// Fetch the taxid for this entry. Should be something like `9606`, ie the NCBI
+    /// Taxonomic id for humans.
     fn taxid(&self) -> usize;
 
     /// Given a field, return all values for it.

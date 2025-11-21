@@ -1,7 +1,12 @@
 use clap::Parser;
-use polars::datatypes::DataType::{Int64, List};
-use polars::lazy::dsl::col;
-use polars::prelude::*;
+use polars::{
+    datatypes::DataType::{
+        Int64,
+        List,
+    },
+    lazy::dsl::col,
+    prelude::*,
+};
 use std::fs;
 
 #[derive(Parser, Debug)]

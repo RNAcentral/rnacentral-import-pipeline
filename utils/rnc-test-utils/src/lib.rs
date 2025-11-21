@@ -1,7 +1,10 @@
 use std::{
     error::Error,
     io,
-    io::{BufRead, Write},
+    io::{
+        BufRead,
+        Write,
+    },
     process::Output,
 };
 

@@ -1,17 +1,34 @@
-use std::{collections::HashSet, iter::FromIterator};
+use std::{
+    collections::HashSet,
+    iter::FromIterator,
+};
 
 use crate::{
-    fields::{GeneEntry, GeneFields, SoRnaTreeField},
+    fields::{
+        GeneEntry,
+        GeneFields,
+        SoRnaTreeField,
+    },
     genes::region::GeneRegion,
-    search_xml::{SearchEntry, SearchValue},
+    search_xml::{
+        SearchEntry,
+        SearchValue,
+    },
     sequences::{
         accession::CrossReference,
         normalized::Normalized,
-        so_tree::{SoMapping, SoName, SoTree},
+        so_tree::{
+            SoMapping,
+            SoName,
+            SoTree,
+        },
     },
     utils::set_or_check,
 };
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use super::gene_member::GeneMember;
 use log;

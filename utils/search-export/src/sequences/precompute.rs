@@ -1,5 +1,11 @@
-use serde::{Deserialize, Serialize};
-use std::{convert::TryFrom, path::Path};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+use std::{
+    convert::TryFrom,
+    path::Path,
+};
 
 use serde_with::CommaSeparator;
 

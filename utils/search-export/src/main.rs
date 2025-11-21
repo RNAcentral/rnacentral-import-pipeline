@@ -3,7 +3,11 @@ use structopt::StructOpt;
 
 use anyhow::Result;
 
-use strum_macros::{Display, EnumIter, EnumString};
+use strum_macros::{
+    Display,
+    EnumIter,
+    EnumString,
+};
 
 pub mod fields;
 pub mod genes;

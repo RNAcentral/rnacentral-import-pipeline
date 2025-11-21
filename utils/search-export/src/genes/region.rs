@@ -1,11 +1,24 @@
-use std::{collections::HashMap, iter::FromIterator, path::Path};
+use std::{
+    collections::HashMap,
+    iter::FromIterator,
+    path::Path,
+};
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use anyhow::Result;
-use rnc_core::grouper::{self, Grouped};
+use rnc_core::grouper::{
+    self,
+    Grouped,
+};
 
-use crate::{sequences::so_tree::SoId, utils::set_or_check};
+use crate::{
+    sequences::so_tree::SoId,
+    utils::set_or_check,
+};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SequenceWithRegions {

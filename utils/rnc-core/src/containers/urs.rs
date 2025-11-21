@@ -1,13 +1,19 @@
 use std::{
     error::Error,
     fs::File,
-    io::{BufRead, BufReader},
+    io::{
+        BufRead,
+        BufReader,
+    },
     path::Path,
 };
 
 use fnv::FnvHashSet;
 
-use crate::{urs::Urs, urs_taxid::UrsTaxid};
+use crate::{
+    urs::Urs,
+    urs_taxid::UrsTaxid,
+};
 
 pub trait UrsStore {
     fn add(&mut self, urs: &Urs);

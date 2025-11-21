@@ -1,15 +1,25 @@
 use std::{
     fs::File,
     io,
-    io::{BufRead, BufReader},
+    io::{
+        BufRead,
+        BufReader,
+    },
     path::Path,
 };
 
-use fnv::{FnvHashMap, FnvHashSet};
+use fnv::{
+    FnvHashMap,
+    FnvHashSet,
+};
 
 use thiserror::Error;
 
-use crate::{urs::Urs, urs_taxid, urs_taxid::UrsTaxid};
+use crate::{
+    urs::Urs,
+    urs_taxid,
+    urs_taxid::UrsTaxid,
+};
 
 #[derive(Error, Debug)]
 pub enum Error {

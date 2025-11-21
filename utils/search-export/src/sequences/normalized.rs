@@ -1,16 +1,38 @@
-use std::{convert::TryInto, iter::FromIterator, num::TryFromIntError};
+use std::{
+    convert::TryInto,
+    iter::FromIterator,
+    num::TryFromIntError,
+};
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use thiserror::Error;
 
-use rnc_core::{urs, urs_taxid};
+use rnc_core::{
+    urs,
+    urs_taxid,
+};
 
 use crate::{
-    fields::{SequenceEntry, SequenceFields, SoRnaTreeField},
-    search_xml::{SearchEntry, SearchValue},
+    fields::{
+        SequenceEntry,
+        SequenceFields,
+        SoRnaTreeField,
+    },
+    search_xml::{
+        SearchEntry,
+        SearchValue,
+    },
     sequences::{
-        accession::{AccessionVec, CrossReference, RawAccession, ReferenceVec},
+        accession::{
+            AccessionVec,
+            CrossReference,
+            RawAccession,
+            ReferenceVec,
+        },
         basic::Basic,
         crs::CrsVec,
         editing_events::EditingEvent,

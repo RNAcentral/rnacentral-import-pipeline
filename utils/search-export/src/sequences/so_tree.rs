@@ -1,17 +1,28 @@
 use core::{
-    convert::{Into, TryFrom},
-    num::NonZeroU16,
-    num::NonZeroU32,
+    convert::{
+        Into,
+        TryFrom,
+    },
+    num::{
+        NonZeroU16,
+        NonZeroU32,
+    },
 };
 use std::{
     collections::HashMap,
     fmt,
     fs::File,
-    io::{BufRead, BufReader},
+    io::{
+        BufRead,
+        BufReader,
+    },
     path::Path,
 };
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use anyhow::Result;
 use thiserror::Error;
@@ -33,8 +44,8 @@ pub enum SoIdError {
     ZeroValue,
 }
 
-/// This is a wrapper around SO ids, like `SO:0000374`. This is used to track and esnure that the
-/// ids are used where they are meant to and names where they should be.
+/// This is a wrapper around SO ids, like `SO:0000374`. This is used to track and esnure
+/// that the ids are used where they are meant to and names where they should be.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
 #[serde(try_from = "String", into = "String")]
 pub struct SoId(NonZeroU32);
@@ -200,8 +211,8 @@ impl SoTreeEntry {
     }
 }
 
-/// Load a flie of SO information. The file should be a JSONL (one JSON object per line) formatted
-/// file, where each line is an SoLine.
+/// Load a flie of SO information. The file should be a JSONL (one JSON object per line)
+/// formatted file, where each line is an SoLine.
 pub fn load(filename: &Path) -> Result<SoMapping> {
     let mut map: HashMap<SoId, SoTree> = HashMap::new();
     let file = File::open(filename)?;

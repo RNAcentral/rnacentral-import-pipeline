@@ -1,6 +1,9 @@
 use std::path::Path;
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use anyhow::Result;
 

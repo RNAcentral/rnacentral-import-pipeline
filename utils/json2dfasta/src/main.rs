@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::{
+    Context,
+    Result,
+};
 
 use serde::Deserialize;
 

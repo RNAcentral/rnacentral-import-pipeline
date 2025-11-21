@@ -1,8 +1,16 @@
 use std::{
     fs::File,
-    io::{self, BufRead, BufReader, Read},
+    io::{
+        self,
+        BufRead,
+        BufReader,
+        Read,
+    },
     marker::PhantomData,
-    path::{Path, PathBuf},
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 use thiserror::Error;

@@ -1,17 +1,30 @@
 use std::{
-    cmp::Ordering::{Equal, Greater, Less},
+    cmp::Ordering::{
+        Equal,
+        Greater,
+        Less,
+    },
     fs::File,
     io::BufReader,
     path::Path,
 };
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use itertools::Itertools;
 use serde_json::error;
-use sorted_iter::{assume::*, SortedPairIterator};
+use sorted_iter::{
+    assume::*,
+    SortedPairIterator,
+};
 
-use anyhow::{anyhow, Result};
+use anyhow::{
+    anyhow,
+    Result,
+};
 
 use polars::prelude::*;
 
@@ -134,10 +147,12 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
 
     // let check: LazyFrame = selection.clone();
 
-    // // // check we are not in a catastrophic error state - precompute should never be newer than
-    // // // xref
-    // let selected_urs = selection.filter(col("selected").eq(true)).with_streaming(streaming).collect()?;
-    // let error_urs = check.filter(col("error_state").eq(true)).with_streaming(streaming).collect()?;
+    // // // check we are not in a catastrophic error state - precompute should never be newer
+    // than // // xref
+    // let selected_urs =
+    // selection.filter(col("selected").eq(true)).with_streaming(streaming).collect()?;
+    // let error_urs =
+    // check.filter(col("error_state").eq(true)).with_streaming(streaming).collect()?;
     // if error_urs.height() > 0 {
     //     return Err(anyhow!("Precompute newer than xref for these UPIs: {:?}", error_urs));
     // }
@@ -178,7 +193,10 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{distributions::Alphanumeric, Rng};
+    use rand::{
+        distributions::Alphanumeric,
+        Rng,
+    };
     use std::io::Cursor; // 0.8
 
     fn get_random_fname() -> String {
