@@ -51,4 +51,11 @@ mod gene_preprocessing {
 
         Ok(count)
     }
+
+    #[pyfunction]
+    fn distance_to_agreement(exon_a_5p: Vec<i64>, exon_b_5p: Vec<i64>) -> PyResult<Vec<i64>> {
+        Ok(vec![(exon_a_5p[0] - exon_b_5p[0]).abs(), (exon_a_5p[1] - exon_b_5p[1]).abs()])
+        // Ok(exon_a_5p.iter().zip(exon_b_5p.iter()).map(|(xa, xb)|->
+        // Vec<i64>{vec![(xa[0]-xb[0]).abs(), (xa[1]-xb[1]).abs()]}).collect())
+    }
 }
