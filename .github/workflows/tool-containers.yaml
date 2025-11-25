@@ -1,0 +1,119 @@
+# GitHub Actions workflow for building and pushing tool containers
+# These containers cache slow-to-build bioinformatics tools (Infernal, Samtools)
+
+name: Build and Push Tool Containers
+
+on:
+  push:
+    branches: ['master', 'dev']
+    paths:
+      - 'containers/infernal/**'
+      - 'containers/samtools/**'
+      - '.github/workflows/tool-containers.yaml'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild all tool containers'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      infernal: ${{ steps.changes.outputs.infernal }}
+      samtools: ${{ steps.changes.outputs.samtools }}
+      force: ${{ github.event.inputs.force_rebuild == 'true' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed files
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.force_rebuild }}" = "true" ]; then
+            echo "infernal=true" >> $GITHUB_OUTPUT
+            echo "samtools=true" >> $GITHUB_OUTPUT
+          else
+            # Check if infernal files changed
+            if git diff --name-only HEAD^ HEAD | grep -q "^containers/infernal/"; then
+              echo "infernal=true" >> $GITHUB_OUTPUT
+            else
+              echo "infernal=false" >> $GITHUB_OUTPUT
+            fi
+
+            # Check if samtools files changed
+            if git diff --name-only HEAD^ HEAD | grep -q "^containers/samtools/"; then
+              echo "samtools=true" >> $GITHUB_OUTPUT
+            else
+              echo "samtools=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build-infernal:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.infernal == 'true' || needs.detect-changes.outputs.force == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build Infernal container
+        run: docker build -t rnacentral/infernal:1.1.2 -f containers/infernal/Dockerfile containers/infernal/
+
+      - name: Tag as latest
+        run: docker tag rnacentral/infernal:1.1.2 rnacentral/infernal:latest
+
+      - name: Push versioned tag
+        run: docker push rnacentral/infernal:1.1.2
+
+      - name: Push latest tag
+        run: docker push rnacentral/infernal:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'Infernal container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
+
+  build-samtools:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.samtools == 'true' || needs.detect-changes.outputs.force == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build Samtools container
+        run: docker build -t rnacentral/samtools:1.18 -f containers/samtools/Dockerfile containers/samtools/
+
+      - name: Tag as latest
+        run: docker tag rnacentral/samtools:1.18 rnacentral/samtools:latest
+
+      - name: Push versioned tag
+        run: docker push rnacentral/samtools:1.18
+
+      - name: Push latest tag
+        run: docker push rnacentral/samtools:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'Samtools container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
