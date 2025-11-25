@@ -13,7 +13,7 @@ rust:
 	mv -f target/release/ftp-export bin
 	mv -f target/release/json2dfasta bin
 	mv -f target/release/bed-expander bin
-	cd utils/genes-preprocessing && maturin develop --release
+	cd utils/genes-preprocessing && maturin build --release -o wheel && pip install wheel/*
 
 
 clean:
