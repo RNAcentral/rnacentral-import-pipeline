@@ -69,7 +69,7 @@ RUN \
 # Install blat
 RUN \
     wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip -O blat.zip && \
-    unzip blatSuite.38.zip -d blat_suite && \
+    unzip blat.zip -d blat_suite && \
     rm blat.zip
 
 
