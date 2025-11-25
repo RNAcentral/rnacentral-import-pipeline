@@ -20,19 +20,19 @@ all: infernal samtools
 
 # Build CPAT container (existing target)
 cpat: cpat/Dockerfile
-	docker build -t "$(cpat)" -f $^ .
+	docker buildx build -t "$(cpat)" -f $^ --platform linux/amd64 .
 	docker push $(cpat)
 
 # Build Infernal container
 infernal:
 	@echo "Building Infernal $(INFERNAL_VERSION) container..."
-	docker build -t $(INFERNAL_IMAGE) -f infernal/Dockerfile .
+	docker buildx build -t $(INFERNAL_IMAGE) -f infernal/Dockerfile --platform linux/amd64 .
 	docker tag $(INFERNAL_IMAGE) $(INFERNAL_LATEST)
 
 # Build Samtools container
 samtools:
 	@echo "Building Samtools $(SAMTOOLS_VERSION) container..."
-	docker build -t $(SAMTOOLS_IMAGE) -f samtools/Dockerfile .
+	docker buildx build -t $(SAMTOOLS_IMAGE) -f samtools/Dockerfile --platform linux/amd64 .
 	docker tag $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST)
 
 # Push Infernal to Docker Hub
