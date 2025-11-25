@@ -68,11 +68,11 @@ RUN \
 
 # Install blat
 RUN \
-    wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip && \
     mkdir blat_suite && \
     cd blat_suite && \
-    unzip ../blatSuite.38.zip && \
-    rm ../blatSuite.38.zip
+    wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip && \
+    unzip blatSuite.38.zip && \
+    rm blatSuite.38.zip
 
 
 # Install seqkit
@@ -122,7 +122,7 @@ COPY pyproject.toml $RNACENTRAL_IMPORT_PIPELINE/pyproject.toml
 COPY uv.lock $RNACENTRAL_IMPORT_PIPELINE/uv.lock
 
 WORKDIR "$RNA/rnacentral-import-pipeline"
-RUN /root/.local/bin/uv sync --no-editable --frozen
+RUN uv sync --no-editable --frozen
 ENV PATH="$RNA/rnacentral-import-pipeline/.venv/bin:$PATH"
 RUN python3 -m nltk.downloader words
 
