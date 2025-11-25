@@ -68,11 +68,9 @@ RUN \
 
 # Install blat
 RUN \
-    mkdir blat_suite && \
-    cd blat_suite && \
-    wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip && \
-    unzip blatSuite.38.zip && \
-    rm blatSuite.38.zip
+    wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip -O blat.zip && \
+    unzip blatSuite.38.zip -d blat_suite && \
+    rm blat.zip
 
 
 # Install seqkit
