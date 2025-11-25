@@ -124,7 +124,6 @@ COPY uv.lock $RNACENTRAL_IMPORT_PIPELINE/uv.lock
 WORKDIR "$RNA/rnacentral-import-pipeline"
 RUN /root/.local/bin/uv sync --no-editable --frozen
 ENV PATH="$RNA/rnacentral-import-pipeline/.venv/bin:$PATH"
-# RUN echo $PATH && ls /root/.local/bin && ls -a $RNA/rnacentral-import-pipeline/.venv/bin && exit 1
 RUN python3 -m nltk.downloader words
 
 ## Download Rust toolchain
