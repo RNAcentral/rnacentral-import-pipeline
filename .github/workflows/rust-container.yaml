@@ -1,0 +1,47 @@
+# GitHub Actions workflow for building and pushing Rust utilities container
+# Rebuilds when Rust code changes (utils/**, Cargo.toml, Cargo.lock)
+
+name: Build Rust Utilities Container
+
+on:
+  push:
+    branches: ['master', 'dev']
+    paths:
+      - 'utils/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'containers/rust-utils/**'
+      - '.github/workflows/rust-container.yaml'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild Rust utilities container'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-rust-utils:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build Rust utilities container
+        run: docker build -t rnacentral/rust-utils:latest -f containers/rust-utils/Dockerfile .
+
+      - name: Push to Docker Hub
+        run: docker push rnacentral/rust-utils:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'Rust utilities container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true

@@ -22,7 +22,75 @@ jobs:
          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
          MSG_MINIMAL: true
 
+  wait-for-rust-build:
+    runs-on: ubuntu-latest
+    outputs:
+      rust_changed: ${{ steps.check-rust.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Check if Rust files changed
+        id: check-rust
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -qE '^(utils/|Cargo\.(toml|lock))'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Rust files changed, waiting for rust-container workflow..."
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No Rust changes, skipping wait"
+          fi
+
+      - name: Wait for Rust container build
+        if: steps.check-rust.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Waiting for rust-container workflow to complete..."
+          sleep 10  # Give workflow time to start
+
+          # Wait up to 30 minutes for rust-container workflow to complete
+          timeout=1800
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            # Check for running or completed rust-container workflows for this commit
+            status=$(gh run list \
+              --workflow=rust-container.yaml \
+              --commit=${{ github.sha }} \
+              --json status,conclusion \
+              --jq '.[0] | "\(.status):\(.conclusion)"')
+
+            if [ -z "$status" ]; then
+              echo "No rust-container workflow found yet, waiting..."
+              sleep 10
+              elapsed=$((elapsed + 10))
+              continue
+            fi
+
+            workflow_status=$(echo "$status" | cut -d: -f1)
+            workflow_conclusion=$(echo "$status" | cut -d: -f2)
+
+            if [ "$workflow_status" = "completed" ]; then
+              if [ "$workflow_conclusion" = "success" ]; then
+                echo "✓ Rust container build completed successfully"
+                exit 0
+              else
+                echo "✗ Rust container build failed with conclusion: $workflow_conclusion"
+                exit 1
+              fi
+            fi
+
+            echo "Rust container build status: $workflow_status (elapsed: ${elapsed}s)"
+            sleep 15
+            elapsed=$((elapsed + 15))
+          done
+
+          echo "✗ Timeout waiting for rust-container workflow"
+          exit 1
+
   create-docker-image:
+    needs: wait-for-rust-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
