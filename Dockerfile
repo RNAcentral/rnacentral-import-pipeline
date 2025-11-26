@@ -19,7 +19,8 @@ ENV PATH="/root/.local/bin:$PATH"
 
 # Copy dependency files and install
 WORKDIR /app
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml .
+COPY uv.lock .
 RUN uv sync --no-editable --frozen
 
 # Download NLTK data
