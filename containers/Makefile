@@ -13,10 +13,11 @@ INFERNAL_IMAGE=$(DOCKER_REPO)/infernal:$(INFERNAL_VERSION)
 INFERNAL_LATEST=$(DOCKER_REPO)/infernal:latest
 SAMTOOLS_IMAGE=$(DOCKER_REPO)/samtools:$(SAMTOOLS_VERSION)
 SAMTOOLS_LATEST=$(DOCKER_REPO)/samtools:latest
+RUST_UTILS_IMAGE=$(DOCKER_REPO)/rust-utils:latest
 
-.PHONY: all cpat infernal samtools push-infernal push-samtools push-all clean test
+.PHONY: all cpat infernal samtools rust-utils push-infernal push-samtools push-rust-utils push-all clean test
 
-all: infernal samtools
+all: infernal samtools rust-utils
 
 # Build CPAT container (existing target)
 cpat: cpat/Dockerfile
@@ -35,6 +36,12 @@ samtools:
 	docker buildx build -t $(SAMTOOLS_IMAGE) -f samtools/Dockerfile --platform linux/amd64 .
 	docker tag $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST)
 
+# Build Rust utilities container
+rust-utils:
+	@echo "Building Rust utilities container..."
+	docker buildx build -t $(RUST_UTILS_IMAGE) -f rust-utils/Dockerfile --platform linux/amd64 ../
+	@echo "✓ Rust utilities built successfully"
+
 # Push Infernal to Docker Hub
 push-infernal: infernal
 	@echo "Pushing Infernal images to Docker Hub..."
@@ -47,11 +54,16 @@ push-samtools: samtools
 	docker push $(SAMTOOLS_IMAGE)
 	docker push $(SAMTOOLS_LATEST)
 
+# Push Rust utilities to Docker Hub
+push-rust-utils: rust-utils
+	@echo "Pushing Rust utilities image to Docker Hub..."
+	docker push $(RUST_UTILS_IMAGE)
+
 # Push all tool containers
-push-all: push-infernal push-samtools
+push-all: push-infernal push-samtools push-rust-utils
 
 # Test tool containers locally
-test: infernal samtools
+test: infernal samtools rust-utils
 	@echo "Testing Infernal container..."
 	docker run --rm $(INFERNAL_IMAGE) cmscan -h > /dev/null
 	docker run --rm $(INFERNAL_IMAGE) cmbuild -h > /dev/null
@@ -61,9 +73,16 @@ test: infernal samtools
 	docker run --rm $(SAMTOOLS_IMAGE) samtools --version
 	docker run --rm $(SAMTOOLS_IMAGE) tabix --version
 	@echo "✓ Samtools tests passed"
+	@echo ""
+	@echo "Testing Rust utilities container..."
+	docker run --rm $(RUST_UTILS_IMAGE) json2fasta --help > /dev/null
+	docker run --rm $(RUST_UTILS_IMAGE) precompute --help > /dev/null
+	docker run --rm $(RUST_UTILS_IMAGE) search-export --help > /dev/null
+	@echo "✓ Rust utilities tests passed"
 
 # Clean up local tool container images
 clean:
 	@echo "Removing tool container images..."
 	docker rmi $(INFERNAL_IMAGE) $(INFERNAL_LATEST) || true
 	docker rmi $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST) || true
+	docker rmi $(RUST_UTILS_IMAGE) || true

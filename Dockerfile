@@ -7,29 +7,8 @@ FROM rnacentral/infernal:1.1.2 AS infernal
 # Stage 2: Pull pre-built Samtools/HTSlib container
 FROM rnacentral/samtools:1.18 AS samtools
 
-# Stage 3: Rust builder - compiles Rust utilities
-FROM python:3.11.14-trixie AS rust-builder
-
-# Install Rust toolchain only
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:$PATH"
-ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
-
-# Copy Rust source and build
-WORKDIR /build
-COPY utils ./utils
-COPY Cargo.toml Cargo.lock Makefile ./
-RUN cargo build --release && \
-    mkdir /rust-bins && \
-    mv target/release/json2fasta \
-       target/release/split-ena \
-       target/release/expand-urs \
-       target/release/precompute \
-       target/release/search-export \
-       target/release/ftp-export \
-       target/release/json2dfasta \
-       target/release/bed-expander \
-       /rust-bins/
+# Stage 3: Pull pre-built Rust utilities container
+FROM rnacentral/rust-utils:latest AS rust-utils
 
 # Stage 4: Python environment builder
 FROM python:3.11.14-trixie AS python-builder
@@ -135,8 +114,8 @@ ENV PATH="/root/.local/bin:$PATH"
 ENV RNACENTRAL_IMPORT_PIPELINE="$RNA/rnacentral-import-pipeline"
 COPY --from=python-builder /app/.venv $RNACENTRAL_IMPORT_PIPELINE/.venv
 
-# Copy Rust binaries from builder
-COPY --from=rust-builder /rust-bins/* $RNACENTRAL_IMPORT_PIPELINE/bin/
+# Copy Rust binaries from rust-utils container
+COPY --from=rust-utils /rna/bin/* $RNACENTRAL_IMPORT_PIPELINE/bin/
 
 # Copy project files (needed for imports and runtime)
 COPY . $RNACENTRAL_IMPORT_PIPELINE/
