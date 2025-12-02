@@ -17,15 +17,7 @@ COPY Cargo.toml Cargo.lock Makefile ./
 # Build all Rust utilities in release mode
 RUN cargo build --release && \
     mkdir /rust-bins && \
-    mv target/release/json2fasta \
-       target/release/split-ena \
-       target/release/expand-urs \
-       target/release/precompute \
-       target/release/search-export \
-       target/release/ftp-export \
-       target/release/json2dfasta \
-       target/release/bed-expander \
-       /rust-bins/
+    find target/release -maxdepth 1 -type f -executable -exec mv {} /rust-bins/ \;
 
 # Stage 2: Final - minimal runtime image
 FROM python:3.11.14-trixie
