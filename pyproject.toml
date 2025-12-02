@@ -1,4 +1,4 @@
-[tool.poetry]
+[project]
 name = "rnacentral_pipeline"
 version = "0.1.0"
 description = "The pipeline that imports all RNAcentral data"

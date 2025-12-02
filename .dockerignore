@@ -4,6 +4,6 @@
 !Cargo.lock
 !utils
 !openssl
-!poetry.lock
+!uv.lock
 !pyproject.toml
 !Makefile

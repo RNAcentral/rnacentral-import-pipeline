@@ -37,7 +37,7 @@ process get_partitions {
 
 
 process fetch_xrefs {
-  // when { params.r2dt.run }
+  when { params.r2dt.run }
 
   input:
   tuple val(partition), path(query)
@@ -56,7 +56,7 @@ process fetch_xrefs {
 }
 
 process fetch_tracked {
-  // when { params.r2dt.run }
+  when { params.r2dt.run }
 
   input:
   tuple val(_flag)
@@ -76,7 +76,7 @@ process fetch_tracked {
 
 
 process extract_sequences {
-  // when { params.r2dt.run }
+  when { params.r2dt.run }
 
   memory '12GB'
 

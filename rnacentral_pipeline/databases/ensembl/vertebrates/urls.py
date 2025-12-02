@@ -23,18 +23,17 @@ from ftplib import FTP
 from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 
 
-def list_releases(ftp: FTP) -> ty.List[str]:
-    return [f for f in ftp.nlst() if f.startswith("release-")]
 
-
-def latest_release(releases: ty.List[str], ftp: FTP) -> str:
+def latest_release(ftp: FTP) -> str:
     ## Parse the readme for the current release to avoid getting a half baked release
     readme_lines = []
     ftp.retrlines("RETR current_README", readme_lines.append)
     cur_readme = "\n".join(readme_lines)
     pattern = r"Ensembl Release (\d+) Databases."
-    release = re.search(pattern, cur_readme).group(1)
-    print(f"Ensembl release {release}")
+    match = re.search(pattern, cur_readme)
+    if not match:
+        raise ValueError("Could not determine latest Ensembl release from README")
+    release = match.group(1)
     return f"release-{release}"
 
 
@@ -71,7 +70,6 @@ def urls_for(host: str) -> ty.Iterable[FtpInfo]:
     with FTP(host) as ftp:
         ftp.login()
         ftp.cwd("pub")
-        releases = list_releases(ftp)
-        latest = latest_release(releases, ftp)
+        latest = latest_release(ftp)
         with species_info(ftp, latest) as info:
             yield from generate_paths(f"ftp://{host}/pub", latest, info)
