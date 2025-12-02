@@ -65,8 +65,8 @@ push-all: push-infernal push-samtools push-rust-utils
 # Test tool containers locally
 test: infernal samtools rust-utils
 	@echo "Testing Infernal container..."
-	docker run --rm $(INFERNAL_IMAGE) cmscan -h > /dev/null
-	docker run --rm $(INFERNAL_IMAGE) cmbuild -h > /dev/null
+	docker run --rm $(INFERNAL_IMAGE) cmscan -h
+	docker run --rm $(INFERNAL_IMAGE) cmbuild -h
 	@echo "✓ Infernal tests passed"
 	@echo ""
 	@echo "Testing Samtools container..."
@@ -75,9 +75,9 @@ test: infernal samtools rust-utils
 	@echo "✓ Samtools tests passed"
 	@echo ""
 	@echo "Testing Rust utilities container..."
-	docker run --rm $(RUST_UTILS_IMAGE) json2fasta --help > /dev/null
-	docker run --rm $(RUST_UTILS_IMAGE) precompute --help > /dev/null
-	docker run --rm $(RUST_UTILS_IMAGE) search-export --help > /dev/null
+	docker run --rm $(RUST_UTILS_IMAGE) json2fasta --help
+	docker run --rm $(RUST_UTILS_IMAGE) precompute --help
+	docker run --rm $(RUST_UTILS_IMAGE) search-export --help
 	@echo "✓ Rust utilities tests passed"
 
 # Clean up local tool container images
