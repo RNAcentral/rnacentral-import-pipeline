@@ -2,7 +2,7 @@
 # This container provides Samtools, HTSlib tools (tabix, bgzip) and libraries
 
 # Stage 1: Builder - compiles HTSlib and Samtools from source
-FROM python:3.11.14-trixie AS builder
+FROM debian:trixie-slim AS builder
 
 WORKDIR /build
 
@@ -37,7 +37,7 @@ RUN wget https://github.com/samtools/samtools/releases/download/1.18/samtools-1.
     make install
 
 # Stage 2: Final - minimal runtime image with libraries
-FROM python:3.11.14-trixie
+FROM debian:trixie-slim
 
 # Install only runtime dependencies (no -dev packages)
 RUN apt update && apt install -y \
@@ -53,7 +53,6 @@ COPY --from=builder /usr/local/bin/samtools /usr/local/bin/
 COPY --from=builder /usr/local/bin/tabix /usr/local/bin/
 COPY --from=builder /usr/local/bin/bgzip /usr/local/bin/
 COPY --from=builder /usr/local/lib/libhts* /usr/local/lib/
-COPY --from=builder /usr/local/include/htslib /usr/local/include/htslib/
 
 # Run ldconfig to register shared libraries
 RUN ldconfig

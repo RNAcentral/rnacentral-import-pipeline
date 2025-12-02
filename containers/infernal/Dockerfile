@@ -2,13 +2,13 @@
 # This container provides the Infernal bioinformatics tool suite
 
 # Stage 1: Builder - compiles Infernal from source
-FROM python:3.11.14-trixie AS builder
+FROM debian:trixie-slim AS builder
 
 ENV RNA=/rna
 WORKDIR $RNA
 
 # Install minimal build dependencies
-RUN apt update && apt install -y gcc make && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y gcc make curl && rm -rf /var/lib/apt/lists/*
 
 # Download and build Infernal
 RUN curl -OL http://eddylab.org/infernal/infernal-1.1.2.tar.gz && \
@@ -22,7 +22,7 @@ RUN curl -OL http://eddylab.org/infernal/infernal-1.1.2.tar.gz && \
     make install
 
 # Stage 2: Final - minimal runtime image
-FROM python:3.11.14-trixie
+FROM debian:trixie-slim
 
 ENV RNA=/rna
 WORKDIR $RNA
