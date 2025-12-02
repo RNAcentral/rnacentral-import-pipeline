@@ -19,8 +19,12 @@ import click
 
 from rnacentral_pipeline.rnacentral.genes.random_forest import classify as rf_classify
 from rnacentral_pipeline.rnacentral.genes.random_forest import convert as gff_convert
-from rnacentral_pipeline.rnacentral.genes.random_forest import data, preprocessing
-from rnacentral_pipeline.rnacentral.genes.random_forest import train, evaluate
+from rnacentral_pipeline.rnacentral.genes.random_forest import (
+    data,
+    evaluate,
+    preprocessing,
+    train,
+)
 
 
 @click.group("genes")
@@ -40,7 +44,7 @@ def train_cli():
     pass
 
 
-# Inference subgroup  
+# Inference subgroup
 @cli.group("infer")
 def infer_cli():
     """
@@ -48,12 +52,14 @@ def infer_cli():
     """
     pass
 
+
 @cli.group("utils")
 def utils_cli():
     """
     Utility commands for gene processing.
     """
     pass
+
 
 ## New RF based gene models
 
@@ -224,7 +230,9 @@ def convert(gff_file, taxid, regions_data):
         raise click.ClickException(f"GFF file not found: {gff_file}")
     output_name = Path(gff_file).stem + "_transcripts.parquet"
     output_path = Path(gff_file).parent / output_name
-    transcripts_table = gff_convert.gff_to_polars(Path(gff_file), taxid=taxid, regions_data=Path(regions_data))
+    transcripts_table = gff_convert.gff_to_polars(
+        Path(gff_file), taxid=taxid, regions_data=Path(regions_data)
+    )
     transcripts_table.write_parquet(output_path)
     click.echo(
         f"Converted {gff_file} to {output_path} with {transcripts_table.height} transcripts."
@@ -234,35 +242,51 @@ def convert(gff_file, taxid, regions_data):
 @utils_cli.command("create-bedfile")
 @click.option("--bed_file", required=True, help="BEDfile output path")
 @click.option("--taxid", type=int, help="Taxonomy ID for the BED file")
+@click.option("--assembly_id", help="Assembly ID to filter transcripts")
 @click.option(
     "--conn_str",
     envvar="PGDATABASE",
     required=True,
     help="Database connection string (can use PGDATABASE env var)",
 )
-def create_bedfile(bed_file, taxid, conn_str):
+def create_bedfile(bed_file, taxid, assembly_id, conn_str):
     """
     Query the genes table in the database and convert the data there into a bed file for analysis.
     """
     gff_convert.database_to_bed(
         output_path=Path(bed_file),
         taxid=taxid,
+        assembly_id=assembly_id,
         conn_str=conn_str,
     )
-    
-    click.echo(
-        f"Converted database records to {bed_file} with."
-    )
+
+    click.echo(f"Converted database records to {bed_file} with.")
 
 
 @utils_cli.command("merge")
 @click.option("--previous_genes", required=True, help="Path to previous genes file")
 @click.option("--next_genes", required=True, help="Path to new genes file")
 @click.option("--output", required=True, help="Output file path for merged genes")
-@click.option("--inactive_ids", type=click.Path(exists=True), default=None, help="Path to inactive IDs file. Should be a CSV with one column of URS'.")
-@click.option("--prev_release_number", type=int, default=None, help="Previous release number")
-@click.option("--next_release_number", type=int, default=None, help="Next release number")
-def merge(previous_genes, next_genes, output, inactive_ids, prev_release_number, next_release_number):
+@click.option(
+    "--inactive_ids",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to inactive IDs file. Should be a CSV with one column of URS'.",
+)
+@click.option(
+    "--prev_release_number", type=int, default=None, help="Previous release number"
+)
+@click.option(
+    "--next_release_number", type=int, default=None, help="Next release number"
+)
+def merge(
+    previous_genes,
+    next_genes,
+    output,
+    inactive_ids,
+    prev_release_number,
+    next_release_number,
+):
     """
     Merge two gene files, updating IDs and handling inactive genes.
 
@@ -273,7 +297,7 @@ def merge(previous_genes, next_genes, output, inactive_ids, prev_release_number,
     1. If the previous gene has a perfect overlap, the two are merged and the version is updated
     2. Within 1kb around each gene, we merge genes that have total region overlap > 0.9, and update the version
 
-    If a gene is present in the previous release but not the next, it is discarded. Genes present in the next 
+    If a gene is present in the previous release but not the next, it is discarded. Genes present in the next
     release but not the previous are added as new genes.
     """
     previous_genes = Path(previous_genes)
@@ -286,9 +310,14 @@ def merge(previous_genes, next_genes, output, inactive_ids, prev_release_number,
         raise click.ClickException(f"Next genes file not found: {next_genes}")
 
     merged_genes = data.merge_genes(
-        previous_genes, next_genes,output, inactive_ids, prev_release_number, next_release_number
+        previous_genes,
+        next_genes,
+        output,
+        inactive_ids,
+        prev_release_number,
+        next_release_number,
     )
-    
+
     merged_genes.write_json(output)
     click.echo(f"Merged genes saved to {output}")
 
@@ -303,12 +332,13 @@ def process_metadata(final_genes, metadata_output, db_str):
     click.echo(f"Metadata written to {metadata_output}")
 
 
-
-
 @utils_cli.command("store-genes")
 @click.argument("final_genes", type=click.Path(exists=True))
 @click.option("--taxid", type=int)
-@click.option("--db_str", envvar="PGDATABASE",)
+@click.option(
+    "--db_str",
+    envvar="PGDATABASE",
+)
 def store(final_genes, taxid, db_str):
     """
     Store final genes in the database.
@@ -327,7 +357,10 @@ def store(final_genes, taxid, db_str):
 
 @utils_cli.command("store-metadata")
 @click.argument("metadata_file", type=click.Path(exists=True))
-@click.option("--db_str", envvar="PGDATABASE",)
+@click.option(
+    "--db_str",
+    envvar="PGDATABASE",
+)
 def store_metadata(metadata_file, db_str):
     """
     Store gene metadata in the database.
@@ -360,7 +393,12 @@ def convert_csv(input_csv, output_parquet):
 
 @train_cli.command("fetch-training-data")
 @click.option("--transcripts_parquet", required=True, help="The input transcripts")
-@click.option("--nearby_distance", default=1000, type=int, help="Distance to search for candidate genes to compare")
+@click.option(
+    "--nearby_distance",
+    default=1000,
+    type=int,
+    help="Distance to search for candidate genes to compare",
+)
 @click.option("--output_parquet", required=True, help="Output Parquet file path")
 def fetch_training_data(transcripts_parquet, nearby_distance, output_parquet):
     """
@@ -370,18 +408,26 @@ def fetch_training_data(transcripts_parquet, nearby_distance, output_parquet):
     within the specified distance and labels them for training.
     """
     if not Path(transcripts_parquet).exists():
-        raise click.ClickException(f"Input transcripts file not found: {transcripts_parquet}")
+        raise click.ClickException(
+            f"Input transcripts file not found: {transcripts_parquet}"
+        )
     candidates_df = train.fetch_training_data(transcripts_parquet, nearby_distance)
     candidates_df.write_parquet(output_parquet)
     click.echo(f"Fetched training data and saved to {output_parquet}")
 
 
 @train_cli.command("prepare-features")
-@click.option("--candidates_parquet", required=True, help="Input Parquet file with candidates")
-@click.option("--transcripts_parquet", required=True, help="Input Parquet file with transcripts")
+@click.option(
+    "--candidates_parquet", required=True, help="Input Parquet file with candidates"
+)
+@click.option(
+    "--transcripts_parquet", required=True, help="Input Parquet file with transcripts"
+)
 @click.option("--so_model_path", required=True, help="SO Node2Vec model path")
 @click.option("--output_parquet", required=True, help="Output Parquet file path")
-def prepare_features(candidates_parquet, transcripts_parquet, so_model_path, output_parquet):
+def prepare_features(
+    candidates_parquet, transcripts_parquet, so_model_path, output_parquet
+):
     """
     Prepare features for training the model.
 
@@ -389,25 +435,61 @@ def prepare_features(candidates_parquet, transcripts_parquet, so_model_path, out
     using the specified SO Node2Vec model.
     """
     if not Path(candidates_parquet).exists():
-        raise click.ClickException(f"Input candidates file not found: {candidates_parquet}")
+        raise click.ClickException(
+            f"Input candidates file not found: {candidates_parquet}"
+        )
     if not Path(so_model_path).exists():
         raise click.ClickException(f"SO model file not found: {so_model_path}")
 
-    features = train.build_training_features(candidates_parquet, transcripts_parquet, so_model_path)
+    features = train.build_training_features(
+        candidates_parquet, transcripts_parquet, so_model_path
+    )
     features.write_parquet(output_parquet)
     click.echo(f"Prepared features and saved to {output_parquet}")
 
 
 @train_cli.command("split-dataset")
-@click.option("--features_parquet", required=True, help="Input Parquet file with features")
-@click.option("--train_path", required=True, help="Output Parquet file for training data")
-@click.option("--val_path", required=True, help="Output Parquet file for validation data")
+@click.option(
+    "--features_parquet", required=True, help="Input Parquet file with features"
+)
+@click.option(
+    "--train_path", required=True, help="Output Parquet file for training data"
+)
+@click.option(
+    "--val_path", required=True, help="Output Parquet file for validation data"
+)
 @click.option("--test_path", required=True, help="Output Parquet file for testing data")
-@click.option("--test_frac", default=0.2, type=float, help="Proportion of data to use for testing (default: 0.2)")
-@click.option("--val_frac", default=0.2, type=float, help="Proportion of data to use for validation (default: 0.2)")
-@click.option("--seed", default=1337, type=int, help="Random seed for reproducibility (default: 1337)")
-@click.option("--hub_path", default=None, help="Repo to upload dataset to on huggingface hub")
-def split_dataset(features_parquet, train_path, val_path, test_path, test_frac, val_frac, seed, hub_path):
+@click.option(
+    "--test_frac",
+    default=0.2,
+    type=float,
+    help="Proportion of data to use for testing (default: 0.2)",
+)
+@click.option(
+    "--val_frac",
+    default=0.2,
+    type=float,
+    help="Proportion of data to use for validation (default: 0.2)",
+)
+@click.option(
+    "--seed",
+    default=1337,
+    type=int,
+    help="Random seed for reproducibility (default: 1337)",
+)
+@click.option(
+    "--hub_path", default=None, help="Repo to upload dataset to on huggingface hub"
+)
+def split_dataset(
+    features_parquet,
+    train_path,
+    val_path,
+    test_path,
+    test_frac,
+    val_frac,
+    seed,
+    hub_path,
+):
     """
     Split the dataset into training, validation, and testing sets.
 
@@ -417,18 +499,49 @@ def split_dataset(features_parquet, train_path, val_path, test_path, test_frac, 
     if not Path(features_parquet).exists():
         raise click.ClickException(f"Input features file not found: {features_parquet}")
 
-    train.split_datasets(features_parquet, train_path, val_path, test_path, test_frac, val_frac, seed, hub_path)
-    click.echo(f"Split dataset into train ({train_path}), val ({val_path}), and test ({test_path})")
+    train.split_datasets(
+        features_parquet,
+        train_path,
+        val_path,
+        test_path,
+        test_frac,
+        val_frac,
+        seed,
+        hub_path,
+    )
+    click.echo(
+        f"Split dataset into train ({train_path}), val ({val_path}), and test ({test_path})"
+    )
 
 
 @train_cli.command("train-model")
-@click.option("--train_data", required=True, help="Input Parquet file with training data")
-@click.option("--model_output", required=True, help="Output folder for the trained models")
-@click.option("--folds", default=5, type=int, help="Number of cross-validation folds (default: 5)")
+@click.option(
+    "--train_data", required=True, help="Input Parquet file with training data"
+)
+@click.option(
+    "--model_output", required=True, help="Output folder for the trained models"
+)
+@click.option(
+    "--folds", default=5, type=int, help="Number of cross-validation folds (default: 5)"
+)
 @click.option("--exclude", multiple=True, help="Columns to exclude from features")
-@click.option("--seed", default=1337, type=int, help="Random seed for reproducibility (default: 1337)")
-@click.option("--basename", default="rf_model", help="Base name for output model files (default: rf_model)")
-@click.option("--n_estimators", default=100, type=int, help="Number of trees in the random forest (default: 100)")
+@click.option(
+    "--seed",
+    default=1337,
+    type=int,
+    help="Random seed for reproducibility (default: 1337)",
+)
+@click.option(
+    "--basename",
+    default="rf_model",
+    help="Base name for output model files (default: rf_model)",
+)
+@click.option(
+    "--n_estimators",
+    default=100,
+    type=int,
+    help="Number of trees in the random forest (default: 100)",
+)
 def train_model(train_data, model_output, folds, exclude, seed, basename, n_estimators):
     """
     Train a Random Forest model using the provided training data.
@@ -441,14 +554,16 @@ def train_model(train_data, model_output, folds, exclude, seed, basename, n_esti
     if not Path(model_output).exists():
         Path(model_output).mkdir(parents=True, exist_ok=True)
 
-    
     train.train(train_data, model_output, folds, exclude, seed, basename, n_estimators)
     click.echo(f"Trained models saved to {model_output}")
+
 
 @train_cli.command("evaluate-model")
 @click.option("--model_path", required=True, help="Path to the trained model file")
 @click.option("--test_data", required=True, help="Input Parquet file with testing data")
-@click.option("--metric_output", required=True, help="Output file for metrics (should be ndjson)")
+@click.option(
+    "--metric_output", required=True, help="Output file for metrics (should be ndjson)"
+)
 @click.option("--exclude", "-e", default=None, multiple=True, help="Columns to exclude")
 def evaluate_model(model_path, test_data, metric_output, exclude):
     """
@@ -468,8 +583,7 @@ def evaluate_model(model_path, test_data, metric_output, exclude):
 
     metrics = evaluate.evaluate_model(model_path, test_data, excluded_columns)
     click.echo("Model evaluation metrics:")
-    
+
     click.echo(metrics)
     # Save metrics to output file
     metrics.write_ndjson(metric_output)
-    

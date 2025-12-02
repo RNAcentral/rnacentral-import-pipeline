@@ -19,8 +19,8 @@ from pathlib import Path
 
 import gffutils
 import polars as pl
-from sqlitedict import SqliteDict
 import psycopg2 as pg
+from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.rnacentral.genes.random_forest import data
 
@@ -93,9 +93,8 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
             else:
                 urs_taxid = f"{urs}_{taxid}"
 
-
             exons = []
-            for exon in db.children(ncrna_gene.id):                
+            for exon in db.children(ncrna_gene.id):
                 exon_start = exon.start
                 exon_stop = exon.stop
                 exon_dict = {
@@ -138,9 +137,11 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
 
     transcript_dataframe = pl.DataFrame(transcript_data)
     ## Assembly ID is not guaranteed to be in the filename, so query it from the DB here
-    ## - Is it possible for a region ID to be on multiple assemblies? 
+    ## - Is it possible for a region ID to be on multiple assemblies?
     ## I don't _think_ it is, but if things go wrong, check here
-    transcript_dataframe = data.add_assembly_region_ids(transcript_dataframe, regions_data)
+    transcript_dataframe = data.add_assembly_region_ids(
+        transcript_dataframe, regions_data
+    )
 
     transcript_dataframe = transcript_dataframe.group_by(
         ["assembly_id", "chromosome", "region_name"], maintain_order=True
@@ -153,7 +154,7 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
         pl.col("strand").first(),
         pl.col("so_type").first(),
     )
-    
+
     return transcript_dataframe
 
 
@@ -172,7 +173,9 @@ def gff_to_polars(path: Path, taxid: int, regions_data: Path) -> pl.DataFrame:
     return load_coordinates(path, taxid, regions_data)
 
 
-def database_to_bed(output_path: Path, taxid: int, conn_str: str) -> None:
+def database_to_bed(
+    output_path: Path, taxid: int, assembly_id: str, conn_str: str
+) -> None:
     """
     Convert transcript data from the database to a BED file format.
 
@@ -183,23 +186,25 @@ def database_to_bed(output_path: Path, taxid: int, conn_str: str) -> None:
     """
     conn = pg.connect(conn_str)
     cur = conn.cursor()
-    
-    cur.execute("""
-        SELECT chromosome, start-1, stop, public_name, 0, strand 
-        FROM rnc_genes 
-        WHERE assembly_id = 'GRCh38'
+
+    cur.execute(
+        """
+        SELECT chromosome, start-1, stop, public_name, 0, strand
+        FROM rnc_genes
+        WHERE assembly_id = %s
         AND taxid = %s
-        AND chromosome IN ('1','2','3','4','5','6','7','8','9','10',
-                          '11','12','13','14','15','16','17','18','19','20',
-                          '21','22','X','Y','MT')
         ORDER BY chromosome, start
-    """, (taxid,))
-    
-    with open(output_path, 'w') as f:
+    """,
+        (
+            assembly_id,
+            taxid,
+        ),
+    )
+
+    with open(output_path, "w") as f:
         for row in cur.fetchall():
-            chrom = f"chr{row[0]}" if not str(row[0]).startswith('chr') else str(row[0])
+            chrom = f"chr{row[0]}" if not str(row[0]).startswith("chr") else str(row[0])
             f.write(f"{chrom}\t{row[1]}\t{row[2]}\t{row[3]}\t{row[4]}\t{row[5]}\n")
-    
+
     cur.close()
     conn.close()
-
