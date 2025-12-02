@@ -4,10 +4,6 @@
 *.nf
 workflows/
 tests/
-utils/
-Cargo.toml
-Cargo.lock
-Makefile
 containers/
 Dockerfile.old
 .dockerignore
