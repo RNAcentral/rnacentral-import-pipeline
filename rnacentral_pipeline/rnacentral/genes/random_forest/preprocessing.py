@@ -15,9 +15,7 @@ limitations under the License.
 
 import bisect
 import multiprocessing as mp
-import os
 import time
-from itertools import product
 from pathlib import Path
 
 import gene_preprocessing as gpp
