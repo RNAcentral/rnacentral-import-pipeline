@@ -36,7 +36,7 @@ process sequences {
 
   """
   export TMPDIR="$baseDir/work/tmp"
-  psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "$PGDATABASE" | sort -u > active-urs
+  psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "$PGDATABASE" | uniq | sort -u > active-urs
   psql -v ON_ERROR_STOP=1 -v 'name=rfam' -f "$computed" "$PGDATABASE" | sort > computed
   comm -23 active-urs computed > urs-to-compute
   psql -q -v ON_ERROR_STOP=1 -f "$compute_missing" "$PGDATABASE" > raw.json
@@ -70,6 +70,7 @@ process scan {
     --rfam \
     --notextw \
     --nohmmonly \
+    --toponly \
     "$cm_files/Rfam.cm" \
     sequences.fasta
 

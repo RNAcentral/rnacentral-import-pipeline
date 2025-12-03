@@ -1,6 +1,6 @@
-FROM python:3.11.0-buster
+FROM python:3.11.14-trixie
 
-ENV RNA /rna
+ENV RNA=/rna
 
 WORKDIR $RNA
 
@@ -27,7 +27,7 @@ RUN apt install -y \
     libncurses5-dev \
     libncursesw5-dev \
     libsqlite3-dev \
-    libssl1.1 \
+    libssl-dev \
     libxml2-utils \
     libxml2-dev \
     libzip-dev \
@@ -37,8 +37,8 @@ RUN apt install -y \
     pandoc \
     patch \
     pgloader \
-    postgresql-11 \
-    postgresql-client-11 \
+    postgresql-17 \
+    postgresql-client-17 \
     procps \
     python3 \
     python3-dev \
@@ -68,18 +68,16 @@ RUN \
 
 # Install blat
 RUN \
-    wget https://users.soe.ucsc.edu/~kent/src/blatSrc35.zip && \
-    unzip blatSrc35.zip && \
-    rm blatSrc35.zip && \
-    cd blatSrc && \
-    mkdir bin && \
-    make MACHTYPE=x86_64 BINDIR=$PWD/bin
+    wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip -O blat.zip && \
+    unzip blat.zip -d blat_suite && \
+    rm blat.zip
+
 
 # Install seqkit
 RUN \
     mkdir seqkit && \
     cd seqkit && \
-    wget https://github.com/shenwei356/seqkit/releases/download/v0.10.0/seqkit_linux_amd64.tar.gz && \
+    wget https://github.com/shenwei356/seqkit/releases/download/v2.10.1/seqkit_linux_amd64.tar.gz && \
     tar xvf seqkit_linux_amd64.tar.gz && \
     rm seqkit_linux_amd64.tar.gz
 
@@ -108,21 +106,22 @@ RUN \
     make install
 
 # Install python requirements
-ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
+ENV RNACENTRAL_IMPORT_PIPELINE="$RNA/rnacentral-import-pipeline"
 
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
-# Install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+## Add uv install directory to the front of the path
+ENV PATH="/root/.local/bin:$PATH"
 
-COPY poetry.lock $RNACENTRAL_IMPORT_PIPELINE/poetry.lock
 COPY pyproject.toml $RNACENTRAL_IMPORT_PIPELINE/pyproject.toml
+COPY uv.lock $RNACENTRAL_IMPORT_PIPELINE/uv.lock
 
 WORKDIR "$RNA/rnacentral-import-pipeline"
-RUN PATH="$PATH:/root/.local/bin" poetry config virtualenvs.create false
-RUN PATH="$PATH:/root/.local/bin" poetry install
-
+RUN uv sync --no-editable --frozen
+ENV PATH="$RNA/rnacentral-import-pipeline/.venv/bin:$PATH"
 RUN python3 -m nltk.downloader words
 
 ## Download Rust toolchain
@@ -152,7 +151,7 @@ ENV BIOEASELDIR="$RNA/Bio-Easel/blib/lib:$RNA/Bio-Easel/blib/arch:$RNA/Bio-Easel
 ENV PERL5LIB="$BIOEASELDIR:$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$PERL5LIB"
 
 ENV PATH="$RNA/infernal-1.1.2/bin:$PATH"
-ENV PATH="$RNA/blatSrc/bin:$PATH"
+ENV PATH="$RNA/blat_suite:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
 
