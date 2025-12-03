@@ -189,27 +189,27 @@ impl<T> Iterator for RegionGrouper<T>
 where
     T: Iterator<Item = Grouped<UrsRegion>>,
 {
-    type Item = SequenceWithRegions;
+    type Item = Result<SequenceWithRegions>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {
             None => None,
             Some(Grouped::Optional {
                 id,
-                data: _data,
+                ..
             }) => {
-                panic!("Bad data at {}", id);
+                return Some(Err(anyhow::anyhow!("Bad optional data at {}", id)));
             },
             Some(Grouped::Required {
                 id,
-                data: _data,
+                ..
             }) => {
-                panic!("Bad data at {}", id);
+                return Some(Err(anyhow::anyhow!("Bad required data at {}", id)));
             },
             Some(Grouped::Multiple {
                 id: _id,
                 data,
-            }) => Some(SequenceWithRegions::from_iter(data)),
+            }) => Some(Ok(SequenceWithRegions::from_iter(data))),
         }
     }
 }

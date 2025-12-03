@@ -67,6 +67,7 @@ pub fn write_split_selected(locus_path: &Path, sequence_file: &Path, output: &Pa
     let locus = locus.map(|r| r.unwrap());
     let locus = locus.filter(|l| !l.is_empty());
     let locus = RegionGrouper::new(locus);
+    let locus = locus.map(|l| l.unwrap());
     let locus = locus.map(|l| (*l.id(), l)).assume_sorted_by_key();
 
     let sequence_file = File::open(sequence_file)
