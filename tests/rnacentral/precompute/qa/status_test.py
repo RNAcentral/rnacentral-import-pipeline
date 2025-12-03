@@ -99,9 +99,9 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
             "rRNA",
             [
                 (
-                    u"This <i>Caenorhabditis elegans</i> sequence matches a Bacteria "
-                    u'Rfam model (<a href="http://rfam.org/family/RF00177">SSU_rRNA_bacteria</a>). '
-                    u'<a href="/help/rfam-annotations">Learn more &rarr;</a>'
+                    "This <i>Caenorhabditis elegans</i> sequence matches a Bacteria "
+                    'Rfam model (<a href="http://rfam.org/family/RF00177">SSU_rRNA_bacteria</a>). '
+                    '<a href="/help/qc">Learn more &rarr;</a>'
                 ),
             ],
         ),
@@ -110,9 +110,9 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
             "tRNA",
             [
                 (
-                    u"No match to a tRNA Rfam model "
-                    u'(<a href="http://rfam.org/family/RF00005">RF00005</a>,'
-                    u' <a href="http://rfam.org/family/RF01852">RF01852</a>)'
+                    "No match to a tRNA Rfam model "
+                    '(<a href="http://rfam.org/family/RF00005">RF00005</a>,'
+                    ' <a href="http://rfam.org/family/RF01852">RF01852</a>)'
                 )
             ],
         ),
