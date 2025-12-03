@@ -8,7 +8,7 @@ RUN apt update
 RUN apt upgrade -y
 
 # Install all required packages
-RUN apt install -y \
+RUN apt install -y --no-install-recommends \
     bedtools \
     ca-certificates \
     curl \
@@ -133,6 +133,7 @@ COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 ENV PATH="$PATH:/root/.cargo/bin"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+RUN pip install maturin
 RUN  make rust
 
 WORKDIR $RNA

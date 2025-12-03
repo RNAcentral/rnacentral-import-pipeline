@@ -121,7 +121,6 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
     //     .agg([col("last").max().alias("last"), col("id").first().alias("id")])
     //     .sort("id", Default::default());
 
-
     // let known_records: LazyFrame = LazyCsvReader::new(known_path)
     //     .has_header(false)
     //     .low_memory(streaming)
@@ -131,7 +130,6 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
     //     .group_by(["upi"])
     //     .agg([col("last").max().alias("last"), col("id").first().alias("id")])
     //     .sort("id", Default::default());
-
 
     // let selection: LazyFrame = xref_records
     //     .join(
@@ -149,10 +147,12 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
 
     // let check: LazyFrame = selection.clone();
 
-    // // // check we are not in a catastrophic error state - precompute should never be newer than
-    // // // xref
-    // let selected_urs = selection.filter(col("selected").eq(true)).with_streaming(streaming).collect()?;
-    // let error_urs = check.filter(col("error_state").eq(true)).with_streaming(streaming).collect()?;
+    // // // check we are not in a catastrophic error state - precompute should never be newer
+    // than // // xref
+    // let selected_urs =
+    // selection.filter(col("selected").eq(true)).with_streaming(streaming).collect()?;
+    // let error_urs =
+    // check.filter(col("error_state").eq(true)).with_streaming(streaming).collect()?;
     // if error_urs.height() > 0 {
     //     return Err(anyhow!("Precompute newer than xref for these UPIs: {:?}", error_urs));
     // }

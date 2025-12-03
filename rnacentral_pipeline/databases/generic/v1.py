@@ -201,7 +201,6 @@ def features(record):
                 f"Skipping sequence feature {key} due to unexpected type {type(feature)}"
             )
             continue
-
         ## Skip sequence features that don't have the required fields
         if feature.get("indexes", None) is None:
             LOGGER.warning(
