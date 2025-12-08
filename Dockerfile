@@ -115,6 +115,9 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ## Add uv install directory to the front of the path
 ENV PATH="/root/.local/bin:$PATH"
+## Download Rust toolchain
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="$PATH:/root/.cargo/bin"
 
 COPY pyproject.toml $RNACENTRAL_IMPORT_PIPELINE/pyproject.toml
 COPY uv.lock $RNACENTRAL_IMPORT_PIPELINE/uv.lock
@@ -124,14 +127,13 @@ RUN uv sync --no-editable --frozen
 ENV PATH="$RNA/rnacentral-import-pipeline/.venv/bin:$PATH"
 RUN python3 -m nltk.downloader words
 
-## Download Rust toolchain
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+
 
 COPY utils ./utils
 COPY Makefile Makefile
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
-ENV PATH="$PATH:/root/.cargo/bin"
+
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 RUN pip install maturin
 RUN  make rust
