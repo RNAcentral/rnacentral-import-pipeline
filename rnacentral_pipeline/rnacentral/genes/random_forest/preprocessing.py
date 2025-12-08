@@ -18,6 +18,8 @@ import multiprocessing as mp
 import time
 from pathlib import Path
 
+## Use rust preprocessing code
+## Must be built using the Makefile in an activated environment
 import gene_preprocessing as gpp
 import numpy as np
 import polars as pl
