@@ -621,16 +621,6 @@ wheels = [
 ]
 
 [[package]]
-name = "gene-preprocessing"
-source = { directory = "utils/genes-preprocessing" }
-dependencies = [
-    { name = "numpy" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "numpy", specifier = ">=1.24.4" }]
-
-[[package]]
 name = "gensim"
 version = "4.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1970,7 +1960,6 @@ dependencies = [
     { name = "cython" },
     { name = "datasets" },
     { name = "furl" },
-    { name = "gene-preprocessing" },
     { name = "gensim" },
     { name = "gffutils" },
     { name = "humanfriendly" },
@@ -2023,7 +2012,6 @@ requires-dist = [
     { name = "cython", specifier = ">=3.1.2" },
     { name = "datasets", specifier = ">=3.5.0" },
     { name = "furl", specifier = ">=2.1.3" },
-    { name = "gene-preprocessing", directory = "utils/genes-preprocessing" },
     { name = "gensim", specifier = ">=4.3.3" },
     { name = "gffutils", specifier = ">=0.11.1" },
     { name = "humanfriendly", specifier = ">=10.0" },
