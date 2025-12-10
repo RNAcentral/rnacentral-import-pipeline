@@ -15,7 +15,7 @@ SAMTOOLS_IMAGE=$(DOCKER_REPO)/samtools:$(SAMTOOLS_VERSION)
 SAMTOOLS_LATEST=$(DOCKER_REPO)/samtools:latest
 RUST_UTILS_IMAGE=$(DOCKER_REPO)/rust-utils:latest
 
-.PHONY: all cpat infernal samtools rust-utils push-infernal push-samtools push-rust-utils push-all clean test
+.PHONY: all cpat infernal samtools rust-utils push-cpat push-infernal push-samtools push-rust-utils push-all clean test
 
 all: infernal samtools rust-utils
 
@@ -23,7 +23,12 @@ all: infernal samtools rust-utils
 cpat: cpat/Dockerfile
 	docker buildx build -t $(CPAT_IMAGE) -f $^ --platform linux/amd64 .
 	docker tag $(CPAT_IMAGE) $(CPAT_LATEST)
-	docker push $(CPAT_IMAGE) $(CPAT_LATEST)
+
+# Push CPAT to Docker Hub
+push-cpat: cpat
+	@echo "Pushing CPAT images to Docker Hub..."
+	docker push $(CPAT_IMAGE)
+	docker push $(CPAT_LATEST)
 
 # Build Infernal container
 infernal:
@@ -61,10 +66,14 @@ push-rust-utils: rust-utils
 	docker push $(RUST_UTILS_IMAGE)
 
 # Push all tool containers
-push-all: push-infernal push-samtools push-rust-utils
+push-all: push-cpat push-infernal push-samtools push-rust-utils
 
 # Test tool containers locally
-test: infernal samtools rust-utils
+test: cpat infernal samtools rust-utils
+	@echo "Testing CPAT container..."
+	docker run --rm $(CPAT_IMAGE) cpat -h
+	@echo "✓ CPAT tests passed"
+	@echo ""
 	@echo "Testing Infernal container..."
 	docker run --rm $(INFERNAL_IMAGE) cmscan -h
 	docker run --rm $(INFERNAL_IMAGE) cmbuild -h
@@ -84,6 +93,7 @@ test: infernal samtools rust-utils
 # Clean up local tool container images
 clean:
 	@echo "Removing tool container images..."
+	docker rmi $(CPAT_IMAGE) $(CPAT_LATEST) || true
 	docker rmi $(INFERNAL_IMAGE) $(INFERNAL_LATEST) || true
 	docker rmi $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST) || true
 	docker rmi $(RUST_UTILS_IMAGE) || true
