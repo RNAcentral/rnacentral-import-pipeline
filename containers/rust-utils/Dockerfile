@@ -20,7 +20,7 @@ RUN cargo build --release && \
     find target/release -maxdepth 1 -type f -executable -exec mv {} /rust-bins/ \;
 
 # Stage 2: Final - minimal runtime image
-FROM python:3.11.14-trixie
+FROM debian:trixie-slim
 
 WORKDIR /rna
 
