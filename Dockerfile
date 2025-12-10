@@ -1,14 +1,19 @@
 # Multi-stage Dockerfile for RNAcentral Import Pipeline
 # This reduces final image size by ~30-40% by separating build and runtime dependencies
 
+# Build arguments for tool versions
+ARG INFERNAL_VERSION=1.1.2
+ARG SAMTOOLS_VERSION=1.22.1
+ARG RUST_VERSION=latest
+
 # Stage 1: Pull pre-built Infernal container
-FROM rnacentral/infernal:1.1.2 AS infernal
+FROM rnacentral/infernal:${INFERNAL_VERSION} AS infernal
 
 # Stage 2: Pull pre-built Samtools/HTSlib container
-FROM rnacentral/samtools:1.18 AS samtools
+FROM rnacentral/samtools:${SAMTOOLS_VERSION} AS samtools
 
 # Stage 3: Pull pre-built Rust utilities container
-FROM rnacentral/rust-utils:latest AS rust-utils
+FROM rnacentral/rust-utils:${RUST_VERSION} AS rust-utils
 
 # Stage 4: Python environment builder
 FROM python:3.11.14-trixie AS python-builder
