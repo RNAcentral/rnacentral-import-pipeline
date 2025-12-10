@@ -9,6 +9,7 @@ on:
     paths:
       - 'containers/infernal/**'
       - 'containers/samtools/**'
+      - 'containers/cpat/**'
       - '.github/workflows/tool-containers.yaml'
   workflow_dispatch:
     inputs:
@@ -24,6 +25,7 @@ jobs:
     outputs:
       infernal: ${{ steps.changes.outputs.infernal }}
       samtools: ${{ steps.changes.outputs.samtools }}
+      cpat: ${{ steps.changes.outputs.cpat }}
       force: ${{ github.event.inputs.force_rebuild == 'true' }}
     steps:
       - uses: actions/checkout@v3
@@ -36,6 +38,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.force_rebuild }}" = "true" ]; then
             echo "infernal=true" >> $GITHUB_OUTPUT
             echo "samtools=true" >> $GITHUB_OUTPUT
+            echo "cpat=true" >> $GITHUB_OUTPUT
           else
             # Check if infernal files changed
             if git diff --name-only HEAD^ HEAD | grep -q "^containers/infernal/"; then
@@ -50,6 +53,13 @@ jobs:
             else
               echo "samtools=false" >> $GITHUB_OUTPUT
             fi
+
+            # Check if cpat files changed
+            if git diff --name-only HEAD^ HEAD | grep -q "^containers/cpat/"; then
+              echo "cpat=true" >> $GITHUB_OUTPUT
+            else
+              echo "cpat=false" >> $GITHUB_OUTPUT
+            fi
           fi
 
   build-infernal:
@@ -59,6 +69,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Read Infernal version
+        id: version
+        run: echo "version=$(cat containers/infernal/VERSION)" >> $GITHUB_OUTPUT
+
       - name: Docker login
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
@@ -66,13 +80,19 @@ jobs:
         run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
       - name: Build Infernal container
-        run: docker build -t rnacentral/infernal:1.1.2 -f containers/infernal/Dockerfile containers/infernal/
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker build -t rnacentral/infernal:${VERSION} -f containers/infernal/Dockerfile containers/infernal/
 
       - name: Tag as latest
-        run: docker tag rnacentral/infernal:1.1.2 rnacentral/infernal:latest
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker tag rnacentral/infernal:${VERSION} rnacentral/infernal:latest
 
       - name: Push versioned tag
-        run: docker push rnacentral/infernal:1.1.2
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker push rnacentral/infernal:${VERSION}
 
       - name: Push latest tag
         run: docker push rnacentral/infernal:latest
@@ -81,7 +101,7 @@ jobs:
         if: always()
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_MESSAGE: 'Infernal container built and pushed: ${{ job.status }}'
+          SLACK_MESSAGE: 'Infernal ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           MSG_MINIMAL: true
 
@@ -92,6 +112,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Read Samtools version
+        id: version
+        run: echo "version=$(cat containers/samtools/VERSION)" >> $GITHUB_OUTPUT
+
       - name: Docker login
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
@@ -99,13 +123,19 @@ jobs:
         run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
       - name: Build Samtools container
-        run: docker build -t rnacentral/samtools:1.18 -f containers/samtools/Dockerfile containers/samtools/
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker build -t rnacentral/samtools:${VERSION} -f containers/samtools/Dockerfile containers/samtools/
 
       - name: Tag as latest
-        run: docker tag rnacentral/samtools:1.18 rnacentral/samtools:latest
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker tag rnacentral/samtools:${VERSION} rnacentral/samtools:latest
 
       - name: Push versioned tag
-        run: docker push rnacentral/samtools:1.18
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker push rnacentral/samtools:${VERSION}
 
       - name: Push latest tag
         run: docker push rnacentral/samtools:latest
@@ -114,6 +144,49 @@ jobs:
         if: always()
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_MESSAGE: 'Samtools container built and pushed: ${{ job.status }}'
+          SLACK_MESSAGE: 'Samtools ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
+
+  build-cpat:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.cpat == 'true' || needs.detect-changes.outputs.force == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read CPAT version
+        id: version
+        run: echo "version=$(cat containers/cpat/VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build CPAT container
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker build -t rnacentral/cpat:${VERSION} -f containers/cpat/Dockerfile containers/cpat/
+
+      - name: Tag as latest
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker tag rnacentral/cpat:${VERSION} rnacentral/cpat:latest
+
+      - name: Push versioned tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker push rnacentral/cpat:${VERSION}
+
+      - name: Push latest tag
+        run: docker push rnacentral/cpat:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'CPAT ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           MSG_MINIMAL: true

@@ -26,6 +26,29 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Calculate Rust version
+        id: rust-version
+        run: |
+          VERSION_FILE="containers/rust-utils/VERSION"
+          VERSION_CONTENT=$(cat $VERSION_FILE)
+
+          if [ "$VERSION_CONTENT" = "auto" ]; then
+            GIT_SHA=$(git rev-parse --short=8 HEAD)
+
+            # Check for uncommitted changes
+            if ! git diff-index --quiet HEAD --; then
+              GIT_SHA="${GIT_SHA}-dirty"
+              echo "⚠️  Warning: Building with uncommitted changes"
+            fi
+
+            VERSION=$GIT_SHA
+          else
+            VERSION=$VERSION_CONTENT
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "🔖 Building rust-utils:$VERSION"
+
       - name: Docker login
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
@@ -33,15 +56,30 @@ jobs:
         run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
       - name: Build Rust utilities container
-        run: docker build -t rnacentral/rust-utils:latest -f containers/rust-utils/Dockerfile .
+        run: |
+          VERSION=${{ steps.rust-version.outputs.version }}
+          docker build \
+            --build-arg RUST_VERSION=${VERSION} \
+            -t rnacentral/rust-utils:${VERSION} \
+            -f containers/rust-utils/Dockerfile .
 
-      - name: Push to Docker Hub
+      - name: Tag as latest
+        run: |
+          VERSION=${{ steps.rust-version.outputs.version }}
+          docker tag rnacentral/rust-utils:${VERSION} rnacentral/rust-utils:latest
+
+      - name: Push versioned tag
+        run: |
+          VERSION=${{ steps.rust-version.outputs.version }}
+          docker push rnacentral/rust-utils:${VERSION}
+
+      - name: Push latest tag
         run: docker push rnacentral/rust-utils:latest
 
       - name: Slack notification
         if: always()
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_MESSAGE: 'Rust utilities container built and pushed: ${{ job.status }}'
+          SLACK_MESSAGE: 'Rust utilities ${{ steps.rust-version.outputs.version }} container built and pushed: ${{ job.status }}'
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           MSG_MINIMAL: true
