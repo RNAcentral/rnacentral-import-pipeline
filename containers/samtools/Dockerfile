@@ -10,6 +10,7 @@ WORKDIR /build
 RUN apt update && apt install -y \
     gcc \
     make \
+    bzip2 \
     libbz2-dev \
     liblzma-dev \
     libncurses5-dev \
