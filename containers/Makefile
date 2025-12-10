@@ -1,7 +1,20 @@
-# Tool versions
-INFERNAL_VERSION=1.1.2
-SAMTOOLS_VERSION=1.22.1
-CPAT_VERSION=3.0.5
+# Tool versions - read from VERSION files
+INFERNAL_VERSION := $(shell cat infernal/VERSION)
+SAMTOOLS_VERSION := $(shell cat samtools/VERSION)
+CPAT_VERSION := $(shell cat cpat/VERSION)
+
+# Rust utilities version - auto mode uses git SHA
+RUST_VERSION_RAW := $(shell cat rust-utils/VERSION)
+ifeq ($(RUST_VERSION_RAW),auto)
+    RUST_GIT_SHA := $(shell git rev-parse --short=8 HEAD 2>/dev/null || echo "unknown")
+    ifneq ($(shell git diff-index --quiet HEAD -- 2>/dev/null; echo $$?),0)
+        RUST_VERSION := $(RUST_GIT_SHA)-dirty
+    else
+        RUST_VERSION := $(RUST_GIT_SHA)
+    endif
+else
+    RUST_VERSION := $(RUST_VERSION_RAW)
+endif
 
 # Docker repository
 DOCKER_REPO=rnacentral
@@ -13,9 +26,10 @@ INFERNAL_IMAGE=$(DOCKER_REPO)/infernal:$(INFERNAL_VERSION)
 INFERNAL_LATEST=$(DOCKER_REPO)/infernal:latest
 SAMTOOLS_IMAGE=$(DOCKER_REPO)/samtools:$(SAMTOOLS_VERSION)
 SAMTOOLS_LATEST=$(DOCKER_REPO)/samtools:latest
-RUST_UTILS_IMAGE=$(DOCKER_REPO)/rust-utils:latest
+RUST_UTILS_IMAGE=$(DOCKER_REPO)/rust-utils:$(RUST_VERSION)
+RUST_UTILS_LATEST=$(DOCKER_REPO)/rust-utils:latest
 
-.PHONY: all cpat infernal samtools rust-utils push-cpat push-infernal push-samtools push-rust-utils push-all clean test
+.PHONY: all cpat infernal samtools rust-utils push-cpat push-infernal push-samtools push-rust-utils push-all clean test validate-versions
 
 all: infernal samtools rust-utils
 
@@ -44,9 +58,14 @@ samtools:
 
 # Build Rust utilities container
 rust-utils:
-	@echo "Building Rust utilities container..."
-	docker buildx build -t $(RUST_UTILS_IMAGE) -f rust-utils/Dockerfile --platform linux/amd64 ../
-	@echo "✓ Rust utilities built successfully"
+	@echo "Building Rust utilities container (version: $(RUST_VERSION))..."
+	docker buildx build \
+		--build-arg RUST_VERSION=$(RUST_VERSION) \
+		-t $(RUST_UTILS_IMAGE) \
+		-f rust-utils/Dockerfile \
+		--platform linux/amd64 ../
+	docker tag $(RUST_UTILS_IMAGE) $(RUST_UTILS_LATEST)
+	@echo "✓ Rust utilities $(RUST_VERSION) built successfully"
 
 # Push Infernal to Docker Hub
 push-infernal: infernal
@@ -64,6 +83,7 @@ push-samtools: samtools
 push-rust-utils: rust-utils
 	@echo "Pushing Rust utilities image to Docker Hub..."
 	docker push $(RUST_UTILS_IMAGE)
+	docker push $(RUST_UTILS_LATEST)
 
 # Push all tool containers
 push-all: push-cpat push-infernal push-samtools push-rust-utils
@@ -90,10 +110,21 @@ test: cpat infernal samtools rust-utils
 	docker run --rm $(RUST_UTILS_IMAGE) search-export --help
 	@echo "✓ Rust utilities tests passed"
 
+# Validate VERSION files
+validate-versions:
+	@echo "Validating VERSION files..."
+	@for tool in infernal samtools rust-utils cpat; do \
+		if [ ! -f $$tool/VERSION ]; then \
+			echo "ERROR: Missing VERSION file: $$tool/VERSION"; \
+			exit 1; \
+		fi; \
+		echo "✓ $$tool/VERSION: $$(cat $$tool/VERSION)"; \
+	done
+
 # Clean up local tool container images
 clean:
 	@echo "Removing tool container images..."
 	docker rmi $(CPAT_IMAGE) $(CPAT_LATEST) || true
 	docker rmi $(INFERNAL_IMAGE) $(INFERNAL_LATEST) || true
 	docker rmi $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST) || true
-	docker rmi $(RUST_UTILS_IMAGE) || true
+	docker rmi $(RUST_UTILS_IMAGE) $(RUST_UTILS_LATEST) || true
