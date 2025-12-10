@@ -14,25 +14,26 @@ RUN apt update && apt install -y \
     libbz2-dev \
     liblzma-dev \
     libncurses5-dev \
+    libncursesw6 \
     libssl-dev \
     zlib1g-dev \
     wget && \
     rm -rf /var/lib/apt/lists/*
 
 # Build HTSlib first (Samtools depends on it)
-RUN wget https://github.com/samtools/htslib/releases/download/1.18/htslib-1.18.tar.bz2 && \
-    tar -jxf htslib-1.18.tar.bz2 && \
-    rm htslib-1.18.tar.bz2 && \
-    cd htslib-1.18 && \
+RUN wget https://github.com/samtools/htslib/releases/download/1.22.1/htslib-1.22.1.tar.bz2 && \
+    tar -jxf htslib-1.22.1.tar.bz2 && \
+    rm htslib-1.22.1.tar.bz2 && \
+    cd htslib-1.22.1 && \
     ./configure --prefix=/usr/local && \
     make && \
     make install
 
 # Build Samtools
-RUN wget https://github.com/samtools/samtools/releases/download/1.18/samtools-1.18.tar.bz2 && \
-    tar jxf samtools-1.18.tar.bz2 && \
-    rm samtools-1.18.tar.bz2 && \
-    cd samtools-1.18 && \
+RUN wget https://github.com/samtools/samtools/releases/download/1.22.1/samtools-1.22.1.tar.bz2 && \
+    tar jxf samtools-1.22.1.tar.bz2 && \
+    rm samtools-1.22.1.tar.bz2 && \
+    cd samtools-1.22.1 && \
     ./configure --prefix=/usr/local && \
     make && \
     make install
@@ -45,6 +46,7 @@ RUN apt update && apt install -y \
     libbz2-1.0 \
     liblzma5 \
     libncurses6 \
+    libncursesw6 \
     libssl3 \
     zlib1g && \
     rm -rf /var/lib/apt/lists/*
