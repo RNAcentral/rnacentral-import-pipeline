@@ -3,7 +3,8 @@ cpat=rnacentral/cpat:latest
 
 # Tool versions
 INFERNAL_VERSION=1.1.2
-SAMTOOLS_VERSION=1.18
+SAMTOOLS_VERSION=1.22.1
+CPAT_VERSION=3.0.5
 
 # Docker repository
 DOCKER_REPO=rnacentral
