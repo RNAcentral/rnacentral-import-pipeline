@@ -62,7 +62,7 @@ jobs:
               --jq '.[0] | "\(.status):\(.conclusion)"')
 
             if [ -z "$status" ]; then
-              echo "No rust-container workflow found yet, waiting..."
+              echo "Warning: rust-container workflow not found yet, waiting..."
               sleep 10
               elapsed=$((elapsed + 10))
               continue
