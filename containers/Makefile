@@ -1,6 +1,3 @@
-# Container image names
-cpat=rnacentral/cpat:latest
-
 # Tool versions
 INFERNAL_VERSION=1.1.2
 SAMTOOLS_VERSION=1.22.1
@@ -10,6 +7,8 @@ CPAT_VERSION=3.0.5
 DOCKER_REPO=rnacentral
 
 # Tool container image names
+CPAT_LATEST=$(DOCKER_REPO)/cpat:latest
+CPAT_IMAGE=$(DOCKER_REPO)/cpat:$(CPAT_VERSION)
 INFERNAL_IMAGE=$(DOCKER_REPO)/infernal:$(INFERNAL_VERSION)
 INFERNAL_LATEST=$(DOCKER_REPO)/infernal:latest
 SAMTOOLS_IMAGE=$(DOCKER_REPO)/samtools:$(SAMTOOLS_VERSION)
@@ -22,8 +21,9 @@ all: infernal samtools rust-utils
 
 # Build CPAT container (existing target)
 cpat: cpat/Dockerfile
-	docker buildx build -t "$(cpat)" -f $^ --platform linux/amd64 .
-	docker push $(cpat)
+	docker buildx build -t $(CPAT_IMAGE) -f $^ --platform linux/amd64 .
+	docker tag $(CPAT_IMAGE) $(CPAT_LATEST)
+	docker push $(CPAT_IMAGE) $(CPAT_LATEST)
 
 # Build Infernal container
 infernal:
