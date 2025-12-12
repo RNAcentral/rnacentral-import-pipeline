@@ -48,7 +48,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Waiting for rust-container workflow to complete..."
-          sleep 10  # Give workflow time to start
+          sleep 30  # Give workflow time to start
 
           # Wait up to 30 minutes for rust-container workflow to complete
           timeout=1800
@@ -82,8 +82,8 @@ jobs:
             fi
 
             echo "Rust container build status: $workflow_status (elapsed: ${elapsed}s)"
-            sleep 15
-            elapsed=$((elapsed + 15))
+            sleep 30
+            elapsed=$((elapsed + 30))
           done
 
           echo "✗ Timeout waiting for rust-container workflow"
