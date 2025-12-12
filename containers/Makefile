@@ -53,7 +53,7 @@ infernal:
 # Build Samtools container
 samtools:
 	@echo "Building Samtools $(SAMTOOLS_VERSION) container..."
-	docker buildx build -t $(SAMTOOLS_IMAGE) -f samtools/Dockerfile --platform linux/amd64 .
+	docker buildx build -t $(SAMTOOLS_IMAGE) -f samtools/Dockerfile --platform linux/amd64 --build-arg SAMTOOLS_VERSION=$(SAMTOOLS_VERSION) .
 	docker tag $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST)
 
 # Build Rust utilities container

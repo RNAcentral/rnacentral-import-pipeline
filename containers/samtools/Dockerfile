@@ -3,7 +3,7 @@
 
 # Stage 1: Builder - compiles HTSlib and Samtools from source
 FROM debian:trixie-slim AS builder
-
+ARG SAMTOOLS_VERSION
 WORKDIR /build
 
 # Install build dependencies
@@ -21,19 +21,19 @@ RUN apt update && apt install -y \
     rm -rf /var/lib/apt/lists/*
 
 # Build HTSlib first (Samtools depends on it)
-RUN wget https://github.com/samtools/htslib/releases/download/1.22.1/htslib-1.22.1.tar.bz2 && \
-    tar -jxf htslib-1.22.1.tar.bz2 && \
-    rm htslib-1.22.1.tar.bz2 && \
-    cd htslib-1.22.1 && \
+RUN wget https://github.com/samtools/htslib/releases/download/${SAMTOOLS_VERSION}/htslib-${SAMTOOLS_VERSION}.tar.bz2 && \
+    tar -jxf htslib-${SAMTOOLS_VERSION}.tar.bz2 && \
+    rm htslib-${SAMTOOLS_VERSION}.tar.bz2 && \
+    cd htslib-${SAMTOOLS_VERSION} && \
     ./configure --prefix=/usr/local && \
     make && \
     make install
 
 # Build Samtools
-RUN wget https://github.com/samtools/samtools/releases/download/1.22.1/samtools-1.22.1.tar.bz2 && \
-    tar jxf samtools-1.22.1.tar.bz2 && \
-    rm samtools-1.22.1.tar.bz2 && \
-    cd samtools-1.22.1 && \
+RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
+    tar jxf samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
+    rm samtools-${SAMTOOLS_VERSION}.tar.bz2 && \
+    cd samtools-${SAMTOOLS_VERSION} && \
     ./configure --prefix=/usr/local && \
     make && \
     make install
