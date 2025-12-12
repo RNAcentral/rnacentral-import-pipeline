@@ -111,11 +111,6 @@ RUN git clone https://github.com/nawrockie/epn-ofile.git && \
     git clone https://github.com/nawrockie/ribovore.git && \
     cd ribovore && git checkout ribovore-0.40
 
-# Install pip and uv (lightweight, for potential runtime use)
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py && \
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:$PATH"
-
 # Copy Python environment from builder
 ENV RNACENTRAL_IMPORT_PIPELINE="$RNA/rnacentral-import-pipeline"
 COPY --from=python-builder /app/.venv $RNACENTRAL_IMPORT_PIPELINE/.venv
