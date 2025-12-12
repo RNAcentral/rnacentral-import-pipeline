@@ -62,6 +62,7 @@ RUN ldconfig
 
 # Test that samtools and tools are working
 RUN samtools --version && \
-    tabix --version
+    tabix --version && \
+    bgzip --version
 
 ENTRYPOINT ["/bin/bash"]
