@@ -125,7 +125,7 @@ jobs:
       - name: Build Samtools container
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          docker build -t rnacentral/samtools:${VERSION} -f containers/samtools/Dockerfile containers/samtools/
+          docker build -t rnacentral/samtools:${VERSION} --build-arg SAMTOOLS_VERSION=${VERSION} -f containers/samtools/Dockerfile containers/samtools/
 
       - name: Tag as latest
         run: |
