@@ -67,7 +67,6 @@ RUN apt update && apt upgrade -y && \
     python3-pip \
     rsync \
     sbcl \
-    tabix \
     tar \
     time \
     unzip \
