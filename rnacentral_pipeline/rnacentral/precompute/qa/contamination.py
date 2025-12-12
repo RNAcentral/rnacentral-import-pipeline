@@ -93,7 +93,7 @@ def message(data: Sequence) -> str:
         match_domain=model_domain,
         model_url=model_url,
         model_name=model_name,
-        help_url="/help/rfam-annotations",
+        help_url="/help/qc",
     )
 
     return re.sub(r"\s+", " ", msg)

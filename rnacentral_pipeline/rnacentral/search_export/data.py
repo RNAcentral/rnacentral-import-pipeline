@@ -771,7 +771,6 @@ builder = entry(
                 field("short_urs", short_urs, keys=("urs", "taxid")),
                 field("active", as_active, keys="deleted"),
                 field("length", given),
-                field("species", first),
                 field("entry_type", entry_type, keys="urs"),
                 fields("organelle", unique_lower, keys="organelles"),
                 fields("expert_db", unique, keys="databases"),

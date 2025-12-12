@@ -16,9 +16,18 @@ repos:
     -   id: isort
         args: ["--profile", "black", "--filter-files"]
         name: isort (python)
--   repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
+-   repo: local
     hooks:
-    -   id: fmt
-    -   id: cargo-check
-    -   id: clippy
+    -   id: rustfmt
+        name: rustfmt
+        entry: rustfmt
+        language: system
+        types: [rust]
+        args: ['--edition', '2021']
+# - repo: https://github.com/python-poetry/poetry
+#   rev: '1.2.2'
+#   hooks:
+#     - id: poetry-check
+#     - id: poetry-lock
+#       args: ["--no-update"]
+#       language_version: 3.11.0
