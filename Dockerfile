@@ -80,7 +80,6 @@ COPY --from=infernal /rna/infernal-1.1.2 $RNA/infernal-1.1.2
 # Copy Samtools + HTSlib from tool container
 COPY --from=samtools /usr/local/bin/samtools /usr/local/bin/tabix /usr/local/bin/bgzip /usr/local/bin/
 COPY --from=samtools /usr/local/lib/libhts* /usr/local/lib/
-COPY --from=samtools /usr/local/include/htslib /usr/local/include/htslib
 
 # Run ldconfig to register shared libraries
 RUN ldconfig
