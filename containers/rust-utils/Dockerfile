@@ -12,7 +12,7 @@ ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 # Copy Rust source and build
 WORKDIR /build
 COPY utils ./utils
-COPY Cargo.toml Cargo.lock Makefile ./
+COPY Cargo.toml Cargo.lock ./
 
 # Build all Rust utilities in release mode
 RUN cargo build --release && \
