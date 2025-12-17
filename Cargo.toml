@@ -12,3 +12,4 @@ members = [
   "utils/search-export",
   "utils/split-ena",
 ]
+exclude = ["utils/genes-preprocessing"]
