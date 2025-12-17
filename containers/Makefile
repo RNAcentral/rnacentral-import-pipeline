@@ -47,7 +47,7 @@ push-cpat: cpat
 # Build Infernal container
 infernal:
 	@echo "Building Infernal $(INFERNAL_VERSION) container..."
-	docker buildx build -t $(INFERNAL_IMAGE) -f infernal/Dockerfile --platform linux/amd64 .
+	docker buildx build -t $(INFERNAL_IMAGE) -f infernal/Dockerfile --platform linux/amd64  --build-arg INFERNAL_VERSION=$(INFERNAL_VERSION) .
 	docker tag $(INFERNAL_IMAGE) $(INFERNAL_LATEST)
 
 # Build Samtools container
