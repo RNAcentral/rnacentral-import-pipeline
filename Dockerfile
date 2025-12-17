@@ -2,7 +2,7 @@
 # This reduces final image size by ~30-40% by separating build and runtime dependencies
 
 # Build arguments for tool versions
-ARG INFERNAL_VERSION=1.1.2
+ARG INFERNAL_VERSION=1.1.5
 ARG SAMTOOLS_VERSION=1.22.1
 ARG RUST_VERSION=latest
 
@@ -37,7 +37,9 @@ RUN /app/.venv/bin/python3 -m nltk.downloader words
 
 # Stage 5: Final runtime image
 FROM python:3.11.14-trixie
-
+ARG INFERNAL_VERSION=1.1.5
+ARG SAMTOOLS_VERSION=1.22.1
+ARG RUST_VERSION=latest
 ENV RNA=/rna
 WORKDIR $RNA
 
@@ -79,7 +81,7 @@ RUN apt update && apt upgrade -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy Infernal from tool container
-COPY --from=infernal /rna/infernal-1.1.2 $RNA/infernal-1.1.2
+COPY --from=infernal /rna/infernal-${INFERNAL_VERSION} $RNA/infernal-${INFERNAL_VERSION}
 
 # Copy Samtools + HTSlib from tool container
 COPY --from=samtools /usr/local/bin/samtools /usr/local/bin/tabix /usr/local/bin/bgzip /usr/local/bin/
