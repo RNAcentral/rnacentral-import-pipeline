@@ -3,6 +3,7 @@
 
 # Stage 1: Builder - compiles Infernal from source
 FROM debian:trixie-slim AS builder
+ARG INFERNAL_VERSION
 
 ENV RNA=/rna
 WORKDIR $RNA
@@ -11,11 +12,11 @@ WORKDIR $RNA
 RUN apt update && apt install -y gcc make curl && rm -rf /var/lib/apt/lists/*
 
 # Download and build Infernal
-RUN curl -OL http://eddylab.org/infernal/infernal-1.1.2.tar.gz && \
-    tar -xvzf infernal-1.1.2.tar.gz && \
-    rm infernal-1.1.2.tar.gz && \
-    cd infernal-1.1.2 && \
-    ./configure --prefix=$RNA/infernal-1.1.2 && \
+RUN curl -OL http://eddylab.org/infernal/infernal-${INFERNAL_VERSION}.tar.gz && \
+    tar -xvzf infernal-${INFERNAL_VERSION}.tar.gz && \
+    rm infernal-${INFERNAL_VERSION}.tar.gz && \
+    cd infernal-${INFERNAL_VERSION} && \
+    ./configure --build=aarch64-unknown-linux-gnu --prefix=$RNA/infernal-${INFERNAL_VERSION} && \
     make && \
     make install && \
     cd easel && \
@@ -23,15 +24,15 @@ RUN curl -OL http://eddylab.org/infernal/infernal-1.1.2.tar.gz && \
 
 # Stage 2: Final - minimal runtime image
 FROM debian:trixie-slim
-
+ARG INFERNAL_VERSION
 ENV RNA=/rna
 WORKDIR $RNA
 
 # Copy built Infernal from builder stage
-COPY --from=builder $RNA/infernal-1.1.2 $RNA/infernal-1.1.2
+COPY --from=builder $RNA/infernal-${INFERNAL_VERSION} $RNA/infernal-${INFERNAL_VERSION}
 
 # Set PATH
-ENV PATH="$RNA/infernal-1.1.2/bin:$PATH"
+ENV PATH="$RNA/infernal-${INFERNAL_VERSION}/bin:$PATH"
 
 # Test that Infernal is working
 RUN cmscan -h > /dev/null 2>&1
