@@ -82,7 +82,7 @@ jobs:
       - name: Build Infernal container
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          docker build -t rnacentral/infernal:${VERSION} -f containers/infernal/Dockerfile containers/infernal/
+          docker build -t rnacentral/infernal:${VERSION} -f containers/infernal/Dockerfile containers/infernal/ --build-arg INFERNAL_VERSION=${VERSION}
 
       - name: Tag as latest
         run: |
