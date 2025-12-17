@@ -143,6 +143,7 @@ process litsumm_summaries {
 }
 
 process go_flow_annotations {
+  container ''
   input:
   val(max_count)
   path (query)
