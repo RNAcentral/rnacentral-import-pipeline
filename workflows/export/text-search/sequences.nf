@@ -156,7 +156,7 @@ process go_flow_annotations {
   """
 }
 
-process go_flow_annotations {
+process editing_events {
   input:
   val(max_count)
   path (query)
