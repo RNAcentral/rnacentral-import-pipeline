@@ -28,6 +28,10 @@ COPY pyproject.toml .
 COPY uv.lock .
 RUN uv sync --no-editable --frozen
 
+# Copy and install maturin wheel from rust-utils
+COPY --from=rust-utils /rna/wheels/*.whl /tmp/wheels/
+RUN uv pip install /tmp/wheels/*.whl
+
 # Download NLTK data
 RUN /app/.venv/bin/python3 -m nltk.downloader words
 
