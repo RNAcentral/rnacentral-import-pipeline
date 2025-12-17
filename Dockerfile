@@ -135,9 +135,9 @@ COPY pyproject.toml setup-env $RNACENTRAL_IMPORT_PIPELINE/
 
 # Setup environmental variables
 ENV PERL5LIB="/usr/bin/env:$PERL5LIB"
-ENV RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin"
+ENV RIBOINFERNALDIR="$RNA/infernal-${INFERNAL_VERSION}/bin"
 ENV RIBODIR="$RNA/ribovore"
-ENV RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
+ENV RIBOEASELDIR="$RNA/infernal-${INFERNAL_VERSION}/bin"
 ENV EPNOPTDIR="$RNA/epn-options"
 ENV EPNOFILEDIR="$RNA/epn-ofile"
 ENV EPNTESTDIR="$RNA/epn-test"
