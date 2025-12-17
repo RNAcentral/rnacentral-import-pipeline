@@ -28,7 +28,7 @@ clean:
 	cargo clean
 
 docker: Dockerfile
-	docker build -t "$(docker)" .
+	docker buildx build -t "$(docker)" --platform linux/amd64 .
 
 shell: docker
 	docker run -v `pwd`:/rna/import-pipeline -i -t "$(docker)"

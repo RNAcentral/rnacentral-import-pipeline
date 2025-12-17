@@ -24,7 +24,6 @@ import gene_preprocessing as gpp
 import numpy as np
 import polars as pl
 from gensim.models import Word2Vec
-from line_profiler import profile
 from tqdm import tqdm
 
 from rnacentral_pipeline.rnacentral.genes.random_forest import data
@@ -102,7 +101,6 @@ def rna_type_similarity(so_type_a, so_type_b, so_model):
     return sim
 
 
-@profile
 def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
     comparisons = set()
     similarity_comparisons = set()
@@ -228,7 +226,6 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
     return features
 
 
-@profile
 def identify_nearby_transcripts(transcripts, so_model, nearby_distance=1000):
     """
     Find transcripts within 1kb of each other to calculate feature sets for and calculate features

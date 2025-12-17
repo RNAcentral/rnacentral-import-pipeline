@@ -19,10 +19,91 @@ jobs:
          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
          MSG_MINIMAL: true
 
+  wait-for-rust-build:
+    runs-on: ubuntu-latest
+    outputs:
+      rust_changed: ${{ steps.check-rust.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Check if Rust files changed
+        id: check-rust
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -qE '^(utils/|Cargo\.(toml|lock))'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Rust files changed, waiting for rust-container workflow..."
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No Rust changes, skipping wait"
+          fi
+
+      - name: Wait for Rust container build
+        if: steps.check-rust.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Waiting for rust-container workflow to complete..."
+          sleep 30  # Give workflow time to start
+
+          # Wait up to 30 minutes for rust-container workflow to complete
+          timeout=1800
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            # Check for running or completed rust-container workflows for this commit
+            status=$(gh run list \
+              --workflow=rust-container.yaml \
+              --commit=${{ github.sha }} \
+              --json status,conclusion \
+              --jq '.[0] | "\(.status):\(.conclusion)"')
+
+            if [ -z "$status" ]; then
+              echo "Warning: rust-container workflow not found yet, waiting..."
+              sleep 10
+              elapsed=$((elapsed + 10))
+              continue
+            fi
+
+            workflow_status=$(echo "$status" | cut -d: -f1)
+            workflow_conclusion=$(echo "$status" | cut -d: -f2)
+
+            if [ "$workflow_status" = "completed" ]; then
+              if [ "$workflow_conclusion" = "success" ]; then
+                echo "✓ Rust container build completed successfully"
+                exit 0
+              else
+                echo "✗ Rust container build failed with conclusion: $workflow_conclusion"
+                exit 1
+              fi
+            fi
+
+            echo "Rust container build status: $workflow_status (elapsed: ${elapsed}s)"
+            sleep 30
+            elapsed=$((elapsed + 30))
+          done
+
+          echo "✗ Timeout waiting for rust-container workflow"
+          exit 1
+
   create-docker-image:
+    needs: wait-for-rust-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Read versions
+        id: versions
+        run: |
+          echo "pipeline=$(cat VERSION)" >> $GITHUB_OUTPUT
+          echo "infernal=$(cat containers/infernal/VERSION)" >> $GITHUB_OUTPUT
+          echo "samtools=$(cat containers/samtools/VERSION)" >> $GITHUB_OUTPUT
+
+          RUST_VERSION=$(cat containers/rust-utils/VERSION)
+          if [ "$RUST_VERSION" = "auto" ]; then
+            RUST_VERSION=$(git rev-parse --short=8 HEAD)
+          fi
+          echo "rust=$RUST_VERSION" >> $GITHUB_OUTPUT
 
       - name: docker login
         env:
@@ -31,10 +112,19 @@ jobs:
         run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
       - name: docker build
-        run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline:latest .
+        run: |
+          docker build \
+            --build-arg INFERNAL_VERSION=${{ steps.versions.outputs.infernal }} \
+            --build-arg SAMTOOLS_VERSION=${{ steps.versions.outputs.samtools }} \
+            --build-arg RUST_VERSION=${{ steps.versions.outputs.rust }} \
+            -t rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pipeline }} \
+            -t rnacentral/rnacentral-import-pipeline:latest \
+            -f Dockerfile .
 
       - name: docker push
-        run: docker push rnacentral/rnacentral-import-pipeline:latest
+        run: |
+          docker push rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pipeline }}
+          docker push rnacentral/rnacentral-import-pipeline:latest
 
   finished-notification:
     needs:
