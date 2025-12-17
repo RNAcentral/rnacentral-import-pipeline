@@ -250,7 +250,7 @@ workflow sequences {
       litsumm_summaries(search_count, litsumm_sql),
       editing_events(search_count, editing_events_sql),
       go_flow_annotations(search_count, goflow_sql),
-      fetch_so_tree(so_sql),
+      so_tree,
     )\
     | set { metadata }
 
