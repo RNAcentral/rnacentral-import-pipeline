@@ -1,10 +1,16 @@
 use std::{
+    fmt::{
+        self,
+        Display,
+    },
     path::{
         Path,
         PathBuf,
     },
-    str,
-    str::FromStr,
+    str::{
+        self,
+        FromStr,
+    },
 };
 
 use regex::Regex;
@@ -24,7 +30,7 @@ impl FromStr for Urs {
     type Err = Error;
 
     fn from_str(raw: &str) -> Result<Self, Self::Err> {
-        u64::from_str_radix(&raw[3..], 16).map(|s| Urs(s)).map_err(|e| e.into())
+        u64::from_str_radix(&raw[3..], 16).map(Urs).map_err(|e| e.into())
     }
 }
 
@@ -52,11 +58,13 @@ impl From<&Urs> for u64 {
     }
 }
 
-impl Urs {
-    pub fn to_string(&self) -> String {
-        format!("URS{:010X}", self.0)
+impl fmt::Display for Urs {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "URS{:010X}", self.0)
     }
+}
 
+impl Urs {
     pub fn short_urs(&self) -> String {
         format!("URS{:X}", self.0)
     }
@@ -73,13 +81,13 @@ impl Urs {
         path.push("URS");
         let urs: String = self.into();
         for x in (3..11).step_by(2) {
-            path.push(urs[x..(x + 2)].to_string());
+            path.push(&urs[x..(x + 2)]);
         }
         path
     }
 
     pub fn path_for(&self, base: &Path, extension: &str) -> PathBuf {
-        let mut path = self.directory_path(&base);
+        let mut path = self.directory_path(base);
         let urs: String = self.into();
         path.push(urs);
         path.set_extension(extension);

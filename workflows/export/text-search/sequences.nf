@@ -156,7 +156,7 @@ process go_flow_annotations {
   """
 }
 
-process editing_events {
+process go_flow_annotations {
   input:
   val(max_count)
   path (query)
@@ -199,6 +199,7 @@ workflow sequences {
     counts
     search_count
     sequence_json
+    so_tree
   main:
     Channel.fromPath('files/search-export/setup.sql') | set { setup_sql }
 
@@ -230,6 +231,8 @@ workflow sequences {
     | set { search_count }
 
     search_count | build_search_accessions | set { accessions_ready }
+
+    fetch_so_tree(so_sql) | set { so_tree }
 
     build_metadata(
       base_query(search_count, base_sql),

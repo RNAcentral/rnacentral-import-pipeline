@@ -50,7 +50,7 @@ class Database(enum.Enum):
     ensembl_plants = DatabaseValue(6, "Ensembl Plants", "ENSEMBL_PLANTS")
     ensembl_protists = DatabaseValue(7, "Ensembl Protists", "ENSEMBL_PROTISTS")
     evlncrnas = DatabaseValue(53, "EVlncRNAs", "EVLNCRNAS")
-    expression_atlas = DatabaseValue(51, "Expression Atlas", "Expression Atlas")
+    expression_atlas = DatabaseValue(51, "Expression Atlas", "EXPRESSION_ATLAS")
     five_srrnadb = DatabaseValue(8, "5SrRNAdb", "5SRRNADB")
     flybase = DatabaseValue(9, "FlyBase", "FLYBASE")
     gencode = DatabaseValue(10, "Ensembl/GENCODE", "ENSEMBL_GENCODE")

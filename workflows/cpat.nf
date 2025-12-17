@@ -38,7 +38,7 @@ process find_sequences {
 
 process cpat_scan {
   tag { "$sequences" }
-  container 'rnacentral/cpat'
+  container 'rnacentral/cpat:3.0.5'
   errorStrategy 'ignore'
 
   input:
@@ -48,7 +48,7 @@ process cpat_scan {
   tuple val(model_name), path('output.ORF_prob.best.tsv')
 
   """
-  cpat.py -g "$sequences" -d "$data" -x "$hexamer" -o output
+  cpat -g "$sequences" -d "$data" -x "$hexamer" -o output
   """
 }
 
