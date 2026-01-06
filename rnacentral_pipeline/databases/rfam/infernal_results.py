@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import csv
+import re
 
 import attr
 
@@ -91,14 +91,17 @@ def convert_trunc(raw):
 def convert_overlap(raw):
     """
     Convert the short overlap strings from infernal into more readable names.
+    * - unique hit, take it
+    ^ - best hit, take it
+    = or $ - secondary hit, ignore it
     """
 
     if raw == "*" or raw == "unique":
-        return u"unique"
+        return "unique"
     if raw == "^" or raw == "best":
-        return u"best"
-    if raw == "=" or raw == "secondary":
-        return u"secondary"
+        return "best"
+    if raw in ("=" "$", "secondary"):
+        return "secondary"
     raise Exception("Unknown overlap symbol %s" % raw)
 
 
