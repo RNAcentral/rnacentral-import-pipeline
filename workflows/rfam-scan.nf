@@ -39,7 +39,7 @@ process sequences {
   psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "$PGDATABASE" | uniq | sort -u > active-urs
   psql -v ON_ERROR_STOP=1 -v 'name=rfam' -f "$computed" "$PGDATABASE" | sort > computed
   comm -23 active-urs computed > urs-to-compute
-  psql -q -v ON_ERROR_STOP=1 -f "$compute_missing" "$PGDATABASE" > raw.json
+  psql -q -v ON_ERROR_STOP=1 -v 'max_sequences=${params.rfam.max_sequences}' -f "$compute_missing" "$PGDATABASE" > raw.json
   mkdir parts
   split --filter 'json2fasta --only-valid-easel - - >> \$FILE.fasta' --lines ${params.rfam.chunk_size} raw.json parts/
   """
