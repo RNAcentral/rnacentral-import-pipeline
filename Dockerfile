@@ -120,10 +120,7 @@ ENV RNACENTRAL_IMPORT_PIPELINE="$RNA/rnacentral-import-pipeline"
 COPY --from=python-builder /app/.venv $RNACENTRAL_IMPORT_PIPELINE/.venv
 
 # Copy only essential runtime files (exclude build artifacts, tests, Nextflow files)
-# Python/shell scripts - required for various operations (includes old Rust binaries from git)
-COPY bin/ $RNACENTRAL_IMPORT_PIPELINE/bin/
-
-# Copy fresh Rust binaries from rust-utils container (overwrites old binaries from git)
+# Copy Rust binaries from rust-utils container (shell scripts will come from bind mount)
 COPY --from=rust-utils /rna/bin/* $RNACENTRAL_IMPORT_PIPELINE/bin/
 
 # Package metadata - required for module imports
