@@ -129,7 +129,7 @@ COPY --from=rust-utils /rna/bin/* $RNACENTRAL_IMPORT_PIPELINE/bin/
 # Package metadata - required for module imports
 COPY pyproject.toml setup-env $RNACENTRAL_IMPORT_PIPELINE/
 
-
+WORKDIR $RNA
 # Setup environmental variables
 ENV PERL5LIB="/usr/bin/env:$PERL5LIB"
 ENV RIBOINFERNALDIR="$RNA/${INFERNAL_VERSION}/bin"
