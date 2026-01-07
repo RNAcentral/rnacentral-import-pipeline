@@ -22,11 +22,11 @@ FROM python:3.11.14-trixie AS python-builder
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
-# Copy dependency files and install
+# Copy dependency files and install dependencies only
 WORKDIR /app
 COPY pyproject.toml .
 COPY uv.lock .
-RUN uv sync --no-editable --frozen
+RUN uv sync --no-editable --frozen --no-install-project
 
 # Copy and install maturin wheel from rust-utils
 COPY --from=rust-utils /rna/wheels/*.whl /tmp/wheels/
