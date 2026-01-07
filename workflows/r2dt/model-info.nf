@@ -1,7 +1,7 @@
 process fetch_model_stats {
   when { params.r2dt.run }
   container params.r2dt.container
-  containerOptions "--bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms"
+  containerOptions "${params.common_container} --bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms"
 
   input:
   val(_flag)
