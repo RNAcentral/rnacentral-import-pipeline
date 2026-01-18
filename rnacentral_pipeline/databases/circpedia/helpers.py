@@ -449,3 +449,113 @@ except ImportError:
         @staticmethod
         def isna(value):
             return value is None or (isinstance(value, float) and value != value)
+
+
+def parse_location_field(location_str: str) -> ty.Optional[ty.Dict[str, ty.Any]]:
+    """
+    Parse CIRCpedia V3 Location field which combines chromosome, coordinates, and strand.
+
+    Expected format: "V:15874634-15876408(-)" or "chr1:100-200(+)"
+    Components:
+        - Chromosome: V, chr1, I, II, X, etc.
+        - Start:End coordinates
+        - Strand: (+) or (-)
+
+    Args:
+        location_str: Location string from CIRCpedia V3
+
+    Returns:
+        Dict with chromosome, start, end, strand or None if parsing fails
+    """
+    if not location_str or pd.isna(location_str):
+        return None
+
+    # Match pattern: chromosome:start-end(strand)
+    # Examples: "V:15874634-15876408(-)", "chr1:100-200(+)", "III:1000-2000(+)"
+    match = re.match(r'^(?:chr)?([^:]+):(\d+)-(\d+)\(([+-])\)$', str(location_str).strip())
+    if not match:
+        LOGGER.warning(f"Could not parse location field: {location_str}")
+        return None
+
+    chromosome, start, end, strand_char = match.groups()
+
+    # Convert strand character to integer
+    strand = 1 if strand_char == '+' else -1
+
+    return {
+        "chromosome": chromosome,
+        "start": int(start),
+        "end": int(end),
+        "strand": strand,
+    }
+
+
+def note_data_from_tsv(row: ty.Dict[str, ty.Any], location: ty.Dict[str, ty.Any]) -> ty.Dict[str, ty.Any]:
+    """
+    Build note data dictionary from CIRCpedia V3 TSV row.
+
+    Args:
+        row: Dictionary representing TSV row
+        location: Location dict with chromosome, start, end
+
+    Returns:
+        Note data dictionary
+    """
+    notes = {}
+
+    # Add genomic location
+    notes["genomic_location"] = f"{location['chromosome']}:{location['start']}-{location['end']}"
+
+    # Add circular RNA name if available
+    if row.get('circname'):
+        notes["circname"] = str(row['circname'])
+
+    # Add length
+    if row.get('length'):
+        try:
+            notes["length"] = int(row['length'])
+        except (ValueError, TypeError):
+            pass
+
+    # Add subcellular localization
+    if row.get('subcell_location'):
+        notes["subcell_location"] = str(row['subcell_location'])
+
+    # Add editing sites if available
+    if row.get('editing_site') and row['editing_site'] not in ['none', 'none;none;none;none']:
+        notes["editing_site"] = str(row['editing_site'])
+
+    # Add DIS3 degradation signals
+    if row.get('DIS3_signal') and row['DIS3_signal'] != 'none':
+        notes["DIS3_signal"] = str(row['DIS3_signal'])
+
+    # Add orthology information
+    if row.get('Orthology') and row['Orthology'] != 'none':
+        notes["orthology"] = str(row['Orthology'])
+
+    # Add TGS (third-generation sequencing) support
+    if row.get('TGS') and row['TGS'] != 'none':
+        notes["TGS_support"] = str(row['TGS'])
+
+    # Add transcript IDs
+    if row.get('transcript_Ensembl') and row['transcript_Ensembl'] != 'NA':
+        notes["transcript_ensembl"] = str(row['transcript_Ensembl'])
+    if row.get('transcript_Refseq') and row['transcript_Refseq'] != 'NA':
+        notes["transcript_refseq"] = str(row['transcript_Refseq'])
+
+    return notes
+
+
+def product_from_gene(gene_name: ty.Optional[str]) -> str:
+    """
+    Generate product description from gene name.
+
+    Args:
+        gene_name: Gene name
+
+    Returns:
+        Product description
+    """
+    if gene_name:
+        return f"{gene_name} circular RNA"
+    return "circular RNA"

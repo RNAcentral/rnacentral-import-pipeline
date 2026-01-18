@@ -18,6 +18,10 @@ Parser for CIRCpedia V3 circular RNA data.
 
 CIRCpedia V3 provides comprehensive circular RNA annotations from
 multiple species with expression data and genomic coordinates.
+
+Data format:
+- Annotation file: Tab-delimited text (.txt)
+- Sequence file: FASTA format (.fa)
 """
 
 import logging
@@ -37,16 +41,55 @@ LOGGER = logging.getLogger(__name__)
 CIRCULAR_RNA_SO_TERM = "SO:0000593"
 
 
-def parse_csv_row(
-    row: pl.Series,
+def load_fasta_sequences(fasta_file: ty.Union[str, Path]) -> ty.Dict[str, str]:
+    """
+    Load sequences from FASTA file into a dictionary.
+
+    Args:
+        fasta_file: Path to FASTA file
+
+    Returns:
+        Dictionary mapping circRNA ID to sequence
+    """
+    sequences = {}
+    current_id = None
+    current_seq = []
+
+    LOGGER.info(f"Loading sequences from {fasta_file}")
+
+    with open(fasta_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith('>'):
+                # Save previous sequence if exists
+                if current_id and current_seq:
+                    sequences[current_id] = ''.join(current_seq)
+                # Start new sequence
+                current_id = line[1:].strip()  # Remove '>'
+                current_seq = []
+            elif current_id:
+                current_seq.append(line)
+
+        # Save last sequence
+        if current_id and current_seq:
+            sequences[current_id] = ''.join(current_seq)
+
+    LOGGER.info(f"Loaded {len(sequences)} sequences from FASTA")
+    return sequences
+
+
+def parse_tsv_row(
+    row: ty.Dict[str, ty.Any],
+    sequences: ty.Dict[str, str],
     taxonomy: SqliteDict,
     assembly_id: ty.Optional[str] = None,
 ) -> ty.Optional[Entry]:
     """
-    Parse a single row from CIRCpedia CSV data.
+    Parse a single row from CIRCpedia TSV data.
 
     Args:
-        row: Polars Series representing one circRNA
+        row: Dictionary representing one circRNA annotation
+        sequences: Dictionary mapping circRNA ID to sequence
         taxonomy: SqliteDict with taxonomy data
         assembly_id: Genome assembly ID (e.g., GRCh38)
 
@@ -55,94 +98,85 @@ def parse_csv_row(
     """
     try:
         # Get circRNA ID (required)
-        if "circid" not in row:
-            LOGGER.warning("Missing circid field in row")
-            return None
-
-        circ_id = row["circid"]
-        if circ_id is None or (isinstance(circ_id, float) and circ_id != circ_id):
-            LOGGER.warning("Invalid circid in row")
+        circ_id = row.get('circID') or row.get('circid')
+        if not circ_id or (isinstance(circ_id, float) and circ_id != circ_id):
+            LOGGER.warning("Missing or invalid circID in row")
             return None
 
         circ_id = str(circ_id).strip()
 
         # Get species and taxonomy ID (required)
-        if "species" not in row:
+        species_str = row.get('species')
+        if not species_str:
             LOGGER.warning(f"Missing species field for {circ_id}")
             return None
 
-        species_str = str(row["species"]).strip() if row["species"] else None
-        if not species_str:
-            LOGGER.warning(f"Empty species for {circ_id}")
-            return None
+        species_str = str(species_str).strip()
+        # Replace hyphens with spaces for taxonomy lookup
+        species_lookup = species_str.replace('-', ' ')
 
-        taxid = helpers.get_ncbi_taxid(taxonomy, species_str)
+        taxid = helpers.get_ncbi_taxid(taxonomy, species_lookup)
         if not taxid:
             LOGGER.warning(f"Could not determine taxid for species: {species_str}")
             return None
 
-        # Parse genomic location (required for circRNAs)
-        if "location" not in row or not row["location"]:
+        # Parse genomic location from combined Location field
+        # Format: "V:15874634-15876408(-)" or "chr1:100-200(+)"
+        location_str = row.get('Location') or row.get('location')
+        if not location_str:
             LOGGER.warning(f"Missing location for {circ_id}")
             return None
 
-        location = helpers.parse_genomic_location(row["location"])
-        if not location:
-            LOGGER.warning(f"Could not parse location for {circ_id}: {row['location']}")
+        location_data = helpers.parse_location_field(location_str)
+        if not location_data:
+            LOGGER.warning(f"Could not parse location for {circ_id}: {location_str}")
             return None
 
-        # Get strand information
-        strand = 0
-        if "strand" in row and row["strand"]:
-            strand = helpers.parse_strand(row["strand"])
-
-        # Parse exon positions if available
-        exons_list = []
-        if "exon_positions" in row and row["exon_positions"]:
-            exons_list = helpers.parse_exon_positions(row["exon_positions"])
-        elif "exonstart_exonend" in row and row["exonstart_exonend"]:
-            # Alternative column name
-            exons_list = helpers.parse_exon_positions(row["exonstart_exonend"])
-
-        # Get sequence if provided, otherwise use placeholder
-        # Circular RNA sequences may need to be constructed from exons
-        sequence = ""
-        if "sequence" in row and row["sequence"]:
-            sequence = str(row["sequence"]).upper().replace('U', 'T')
-
-        # If no sequence provided, create a placeholder
-        # In production, you would fetch from genome or database
+        # Get sequence from FASTA file
+        sequence = sequences.get(circ_id, '')
         if not sequence:
-            # Use 'N' * length as placeholder - this should be replaced
-            # with actual sequence extraction in production
-            seq_length = location["end"] - location["start"] + 1
-            sequence = "N" * min(seq_length, 100)  # Limit placeholder size
-            LOGGER.warning(
-                f"No sequence provided for {circ_id}, using placeholder. "
-                "Sequence should be extracted from genome."
-            )
+            LOGGER.warning(f"No sequence found for {circ_id} in FASTA file")
+            return None
 
-        # Get gene name
-        gene_name = helpers.gene(row)
+        # Ensure sequence is DNA (T not U)
+        sequence = sequence.upper().replace('U', 'T')
+
+        # Get gene name from gene_Ensembl or gene_Refseq
+        gene_name = row.get('gene_Refseq') or row.get('gene_Ensembl')
+        if gene_name and not isinstance(gene_name, str):
+            gene_name = str(gene_name)
+        if gene_name:
+            gene_name = gene_name.strip()
+
+        # Parse exon positions from circname if available
+        # Format: "circnhr-102(1-7)" indicates exons 1-7
+        exons_list = []
+        # Note: Exon positions would need to be derived from genome annotation
+        # or additional data files - not directly available in this format
 
         # Build the Entry
         entry = Entry(
             primary_id=helpers.primary_id(circ_id),
-            accession=helpers.accession(circ_id, location),
+            accession=helpers.accession(circ_id, location_data),
             ncbi_tax_id=taxid,
             database="CIRCPEDIA",
             sequence=sequence,
-            regions=helpers.regions(location, strand, exons_list, assembly_id),
+            regions=helpers.regions(
+                location_data,
+                location_data['strand'],
+                exons_list,
+                assembly_id
+            ),
             rna_type=CIRCULAR_RNA_SO_TERM,
             url=helpers.url(circ_id),
-            seq_version=helpers.seq_version(row),
-            note_data=helpers.note_data(row, location),
-            chromosome=helpers.chromosome(location),
+            seq_version="1",
+            note_data=helpers.note_data_from_tsv(row, location_data),
+            chromosome=location_data['chromosome'],
             species=phy.species(taxid, taxonomy),
             common_name=phy.common_name(taxid, taxonomy),
             lineage=phy.lineage(taxid, taxonomy),
             gene=gene_name,
-            product=helpers.product(row, gene_name),
+            product=helpers.product_from_gene(gene_name),
             description=helpers.description(taxonomy, taxid, gene_name),
             mol_type="genomic DNA",
             references=helpers.references(),
@@ -157,72 +191,62 @@ def parse_csv_row(
         LOGGER.warning(f"Unknown taxonomy ID: {e}")
         return None
     except Exception as e:
-        LOGGER.error(f"Error parsing row: {e}", exc_info=True)
+        LOGGER.error(f"Error parsing row for {circ_id if 'circ_id' in locals() else 'unknown'}: {e}", exc_info=True)
         return None
 
 
 def parse(
-    csv_file: ty.Union[str, Path],
+    annotation_file: ty.Union[str, Path],
+    fasta_file: ty.Union[str, Path],
     taxonomy_file: Path,
     assembly_id: ty.Optional[str] = None,
 ) -> ty.Iterable[Entry]:
     """
-    Parse CIRCpedia V3 CSV file.
-
-    Expected CSV columns (case-insensitive):
-        - circid (required): CIRCpedia circular RNA ID
-        - species (required): Species name (e.g., "Homo sapiens")
-        - location (required): Genomic location (e.g., "chr1:12345-67890")
-        - strand (optional): Strand ('+' or '-')
-        - gene (optional): Host gene name
-        - sequence (optional): RNA sequence
-        - exon_positions or exonstart_exonend (optional): Exon coordinates
-        - fpm (optional): Expression level (Fragments Per Million)
-        - cell_line (optional): Cell line or tissue
-        - sequencing_type (optional): Type of sequencing
-        - conservation (optional): Conservation information
-        - rnase_r_enrichment (optional): RNase R enrichment fold change
+    Parse CIRCpedia V3 annotation and sequence files.
 
     Args:
-        csv_file: Path to CIRCpedia CSV file
+        annotation_file: Path to CIRCpedia TSV annotation file
+        fasta_file: Path to CIRCpedia FASTA sequence file
         taxonomy_file: Path to taxonomy database file
         assembly_id: Genome assembly ID (e.g., GRCh38, GRCm39)
 
     Yields:
         Entry objects for each circular RNA
     """
-    LOGGER.info(f"Parsing CIRCpedia data from {csv_file}")
+    LOGGER.info(f"Parsing CIRCpedia data from {annotation_file} and {fasta_file}")
 
     # Load taxonomy data
     taxonomy = SqliteDict(str(taxonomy_file))
 
-    # Read CSV with polars for efficient processing
     try:
-        # Read CSV and normalize column names to lowercase
+        # Load sequences from FASTA
+        sequences = load_fasta_sequences(fasta_file)
+
+        # Read TSV annotation file with polars
         df = pl.read_csv(
-            csv_file,
+            annotation_file,
+            separator='\t',
             infer_schema_length=10000,
             ignore_errors=True,
         )
 
-        # Normalize column names to lowercase for easier matching
-        df = df.rename({col: col.lower() for col in df.columns})
-
-        LOGGER.info(f"Read {len(df)} rows from CSV")
+        LOGGER.info(f"Read {len(df)} rows from annotation file")
         LOGGER.info(f"Columns: {df.columns}")
 
         # Check for required columns
-        required_cols = ["circid", "species", "location"]
-        missing_cols = [col for col in required_cols if col not in df.columns]
-        if missing_cols:
-            raise ValueError(f"Missing required columns: {missing_cols}")
+        if 'circID' not in df.columns and 'circid' not in df.columns:
+            raise ValueError("Missing required column: circID")
+        if 'Location' not in df.columns and 'location' not in df.columns:
+            raise ValueError("Missing required column: Location")
+        if 'species' not in df.columns:
+            raise ValueError("Missing required column: species")
 
         # Process each row
         parsed_count = 0
         error_count = 0
 
         for row in df.iter_rows(named=True):
-            entry = parse_csv_row(row, taxonomy, assembly_id)
+            entry = parse_tsv_row(row, sequences, taxonomy, assembly_id)
             if entry:
                 yield entry
                 parsed_count += 1
@@ -242,7 +266,7 @@ def parse(
         )
 
     except Exception as e:
-        LOGGER.error(f"Error reading CSV file: {e}", exc_info=True)
+        LOGGER.error(f"Error parsing CIRCpedia files: {e}", exc_info=True)
         raise
     finally:
         taxonomy.close()

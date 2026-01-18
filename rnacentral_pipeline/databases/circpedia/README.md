@@ -15,34 +15,46 @@ CIRCpedia V3 is a comprehensive circular RNA database containing:
 
 ## Data Format
 
-The module expects CSV files with the following columns:
+The module expects two files:
+1. **Annotation file**: Tab-delimited text (.txt) with circRNA metadata
+2. **Sequence file**: FASTA format (.fa) with circRNA sequences
 
-### Required Columns
+### Annotation File (TSV)
 
-- **circid**: CIRCpedia circular RNA identifier (e.g., "hsa_circ_0001")
+#### Required Columns
+
+- **circID**: CIRCpedia circular RNA identifier (e.g., "hsa_circ_0001")
 - **species**: Species name in binomial nomenclature (e.g., "Homo sapiens")
-- **location**: Genomic location in format "chr:start-end" (e.g., "chr1:12345-67890")
+- **Location**: Genomic location with strand in format "chr:start-end(strand)" (e.g., "chr1:12345-67890(+)")
 
-### Optional Columns
+#### Optional Columns
 
-- **strand**: DNA strand ('+' or '-')
-- **gene**: Host gene symbol
-- **sequence**: RNA sequence (if not provided, placeholder will be used)
-- **exon_positions** or **exonstart_exonend**: Exon coordinates in format "start1-end1,start2-end2,..."
-- **fpm**: Expression level in Fragments Per Million
-- **cell_line** or **tissue**: Cell line or tissue type
-- **sequencing_type**: Type of sequencing used
-- **conservation**: Conservation information
-- **rnase_r_enrichment**: RNase R enrichment fold change
+- **gene_Refseq**: RefSeq gene identifier
+- **gene_Ensembl**: Ensembl gene identifier
+- **circname**: Circular RNA name (e.g., "circ-TP53(1-5)")
+- **length**: Length of circular RNA
+- **subcell_location**: Subcellular localization (e.g., "cytoplasm", "nucleus")
+- **editing_site**: RNA editing sites
+- **DIS3_signal**: DIS3 degradation signals
+- **Orthology**: Orthology information across species
+- **TGS**: Third-generation sequencing support
+- **transcript_Ensembl**: Ensembl transcript ID
+- **transcript_Refseq**: RefSeq transcript ID
 
-### Example CSV
+### Sequence File (FASTA)
 
-```csv
-circid,species,location,strand,gene,sequence,exon_positions,fpm,cell_line
-hsa_circ_0001,Homo sapiens,chr1:1000-2000,+,TP53,ATCGATCG...,1000-1200;1400-2000,10.5,HeLa
-hsa_circ_0002,Homo sapiens,chr2:3000-4000,-,MYC,GCTAGCTA...,3000-3500;3600-4000,5.2,K562
-mmu_circ_0001,Mus musculus,chr3:5000-6000,+,Trp53,TTTTAAAA...,5000-5500;5700-6000,8.7,MEF
+FASTA file with sequences keyed by circID:
+
+```fasta
+>hsa_circ_0001
+ATCGATCGATCGATCGATCGATCG...
+>hsa_circ_0002
+GCTAGCTAGCTAGCTAGCTAGCTA...
 ```
+
+### Example Data
+
+See `example_annotation.txt` and `example_sequences.fa` for sample data files.
 
 ## Architecture
 
@@ -51,24 +63,25 @@ The implementation follows the RNAcentral import pipeline architecture:
 ### Components
 
 1. **parser.py**: Main parsing logic
-   - Reads CSV files using Polars for efficient processing
+   - Loads sequences from FASTA file
+   - Reads TSV annotation files using Polars for efficient processing
    - Converts circRNA data to RNAcentral Entry format
    - Handles taxonomy lookups
-   - Processes genomic coordinates and exon positions
+   - Processes genomic coordinates with combined location field
 
 2. **helpers.py**: Helper functions
-   - Genomic location parsing
+   - Combined location field parsing (chr:start-end(strand))
    - Exon position parsing
    - Taxonomy ID lookup with fallback mapping
-   - URL and accession generation
-   - Note data construction
+   - URL and accession generation with CIRCPEDIA: prefix
+   - Note data construction from TSV fields
 
 3. **CLI (cli/circpedia.py)**: Command-line interface
    - Integrates with the `rnac` command system
-   - Command: `rnac circpedia parse <taxonomy> <csv_file> <output>`
+   - Command: `rnac circpedia parse <taxonomy> <annotation_file> <fasta_file> <output>`
 
 4. **Nextflow (workflows/databases/circpedia.nf)**: Pipeline integration
-   - Fetches data from configured source
+   - Fetches both annotation and FASTA files from configured sources
    - Runs parser with taxonomy context
    - Outputs standardized CSV files for database loading
 
@@ -77,8 +90,8 @@ The implementation follows the RNAcentral import pipeline architecture:
 ### Command Line
 
 ```bash
-# Parse CIRCpedia CSV data
-rnac circpedia parse context.db circpedia_v3.csv output_dir/ --assembly GRCh38
+# Parse CIRCpedia TSV annotation and FASTA sequence files
+rnac circpedia parse context.db circpedia_annotation.txt circpedia_sequences.fa output_dir/ --assembly GRCh38
 ```
 
 ### Nextflow
@@ -102,7 +115,10 @@ circpedia {
   run = false                    // Set to true to enable
   needs_taxonomy = true          // Requires taxonomy database
   process.directives.memory = 8.GB
-  remote = '/path/to/circpedia_v3.csv'
+  remote {
+    annotation = '/path/to/circpedia_v3_annotation.txt'
+    fasta = '/path/to/circpedia_v3_sequences.fa'
+  }
   assembly = 'GRCh38'           // Genome assembly ID
 }
 ```
@@ -138,7 +154,7 @@ pytest tests/databases/circpedia/
 
 ### Technology Choices
 
-- **Polars**: Used for efficient CSV processing (preferred over pandas per requirements)
+- **Polars**: Used for efficient TSV processing (preferred over pandas per requirements)
 - **psycopg**: Would be used for database queries if needed
 - **SqliteDict**: Used for taxonomy lookups
 
@@ -146,15 +162,16 @@ pytest tests/databases/circpedia/
 
 - RNA type: SO:0000593 (circular RNA)
 - Database: CIRCPEDIA
-- Accessions: Generated using MD5 hash of ID + location for uniqueness
-- URLs: Link to CIRCpedia V3 search interface
+- Accessions: Use CIRCpedia's own IDs with CIRCPEDIA: prefix (e.g., "CIRCPEDIA:hsa_circ_0001_1:100-200")
+- URLs: Direct links to circRNA detail pages (e.g., https://bits.fudan.edu.cn/circpediav3/circrna/hsa_circ_0001)
+- Coordinate system: 1-based, fully-closed (same as GFF/GTF)
 
 ### Sequence Handling
 
-If sequences are not provided in the CSV:
-- Placeholder sequences are used (marked with warning)
-- In production, sequences should be extracted from genome assemblies
-- Back-splicing junction sequences may need special handling
+- Sequences are loaded from separate FASTA file
+- Sequences must be DNA (T not U) - automatically converted if needed
+- If a circID is missing from FASTA, the entry is skipped with a warning
+- Back-splicing junction sequences may need special handling in production
 
 ### Species Support
 

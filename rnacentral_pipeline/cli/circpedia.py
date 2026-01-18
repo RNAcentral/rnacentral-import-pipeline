@@ -30,7 +30,8 @@ def cli():
 
 @cli.command("parse")
 @click.argument("taxonomy", type=click.Path(exists=True))
-@click.argument("csv_file", type=click.Path(exists=True))
+@click.argument("annotation_file", type=click.Path(exists=True))
+@click.argument("fasta_file", type=click.Path(exists=True))
 @click.argument(
     "output",
     default=".",
@@ -41,9 +42,9 @@ def cli():
     default=None,
     help="Genome assembly ID (e.g., GRCh38, GRCm39)",
 )
-def parse_circpedia(taxonomy, csv_file, output, assembly):
+def parse_circpedia(taxonomy, annotation_file, fasta_file, output, assembly):
     """
-    Parse CIRCpedia V3 CSV data file.
+    Parse CIRCpedia V3 annotation and sequence files.
 
     This command parses circular RNA data from CIRCpedia V3 and converts it
     to RNAcentral import format.
@@ -52,21 +53,29 @@ def parse_circpedia(taxonomy, csv_file, output, assembly):
 
         TAXONOMY: Path to taxonomy database file (context.db)
 
-        CSV_FILE: Path to CIRCpedia CSV data file
+        ANNOTATION_FILE: Path to CIRCpedia TSV annotation file
+
+        FASTA_FILE: Path to CIRCpedia FASTA sequence file
 
         OUTPUT: Output directory for CSV files (default: current directory)
 
-    The CSV file should contain columns:
-        - circid: CIRCpedia circular RNA ID
+    The annotation file should be tab-delimited with columns:
+        - circID: CIRCpedia circular RNA ID
         - species: Species name
-        - location: Genomic location (chr:start-end)
-        - strand: Strand (+ or -)
-        - gene: Host gene name (optional)
-        - sequence: RNA sequence (optional)
-        - exon_positions: Exon coordinates (optional)
-        - fpm: Expression level (optional)
-        - cell_line: Cell line/tissue (optional)
+        - Location: Genomic location with strand (e.g., V:15874634-15876408(-))
+        - gene_Ensembl: Ensembl gene ID (optional)
+        - gene_Refseq: RefSeq gene ID (optional)
+        - circname: circRNA name (optional)
+        - subcell_location: Subcellular localization (optional)
+        - editing_site: Editing sites (optional)
+        - DIS3_signal: DIS3 degradation signals (optional)
+        - Orthology: Orthology information (optional)
+        - TGS: Third-generation sequencing support (optional)
+
+    The FASTA file should contain sequences with headers matching circIDs.
     """
-    entries = parser.parse(csv_file, Path(taxonomy), assembly_id=assembly)
+    entries = parser.parse(
+        annotation_file, fasta_file, Path(taxonomy), assembly_id=assembly
+    )
     with entry_writer(Path(output)) as writer:
         writer.write(entries)

@@ -3,46 +3,44 @@ process fetch_data {
   memory '4GB'
 
   output:
-  path('circpedia_*.csv')
+  tuple path('circpedia_annotation.txt'), path('circpedia_sequences.fa')
 
   """
-  # Fetch CIRCpedia V3 data
-  # The remote location should be configured in databases.config
-  wget --no-check-certificate $params.databases.circpedia.remote -O circpedia_data.csv || \
-  scp $params.databases.circpedia.remote circpedia_data.csv
+  # Fetch CIRCpedia V3 annotation file
+  wget --no-check-certificate $params.databases.circpedia.remote.annotation -O circpedia_annotation.txt || \
+  scp $params.databases.circpedia.remote.annotation circpedia_annotation.txt
 
-  # If the downloaded file is compressed, uncompress it
-  if [[ -f circpedia_data.csv.gz ]]; then
-    gunzip circpedia_data.csv.gz
-  elif [[ -f circpedia_data.tar.gz ]]; then
-    tar xzf circpedia_data.tar.gz
+  # Fetch CIRCpedia V3 FASTA sequence file
+  wget --no-check-certificate $params.databases.circpedia.remote.fasta -O circpedia_sequences.fa || \
+  scp $params.databases.circpedia.remote.fasta circpedia_sequences.fa
+
+  # If the downloaded files are compressed, uncompress them
+  if [[ -f circpedia_annotation.txt.gz ]]; then
+    gunzip circpedia_annotation.txt.gz
   fi
-
-  # Rename to standard format
-  # If multiple files, they should already match the pattern circpedia_*.csv
-  if [[ ! -f circpedia_*.csv ]]; then
-    mv circpedia_data.csv circpedia_all.csv 2>/dev/null || true
+  if [[ -f circpedia_sequences.fa.gz ]]; then
+    gunzip circpedia_sequences.fa.gz
   fi
   """
 }
 
 process parse_data {
-  tag { "$csv_file.name" }
+  tag { "$annotation_file.name" }
   memory '8GB'
 
   input:
-  tuple path(csv_file), path(taxonomy)
+  tuple path(annotation_file), path(fasta_file), path(taxonomy)
 
   output:
   path('*.csv')
 
   """
-  # Parse CIRCpedia data
+  # Parse CIRCpedia data with both annotation and FASTA files
   # Use assembly ID if specified in config, otherwise omit
   if [ -n "$params.databases.circpedia.assembly" ]; then
-    rnac circpedia parse $taxonomy $csv_file . --assembly $params.databases.circpedia.assembly
+    rnac circpedia parse $taxonomy $annotation_file $fasta_file . --assembly $params.databases.circpedia.assembly
   else
-    rnac circpedia parse $taxonomy $csv_file .
+    rnac circpedia parse $taxonomy $annotation_file $fasta_file .
   fi
   """
 }
@@ -52,7 +50,6 @@ workflow circpedia {
   emit: data
   main:
     fetch_data \
-    | flatten \
     | combine(taxonomy) \
     | parse_data \
     | set { data }

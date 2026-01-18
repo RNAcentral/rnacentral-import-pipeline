@@ -24,25 +24,29 @@ A complete import pipeline has been implemented following RNAcentral's architect
 
 Files created:
 - `__init__.py` - Module initialization
-- `parser.py` - Main CSV parsing logic using Polars
+- `parser.py` - Main TSV/FASTA parsing logic using Polars
 - `helpers.py` - Helper functions for data processing
 - `README.md` - Comprehensive documentation
-- `example_data.csv` - Sample data format
+- `example_annotation.txt` - Sample TSV annotation file
+- `example_sequences.fa` - Sample FASTA sequence file
 
 **Key Features**:
-- Parses CSV files with circular RNA data
+- Parses TSV annotation files with circular RNA metadata
+- Loads sequences from FASTA files
 - Converts to RNAcentral Entry format
 - Handles taxonomy lookups with fallback mappings
-- Processes genomic coordinates and exon positions
+- Processes combined genomic location fields (chr:start-end(strand))
 - Uses **Polars** for efficient dataframe operations (as requested)
 - Generates proper RNA type (SO:0000593 for circular RNA)
+- Uses CIRCpedia's own IDs with CIRCPEDIA: prefix for accessions
+- Creates direct links to circRNA detail pages
 
 ### 2. CLI Integration
 **Location**: `rnacentral_pipeline/cli/circpedia.py`
 
 Command:
 ```bash
-rnac circpedia parse <taxonomy> <csv_file> <output> [--assembly ASSEMBLY]
+rnac circpedia parse <taxonomy> <annotation_file> <fasta_file> <output> [--assembly ASSEMBLY]
 ```
 
 Registered in: `rnacentral_pipeline/cli/__init__.py`
@@ -51,8 +55,8 @@ Registered in: `rnacentral_pipeline/cli/__init__.py`
 **Location**: `workflows/databases/circpedia.nf`
 
 Workflow processes:
-- `fetch_data`: Downloads CIRCpedia data from configured source
-- `parse_data`: Runs parser with taxonomy context
+- `fetch_data`: Downloads CIRCpedia annotation and FASTA files from configured sources
+- `parse_data`: Runs parser with taxonomy context and both input files
 - Outputs standard CSV files for RNAcentral loading
 
 Integrated into: `workflows/parse-databases.nf`
@@ -66,7 +70,10 @@ circpedia {
   run = false                    // Disabled by default
   needs_taxonomy = true          // Requires taxonomy database
   process.directives.memory = 8.GB
-  remote = '/nfs/production/agb/rnacentral/provided-data/circpedia/circpedia_v3.csv'
+  remote {
+    annotation = '/nfs/production/agb/rnacentral/provided-data/circpedia/circpedia_v3_annotation.txt'
+    fasta = '/nfs/production/agb/rnacentral/provided-data/circpedia/circpedia_v3_sequences.fa'
+  }
   assembly = 'GRCh38'
 }
 ```
@@ -89,7 +96,7 @@ Files created:
 ## Data Flow
 
 ```
-CIRCpedia CSV
+CIRCpedia Annotation (TSV) + Sequences (FASTA)
     ↓
 Nextflow: fetch_data
     ↓
@@ -97,11 +104,13 @@ Nextflow: parse_data
     ↓
 Python: parser.parse()
     ↓
-For each row:
-  - Parse genomic location
-  - Lookup taxonomy ID
-  - Parse exon positions
-  - Create Entry object
+1. Load sequences from FASTA into dictionary
+2. Read TSV with Polars
+3. For each row:
+   - Parse combined location field (chr:start-end(strand))
+   - Lookup taxonomy ID
+   - Get sequence from FASTA dictionary
+   - Create Entry object with CIRCPEDIA: prefix
     ↓
 EntryWriter
     ↓
@@ -113,23 +122,37 @@ Standard RNAcentral CSV files:
   - etc.
 ```
 
-## Expected CSV Format
+## Expected Data Format
 
-### Required Columns
-- `circid` - CIRCpedia circular RNA ID
+### Annotation File (TSV)
+
+#### Required Columns
+- `circID` - CIRCpedia circular RNA ID
 - `species` - Species name (e.g., "Homo sapiens")
-- `location` - Genomic location (e.g., "chr1:12345-67890")
+- `Location` - Combined genomic location with strand (e.g., "V:15874634-15876408(-)")
 
-### Optional Columns
-- `strand` - DNA strand ('+' or '-')
-- `gene` - Host gene symbol
-- `sequence` - RNA sequence
-- `exon_positions` - Exon coordinates
-- `fpm` - Expression level
-- `cell_line` - Cell line/tissue
-- `sequencing_type` - Sequencing type
-- `conservation` - Conservation info
-- `rnase_r_enrichment` - RNase R enrichment
+#### Optional Columns
+- `gene_Refseq` - RefSeq gene identifier
+- `gene_Ensembl` - Ensembl gene identifier
+- `circname` - Circular RNA name
+- `length` - Length of circular RNA
+- `subcell_location` - Subcellular localization
+- `editing_site` - RNA editing sites
+- `DIS3_signal` - DIS3 degradation signals
+- `Orthology` - Orthology information
+- `TGS` - Third-generation sequencing support
+- `transcript_Ensembl` - Ensembl transcript ID
+- `transcript_Refseq` - RefSeq transcript ID
+
+### Sequence File (FASTA)
+
+Standard FASTA format with headers matching circIDs:
+```
+>circID_1
+ATCGATCG...
+>circID_2
+GCTAGCTA...
+```
 
 ## Technology Stack
 
@@ -157,14 +180,15 @@ pytest --cov=rnacentral_pipeline.databases.circpedia tests/databases/circpedia/
 
 ## Files Created/Modified
 
-### New Files (11)
+### New Files (12)
 ```
 rnacentral_pipeline/databases/circpedia/
   ├── __init__.py
   ├── parser.py
   ├── helpers.py
   ├── README.md
-  └── example_data.csv
+  ├── example_annotation.txt
+  └── example_sequences.fa
 
 rnacentral_pipeline/cli/
   └── circpedia.py
@@ -201,7 +225,8 @@ config/databases.config
 1. **Prepare test data**:
    ```bash
    # Use example data
-   cp rnacentral_pipeline/databases/circpedia/example_data.csv test_data.csv
+   cp rnacentral_pipeline/databases/circpedia/example_annotation.txt test_annotation.txt
+   cp rnacentral_pipeline/databases/circpedia/example_sequences.fa test_sequences.fa
    ```
 
 2. **Build taxonomy context** (if not already available):
@@ -216,7 +241,7 @@ config/databases.config
 
 3. **Parse data**:
    ```bash
-   rnac circpedia parse context.db test_data.csv output/ --assembly GRCh38
+   rnac circpedia parse context.db test_annotation.txt test_sequences.fa output/ --assembly GRCh38
    ```
 
 ### For Production
@@ -226,7 +251,10 @@ config/databases.config
    ```groovy
    circpedia {
      run = true  // Enable
-     remote = '/path/to/circpedia_v3.csv'  // Set data path
+     remote {
+       annotation = '/path/to/circpedia_v3_annotation.txt'
+       fasta = '/path/to/circpedia_v3_sequences.fa'
+     }
    }
    ```
 
@@ -240,14 +268,16 @@ config/databases.config
 ### Circular RNA Specifics
 - **RNA Type**: SO:0000593 (circular RNA from Sequence Ontology)
 - **Database**: CIRCPEDIA (uppercase as per RNAcentral convention)
-- **Accessions**: Generated using MD5 hash of circID + location for uniqueness
-- **URLs**: Point to CIRCpedia V3 search interface
+- **Accessions**: Use CIRCpedia's own IDs with CIRCPEDIA: prefix (e.g., "CIRCPEDIA:hsa_circ_0001_1:100-200")
+- **URLs**: Direct links to circRNA detail pages (https://bits.fudan.edu.cn/circpediav3/circrna/{circ_id})
+- **Coordinate System**: 1-based, fully-closed (same as GFF/GTF format)
 
 ### Sequence Handling
-- If sequences provided in CSV: used directly
-- If sequences missing: placeholder used with warning
-  - Production should extract from genome assemblies
-  - Special handling may be needed for back-splice junctions
+- Sequences loaded from separate FASTA file
+- Sequences keyed by circID
+- DNA sequences (T not U) - automatically converted if needed
+- If circID missing from FASTA: entry skipped with warning
+- Production may need special handling for back-splice junctions
 
 ### Species Support
 Includes fallback taxonomy mapping for 20 common species:
