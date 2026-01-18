@@ -119,7 +119,7 @@ class TestAccession:
         acc1 = helpers.accession("circ123", location)
         acc2 = helpers.accession("circ123", location)
         assert acc1 == acc2
-        assert acc1 == "circ123_1:1000-2000"
+        assert acc1 == "CIRCPEDIA:circ123_1:1000-2000"
 
     def test_generates_different_accessions_for_different_locations(self):
         """Test that different locations produce different accessions."""
@@ -128,8 +128,15 @@ class TestAccession:
         acc1 = helpers.accession("circ123", loc1)
         acc2 = helpers.accession("circ123", loc2)
         assert acc1 != acc2
-        assert acc1 == "circ123_1:1000-2000"
-        assert acc2 == "circ123_1:3000-4000"
+        assert acc1 == "CIRCPEDIA:circ123_1:1000-2000"
+        assert acc2 == "CIRCPEDIA:circ123_1:3000-4000"
+
+    def test_includes_database_prefix(self):
+        """Test that accession is prefixed with database name."""
+        location = {"chromosome": "X", "start": 5000, "end": 6000}
+        acc = helpers.accession("hsa_circ_0001", location)
+        assert acc.startswith("CIRCPEDIA:")
+        assert "hsa_circ_0001" in acc
 
 
 class TestUrl:
@@ -140,6 +147,13 @@ class TestUrl:
         url = helpers.url("circ123")
         assert "circpediav3" in url.lower()
         assert "circ123" in url
+        assert "/circrna/" in url.lower()
+
+    def test_generates_direct_page_url(self):
+        """Test that URL points to direct circRNA page, not search."""
+        url = helpers.url("hsa_circ_0001")
+        assert url == "https://bits.fudan.edu.cn/circpediav3/circrna/hsa_circ_0001"
+        assert "search" not in url.lower()
 
 
 class TestSeqVersion:

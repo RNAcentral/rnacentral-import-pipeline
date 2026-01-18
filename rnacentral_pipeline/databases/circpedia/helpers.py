@@ -206,8 +206,8 @@ def accession(circ_id: str, location: ty.Dict[str, ty.Any]) -> str:
     """
     Generate accession for RNAcentral.
 
-    Uses CIRCpedia's own identifier with location to ensure uniqueness
-    when a circRNA appears in multiple locations.
+    Uses CIRCpedia's own identifier prefixed with database name, with location
+    to ensure uniqueness when a circRNA appears in multiple locations.
 
     IMPORTANT: This is NOT the URS identifier. RNAcentral automatically
     generates URS identifiers from sequence hashes. This accession is
@@ -218,33 +218,30 @@ def accession(circ_id: str, location: ty.Dict[str, ty.Any]) -> str:
         location: Location dict with chromosome, start, end
 
     Returns:
-        Accession string (CIRCpedia's identifier)
+        Accession string prefixed with database name (e.g., "CIRCPEDIA:hsa_circ_0001_1:100-200")
     """
-    # Use CIRCpedia's ID with location to ensure uniqueness
-    # If a circRNA appears at multiple locations, each gets a unique accession
+    # Prefix with database name to avoid ID conflicts across databases
+    # Include location to ensure uniqueness when a circRNA appears at multiple locations
     location_str = f"{location['chromosome']}:{location['start']}-{location['end']}"
-    return f"{circ_id}_{location_str}"
+    return f"CIRCPEDIA:{circ_id}_{location_str}"
 
 
 def url(circ_id: str) -> str:
     """
-    Generate URL for circRNA in CIRCpedia.
+    Generate URL for circRNA in CIRCpedia V3.
 
-    NOTE: This URL format needs to be verified with the actual CIRCpedia V3
-    website structure. The current implementation uses a search-based URL.
-    If CIRCpedia V3 has direct circRNA pages, the format should be updated to:
-        https://bits.fudan.edu.cn/circpediav3/circRNA/{circ_id}
-    or similar stable URL pattern.
+    Returns a direct link to the circRNA detail page.
+    Format: https://bits.fudan.edu.cn/circpediav3/circrna/{circ_id}
 
     Args:
         circ_id: CIRCpedia circRNA ID
 
     Returns:
-        URL string
+        URL string to the circRNA detail page
     """
     # Encode the ID for URL safety
     encoded_id = quote(str(circ_id))
-    return f"{CIRCPEDIA_BASE_URL}/search?query={encoded_id}"
+    return f"{CIRCPEDIA_BASE_URL}/circrna/{encoded_id}"
 
 
 def seq_version(row: pl.Series) -> str:
