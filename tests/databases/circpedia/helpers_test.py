@@ -119,7 +119,7 @@ class TestAccession:
         acc1 = helpers.accession("circ123", location)
         acc2 = helpers.accession("circ123", location)
         assert acc1 == acc2
-        assert acc1.startswith("CIRCPEDIA_")
+        assert acc1 == "circ123_1:1000-2000"
 
     def test_generates_different_accessions_for_different_locations(self):
         """Test that different locations produce different accessions."""
@@ -128,6 +128,8 @@ class TestAccession:
         acc1 = helpers.accession("circ123", loc1)
         acc2 = helpers.accession("circ123", loc2)
         assert acc1 != acc2
+        assert acc1 == "circ123_1:1000-2000"
+        assert acc2 == "circ123_1:3000-4000"
 
 
 class TestUrl:

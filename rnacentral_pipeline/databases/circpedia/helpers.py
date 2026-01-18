@@ -17,7 +17,6 @@ limitations under the License.
 Helper functions for parsing CIRCpedia V3 data.
 """
 
-import hashlib
 import logging
 import re
 import typing as ty
@@ -27,6 +26,7 @@ import polars as pl
 from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases.data import (
+    CoordinateSystem,
     Entry,
     Exon,
     IdReference,
@@ -206,27 +206,35 @@ def accession(circ_id: str, location: ty.Dict[str, ty.Any]) -> str:
     """
     Generate accession for RNAcentral.
 
-    This creates a unique accession based on circRNA ID and location.
+    Uses CIRCpedia's own identifier with location to ensure uniqueness
+    when a circRNA appears in multiple locations.
+
+    IMPORTANT: This is NOT the URS identifier. RNAcentral automatically
+    generates URS identifiers from sequence hashes. This accession is
+    the external database's own identifier that links back to CIRCpedia.
 
     Args:
         circ_id: CIRCpedia circRNA ID
         location: Location dict with chromosome, start, end
 
     Returns:
-        Accession string
+        Accession string (CIRCpedia's identifier)
     """
-    # Create a unique accession based on ID and location
+    # Use CIRCpedia's ID with location to ensure uniqueness
+    # If a circRNA appears at multiple locations, each gets a unique accession
     location_str = f"{location['chromosome']}:{location['start']}-{location['end']}"
-    combined = f"{circ_id}_{location_str}"
-
-    # Use hash to create a unique but consistent accession
-    hash_val = hashlib.md5(combined.encode()).hexdigest()[:16]
-    return f"CIRCPEDIA_{hash_val}".upper()
+    return f"{circ_id}_{location_str}"
 
 
 def url(circ_id: str) -> str:
     """
     Generate URL for circRNA in CIRCpedia.
+
+    NOTE: This URL format needs to be verified with the actual CIRCpedia V3
+    website structure. The current implementation uses a search-based URL.
+    If CIRCpedia V3 has direct circRNA pages, the format should be updated to:
+        https://bits.fudan.edu.cn/circpediav3/circRNA/{circ_id}
+    or similar stable URL pattern.
 
     Args:
         circ_id: CIRCpedia circRNA ID
@@ -316,6 +324,10 @@ def regions(
     """
     Build sequence regions from location and exon data.
 
+    CIRCpedia uses standard genomic coordinates (chr:start-end format)
+    which follow the 1-based, fully-closed coordinate system (same as
+    GFF/GTF format). Both start and end positions are inclusive.
+
     Args:
         location: Location dict with chromosome, start, end
         strand: Strand (1, -1, or 0)
@@ -337,7 +349,7 @@ def regions(
             strand=strand,
             exons=exons,
             assembly_id=assembly_id or "unknown",
-            coordinate_system=None,
+            coordinate_system=CoordinateSystem.one_based(),
         )
     ]
 
