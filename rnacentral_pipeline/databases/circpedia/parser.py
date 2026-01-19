@@ -141,18 +141,46 @@ def parse_tsv_row(
         # Ensure sequence is DNA (T not U)
         sequence = sequence.upper().replace('U', 'T')
 
-        # Get gene name from gene_Ensembl or gene_Refseq
-        gene_name = row.get('gene_Refseq') or row.get('gene_Ensembl')
-        if gene_name and not isinstance(gene_name, str):
-            gene_name = str(gene_name)
-        if gene_name:
-            gene_name = gene_name.strip()
+        # Validate length if provided (1-based inclusive coordinates)
+        if row.get('length'):
+            try:
+                expected_length = int(row['length'])
+                genomic_length = location_data['end'] - location_data['start'] + 1
+                if genomic_length != expected_length:
+                    LOGGER.warning(
+                        f"{circ_id}: Length mismatch - genomic: {genomic_length}, "
+                        f"reported: {expected_length}"
+                    )
+            except (ValueError, TypeError):
+                pass
 
-        # Parse exon positions from circname if available
-        # Format: "circnhr-102(1-7)" indicates exons 1-7
-        exons_list = []
-        # Note: Exon positions would need to be derived from genome annotation
-        # or additional data files - not directly available in this format
+        # Get gene names - prefer Ensembl, use RefSeq as fallback
+        # Both are collected for gene synonyms/aliases
+        gene_ensembl = row.get('gene_Ensembl')
+        gene_refseq = row.get('gene_Refseq')
+
+        # Clean up gene names
+        if gene_ensembl and isinstance(gene_ensembl, str):
+            gene_ensembl = gene_ensembl.strip()
+            if gene_ensembl in ['', 'NA', 'none']:
+                gene_ensembl = None
+        else:
+            gene_ensembl = None
+
+        if gene_refseq and isinstance(gene_refseq, str):
+            gene_refseq = gene_refseq.strip()
+            if gene_refseq in ['', 'NA', 'none']:
+                gene_refseq = None
+        else:
+            gene_refseq = None
+
+        # Use Ensembl as primary, RefSeq as fallback
+        primary_gene = gene_ensembl or gene_refseq
+
+        # Build gene synonyms list if we have both
+        gene_synonyms = []
+        if gene_ensembl and gene_refseq and gene_ensembl != gene_refseq:
+            gene_synonyms = [gene_refseq]
 
         # Build the Entry
         entry = Entry(
@@ -161,12 +189,7 @@ def parse_tsv_row(
             ncbi_tax_id=taxid,
             database="CIRCPEDIA",
             sequence=sequence,
-            regions=helpers.regions(
-                location_data,
-                location_data['strand'],
-                exons_list,
-                assembly_id
-            ),
+            regions=helpers.regions(location_data, assembly_id),
             rna_type=CIRCULAR_RNA_SO_TERM,
             url=helpers.url(circ_id),
             seq_version="1",
@@ -175,9 +198,10 @@ def parse_tsv_row(
             species=phy.species(taxid, taxonomy),
             common_name=phy.common_name(taxid, taxonomy),
             lineage=phy.lineage(taxid, taxonomy),
-            gene=gene_name,
-            product=helpers.product_from_gene(gene_name),
-            description=helpers.description(taxonomy, taxid, gene_name),
+            gene=primary_gene,
+            gene_synonyms=gene_synonyms if gene_synonyms else None,
+            product=helpers.product_from_gene(primary_gene),
+            description=helpers.description(taxonomy, taxid, primary_gene),
             mol_type="genomic DNA",
             references=helpers.references(),
         )
