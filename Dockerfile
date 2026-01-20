@@ -117,7 +117,7 @@ RUN git clone https://github.com/nawrockie/epn-ofile.git && \
 
 # Copy Python environment from builder
 ENV RNACENTRAL_IMPORT_PIPELINE="$RNA/rnacentral-import-pipeline"
-COPY --from=python-builder /app/.venv $RNACENTRAL_IMPORT_PIPELINE/.venv
+COPY --from=python-builder /app/.venv $RNA/venv
 
 # Copy only essential runtime files (exclude build artifacts, tests, Nextflow files)
 # Copy Rust binaries from rust-utils container (shell scripts will come from bind mount)
@@ -143,6 +143,6 @@ ENV PATH="$RNA/infernal-${INFERNAL_VERSION}/bin:$PATH"
 ENV PATH="$RNA/blat_suite:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE/bin:$PATH"
-ENV PATH="$RNACENTRAL_IMPORT_PIPELINE/.venv/bin:$PATH"
+ENV PATH="$RNA/venv/bin:$PATH"
 
 ENTRYPOINT ["/bin/bash"]
