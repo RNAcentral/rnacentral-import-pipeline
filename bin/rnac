@@ -5,20 +5,10 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 base="$(dirname "$script_dir")"
 
-# Debug output (can be removed once working)
-echo "DEBUG: script_dir=$script_dir" >&2
-echo "DEBUG: base=$base" >&2
-echo "DEBUG: PYTHONPATH before=${PYTHONPATH:-}" >&2
-
 if [ -z "${PYTHONPATH:-}" ]; then
   export PYTHONPATH="$base"
 else
   export PYTHONPATH="$PYTHONPATH:$base"
 fi
-
-echo "DEBUG: PYTHONPATH after=$PYTHONPATH" >&2
-echo "DEBUG: python location=$(which python3)" >&2
-echo "DEBUG: Checking if module exists:" >&2
-ls -la "$base/rnacentral_pipeline/" 2>&1 | head -5 >&2 || echo "Directory not found!" >&2
 
 exec python3 -m rnacentral_pipeline "$@"
