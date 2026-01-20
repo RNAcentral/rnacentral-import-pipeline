@@ -116,7 +116,7 @@ jobs:
           docker build \
             --build-arg INFERNAL_VERSION=${{ steps.versions.outputs.infernal }} \
             --build-arg SAMTOOLS_VERSION=${{ steps.versions.outputs.samtools }} \
-            --build-arg RUST_VERSION=${{ steps.versions.outputs.rust }} \
+            --build-arg RUST_VERSION=latest \
             -t rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pipeline }} \
             -t rnacentral/rnacentral-import-pipeline:latest \
             -f Dockerfile .

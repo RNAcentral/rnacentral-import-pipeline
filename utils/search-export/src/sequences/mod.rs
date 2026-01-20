@@ -5,6 +5,7 @@ pub mod editing_events;
 pub mod feedback;
 pub mod file_joiner;
 pub mod go_annotation;
+pub mod go_flow_annotations;
 pub mod interacting_protein;
 pub mod interacting_rna;
 pub mod litsumm;

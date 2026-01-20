@@ -65,13 +65,14 @@ process build_metadata {
   path(text)
   path(litsumm)
   path(editing_events)
+  path(go_flow_annotations)
   path(so_tree)
 
   output:
   path("merged.json")
 
   """
-  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm $editing_events merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm $editing_events $go_flow_annotations merged.json
   """
 }
 
@@ -141,10 +142,25 @@ process litsumm_summaries {
   """
 }
 
+process go_flow_annotations {
+  container ''
+  input:
+  val(max_count)
+  path (query)
+
+  output:
+  path("go-flow-llm-annotations.json")
+
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  search-export group go-flow-annotation raw.json ${max_count} go-flow-llm-annotations.json
+  """
+}
+
 process editing_events {
   input:
   val(max_count)
-  path(query)
+  path (query)
 
   output:
   path("editing-events.json")
@@ -202,6 +218,7 @@ workflow sequences {
     Channel.fromPath('files/search-export/parts/text-mining.sql') | set { text_sql }
     Channel.fromPath('files/search-export/parts/litsumm.sql') | set { litsumm_sql }
     Channel.fromPath('files/search-export/parts/editing-events.sql') | set { editing_events_sql }
+    Channel.fromPath('files/search-export/parts/goflow.sql') | set { goflow_sql }
     Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
     Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
@@ -233,6 +250,7 @@ workflow sequences {
       text_mining_query(search_count, text_sql),
       litsumm_summaries(search_count, litsumm_sql),
       editing_events(search_count, editing_events_sql),
+      go_flow_annotations(search_count, goflow_sql),
       so_tree,
     )\
     | set { metadata }

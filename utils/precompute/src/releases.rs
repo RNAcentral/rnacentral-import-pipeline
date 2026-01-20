@@ -26,7 +26,6 @@ use anyhow::{
     Result,
 };
 
-use polars::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UrsEntry {
