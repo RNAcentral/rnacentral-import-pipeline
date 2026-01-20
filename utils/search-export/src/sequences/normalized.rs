@@ -38,6 +38,7 @@ use crate::{
         editing_events::EditingEvent,
         feedback::FeedbackVec,
         go_annotation::GoAnnotation,
+        go_flow_annotations::GoFlowLLMAnnotation,
         interacting_protein::InteractingProtein,
         interacting_rna::InteractingRna,
         litsumm::LitsummSummaries,
@@ -80,6 +81,7 @@ pub struct Normalized {
     publication_count: usize,
     litsumm: Vec<LitsummSummaries>,
     editing_events: Vec<EditingEvent>,
+    go_flow_llm_annotations: Vec<GoFlowLLMAnnotation>,
     so_rna_type_tree: so_tree::SoTree,
 
     #[serde(flatten)]
@@ -140,6 +142,7 @@ impl Normalized {
             rfam_hits: raw.rfam_hits().iter().cloned().collect(),
             orfs: raw.orfs().iter().cloned().collect(),
             litsumm: raw.litsumm_summaries().to_vec(),
+            go_flow_llm_annotations: raw.go_flow_llm_annotations().to_vec(),
             editing_events: raw.editing_events().to_vec(),
         })
     }
