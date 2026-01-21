@@ -100,7 +100,7 @@ def convert_overlap(raw):
         return "unique"
     if raw == "^" or raw == "best":
         return "best"
-    if raw in ("=" "$", "secondary"):
+    if raw in ("=", "$", "secondary"):
         return "secondary"
     raise Exception("Unknown overlap symbol %s" % raw)
 
