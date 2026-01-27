@@ -33,7 +33,7 @@ process fetch {
   tag { "${assembly}-${species}" }
   maxForks 2
   time '20m'
-  memory '256 MB'
+  memory '512 MB'
 
   input:
   tuple val(assembly), val(species), val(taxid), path(query)
