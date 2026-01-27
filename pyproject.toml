@@ -47,6 +47,7 @@ dependencies = [
     "cython>=3.1.2",
     "skl2onnx>=1.19.1",
     "datasets>=3.5.0",
+    "fastjsonschema>=2.21.2",
 ]
 
 
@@ -56,6 +57,7 @@ dev = [
     "isort>=5.13.2",
     "pytest>=7.2.0",
     "maturin>=1.10",
+    "line-profiler>=5.0.0",
 ]
 
 [tool.pytest.ini_options]
