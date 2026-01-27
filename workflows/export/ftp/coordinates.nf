@@ -73,7 +73,7 @@ process generate_gff3 {
   memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/genome_coordinates/gff3", mode: 'copy'
   time '5m'
-  memory '1 GB'
+  memory '2 GB'
 
   input:
   tuple val(assembly), val(species), path(raw_data)
