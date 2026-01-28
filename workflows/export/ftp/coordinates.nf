@@ -94,8 +94,8 @@ process generate_gff3_for_igv {
   tag { "${assembly}-${species}" }
   memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
-  time '5m'
-  memory '1 GB'
+  time '30m'
+  memory '2 GB'
 
   input:
   tuple val(assembly), val(species), path(raw_data)
