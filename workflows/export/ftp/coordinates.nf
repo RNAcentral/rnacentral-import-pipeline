@@ -72,7 +72,7 @@ process generate_gff3 {
   tag { "${assembly}-${species}" }
   memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/genome_coordinates/gff3", mode: 'copy'
-  time '5m'
+  time '30m'
   memory '2 GB'
 
   input:
