@@ -24,7 +24,7 @@ process merge_and_split {
 
 process as_xml {
   tag { "$assembly" }
-  memory 10.GB
+  memory params.export.search.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
