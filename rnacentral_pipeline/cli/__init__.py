@@ -67,6 +67,7 @@ from rnacentral_pipeline.cli import (
     snodb,
     snorna_database,
     tarbase,
+    tcode,
     zfin,
     zwd,
 )
@@ -146,6 +147,7 @@ cli.add_command(silva.cli)
 cli.add_command(snodb.cli)
 cli.add_command(snorna_database.cli)
 cli.add_command(tarbase.cli)
+cli.add_command(tcode.cli)
 cli.add_command(zfin.cli)
 cli.add_command(zwd.cli)
 cli.add_command(tmrna.cli)
