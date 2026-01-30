@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import typing as ty
 
 import attr
@@ -41,8 +42,8 @@ class TcodeResult:
         return cls(
             urs=urs,
             length=_format_value(size),
-            mean_score=_format_value(mean_score),
-            std_score=_format_value(std_score),
+            mean_score=_format_value(mean_score, "NaN"),
+            std_score=_format_value(std_score, "NaN"),
             is_protein_coding=is_protein_coding,
         )
 
@@ -58,14 +59,26 @@ class TcodeResult:
 
 @attr.s()
 class TcodeWriter:
-    results = attr.ib()
+    results = attr.ib(
+        metadata={
+            "csv_options": {
+                "delimiter": ",",
+                "quotechar": '"',
+                "quoting": csv.QUOTE_MINIMAL,
+                "lineterminator": "\n",
+            }
+        }
+    )
 
     def write(self, results: ty.Iterable[TcodeResult]):
         for result in results:
             self.results.writerow(result.writeable())
 
 
-def _format_value(value: ty.Optional[ty.Union[int, float]]) -> str:
+def _format_value(
+    value: ty.Optional[ty.Union[int, float]],
+    na_value: str = "",
+) -> str:
     if value is None:
-        return ""
+        return na_value
     return str(value)

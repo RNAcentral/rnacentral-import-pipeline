@@ -6,15 +6,23 @@ process find_sequences {
   when { params.tcode.run }
 
   input:
-  tuple val(taxid), path(query)
+  path(query)
 
   output:
   path('sequences/*.fasta')
 
   """
-  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
-  split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json sequences/seq-
+  if command -v gsplit >/dev/null 2>&1; then
+    split_cmd=gsplit
+  elif split --version >/dev/null 2>&1; then
+    split_cmd=split
+  else
+    echo "GNU split required (install coreutils for gsplit)" >&2
+    exit 1
+  fi
+  "\$split_cmd" --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/tcode-
   """
 }
 
@@ -30,15 +38,9 @@ process tcode_scan {
   path("${sequences.simpleName}.tcode.out")
 
   """
-  # Extract the first FASTA ID and total sequence length for guard/fallback output.
+  # Extract the first FASTA ID for fallback output.
   seq_id=\$(awk '/^>/{print substr(\$0,2); exit}' ${sequences} | awk '{print \$1}')
-  seq_len=\$(awk '/^>/{next} {len+=length(\$0)} END{print len+0}' ${sequences})
-
-  # Skip TCODE for short sequences (it can crash or emit invalid scores).
-  if [ "\$seq_len" -lt ${params.tcode.min_length} ]; then
-    printf "# Sequence: %s\\n# Total_length: %s\\n" "\$seq_id" "\$seq_len" > ${sequences.simpleName}.tcode.out
-    exit 0
-  fi
+  seq_len=0
 
   # If TCODE fails, write a minimal output so parsing yields null scores.
   if ! tcode -sequence ${sequences} -outfile ${sequences.simpleName}.tcode.out -window ${params.tcode.window}; then
@@ -56,7 +58,7 @@ process parse_results {
   path("results.csv")
 
   """
-  rnac tcode parse $tcode_out .
+  ${workflow.launchDir}/bin/rnac tcode parse $tcode_out .
   """
 }
 
@@ -68,7 +70,7 @@ process store_results {
   path(result_ctl)
 
   """
-  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} tcode-results
+  ${workflow.launchDir}/bin/split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} tcode-results
   """
 }
 
@@ -78,14 +80,10 @@ workflow tcode {
     if( !params.tcode.run )
       return
 
-    if( !params.tcode.taxid )
-      error "Please provide --tcode.taxid <taxid>"
-
     Channel.fromPath(params.tcode.query) | set { query }
     Channel.fromPath('files/tcode/tcode.ctl') | set { load_ctl }
 
-    def fasta_ch = Channel.of(params.tcode.taxid) \
-      | combine(query) \
+    def fasta_ch = query \
       | find_sequences \
       | flatMap { seqs -> (seqs instanceof ArrayList) ? seqs : [seqs] }
 
