@@ -14,7 +14,7 @@ process find_sequences {
   """
   psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
-  split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json sequences/seq-
+  split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
   """
 }
 
@@ -30,15 +30,7 @@ process tcode_scan {
   path("${sequences.simpleName}.tcode.out")
 
   """
-  # Extract the first FASTA ID for fallback output.
-  seq_id=\$(awk '/^>/{print substr(\$0,2); exit}' ${sequences} | awk '{print \$1}')
-  seq_len=0
-
-  # If TCODE fails, write a minimal output so parsing yields null scores.
-  if ! tcode -sequence ${sequences} -outfile ${sequences.simpleName}.tcode.out -window ${params.tcode.window}; then
-    printf "# Sequence: %s\\n# Total_length: %s\\n" "\$seq_id" "\$seq_len" > ${sequences.simpleName}.tcode.out
-    exit 0
-  fi
+  tcode -sequence ${sequences} -outfile ${sequences.simpleName}.tcode.out -window ${params.tcode.window}
   """
 }
 

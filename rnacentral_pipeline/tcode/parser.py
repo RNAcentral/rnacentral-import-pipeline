@@ -24,6 +24,39 @@ def parse(tcode_output: Path) -> ty.Iterable[TcodeResult]:
     sequence = None
     size: ty.Optional[int] = None
     scores: ty.List[float] = []
+    lengths: ty.Optional[ty.Dict[str, int]] = None
+
+    def load_lengths() -> ty.Dict[str, int]:
+        fasta = None
+        name = tcode_output.name
+        if name.endswith(".tcode.out"):
+            fasta = tcode_output.with_name(name[: -len(".tcode.out")] + ".fasta")
+        if not fasta or not fasta.exists():
+            return {}
+        seq_lengths: ty.Dict[str, int] = {}
+        current_id = None
+        current_len = 0
+        with fasta.open("r") as handle:
+            for raw in handle:
+                line = raw.strip()
+                if not line:
+                    continue
+                if line.startswith(">"):
+                    if current_id is not None:
+                        seq_lengths[current_id] = current_len
+                    current_id = line[1:].split()[0]
+                    current_len = 0
+                else:
+                    current_len += len(line)
+        if current_id is not None:
+            seq_lengths[current_id] = current_len
+        return seq_lengths
+
+    def get_length(seq_id: str) -> ty.Optional[int]:
+        nonlocal lengths
+        if lengths is None:
+            lengths = load_lengths()
+        return lengths.get(seq_id)
 
     def flush() -> ty.Optional[TcodeResult]:
         if not sequence:
@@ -34,7 +67,8 @@ def parse(tcode_output: Path) -> ty.Iterable[TcodeResult]:
         else:
             mean_score = None
             std_score = None
-        return TcodeResult.build(sequence, size, mean_score, std_score)
+        final_size = size if size is not None else get_length(sequence)
+        return TcodeResult.build(sequence, final_size, mean_score, std_score)
 
     with tcode_output.open("r") as handle:
         for raw in handle:
