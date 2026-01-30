@@ -6,23 +6,15 @@ process find_sequences {
   when { params.tcode.run }
 
   input:
-  path(query)
+  tuple val(taxid), path(query)
 
   output:
   path('sequences/*.fasta')
 
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
-  if command -v gsplit >/dev/null 2>&1; then
-    split_cmd=gsplit
-  elif split --version >/dev/null 2>&1; then
-    split_cmd=split
-  else
-    echo "GNU split required (install coreutils for gsplit)" >&2
-    exit 1
-  fi
-  "\$split_cmd" --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/tcode-
+  split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json sequences/seq-
   """
 }
 
@@ -70,7 +62,7 @@ process store_results {
   path(result_ctl)
 
   """
-  ${workflow.launchDir}/bin/split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} tcode-results
+  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} tcode-results
   """
 }
 
@@ -83,7 +75,8 @@ workflow tcode {
     Channel.fromPath(params.tcode.query) | set { query }
     Channel.fromPath('files/tcode/tcode.ctl') | set { load_ctl }
 
-    def fasta_ch = query \
+    def fasta_ch = Channel.of(params.tcode.taxid) \
+      | combine(query) \
       | find_sequences \
       | flatMap { seqs -> (seqs instanceof ArrayList) ? seqs : [seqs] }
 
