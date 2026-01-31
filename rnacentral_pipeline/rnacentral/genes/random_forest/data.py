@@ -231,9 +231,16 @@ def name_genes(gene_list, prefix, seed=42):
         strand = list(gene)[0][-1]
         chromosome = list(gene)[0].split("@")[-1].split("/")[0]
         chromosome_number = chromosome_mapping[chromosome]
-        coords = np.array(
-            [tuple(map(int, re.search(r"\d+-\d+", g).group().split("-"))) for g in gene]
-        )
+        try:
+            coords = np.array(
+                [
+                    tuple(map(int, re.search(r"\d+-\d+", g).group().split("-")))
+                    for g in gene
+                ]
+            )
+        except Exception as e:
+            print(f"Error parsing coordinates for gene members: {gene}")
+            continue
         overall_coords = (np.min(coords[:, 0]), np.max(coords[:, 1]))
 
         # Create a key combining chromosome, strand, and coordinates
