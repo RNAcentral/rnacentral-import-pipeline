@@ -116,24 +116,12 @@ def fetch(conn_str, taxid, output):
     type=int,
     help="Distance threshold for identifying nearby transcripts (default: 1000)",
 )
-@click.option(
-    "--use-parallel/--no-parallel",
-    default=True,
-    help="Use parallel processing across chromosome/assembly groups (default: enabled)",
-)
-@click.option(
-    "--n-processes",
-    type=int,
-    help="Number of processes to use for parallel processing (default: auto-detect)",
-)
 def preprocess(
     transcripts_file,
     regions_data,
     so_model_path,
     output,
     nearby_distance,
-    use_parallel,
-    n_processes,
 ):
     """
     Generate features by comparing nearby transcripts.
@@ -157,8 +145,6 @@ def preprocess(
         regions_data,
         so_model_path,
         nearby_distance,
-        use_parallel,
-        n_processes,
     )
 
     # Ensure output directory exists
