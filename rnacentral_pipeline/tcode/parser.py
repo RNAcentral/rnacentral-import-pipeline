@@ -16,59 +16,41 @@ limitations under the License.
 from pathlib import Path
 import statistics
 import typing as ty
+import re
 
 from rnacentral_pipeline.tcode.data import TcodeResult
+
+
+def _split_taxid(seq_id: str) -> ty.Tuple[str, bool]:
+    if "_" not in seq_id:
+        return seq_id, False
+    base, suffix = seq_id.rsplit("_", 1)
+    return (base, True) if suffix.isdigit() else (seq_id, False)
+
+
+def _build_result(
+    sequence: str,
+    size: ty.Optional[int],
+    header_len: ty.Optional[int],
+    scores: ty.List[float],
+) -> TcodeResult:
+    if scores:
+        mean_score = statistics.mean(scores)
+        std_score = statistics.stdev(scores) if len(scores) > 1 else 0.0
+    else:
+        mean_score = None
+        std_score = None
+    final_size = size if size is not None else header_len
+    return TcodeResult.build(sequence, final_size, mean_score, std_score)
 
 
 def parse(tcode_output: Path) -> ty.Iterable[TcodeResult]:
     sequence = None
     size: ty.Optional[int] = None
+    header_len: ty.Optional[int] = None
     scores: ty.List[float] = []
-    lengths: ty.Optional[ty.Dict[str, int]] = None
-
-    def load_lengths() -> ty.Dict[str, int]:
-        fasta = None
-        name = tcode_output.name
-        if name.endswith(".tcode.out"):
-            fasta = tcode_output.with_name(name[: -len(".tcode.out")] + ".fasta")
-        if not fasta or not fasta.exists():
-            return {}
-        seq_lengths: ty.Dict[str, int] = {}
-        current_id = None
-        current_len = 0
-        with fasta.open("r") as handle:
-            for raw in handle:
-                line = raw.strip()
-                if not line:
-                    continue
-                if line.startswith(">"):
-                    if current_id is not None:
-                        seq_lengths[current_id] = current_len
-                    current_id = line[1:].split()[0]
-                    current_len = 0
-                else:
-                    current_len += len(line)
-        if current_id is not None:
-            seq_lengths[current_id] = current_len
-        return seq_lengths
-
-    def get_length(seq_id: str) -> ty.Optional[int]:
-        nonlocal lengths
-        if lengths is None:
-            lengths = load_lengths()
-        return lengths.get(seq_id)
-
-    def flush() -> ty.Optional[TcodeResult]:
-        if not sequence:
-            return None
-        if scores:
-            mean_score = statistics.mean(scores)
-            std_score = statistics.stdev(scores) if len(scores) > 1 else 0.0
-        else:
-            mean_score = None
-            std_score = None
-        final_size = size if size is not None else get_length(sequence)
-        return TcodeResult.build(sequence, final_size, mean_score, std_score)
+    results_by_base: ty.Dict[str, TcodeResult] = {}
+    seq_pattern = re.compile(r"^#?\s*Sequence:\s+(\S+)\s+from:\s+(\d+)\s+to:\s+(\d+)")
 
     with tcode_output.open("r") as handle:
         for raw in handle:
@@ -76,13 +58,21 @@ def parse(tcode_output: Path) -> ty.Iterable[TcodeResult]:
             if not line:
                 continue
 
-            if line.startswith("# Sequence:"):
-                result = flush()
-                if result:
-                    yield result
+            match = seq_pattern.match(line)
+            if match:
+                if sequence:
+                    result = _build_result(sequence, size, header_len, scores)
+                    base, has_taxid = _split_taxid(result.urs)
+                    if has_taxid:
+                        results_by_base[base] = result
                 scores = []
                 size = None
-                sequence = line.split(":", 1)[1].strip().split()[0]
+                header_len = None
+                sequence = match.group(1)
+                try:
+                    header_len = int(match.group(3)) - int(match.group(2)) + 1
+                except ValueError:
+                    header_len = None
                 continue
 
             if line.startswith("# Total_length:"):
@@ -100,12 +90,15 @@ def parse(tcode_output: Path) -> ty.Iterable[TcodeResult]:
                 continue
 
             try:
-                score = float(fields[3])
+                scores.append(float(fields[3]))
             except ValueError:
                 continue
 
-            scores.append(score)
+    if sequence:
+        result = _build_result(sequence, size, header_len, scores)
+        base, has_taxid = _split_taxid(result.urs)
+        if has_taxid:
+            results_by_base[base] = result
 
-    result = flush()
-    if result:
+    for result in results_by_base.values():
         yield result
