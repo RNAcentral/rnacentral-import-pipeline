@@ -42,7 +42,7 @@ process parse_results {
   path("results.csv")
 
   """
-  ${workflow.launchDir}/bin/rnac tcode parse $tcode_out .
+  rnac tcode parse $tcode_out .
   """
 }
 
