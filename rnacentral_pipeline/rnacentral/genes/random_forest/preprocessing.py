@@ -154,9 +154,138 @@ def run_preprocessing(
     return features
 
 
-def polars_preprocessing(transcripts, nearby_distance=1000):
+def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
+    """
+    Compare two sets of transcripts and generate features. ONly used when creating training data.
+
+    May be removed in future, in favour of a faster preprocessor
+    """
+    comparisons = set()
+    similarity_comparisons = set()
+    similarity_cache = {}
+
+    if label is not None:
+        features = pl.DataFrame(
+            {
+                "5p_exon_overlap": [],
+                "5p_exon_dta": [],
+                "5p_exon_3p_dta": [],
+                "exons_overlapping": [],
+                "strand": [],
+                "type_sim": [],
+                "label": [],
+                "comparison": [],
+            },
+            schema={
+                "5p_exon_overlap": pl.Float64,
+                "5p_exon_dta": pl.Int64,
+                "5p_exon_3p_dta": pl.Int64,
+                "exons_overlapping": pl.Int64,
+                "strand": pl.Int64,
+                "type_sim": pl.Float64,
+                "label": pl.Int8,
+                "comparison": pl.Utf8,
+            },
+        )
+    else:
+        features = empty_features.clone()
+
+    for tr_a in transcripts_a.iter_rows(named=True):
+        comparison_features = []
+        for tr_b in transcripts_b.iter_rows(named=True):
+            if tr_a["region_name"] == tr_b["region_name"]:
+                continue
+            ## Check if we already compared these two transcripts
+            normalized_pair = tuple(sorted([tr_a["region_name"], tr_b["region_name"]]))
+            if normalized_pair in comparisons:
+                continue
+
+            if tr_a["strand"] == 1:
+                exon_5p_a = (tr_a["exon_start"][0], tr_a["exon_stop"][0])
+                exon_5p_b = (tr_b["exon_start"][0], tr_b["exon_stop"][0])
+            else:
+                exon_5p_a = (tr_a["exon_start"][-1], tr_a["exon_stop"][-1])
+                exon_5p_b = (tr_b["exon_start"][-1], tr_b["exon_stop"][-1])
+
+            five_prime_overlap = exon_overlap_tup(exon_5p_a, exon_5p_b)
+            five_prime_dta, five_prime_ex_3p_dta = gpp.distance_to_agreement(
+                exon_5p_a, exon_5p_b
+            )
+            # distance_2_agreement(
+            #     exon_5p_a, exon_5p_b
+            # )
+
+            exons_a = [(s, e) for s, e in zip(tr_a["exon_start"], tr_a["exon_stop"])]
+            exons_b = [(s, e) for s, e in zip(tr_b["exon_start"], tr_b["exon_stop"])]
+
+            count_90_overlap = gpp.count_overlap(exons_a, exons_b, 0.9)
+
+            # Check if we already calculated similarity for this pair
+            type_pair = tuple(sorted([tr_a["so_type"], tr_b["so_type"]]))
+            if type_pair in similarity_comparisons:
+                type_similarity = similarity_cache[type_pair]
+            else:
+                type_similarity = rna_type_similarity(
+                    tr_a["so_type"], tr_b["so_type"], so_model
+                )
+                similarity_comparisons.add(type_pair)
+                similarity_cache[type_pair] = type_similarity
+            comparison = f"{tr_a['region_name']} vs {tr_b['region_name']}"
+
+            if label is not None:
+                new_features = pl.DataFrame(
+                    {
+                        "5p_exon_overlap": five_prime_overlap,
+                        "5p_exon_dta": five_prime_dta,
+                        "5p_exon_3p_dta": five_prime_ex_3p_dta,
+                        "exons_overlapping": count_90_overlap,
+                        "strand": int(tr_a["strand"] == tr_b["strand"]),
+                        "type_sim": type_similarity,
+                        "label": int(label),
+                        "comparison": comparison,
+                    },
+                    schema={
+                        "5p_exon_overlap": pl.Float64,
+                        "5p_exon_dta": pl.Int64,
+                        "5p_exon_3p_dta": pl.Int64,
+                        "exons_overlapping": pl.Int64,
+                        "strand": pl.Int64,
+                        "type_sim": pl.Float64,
+                        "label": pl.Int8,
+                        "comparison": pl.Utf8,
+                    },
+                )
+            else:
+                comparison_features.append(
+                    {
+                        "5p_exon_overlap": five_prime_overlap,
+                        "5p_exon_dta": five_prime_dta,
+                        "5p_exon_3p_dta": five_prime_ex_3p_dta,
+                        "exons_overlapping": count_90_overlap,
+                        "strand": int(tr_a["strand"] == tr_b["strand"]),
+                        "type_sim": type_similarity,
+                        "comparison": comparison,
+                    }
+                )
+            comparisons.add(normalized_pair)
+        new_features = pl.DataFrame(
+            comparison_features,
+            schema={
+                "5p_exon_overlap": pl.Float64,
+                "5p_exon_dta": pl.Int64,
+                "5p_exon_3p_dta": pl.Int64,
+                "exons_overlapping": pl.Int64,
+                "strand": pl.Int64,
+                "type_sim": pl.Float64,
+                "comparison": pl.Utf8,
+            },
+        )
+        features = features.vstack(new_features)
+    return features
+
+
+def polars_preprocessing(transcripts, nearby_distance=1000, label=None):
     chromosomes = sorted(transcripts["chromosome"].unique().to_list())
-    print(chromosomes)
     all_features = []
 
     for chrom in (pbar := tqdm(chromosomes[::-1])):
@@ -174,7 +303,10 @@ def polars_preprocessing(transcripts, nearby_distance=1000):
             all_features.append(features)
 
     if all_features:
-        return pl.concat(all_features).rechunk()
+        all_features_df = pl.concat(all_features).rechunk()
+        if label is not None:
+            all_features_df = all_features_df.with_columns(pl.lit(label).alias("label"))
+        return all_features_df
 
     return empty_features.clone()
 
