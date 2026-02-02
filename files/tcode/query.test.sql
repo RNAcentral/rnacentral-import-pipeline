@@ -9,4 +9,5 @@ COPY (
   where
     pre.is_active = true
     AND pre.id ~ '_[0-9]+$' 
+  LIMIT 2
 ) TO STDOUT

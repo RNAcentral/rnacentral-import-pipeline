@@ -40,7 +40,7 @@ def _build_result(
     else:
         mean_score = None
         std_score = None
-    final_size = size if size is not None else header_len
+    final_size = header_len if header_len is not None else size
     return TcodeResult.build(sequence, final_size, mean_score, std_score)
 
 
