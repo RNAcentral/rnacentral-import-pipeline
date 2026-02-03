@@ -136,7 +136,11 @@ def get_community_genes(classifications, transcripts):
 
         edge_tuples = []
         for idx, row in enumerate(edges.iter_rows()):
-            source, target = row[0][0], row[0][1]
+            if len(row[0]) > 1:
+                source, target = row[0][0], row[0][1]
+            else:
+                print(row)
+                continue
             probability = row[1]
             edge_tuples.append((source, target, probability))
             if idx > 0 and idx % 100_000 == 0:
@@ -144,7 +148,6 @@ def get_community_genes(classifications, transcripts):
                 edge_tuples = []
         if len(edge_tuples) > 0:
             G.add_weighted_edges_from(edge_tuples)
-        print("edges added")
         # Find communities (genes) using Louvain method
         partition = community_louvain.best_partition(G)
 
