@@ -18,7 +18,7 @@ TARGET COLUMNS (
 
 BEFORE LOAD DO
 $$
-CREATE TABLE IF NOT EXISTS tcode_test (
+CREATE TABLE IF NOT EXISTS tcode_results (
   urs_taxid TEXT PRIMARY KEY,
   len integer,
   mean_score float,
@@ -41,7 +41,7 @@ $$
 
 AFTER LOAD DO
 $$
-INSERT INTO tcode_test (
+INSERT INTO tcode_results (
   urs_taxid,
   len,
   mean_score,
