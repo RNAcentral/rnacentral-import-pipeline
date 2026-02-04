@@ -12,7 +12,7 @@ process find_sequences {
   path('sequences/*.fasta')
 
   """
-  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -v "min_len=${params.tcode.min_len}" -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
   split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
   """
@@ -21,7 +21,6 @@ process find_sequences {
 process tcode_scan {
   tag { "$sequences" }
   container 'biocontainers/emboss:v6.6.0dfsg-7b1-deb_cv1'
-  containerOptions '--platform linux/amd64'
 
   input:
   path(sequences)

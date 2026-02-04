@@ -8,5 +8,6 @@ COPY (
   join rna on rna.upi = pre.upi
   where
     pre.is_active = true
-    AND pre.id ~ '_[0-9]+$' 
+    AND pre.id ~ '_[0-9]+$'
+    AND length(coalesce(rna.seq_short, rna.seq_long)) > :min_len
 ) TO STDOUT
