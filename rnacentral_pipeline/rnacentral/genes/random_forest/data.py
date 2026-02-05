@@ -794,7 +794,7 @@ def process_group(group_data, db_str, progress_queue=None):
         descriptions_with_scores = descriptions.with_columns(
             desc_score=pl.struct(
                 pl.col("database"), pl.col("description")
-            ).map_elements(calculate_description_score, return_dtype=pl.Float32)
+            ).map_elements(calculate_description_score, return_dtype=pl.Float64)
         )
         descriptions_with_scores = descriptions_with_scores.with_columns(
             type_score=pl.struct(
@@ -802,7 +802,7 @@ def process_group(group_data, db_str, progress_queue=None):
                 pl.col("database"),
                 pl.col("rna_type"),
                 pl.col("cm_overlap"),
-            ).map_elements(calculate_cm_type_score, return_dtype=pl.Float32)
+            ).map_elements(calculate_cm_type_score, return_dtype=pl.Float64)
         )
 
         best_description = (
