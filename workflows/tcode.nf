@@ -2,17 +2,33 @@
 
 nextflow.enable.dsl=2
 
+process build_ranges {
+  when { params.tcode.run }
+
+  input:
+  val(_flag)
+
+  output:
+  path('ranges.csv')
+
+  script:
+  def chunk_size = params.tcode.db_chunk_size
+  """
+  rnac upi-ranges --table-name rna $chunk_size ranges.csv
+  """
+}
+
 process find_sequences {
   when { params.tcode.run }
 
   input:
-  tuple val(taxid), path(query)
+  tuple val(min), val(max), path(query)
 
   output:
-  path('sequences/*.fasta')
+  path('sequences/*.fasta'), optional: true
 
   """
-  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -v "min_len=${params.tcode.min_len}" -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -v "min_len=${params.tcode.min_len}" -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
   split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
   """
@@ -63,11 +79,13 @@ workflow tcode {
     if( !params.tcode.run )
       return
 
-    Channel.fromPath(params.tcode.query) | set { query }
-    Channel.fromPath('files/tcode/tcode.ctl') | set { load_ctl }
+    def query = file(params.tcode.query)
+    def load_ctl = file('files/tcode/tcode.ctl')
 
-    def fasta_ch = Channel.of(params.tcode.taxid) \
-      | combine(query) \
+    def fasta_ch = Channel.of('ready') \
+      | build_ranges \
+      | splitCsv \
+      | map { _table, min, max -> [min, max, query] } \
       | find_sequences \
       | flatMap { seqs -> (seqs instanceof ArrayList) ? seqs : [seqs] }
 

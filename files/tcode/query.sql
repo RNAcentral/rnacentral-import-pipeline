@@ -2,13 +2,18 @@ COPY (
   SELECT
     json_build_object(
       'id', pre.id,
-      'sequence', coalesce(rna.seq_short, rna.seq_long),
-      'length', length(coalesce(rna.seq_short, rna.seq_long))
+      'sequence', coalesce(rna.seq_short, rna.seq_long)
     )
   FROM rnc_rna_precomputed pre
-  join rna on rna.upi = pre.upi
-  where
-    pre.is_active = true
+  JOIN rna
+    ON rna.upi = pre.upi
+  WHERE
+    rna.id >= :min
+    AND rna.id < :max
+    AND pre.is_active = true
     AND pre.id ~ '_[0-9]+$'
-    AND length(coalesce(rna.seq_short, rna.seq_long)) > :min_len
+    -- Filter sequences with non-ACGTUN letters or >4 Ns to avoid tcode crashes
+    AND coalesce(rna.seq_short, rna.seq_long) ~ '^[ACGTUNacgtun]+$'
+    AND coalesce(rna.seq_short, rna.seq_long) !~ '([Nn][^Nn]*){5}'
+    AND rna.len > :min_len
 ) TO STDOUT
