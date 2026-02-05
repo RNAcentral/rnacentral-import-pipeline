@@ -474,6 +474,42 @@ def merge_genes(
     return final_merged_data
 
 
+def init_genes(genes_file, release_number):
+    """
+    Initialize version tracking for a single release of genes.
+
+    Use this when there's only one release available and no merging is needed.
+    Adds first_release, last_release, and properly formatted version to gene names.
+    """
+    genes = pl.read_json(genes_file).with_columns(
+        pl.col("name").str.split(".").list.last().cast(pl.Int64).alias("version")
+    )
+    genes = genes.with_columns(pl.col("name").str.split(".").list.first())
+
+    genes = genes.with_columns(
+        first_release=pl.lit(release_number, dtype=pl.Int64),
+        last_release=pl.lit(release_number, dtype=pl.Int64),
+    )
+
+    genes = genes.with_columns(
+        name=pl.col("name") + "." + pl.col("version").cast(pl.Utf8)
+    )
+
+    return genes.select(
+        "name",
+        "internal_name",
+        "members",
+        "start",
+        "stop",
+        "strand",
+        "chromosome",
+        "assembly_id",
+        "version",
+        "first_release",
+        "last_release",
+    )
+
+
 def store_genes(final_genes, taxid, db_str):
     """
     Store the final merged genes in the database.

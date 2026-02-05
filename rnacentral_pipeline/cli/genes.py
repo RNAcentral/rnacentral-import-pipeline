@@ -308,6 +308,31 @@ def merge(
     click.echo(f"Merged genes saved to {output}")
 
 
+@utils_cli.command("init")
+@click.option("--genes", required=True, help="Path to genes file")
+@click.option("--output", required=True, help="Output file path")
+@click.option("--release_number", type=int, required=True, help="Release number")
+def init(genes, output, release_number):
+    """
+    Initialize version tracking for a single release.
+
+    Use this when only one release is available for a taxon and no merging
+    is needed. Adds release tracking columns (first_release, last_release)
+    and ensures consistent name formatting.
+    """
+    genes_path = Path(genes)
+    output_path = Path(output)
+
+    if not genes_path.exists():
+        raise click.ClickException(f"Genes file not found: {genes_path}")
+
+    initialized = data.init_genes(genes_path, release_number)
+    initialized.write_json(output_path)
+    click.echo(
+        f"Initialized {len(initialized)} genes for release {release_number} -> {output_path}"
+    )
+
+
 @utils_cli.command("process-metadata")
 @click.argument("final_genes", type=click.Path(exists=True))
 @click.argument("metadata_output", type=click.Path())
