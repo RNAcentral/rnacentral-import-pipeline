@@ -64,5 +64,6 @@ CREATE TABLE load_qa_status (
   missing_rfam_match bool not null,
   from_repetitive_region bool not null,
   possible_orf bool not null,
+  possible_orf_tcode bool not null,
   messages jsonb not null
 );

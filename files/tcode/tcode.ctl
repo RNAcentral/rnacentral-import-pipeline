@@ -2,7 +2,7 @@ LOAD CSV
 FROM ALL FILENAMES MATCHING ~<tcode-results.*csv$>
 HAVING FIELDS (
   urs_taxid,
-  len,
+  length,
   mean_score,
   std_score,
   is_protein_coding
@@ -10,7 +10,7 @@ HAVING FIELDS (
 INTO {{PGDATABASE}}?load_tcode
 TARGET COLUMNS (
   urs_taxid,
-  len,
+  length,
   mean_score,
   std_score,
   is_protein_coding
@@ -20,7 +20,7 @@ BEFORE LOAD DO
 $$
 CREATE TABLE IF NOT EXISTS tcode_results (
   urs_taxid TEXT PRIMARY KEY,
-  len integer,
+  length integer,
   mean_score float,
   std_score float,
   is_protein_coding bool
@@ -32,7 +32,7 @@ $$,
 $$
 CREATE TABLE load_tcode (
   urs_taxid TEXT not null,
-  len integer,
+  length integer,
   mean_score float,
   std_score float,
   is_protein_coding bool
@@ -43,21 +43,21 @@ AFTER LOAD DO
 $$
 INSERT INTO tcode_results (
   urs_taxid,
-  len,
+  length,
   mean_score,
   std_score,
   is_protein_coding
 ) (
 SELECT
   urs_taxid,
-  len,
+  length,
   mean_score,
   std_score,
   is_protein_coding
 from load_tcode
 ) ON CONFLICT (urs_taxid) DO UPDATE
 SET
-  len = EXCLUDED.len,
+  length = EXCLUDED.length,
   mean_score = EXCLUDED.mean_score,
   std_score = EXCLUDED.std_score,
   is_protein_coding = EXCLUDED.is_protein_coding

@@ -390,6 +390,7 @@ CREATE TABLE load_qa_status (
   incomplete_sequence bool,
   possible_contamination bool,
   missing_rfam_match bool,
+  possible_orf_tcode bool,
   messages jsonb
 );
 

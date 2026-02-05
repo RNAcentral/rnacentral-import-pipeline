@@ -15,6 +15,7 @@ use crate::metadata::{
     previous::Previous,
     r2dt_hit::R2dtHit,
     rfam_hit::RfamHit,
+    tcode::Tcode,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -30,6 +31,7 @@ pub struct Metadata {
     pub rfam_hits: Vec<RfamHit>,
     pub r2dt_hits: Option<R2dtHit>,
     pub orf_info: Option<OrfInfo>,
+    pub possible_orf_tcode: Option<bool>,
 }
 
 impl Metadata {
@@ -40,6 +42,7 @@ impl Metadata {
         r2dt_hits: Option<R2dtHit>,
         previous: Option<Previous>,
         orfs: Vec<Orf>,
+        tcode: Option<Tcode>,
     ) -> Result<Self> {
         if coordinates.len() > 0 {
             assert!(
@@ -59,6 +62,8 @@ impl Metadata {
             )
         }
 
+        let possible_orf_tcode = tcode.and_then(|t| t.is_protein_coding);
+
         return Ok(Self {
             id: basic.id,
             urs_id: basic.urs_id,
@@ -71,6 +76,7 @@ impl Metadata {
             rfam_hits,
             r2dt_hits,
             orf_info: orfs.into_iter().collect(),
+            possible_orf_tcode,
         });
     }
 }

@@ -21,17 +21,9 @@ import re
 from rnacentral_pipeline.tcode.data import TcodeResult
 
 
-def _split_taxid(seq_id: str) -> ty.Tuple[str, bool]:
-    if "_" not in seq_id:
-        return seq_id, False
-    base, suffix = seq_id.rsplit("_", 1)
-    return (base, True) if suffix.isdigit() else (seq_id, False)
-
-
 def _build_result(
     sequence: str,
-    size: ty.Optional[int],
-    header_len: ty.Optional[int],
+    length: ty.Optional[int],
     scores: ty.List[float],
 ) -> TcodeResult:
     if scores:
@@ -40,16 +32,19 @@ def _build_result(
     else:
         mean_score = None
         std_score = None
-    final_size = header_len if header_len is not None else size
-    return TcodeResult.build(sequence, final_size, mean_score, std_score)
+    return TcodeResult.build(sequence, length, mean_score, std_score)
 
 
 def parse(tcode_output: Path) -> ty.Iterable[TcodeResult]:
+    """
+    Assumes input sequences are pre-filtered ( >200 bp to avoid tcode crashing or
+    unreliable results). 
+    For each sequence block, parse scores and emit mean/std. If there is one score,
+    mean is that score and std is 0.0. If no scores are reported, mean/std are NaN.
+    """
     sequence = None
-    size: ty.Optional[int] = None
-    header_len: ty.Optional[int] = None
+    length: ty.Optional[int] = None
     scores: ty.List[float] = []
-    results_by_base: ty.Dict[str, TcodeResult] = {}
     seq_pattern = re.compile(r"^#?\s*Sequence:\s+(\S+)\s+from:\s+(\d+)\s+to:\s+(\d+)")
 
     with tcode_output.open("r") as handle:
@@ -61,25 +56,13 @@ def parse(tcode_output: Path) -> ty.Iterable[TcodeResult]:
             match = seq_pattern.match(line)
             if match:
                 if sequence:
-                    result = _build_result(sequence, size, header_len, scores)
-                    base, has_taxid = _split_taxid(result.urs)
-                    if has_taxid:
-                        results_by_base[base] = result
+                    yield _build_result(sequence, length, scores)
                 scores = []
-                size = None
-                header_len = None
+                try:
+                    length = int(match.group(3)) - int(match.group(2)) + 1
+                except ValueError:
+                    length = None
                 sequence = match.group(1)
-                try:
-                    header_len = int(match.group(3)) - int(match.group(2)) + 1
-                except ValueError:
-                    header_len = None
-                continue
-
-            if line.startswith("# Total_length:"):
-                try:
-                    size = int(line.split(":", 1)[1].strip())
-                except ValueError:
-                    size = None
                 continue
 
             if line.startswith("#"):
@@ -95,10 +78,4 @@ def parse(tcode_output: Path) -> ty.Iterable[TcodeResult]:
                 continue
 
     if sequence:
-        result = _build_result(sequence, size, header_len, scores)
-        base, has_taxid = _split_taxid(result.urs)
-        if has_taxid:
-            results_by_base[base] = result
-
-    for result in results_by_base.values():
-        yield result
+        yield _build_result(sequence, length, scores)

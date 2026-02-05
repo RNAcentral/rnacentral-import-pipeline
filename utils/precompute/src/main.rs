@@ -40,6 +40,10 @@ enum MetadataCommand {
         orfs: PathBuf,
 
         #[structopt(parse(from_os_str))]
+        /// Filename of tcode results
+        tcode: PathBuf,
+
+        #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
     },
@@ -175,6 +179,7 @@ fn main() -> anyhow::Result<()> {
                 r2dt_hits,
                 previous,
                 orfs,
+                tcode,
                 output,
             } => {
                 metadata::write_merge(
@@ -184,6 +189,7 @@ fn main() -> anyhow::Result<()> {
                     &r2dt_hits,
                     &previous,
                     &orfs,
+                    &tcode,
                     &output,
                 )?;
             },
@@ -199,6 +205,7 @@ fn main() -> anyhow::Result<()> {
                 FileType::Previous => metadata::previous::group(&path, max_count, &output)?,
                 FileType::R2dtHits => metadata::r2dt_hit::group(&path, max_count, &output)?,
                 FileType::RfamHits => metadata::rfam_hit::group(&path, max_count, &output)?,
+                FileType::Tcode => metadata::tcode::group(&path, max_count, &output)?,
             },
         },
         Subcommand::GroupAccessions {

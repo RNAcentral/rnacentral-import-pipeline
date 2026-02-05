@@ -7,7 +7,8 @@ COPY (
       'possible_contamination', qa.possible_contamination,
       'incomplete_sequence', qa.incomplete_sequence,
       'missing_rfam_match', qa.missing_rfam_match,
-      'possible_orf', qa.possible_orf
+      'possible_orf', qa.possible_orf,
+      'possible_orf_tcode', qa.possible_orf_tcode
     )
   FROM search_export_urs todo
   JOIN qa_status qa ON qa.rna_id = todo.urs_taxid
