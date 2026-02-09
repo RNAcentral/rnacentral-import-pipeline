@@ -54,7 +54,7 @@ class QaStatus:
     missing_rfam_match = attr.ib(validator=is_a(QaResult))
     from_repetitive_region = attr.ib(validator=is_a(QaResult))
     possible_orf = attr.ib(validator=is_a(QaResult))
-    possible_orf_tcode = attr.ib(validator=is_a(bool))
+    possible_orf_tcode = attr.ib(validator=is_a(QaResult))
 
     @property
     def has_issue(self) -> bool:
@@ -63,7 +63,7 @@ class QaStatus:
         """
 
         fields = (getattr(self, f.name) for f in attr.fields(self.__class__))
-        return any(f.has_issue for f in fields if isinstance(f, QaResult))
+        return any(f.has_issue for f in fields)
 
     def messages(self) -> ty.List[str]:
         messages = []
@@ -86,6 +86,5 @@ class QaStatus:
             str(int(self.has_issue)),
         ]
         data.extend(f.str_issue() for f in fields)
-        data.append(str(int(self.possible_orf_tcode)))
         data.append(json.dumps(self.messages()))
         return data

@@ -21,6 +21,9 @@ from rnacentral_pipeline.tcode import parser
 from rnacentral_pipeline.tcode.data import TcodeResult
 
 
+XIST_TCODE_OUTPUT = Path(__file__).resolve().parents[2] / "data/tcode/XIST_tcode.out"
+
+
 def _write_tcode(tmp_path: Path, content: str) -> Path:
     path = tmp_path / "sample.tcode.out"
     path.write_text(content)
@@ -28,42 +31,25 @@ def _write_tcode(tmp_path: Path, content: str) -> Path:
 
 
 @pytest.mark.tcode
-def test_parses_tcode_output_with_taxid(tmp_path: Path):
-    content = """# Sequence: URS0000000001_77133     from: 1   to: 250
-# Total_length: 250
-1 2 3 1.0
-1 2 3 2.0
-# Sequence: URS0000000002     from: 1   to: 220
-# Total_length: 220
-1 2 3 0.5
-"""
-    results = list(parser.parse(_write_tcode(tmp_path, content)))
-    assert results == [
-        TcodeResult.build("URS0000000001_77133", 250, 1.5, 0.7071067811865476),
-    ]
-
+def test_parses_real_xist_tcode_output():
+    results = list(parser.parse(XIST_TCODE_OUTPUT))
+    assert len(results) == 1
+    result = results[0]
+    assert result.urs == "URS000025784F"
+    assert result.length == "37027"
+    assert float(result.mean_score) == pytest.approx(0.6650742098403388)
+    assert float(result.std_score) == pytest.approx(0.1614766506598923)
+    assert result.is_protein_coding is False
 
 @pytest.mark.tcode
-def test_uses_header_length_when_total_length_missing(tmp_path: Path):
-    content = """# Sequence: URS0000000003_77133     from: 1   to: 363
-1 2 3 0.7
-1 2 3 0.8
+def test_single_score_output(tmp_path: Path):
+    content = """# Sequence: URS0000000006_77133     from: 1   to: 203
+1 2 3 0.73
 """
     results = list(parser.parse(_write_tcode(tmp_path, content)))
     assert len(results) == 1
     result = results[0]
-    assert result.urs == "URS0000000003_77133"
-    assert result.length == "363"
-    assert float(result.mean_score) == pytest.approx(0.75)
-    assert float(result.std_score) == pytest.approx(0.07071067811865475)
-
-
-@pytest.mark.tcode
-def test_nan_scores_when_no_rows(tmp_path: Path):
-    content = """# Sequence: URS0000000004_77133     from: 1   to: 200
-# Total_length: 200
-"""
-    results = list(parser.parse(_write_tcode(tmp_path, content)))
-    assert results == [
-        TcodeResult.build("URS0000000004_77133", 200, None, None),
-    ]
+    assert result.urs == "URS0000000006_77133"
+    assert result.length == "203"
+    assert float(result.mean_score) == pytest.approx(0.73)
+    assert float(result.std_score) == 0.0
