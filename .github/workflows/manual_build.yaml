@@ -4,7 +4,15 @@
 
 name: Manually Building Pipeline Containers
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      force_rust_build:
+        description: 'Force rebuild of Rust containers'
+        required: false
+        type: boolean
+        default: false
+        
 jobs:
 
   starting-notification:
