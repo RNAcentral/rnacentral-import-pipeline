@@ -26,6 +26,21 @@ jobs:
          SLACK_MESSAGE: 'Creating new pipeline image in docker hub'
          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
          MSG_MINIMAL: true
+  
+  trigger-rust-build:
+    runs-on: ubuntu-latest
+    if: inputs.force_rust_build == true
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Trigger Rust container build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Triggering rust-container workflow..."
+          gh workflow run rust-container.yaml \
+            --ref ${{ github.ref_name }} \
+            -f force_rebuild=true
 
   wait-for-rust-build:
     runs-on: ubuntu-latest
