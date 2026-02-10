@@ -39,6 +39,14 @@ jobs:
       - name: Check if Rust files changed
         id: check-rust
         run: |
+          # Check if force build was requested
+          if [ "${{ inputs.force_rust_build }}" = "true" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Force Rust rebuild requested"
+            exit 0
+          fi
+          
+          # Otherwise check for actual changes
           if git diff --name-only HEAD^ HEAD | grep -qE '\.(rs|toml|lock)$'; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "Rust files changed, waiting for rust-container workflow..."
