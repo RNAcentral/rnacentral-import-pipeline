@@ -21,10 +21,10 @@ from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group("flybase")
+@click.group("japonicusdb")
 def cli():
     """
-    Commands for parsing Flybase data.
+    Commands for parsing JaponicusDB data.
     """
 
 

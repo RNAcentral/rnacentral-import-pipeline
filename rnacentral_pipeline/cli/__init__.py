@@ -34,6 +34,7 @@ from rnacentral_pipeline.cli import (
     gtrnadb,
     hgnc,
     intact,
+    japonicusdb,
     lncbase,
     lncbook,
     lncipedia,
@@ -111,6 +112,7 @@ cli.add_command(genome_mapping.cli)
 cli.add_command(gtrnadb.cli)
 cli.add_command(hgnc.cli)
 cli.add_command(intact.cli)
+cli.add_command(japonicusdb.cli)
 cli.add_command(lncbase.cli)
 cli.add_command(lncbook.cli)
 cli.add_command(lncipedia.cli)
