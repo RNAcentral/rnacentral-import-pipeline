@@ -9,6 +9,7 @@ include { genecards_suite } from './databases/genecards_suite'
 include { gtrnadb } from './databases/gtrnadb'
 include { hgnc } from './databases/hgnc'
 include { intact } from './databases/intact'
+include { japonicusdb } from './databases/japonicusdb'
 include { lncbase } from './databases/lncbase'
 include { lncbook } from './databases/lncbook'
 include { lncipedia } from './databases/lncipedia'
@@ -72,6 +73,7 @@ workflow parse_databases {
       gtrnadb(context),
       hgnc(),
       intact(),
+      japonicusdb(),
       lncbase(),
       lncbook(),
       lncipedia(),
