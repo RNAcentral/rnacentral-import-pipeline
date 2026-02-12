@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import json
+import hashlib
 
 import attr
 import pytest
@@ -64,6 +65,42 @@ def test_can_extract_gene_symbols_to_synonyms(filename, synonyms):
         data = list(v1.parse(data))
     assert len(data) == 1
     assert set(data[0].gene_synonyms) == synonyms
+
+
+def test_can_parse_modomics_modifications_to_sequence_features():
+    record = {
+        "primaryId": "MODOMICS:1",
+        "sequence": "ACGTACGT",
+        "sequenceFeatures": {
+            "modifications": [
+                {"index": 16, "shortName": "D", "RNAmodsCode": "D", "fullName": "dihydrouridine"},
+                {"author_position": 56, "modification": "9U", "RNAmodsCode": "9", "fullName": "uridine-9"},
+            ]
+        },
+    }
+
+    result = v1.features(record)
+
+    assert len(result) == 2
+    assert result[0].feature_type == "modification"
+    assert result[0].location == [16, 17]
+    assert result[0].metadata["modification"] == "D"
+    assert result[0].metadata["index"] == 16
+    assert result[0].metadata["RNAmodsCode"] == "D"
+    assert result[0].metadata["fullName"] == "dihydrouridine"
+
+    assert result[1].feature_type == "modification"
+    assert result[1].location == [56, 57]
+    assert result[1].metadata["modification"] == "9U"
+    assert result[1].metadata["index"] == 56
+    assert result[1].metadata["RNAmodsCode"] == "9"
+    assert result[1].metadata["fullName"] == "uridine-9"
+    assert result[0].provider == "MODOMICS"
+    assert result[1].provider == "MODOMICS"
+
+    accession = hashlib.md5(record["sequence"].encode("utf-8")).hexdigest() + "_modomics"
+    assert result[0].metadata["accession"] == accession
+    assert result[1].metadata["accession"] == accession
 
 
 @pytest.mark.parametrize(

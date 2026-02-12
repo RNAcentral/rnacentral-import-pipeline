@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import collections as coll
+import hashlib
 import itertools as it
 import logging
 
@@ -194,7 +195,67 @@ def features(record):
     if not record.get("sequenceFeatures", None):
         return []
     features = []
+    provider = record.get("database")
+    if provider is None and "primaryId" in record:
+        provider = record["primaryId"].split(":", 1)[0]
+    if provider is None:
+        provider = "UNKNOWN"
+
+    def modification_features(modifications):
+        if not isinstance(modifications, list):
+            LOGGER.warning(
+                "Skipping sequence feature modifications due to unexpected type %s",
+                type(modifications),
+            )
+            return
+
+        sequence = record.get("sequence", "")
+        accession = f"{hashlib.md5(sequence.encode('utf-8')).hexdigest()}_modomics"
+        for raw in modifications:
+            if not isinstance(raw, dict):
+                LOGGER.warning(
+                    "Skipping sequence modification due to unexpected type %s",
+                    type(raw),
+                )
+                continue
+
+            position = raw.get("author_position", raw.get("index"))
+            if position is None:
+                LOGGER.warning(
+                    "Skipping sequence modification due to missing author_position/index"
+                )
+                continue
+
+            modification = raw.get("modification", raw.get("shortName"))
+            if modification is None:
+                LOGGER.warning(
+                    "Skipping sequence modification due to missing modification/shortName"
+                )
+                continue
+
+            position = int(position)
+            features.append(
+                data.SequenceFeature(
+                    name="modification",
+                    feature_type="modification",
+                    location=[position, position + 1],
+                    sequence=str(modification),
+                    provider=provider,
+                    metadata={
+                        "accession": accession,
+                        "modification": str(modification),
+                        "index": position,
+                        "RNAmodsCode": raw.get("RNAmodsCode"),
+                        "fullName": raw.get("fullName"),
+                    },
+                )
+            )
+
     for key, feature in record["sequenceFeatures"].items():
+        if key == "modifications":
+            modification_features(feature)
+            continue
+
         ## Skip sequence features that do not have the required metadata
         if not isinstance(feature, dict):
             LOGGER.warning(
@@ -214,14 +275,14 @@ def features(record):
             continue
 
         features.append(
-            data.SequenceFeature(
-                name=key,
-                feature_type=key,
-                location=feature["indexes"],
-                sequence=feature["sequence"],
-                provider=record["database"],
+                data.SequenceFeature(
+                    name=key,
+                    feature_type=key,
+                    location=feature["indexes"],
+                    sequence=feature["sequence"],
+                    provider=provider,
+                )
             )
-        )
     return features
 
 
