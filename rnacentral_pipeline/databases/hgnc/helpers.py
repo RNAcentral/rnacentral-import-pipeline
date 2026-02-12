@@ -57,6 +57,7 @@ def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
     xref = Table("xref")
     rna = Table("rna")
     acc = Table("rnc_accessions")
+    db = Table("rnc_database")
     query = (
         Query.from_(xref)
         .select(rna.upi)
@@ -64,10 +65,12 @@ def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
         .on(xref.ac == acc.accession)
         .join(rna)
         .on(rna.upi == xref.upi)
+        .join(db)
+        .on(db.id == xref.dbid)
         .where(
             (xref.taxid == 9606)
             & (xref.deleted == "N")
-            & (xref.dbid == 8)
+            & (db.descr == "GTRNADB")
             & (acc.optional_id == raw)
             & (acc.database == "GTRNADB")
         )

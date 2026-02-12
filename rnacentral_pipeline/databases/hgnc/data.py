@@ -130,6 +130,7 @@ def ensembl_mapping(conn):
     xref = Table("xref")
     rna = Table("rna")
     acc = Table("rnc_accessions")
+    db = Table("rnc_database")
     query = (
         Query.from_(xref)
         .select(xref.upi, acc.optional_id, rna.len)
@@ -137,7 +138,9 @@ def ensembl_mapping(conn):
         .on(acc.accession == xref.ac)
         .join(rna)
         .on(rna.upi == xref.upi)
-        .where((xref.dbid == 25) & (xref.taxid == 9606) & (xref.deleted == "N"))
+        .join(db)
+        .on(db.id == xref.dbid)
+        .where((db.descr == "NONCODE") & (xref.taxid == 9606) & (xref.deleted == "N"))
     )
 
     found = coll.defaultdict(set)
