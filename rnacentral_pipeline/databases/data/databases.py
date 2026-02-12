@@ -59,6 +59,7 @@ class Database(enum.Enum):
     gtrnadb = DatabaseValue(13, "GtRNAdb", "GTRNADB")
     hgnc = DatabaseValue(14, "HGNC", "HGNC")
     intact = DatabaseValue(15, "IntAct", "INTACT")
+    japonicusdb = DatabaseValue(58, "JaponicusDB", "JAPONICUSDB")
     lncbase = DatabaseValue(16, "LncBase", "LNCBASE")
     lncbook = DatabaseValue(17, "LncBook", "LNCBOOK")
     lncipedia = DatabaseValue(18, "LNCipedia", "LNCIPEDIA")
