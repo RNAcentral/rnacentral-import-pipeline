@@ -53,3 +53,34 @@ def test_single_score_output(tmp_path: Path):
     assert result.length == "203"
     assert float(result.mean_score) == pytest.approx(0.73)
     assert float(result.std_score) == 0.0
+    assert result.is_protein_coding is False
+
+
+@pytest.mark.tcode
+def test_protein_coding_uses_mean_minus_std(tmp_path: Path):
+    content = """# Sequence: URS_HIGHVAR     from: 1   to: 201
+1 2 3 0.99
+1 2 3 0.95
+1 2 3 0.96
+"""
+    results = list(parser.parse(_write_tcode(tmp_path, content)))
+    assert len(results) == 1
+    result = results[0]
+    assert float(result.mean_score) == pytest.approx(0.9666666666666667)
+    assert float(result.std_score) == pytest.approx(0.02081665999466134)
+    assert result.is_protein_coding is False
+
+
+@pytest.mark.tcode
+def test_protein_coding_true_when_mean_minus_std_above_threshold(tmp_path: Path):
+    content = """# Sequence: URS_LOWVAR      from: 1   to: 201
+1 2 3 0.99
+1 2 3 0.99
+1 2 3 0.98
+"""
+    results = list(parser.parse(_write_tcode(tmp_path, content)))
+    assert len(results) == 1
+    result = results[0]
+    assert float(result.mean_score) == pytest.approx(0.9866666666666667)
+    assert float(result.std_score) == pytest.approx(0.005773502691896257)
+    assert result.is_protein_coding is True

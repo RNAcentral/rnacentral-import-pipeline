@@ -38,7 +38,11 @@ class TcodeResult:
         mean_score: ty.Optional[float],
         std_score: ty.Optional[float],
     ) -> TcodeResult:
-        is_protein_coding = mean_score is not None and mean_score > 0.95
+        is_protein_coding = (
+            mean_score is not None
+            and std_score is not None
+            and (mean_score - std_score) > 0.95
+        )
         return cls(
             urs=urs,
             length=_format_value(size),
