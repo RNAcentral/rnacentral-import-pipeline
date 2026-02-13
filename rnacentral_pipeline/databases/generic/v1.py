@@ -219,10 +219,10 @@ def features(record):
                 )
                 continue
 
-            position = raw.get("author_position", raw.get("index"))
+            position = raw.get("modification", raw.get("index"))
             if position is None:
                 LOGGER.warning(
-                    "Skipping sequence modification due to missing author_position/index"
+                    "Skipping sequence modification due to missing modification/index"
                 )
                 continue
 
