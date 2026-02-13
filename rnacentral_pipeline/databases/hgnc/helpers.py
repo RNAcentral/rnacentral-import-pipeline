@@ -65,7 +65,6 @@ def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
         .join(rna)
         .on(rna.upi == xref.upi)
         .where(
-            # dbid 8 == GTRNADB
             (xref.taxid == 9606)
             & (xref.deleted == "N")
             & (xref.dbid == 8)
