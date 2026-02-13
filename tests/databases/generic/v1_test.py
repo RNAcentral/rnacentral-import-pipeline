@@ -74,7 +74,7 @@ def test_can_parse_modomics_modifications_to_sequence_features():
         "sequenceFeatures": {
             "modifications": [
                 {"index": 16, "shortName": "D", "RNAmodsCode": "D", "fullName": "dihydrouridine"},
-                {"author_position": 56, "modification": "9U", "RNAmodsCode": "9", "fullName": "uridine-9"},
+                {"position": 56, "modification": "9U", "RNAmodsCode": "9", "fullName": "uridine-9"},
             ]
         },
     }

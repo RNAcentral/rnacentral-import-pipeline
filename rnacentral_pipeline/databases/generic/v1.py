@@ -219,10 +219,10 @@ def features(record):
                 )
                 continue
 
-            position = raw.get("modification", raw.get("index"))
+            position = raw.get("index", raw.get("position"))
             if position is None:
                 LOGGER.warning(
-                    "Skipping sequence modification due to missing modification/index"
+                    "Skipping sequence modification due to missing index/position"
                 )
                 continue
 
@@ -275,14 +275,14 @@ def features(record):
             continue
 
         features.append(
-                data.SequenceFeature(
-                    name=key,
-                    feature_type=key,
-                    location=feature["indexes"],
-                    sequence=feature["sequence"],
-                    provider=provider,
-                )
+            data.SequenceFeature(
+                name=key,
+                feature_type=key,
+                location=feature["indexes"],
+                sequence=feature["sequence"],
+                provider=provider,
             )
+        )
     return features
 
 
