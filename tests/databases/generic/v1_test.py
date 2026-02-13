@@ -68,20 +68,12 @@ def test_can_extract_gene_symbols_to_synonyms(filename, synonyms):
 
 
 def test_can_parse_modomics_modifications_to_sequence_features():
-    record = {
-        "primaryId": "MODOMICS:1",
-        "sequence": "ACGTACGT",
-        "sequenceFeatures": {
-            "modifications": [
-                {"index": 16, "shortName": "D", "RNAmodsCode": "D", "fullName": "dihydrouridine"},
-                {"position": 56, "modification": "9U", "RNAmodsCode": "9", "fullName": "uridine-9"},
-            ]
-        },
-    }
+    with open("data/json-schema/v020/modomics-modifications.json", "r") as raw:
+        record = json.load(raw)["data"][0]
 
     result = v1.features(record)
 
-    assert len(result) == 2
+    assert len(result) == 5
     assert result[0].feature_type == "modification"
     assert result[0].location == [16, 17]
     assert result[0].metadata["modification"] == "D"
@@ -90,17 +82,55 @@ def test_can_parse_modomics_modifications_to_sequence_features():
     assert result[0].metadata["fullName"] == "dihydrouridine"
 
     assert result[1].feature_type == "modification"
-    assert result[1].location == [56, 57]
-    assert result[1].metadata["modification"] == "9U"
-    assert result[1].metadata["index"] == 56
-    assert result[1].metadata["RNAmodsCode"] == "9"
-    assert result[1].metadata["fullName"] == "uridine-9"
+    assert result[1].location == [33, 34]
+    assert result[1].metadata["modification"] == "cmo5U"
+    assert result[1].metadata["index"] == 33
+    assert result[1].metadata["RNAmodsCode"] == "V"
+    assert result[1].metadata["fullName"] == "uridine 5-oxyacetic acid"
+    assert result[4].location == [54, 55]
+    assert result[4].metadata["modification"] == "Y"
+    assert result[4].metadata["index"] == 54
+    assert result[4].metadata["RNAmodsCode"] == "P"
+    assert result[4].metadata["fullName"] == "pseudouridine"
     assert result[0].provider == "MODOMICS"
     assert result[1].provider == "MODOMICS"
+    assert result[4].provider == "MODOMICS"
 
     accession = hashlib.md5(record["sequence"].encode("utf-8")).hexdigest() + "_modomics"
     assert result[0].metadata["accession"] == accession
     assert result[1].metadata["accession"] == accession
+    assert result[4].metadata["accession"] == accession
+
+
+def test_features_requires_provider_metadata():
+    record = {
+        "sequence": "ACGTACGT",
+        "sequenceFeatures": {"modifications": [{"index": 16, "shortName": "D"}]},
+    }
+
+    with pytest.raises(ValueError, match="Missing provider"):
+        v1.features(record)
+
+
+def test_features_rejects_malformed_primary_id_for_provider():
+    record = {
+        "primaryId": "MODOMICS1",
+        "sequence": "ACGTACGT",
+        "sequenceFeatures": {"modifications": [{"index": 16, "shortName": "D"}]},
+    }
+
+    with pytest.raises(ValueError, match="Invalid primaryId format"):
+        v1.features(record)
+
+
+def test_features_requires_sequence_for_modifications():
+    record = {
+        "primaryId": "MODOMICS:1",
+        "sequenceFeatures": {"modifications": [{"index": 16, "shortName": "D"}]},
+    }
+
+    with pytest.raises(ValueError, match="Missing sequence"):
+        v1.features(record)
 
 
 @pytest.mark.parametrize(

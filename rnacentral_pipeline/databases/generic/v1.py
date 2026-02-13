@@ -197,9 +197,13 @@ def features(record):
     features = []
     provider = record.get("database")
     if provider is None and "primaryId" in record:
+        if ":" not in record["primaryId"]:
+            raise ValueError(
+                f"Invalid primaryId format (expected PREFIX:ID): {record['primaryId']}"
+            )
         provider = record["primaryId"].split(":", 1)[0]
     if provider is None:
-        provider = "UNKNOWN"
+        raise ValueError("Missing provider: expected database or primaryId prefix")
 
     def modification_features(modifications):
         if not isinstance(modifications, list):
@@ -210,6 +214,10 @@ def features(record):
             return
 
         sequence = record.get("sequence", "")
+        if not sequence:
+            raise ValueError(
+                "Missing sequence: cannot compute modification accession"
+            )
         accession = f"{hashlib.md5(sequence.encode('utf-8')).hexdigest()}_modomics"
         for raw in modifications:
             if not isinstance(raw, dict):
@@ -219,17 +227,17 @@ def features(record):
                 )
                 continue
 
-            position = raw.get("index", raw.get("position"))
+            position = raw.get("index", None)
             if position is None:
                 LOGGER.warning(
-                    "Skipping sequence modification due to missing index/position"
+                    "Skipping sequence modification due to missing index"
                 )
                 continue
 
-            modification = raw.get("modification", raw.get("shortName"))
+            modification = raw.get("shortName", None)
             if modification is None:
                 LOGGER.warning(
-                    "Skipping sequence modification due to missing modification/shortName"
+                    "Skipping sequence modification due to missing shortName"
                 )
                 continue
 
