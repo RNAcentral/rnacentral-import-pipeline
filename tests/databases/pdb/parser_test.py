@@ -20,6 +20,9 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.pdb import fetch, parser
 
+# Apply pdb marker to all tests in this module
+pytestmark = pytest.mark.pdb
+
 
 def load(pdb_id: str, chain_id: str) -> data.Entry:
     chains = fetch.chains({(pdb_id.lower(), chain_id)})
@@ -28,8 +31,7 @@ def load(pdb_id: str, chain_id: str) -> data.Entry:
     return parser.as_entry(chain_info, references)
 
 
-@pytest.mark.network
-def test_can_build_correct_entry_for_rrna():
+def test_can_build_correct_entry_for_rrna(mock_pdbe_api):
     cur = attr.asdict(load("1J5E", "A"))
     print(cur["references"])
     assert cur == attr.asdict(
@@ -74,13 +76,11 @@ def test_can_build_correct_entry_for_rrna():
     )
 
 
-@pytest.mark.network
-def test_can_handle_strange_taxids():
+def test_can_handle_strange_taxids(mock_pdbe_api):
     assert load("3T4B", "A").ncbi_tax_id == 32630
 
 
-@pytest.mark.network
-def test_can_build_correct_entry_for_srp_rna():
+def test_can_build_correct_entry_for_srp_rna(mock_pdbe_api):
     assert attr.asdict(load("1CQ5", "A")) == attr.asdict(
         data.Entry(
             primary_id="1CQ5",
