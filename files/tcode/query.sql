@@ -11,7 +11,7 @@ COPY (
     rna.id >= :min
     AND rna.id < :max
     AND pre.is_active = true
-    AND pre.id ~ '_[0-9]+$'
+    AND pre.id IS NOT NULL
     -- Filter sequences with non-ACGTUN letters or >4 Ns to avoid tcode crashes
     AND coalesce(rna.seq_short, rna.seq_long) ~ '^[ACGTUNacgtun]+$'
     AND coalesce(rna.seq_short, rna.seq_long) !~ '([Nn][^Nn]*){5}'

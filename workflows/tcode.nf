@@ -36,7 +36,7 @@ process find_sequences {
 
 process tcode_scan {
   tag { "$sequences" }
-  container 'biocontainers/emboss:v6.6.0dfsg-7b1-deb_cv1'
+  container "${params.tcode.container}"
 
   input:
   path(sequences)
