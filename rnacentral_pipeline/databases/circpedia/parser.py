@@ -36,8 +36,8 @@ from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 LOGGER = logging.getLogger(__name__)
 
-# RNA type for circular RNA (SO:0000593)
-CIRCULAR_RNA_SO_TERM = "SO:0000593"
+# RNA type for circular RNA (SO:0002291)
+CIRCULAR_RNA_SO_TERM = "SO:0002291"
 
 
 def load_fasta_sequences(fasta_file: ty.Union[str, Path]) -> ty.Dict[str, str]:
