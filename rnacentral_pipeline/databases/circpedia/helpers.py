@@ -396,6 +396,34 @@ def dis3_features(dis3_motif: str) -> ty.List[SequenceFeature]:
     return features
 
 
+def ortholog_sequences(orthology: str) -> ty.List[RelatedSequence]:
+    """
+    Parse ortholog circRNA IDs from the Orthology column into RelatedSequence objects.
+
+    Args:
+        orthology: Comma-separated ortholog circRNA IDs, or "none" if no orthologs
+
+    Returns:
+        List of RelatedSequence objects
+    """
+    if not orthology or orthology.strip().lower() == "none":
+        return []
+
+    related = []
+    for ortholog_id in orthology.split(","):
+        ortholog_id = ortholog_id.strip()
+        if not ortholog_id:
+            continue
+        related.append(
+            RelatedSequence(
+                sequence_id=f"CIRCPEDIA:{ortholog_id}",
+                relationship="homolog",
+                evidence=RelatedEvidence(methods=["liftover - provided"]),
+            )
+        )
+    return related
+
+
 def references() -> ty.List[Reference]:
     """
     Get references for CIRCpedia V3.
