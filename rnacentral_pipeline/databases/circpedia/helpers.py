@@ -22,12 +22,9 @@ import re
 import typing as ty
 from urllib.parse import quote
 
-from sqlitedict import SqliteDict
-
 from rnacentral_pipeline.databases.data import (
     CoordinateSystem,
     Exon,
-    IdReference,
     Reference,
     SequenceRegion,
 )
@@ -39,12 +36,11 @@ LOGGER = logging.getLogger(__name__)
 CIRCPEDIA_BASE_URL = "https://bits.fudan.edu.cn/circpediav3"
 
 
-def get_ncbi_taxid(taxonomy: SqliteDict, species_str: str) -> ty.Optional[int]:
+def get_ncbi_taxid(species_str: str) -> ty.Optional[int]:
     """
     Get NCBI taxonomy ID from species name.
 
     Args:
-        taxonomy: SqliteDict with taxonomy data
         species_str: Species string
 
     Returns:
@@ -52,7 +48,7 @@ def get_ncbi_taxid(taxonomy: SqliteDict, species_str: str) -> ty.Optional[int]:
     """
     try:
         # Try to get taxid from scientific name
-        taxid = phy.name_to_taxid(species_str, taxonomy)
+        taxid = phy.taxid(species_str)
         if taxid:
             return taxid
     except (phy.UnknownTaxonId, phy.FailedTaxonId, Exception):
@@ -111,15 +107,16 @@ def parse_location_field(location_str: str) -> ty.Optional[ty.Dict[str, ty.Any]]
 
     # Match pattern: chromosome:start-end(strand)
     # Examples: "V:15874634-15876408(-)", "chr1:100-200(+)", "III:1000-2000(+)"
-    match = re.match(r'^(?:chr)?([^:]+):(\d+)-(\d+)\(([+-])\)$', str(location_str).strip())
+    match = re.match(
+        r"^(?:chr)?([^:]+):(\d+)-(\d+)\(([+-])\)$", str(location_str).strip()
+    )
     if not match:
         LOGGER.warning(f"Could not parse location field: {location_str}")
         return None
 
     chromosome, start, end, strand_char = match.groups()
-
     # Convert strand character to integer
-    strand = 1 if strand_char == '+' else -1
+    strand = 1 if strand_char == "+" else -1
 
     return {
         "chromosome": chromosome,
@@ -217,7 +214,9 @@ def regions(
     ]
 
 
-def note_data_from_tsv(row: ty.Dict[str, ty.Any], location: ty.Dict[str, ty.Any]) -> ty.Dict[str, ty.Any]:
+def note_data_from_tsv(
+    row: ty.Dict[str, ty.Any], location: ty.Dict[str, ty.Any]
+) -> ty.Dict[str, ty.Any]:
     """
     Build note data dictionary from CIRCpedia V3 TSV row.
 
@@ -236,48 +235,53 @@ def note_data_from_tsv(row: ty.Dict[str, ty.Any], location: ty.Dict[str, ty.Any]
     notes = {}
 
     # Add genomic location
-    notes["genomic_location"] = f"{location['chromosome']}:{location['start']}-{location['end']}"
+    notes[
+        "genomic_location"
+    ] = f"{location['chromosome']}:{location['start']}-{location['end']}"
 
     # Add circular RNA name if available
-    if row.get('circname'):
-        notes["circname"] = str(row['circname'])
+    if row.get("circname"):
+        notes["circname"] = str(row["circname"])
 
     # Add length
-    if row.get('length'):
+    if row.get("length"):
         try:
-            notes["length"] = int(row['length'])
+            notes["length"] = int(row["length"])
         except (ValueError, TypeError):
             pass
 
     # Add subcellular localization
-    if row.get('subcell_location'):
-        notes["subcell_location"] = str(row['subcell_location'])
+    if row.get("subcell_location"):
+        notes["subcell_location"] = str(row["subcell_location"])
 
     # Add editing sites if available (filter 'none')
-    if row.get('editing_site') and row['editing_site'] not in ['none', 'none;none;none;none']:
-        notes["editing_site"] = str(row['editing_site'])
+    if row.get("editing_site") and row["editing_site"] not in [
+        "none",
+        "none;none;none;none",
+    ]:
+        notes["editing_site"] = str(row["editing_site"])
 
     # Add DIS3 degradation signals (filter 'none')
-    if row.get('DIS3_signal') and row['DIS3_signal'] != 'none':
-        notes["DIS3_signal"] = str(row['DIS3_signal'])
+    if row.get("DIS3_signal") and row["DIS3_signal"] != "none":
+        notes["DIS3_signal"] = str(row["DIS3_signal"])
 
     # Add DIS3 motif if available (filter 'none')
-    if row.get('DIS3_motif') and row['DIS3_motif'] != 'none':
-        notes["DIS3_motif"] = str(row['DIS3_motif'])
+    if row.get("DIS3_motif") and row["DIS3_motif"] != "none":
+        notes["DIS3_motif"] = str(row["DIS3_motif"])
 
     # Add orthology information (filter 'none')
-    if row.get('Orthology') and row['Orthology'] != 'none':
-        notes["orthology"] = str(row['Orthology'])
+    if row.get("Orthology") and row["Orthology"] != "none":
+        notes["orthology"] = str(row["Orthology"])
 
     # Add TGS (third-generation sequencing) support (filter 'none')
-    if row.get('TGS') and row['TGS'] != 'none':
-        notes["TGS_support"] = str(row['TGS'])
+    if row.get("TGS") and row["TGS"] != "none":
+        notes["TGS_support"] = str(row["TGS"])
 
     # Add transcript IDs (filter 'NA')
-    if row.get('transcript_Ensembl') and row['transcript_Ensembl'] != 'NA':
-        notes["transcript_ensembl"] = str(row['transcript_Ensembl'])
-    if row.get('transcript_Refseq') and row['transcript_Refseq'] != 'NA':
-        notes["transcript_refseq"] = str(row['transcript_Refseq'])
+    if row.get("transcript_Ensembl") and row["transcript_Ensembl"] != "NA":
+        notes["transcript_ensembl"] = str(row["transcript_Ensembl"])
+    if row.get("transcript_Refseq") and row["transcript_Refseq"] != "NA":
+        notes["transcript_refseq"] = str(row["transcript_Refseq"])
 
     return notes
 
@@ -298,7 +302,6 @@ def product_from_gene(gene_name: ty.Optional[str]) -> str:
 
 
 def description(
-    taxonomy: SqliteDict,
     taxid: int,
     gene_name: ty.Optional[str],
 ) -> str:
@@ -306,7 +309,6 @@ def description(
     Generate description for the entry.
 
     Args:
-        taxonomy: SqliteDict with taxonomy data
         taxid: NCBI taxonomy ID
         gene_name: Gene name
 
@@ -314,8 +316,8 @@ def description(
         Description string
     """
     try:
-        species_name = phy.species(taxid, taxonomy)
-        common = phy.common_name(taxid, taxonomy)
+        species_name = phy.species(taxid)
+        common = phy.common_name(taxid)
 
         if common:
             prefix = f"{species_name} ({common})"
@@ -339,7 +341,7 @@ def references() -> ty.List[Reference]:
         List of Reference objects
     """
     return [
-        IdReference(
+        Reference(
             authors="Zhai SN, Zhang YY, Chen MH, Fu ZC, Chen LL, Ma XK, Yang L",
             location=(
                 "CIRCpedia v3: an interactive database for circular RNA "

@@ -29,7 +29,6 @@ def cli():
 
 
 @cli.command("parse")
-@click.argument("taxonomy", type=click.Path(exists=True))
 @click.argument("annotation_file", type=click.Path(exists=True))
 @click.argument("fasta_file", type=click.Path(exists=True))
 @click.argument(
@@ -42,7 +41,7 @@ def cli():
     default=None,
     help="Genome assembly ID (e.g., GRCh38, GRCm39)",
 )
-def parse_circpedia(taxonomy, annotation_file, fasta_file, output, assembly):
+def parse_circpedia(annotation_file, fasta_file, output, assembly):
     """
     Parse CIRCpedia V3 annotation and sequence files.
 
@@ -50,8 +49,6 @@ def parse_circpedia(taxonomy, annotation_file, fasta_file, output, assembly):
     to RNAcentral import format.
 
     Arguments:
-
-        TAXONOMY: Path to taxonomy database file (context.db)
 
         ANNOTATION_FILE: Path to CIRCpedia TSV annotation file
 
@@ -74,8 +71,6 @@ def parse_circpedia(taxonomy, annotation_file, fasta_file, output, assembly):
 
     The FASTA file should contain sequences with headers matching circIDs.
     """
-    entries = parser.parse(
-        annotation_file, fasta_file, Path(taxonomy), assembly_id=assembly
-    )
+    entries = parser.parse(annotation_file, fasta_file, assembly_id=assembly)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
