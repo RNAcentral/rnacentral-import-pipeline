@@ -198,7 +198,6 @@ def parse_tsv_row(
             gene_synonyms=gene_synonyms if gene_synonyms else None,
             product=helpers.product_from_gene(primary_gene),
             description=helpers.description(taxid, primary_gene),
-            mol_type="genomic DNA",
             features=helpers.dis3_features(row.get("DIS3_motif", "none")),
             related_sequences=helpers.ortholog_sequences(row.get("Orthology", "none")),
             references=helpers.references(),
