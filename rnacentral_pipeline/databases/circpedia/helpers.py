@@ -28,6 +28,8 @@ from rnacentral_pipeline.databases.data import (
     Reference,
     SequenceRegion,
 )
+from rnacentral_pipeline.databases.data.features import SequenceFeature
+from rnacentral_pipeline.databases.data.related import RelatedEvidence, RelatedSequence
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 LOGGER = logging.getLogger(__name__)
@@ -331,6 +333,67 @@ def description(
         if gene_name:
             return f"{gene_name} circular RNA"
         return "circular RNA"
+
+
+def dis3_features(dis3_motif: str) -> ty.List[SequenceFeature]:
+    """
+    Parse DIS3 degradation signal motifs into SequenceFeature objects.
+
+    Args:
+        dis3_motif: DIS3_motif column value, e.g.
+            "273-279:GTCCTGC:M2-GCTCTGC|308-314:GTTGCTG:optiM-TTTGCTG"
+            Multiple motif matches at one signal are comma-separated within a
+            pipe-delimited group.
+
+    Returns:
+        List of SequenceFeature objects (empty if value is 'none' or empty)
+    """
+    if not dis3_motif or dis3_motif.strip().lower() == "none":
+        return []
+
+    features = []
+    for group in dis3_motif.split("|"):
+        for motif_entry in group.split(","):
+            motif_entry = motif_entry.strip()
+            if not motif_entry:
+                continue
+
+            # Format: start-end:observed_seq:class-consensus
+            parts = motif_entry.split(":")
+            if len(parts) != 3:
+                LOGGER.warning(f"Unexpected DIS3 motif format: {motif_entry}")
+                continue
+
+            coord_str, observed_seq, class_consensus = parts
+
+            # Parse coordinates (1-based closed → 0-based half-open)
+            try:
+                start_str, end_str = coord_str.split("-")
+                start = int(start_str) - 1  # convert to 0-based
+                end = int(end_str)  # half-open
+            except (ValueError, TypeError):
+                LOGGER.warning(f"Could not parse DIS3 coordinates: {coord_str}")
+                continue
+
+            # Split class-consensus: first token is class, rest is consensus
+            # e.g. "M2-GCTCTGC" → class="M2", consensus="GCTCTGC"
+            # e.g. "optiM-TTTGCTG" → class="optiM", consensus="TTTGCTG"
+            cc_parts = class_consensus.split("-", 1)
+            motif_class = cc_parts[0] if len(cc_parts) >= 1 else class_consensus
+            consensus = cc_parts[1] if len(cc_parts) >= 2 else ""
+
+            features.append(
+                SequenceFeature(
+                    name="dis3_degradation_signal",
+                    feature_type="dis3_degradation_signal",
+                    location=[start, end],
+                    sequence=observed_seq.upper(),
+                    provider="CIRCPEDIA",
+                    metadata={"motif_class": motif_class, "consensus": consensus},
+                )
+            )
+
+    return features
 
 
 def references() -> ty.List[Reference]:

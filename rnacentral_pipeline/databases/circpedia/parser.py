@@ -199,6 +199,7 @@ def parse_tsv_row(
             product=helpers.product_from_gene(primary_gene),
             description=helpers.description(taxid, primary_gene),
             mol_type="genomic DNA",
+            features=helpers.dis3_features(row.get("DIS3_motif", "none")),
             references=helpers.references(),
         )
 
