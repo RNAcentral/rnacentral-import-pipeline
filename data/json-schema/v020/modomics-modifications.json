@@ -1,0 +1,50 @@
+{
+  "metaData": {
+    "dataProvider": "MODOMICS",
+    "schemaVersion": "0.4.0"
+  },
+  "data": [
+    {
+      "primaryId": "MODOMICS:1",
+      "taxonId": "NCBITaxon:562",
+      "soTermId": "SO:0000655",
+      "sequence": "GGGGCTATAGCTCAGCTGGGAGAGCGCCTGCTTTGCACGCAGGAGGTCTGCGGTTCGATCCCGCATAGCTCCACCA",
+      "url": "https://genesilico.pl/modomics/sequences/1/",
+      "description": "Escherichia coli tRNA sequence",
+      "sequenceFeatures": {
+        "modifications": [
+          {
+            "index": 16,
+            "shortName": "D",
+            "RNAmodsCode": "D",
+            "fullName": "dihydrouridine"
+          },
+          {
+            "index": 33,
+            "shortName": "cmo5U",
+            "RNAmodsCode": "V",
+            "fullName": "uridine 5-oxyacetic acid"
+          },
+          {
+            "index": 45,
+            "shortName": "m7G",
+            "RNAmodsCode": "7",
+            "fullName": "7-methylguanosine"
+          },
+          {
+            "index": 53,
+            "shortName": "m5U",
+            "RNAmodsCode": "T",
+            "fullName": "5-methyluridine"
+          },
+          {
+            "index": 54,
+            "shortName": "Y",
+            "RNAmodsCode": "P",
+            "fullName": "pseudouridine"
+          }
+        ]
+      }
+    }
+  ]
+}

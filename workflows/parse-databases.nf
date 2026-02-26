@@ -16,6 +16,7 @@ include { lncipedia } from './databases/lncipedia'
 include { mgnify } from './databases/mgnify'
 include { mirbase } from './databases/mirbase'
 include { mirgenedb } from './databases/mirgenedb'
+include { modomics } from './databases/modomics'
 include { pdbe } from './databases/pdbe'
 include { pirbase } from './databases/pirbase'
 include { plncdb } from './databases/plncdb'
@@ -80,6 +81,7 @@ workflow parse_databases {
       mirbase(),
       mgnify(),
       mirgenedb(),
+      modomics(),
       pdbe(),
       pirbase(),
       plncdb(),
