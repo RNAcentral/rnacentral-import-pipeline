@@ -2,6 +2,7 @@
 INFERNAL_VERSION := $(shell cat infernal/VERSION)
 SAMTOOLS_VERSION := $(shell cat samtools/VERSION)
 CPAT_VERSION := $(shell cat cpat/VERSION)
+EMBOSS_VERSION := $(shell cat emboss/VERSION)
 
 # Rust utilities version - auto mode uses git SHA
 RUST_VERSION_RAW := $(shell cat rust-utils/VERSION)
@@ -22,6 +23,8 @@ DOCKER_REPO=rnacentral
 # Tool container image names
 CPAT_LATEST=$(DOCKER_REPO)/cpat:latest
 CPAT_IMAGE=$(DOCKER_REPO)/cpat:$(CPAT_VERSION)
+EMBOSS_IMAGE=$(DOCKER_REPO)/emboss:$(EMBOSS_VERSION)
+EMBOSS_LATEST=$(DOCKER_REPO)/emboss:latest
 INFERNAL_IMAGE=$(DOCKER_REPO)/infernal:$(INFERNAL_VERSION)
 INFERNAL_LATEST=$(DOCKER_REPO)/infernal:latest
 SAMTOOLS_IMAGE=$(DOCKER_REPO)/samtools:$(SAMTOOLS_VERSION)
@@ -29,9 +32,9 @@ SAMTOOLS_LATEST=$(DOCKER_REPO)/samtools:latest
 RUST_UTILS_IMAGE=$(DOCKER_REPO)/rust-utils:$(RUST_VERSION)
 RUST_UTILS_LATEST=$(DOCKER_REPO)/rust-utils:latest
 
-.PHONY: all cpat infernal samtools rust-utils push-cpat push-infernal push-samtools push-rust-utils push-all clean test validate-versions
+.PHONY: all cpat emboss infernal samtools rust-utils push-cpat push-emboss push-infernal push-samtools push-rust-utils push-all clean test validate-versions
 
-all: infernal samtools rust-utils
+all: infernal samtools rust-utils emboss
 
 # Build CPAT container (existing target)
 cpat: cpat/Dockerfile
@@ -43,6 +46,18 @@ push-cpat: cpat
 	@echo "Pushing CPAT images to Docker Hub..."
 	docker push $(CPAT_IMAGE)
 	docker push $(CPAT_LATEST)
+
+# Build EMBOSS container with procps for Nextflow compatibility
+emboss: emboss/Dockerfile
+	@echo "Building EMBOSS $(EMBOSS_VERSION) container..."
+	docker buildx build -t $(EMBOSS_IMAGE) -f $^ --platform linux/amd64 .
+	docker tag $(EMBOSS_IMAGE) $(EMBOSS_LATEST)
+
+# Push EMBOSS to Docker Hub
+push-emboss: emboss
+	@echo "Pushing EMBOSS images to Docker Hub..."
+	docker push $(EMBOSS_IMAGE)
+	docker push $(EMBOSS_LATEST)
 
 # Build Infernal container
 infernal:
@@ -86,13 +101,18 @@ push-rust-utils: rust-utils
 	docker push $(RUST_UTILS_LATEST)
 
 # Push all tool containers
-push-all: push-cpat push-infernal push-samtools push-rust-utils
+push-all: push-cpat push-emboss push-infernal push-samtools push-rust-utils
 
 # Test tool containers locally
-test: cpat infernal samtools rust-utils
+test: cpat emboss infernal samtools rust-utils
 	@echo "Testing CPAT container..."
 	docker run --rm $(CPAT_IMAGE) cpat -h
 	@echo "✓ CPAT tests passed"
+	@echo ""
+	@echo "Testing EMBOSS container..."
+	docker run --rm $(EMBOSS_IMAGE) tcode -help
+	docker run --rm $(EMBOSS_IMAGE) ps --version
+	@echo "✓ EMBOSS tests passed"
 	@echo ""
 	@echo "Testing Infernal container..."
 	docker run --rm $(INFERNAL_IMAGE) cmscan -h
@@ -113,7 +133,7 @@ test: cpat infernal samtools rust-utils
 # Validate VERSION files
 validate-versions:
 	@echo "Validating VERSION files..."
-	@for tool in infernal samtools rust-utils cpat; do \
+	@for tool in infernal samtools rust-utils cpat emboss; do \
 		if [ ! -f $$tool/VERSION ]; then \
 			echo "ERROR: Missing VERSION file: $$tool/VERSION"; \
 			exit 1; \
@@ -125,6 +145,7 @@ validate-versions:
 clean:
 	@echo "Removing tool container images..."
 	docker rmi $(CPAT_IMAGE) $(CPAT_LATEST) || true
+	docker rmi $(EMBOSS_IMAGE) $(EMBOSS_LATEST) || true
 	docker rmi $(INFERNAL_IMAGE) $(INFERNAL_LATEST) || true
 	docker rmi $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST) || true
 	docker rmi $(RUST_UTILS_IMAGE) $(RUST_UTILS_LATEST) || true

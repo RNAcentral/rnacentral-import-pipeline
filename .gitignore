@@ -109,3 +109,5 @@ workflows/litscan/submit
 singularity/*
 bin/bed-expander
 .projections.json
+*.slurm
+tmp/*

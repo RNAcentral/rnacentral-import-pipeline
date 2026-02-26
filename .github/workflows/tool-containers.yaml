@@ -7,6 +7,7 @@ on:
   push:
     branches: ['master', 'dev']
     paths:
+      - 'containers/emboss/**'
       - 'containers/infernal/**'
       - 'containers/samtools/**'
       - 'containers/cpat/**'
@@ -23,6 +24,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
+      emboss: ${{ steps.changes.outputs.emboss }}
       infernal: ${{ steps.changes.outputs.infernal }}
       samtools: ${{ steps.changes.outputs.samtools }}
       cpat: ${{ steps.changes.outputs.cpat }}
@@ -36,10 +38,18 @@ jobs:
         id: changes
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.force_rebuild }}" = "true" ]; then
+            echo "emboss=true" >> $GITHUB_OUTPUT
             echo "infernal=true" >> $GITHUB_OUTPUT
             echo "samtools=true" >> $GITHUB_OUTPUT
             echo "cpat=true" >> $GITHUB_OUTPUT
           else
+            # Check if emboss files changed
+            if git diff --name-only HEAD^ HEAD | grep -q "^containers/emboss/"; then
+              echo "emboss=true" >> $GITHUB_OUTPUT
+            else
+              echo "emboss=false" >> $GITHUB_OUTPUT
+            fi
+
             # Check if infernal files changed
             if git diff --name-only HEAD^ HEAD | grep -q "^containers/infernal/"; then
               echo "infernal=true" >> $GITHUB_OUTPUT
@@ -61,6 +71,49 @@ jobs:
               echo "cpat=false" >> $GITHUB_OUTPUT
             fi
           fi
+
+  build-emboss:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.emboss == 'true' || needs.detect-changes.outputs.force == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read EMBOSS version
+        id: version
+        run: echo "version=$(cat containers/emboss/VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build EMBOSS container
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker build -t rnacentral/emboss:${VERSION} -f containers/emboss/Dockerfile containers/emboss/
+
+      - name: Tag as latest
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker tag rnacentral/emboss:${VERSION} rnacentral/emboss:latest
+
+      - name: Push versioned tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker push rnacentral/emboss:${VERSION}
+
+      - name: Push latest tag
+        run: docker push rnacentral/emboss:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'EMBOSS ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
 
   build-infernal:
     needs: detect-changes

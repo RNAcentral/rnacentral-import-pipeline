@@ -4,7 +4,15 @@
 
 name: Manually Building Pipeline Containers
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      force_rust_build:
+        description: 'Force rebuild of Rust containers'
+        required: false
+        type: boolean
+        default: false
+        
 jobs:
 
   starting-notification:
@@ -18,6 +26,21 @@ jobs:
          SLACK_MESSAGE: 'Creating new pipeline image in docker hub'
          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
          MSG_MINIMAL: true
+  
+  trigger-rust-build:
+    runs-on: ubuntu-latest
+    if: inputs.force_rust_build == true
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Trigger Rust container build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Triggering rust-container workflow..."
+          gh workflow run rust-container.yaml \
+            --ref ${{ github.ref_name }} \
+            -f force_rebuild=true
 
   wait-for-rust-build:
     runs-on: ubuntu-latest
@@ -31,7 +54,15 @@ jobs:
       - name: Check if Rust files changed
         id: check-rust
         run: |
-          if git diff --name-only HEAD^ HEAD | grep -qE '^(utils/|Cargo\.(toml|lock))'; then
+          # Check if force build was requested
+          if [ "${{ inputs.force_rust_build }}" = "true" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Force Rust rebuild requested"
+            exit 0
+          fi
+          
+          # Otherwise check for actual changes
+          if git diff --name-only HEAD^ HEAD | grep -qE '\.(rs|toml|lock)$'; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "Rust files changed, waiting for rust-container workflow..."
           else

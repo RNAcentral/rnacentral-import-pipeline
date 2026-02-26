@@ -18,6 +18,7 @@ process fetch_model_mapping {
 }
 
 process get_partitions {
+  when { params.r2dt.run }
 
   input:
   val(_flag)
