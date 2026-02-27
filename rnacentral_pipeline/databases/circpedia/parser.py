@@ -29,6 +29,7 @@ import typing as ty
 from pathlib import Path
 
 import polars as pl
+from Bio import SeqIO
 
 from rnacentral_pipeline.databases.circpedia import helpers
 from rnacentral_pipeline.databases.data import Entry
@@ -40,46 +41,9 @@ LOGGER = logging.getLogger(__name__)
 CIRCULAR_RNA_SO_TERM = "SO:0002291"
 
 
-def load_fasta_sequences(fasta_file: ty.Union[str, Path]) -> ty.Dict[str, str]:
-    """
-    Load sequences from FASTA file into a dictionary.
-
-    Args:
-        fasta_file: Path to FASTA file
-
-    Returns:
-        Dictionary mapping circRNA ID to sequence
-    """
-    sequences = {}
-    current_id = None
-    current_seq = []
-
-    LOGGER.info(f"Loading sequences from {fasta_file}")
-
-    with open(fasta_file, "r") as f:
-        for line in f:
-            line = line.strip()
-            if line.startswith(">"):
-                # Save previous sequence if exists
-                if current_id and current_seq:
-                    sequences[current_id] = "".join(current_seq)
-                # Start new sequence
-                current_id = line[1:].strip()  # Remove '>'
-                current_seq = []
-            elif current_id:
-                current_seq.append(line)
-
-        # Save last sequence
-        if current_id and current_seq:
-            sequences[current_id] = "".join(current_seq)
-
-    LOGGER.info(f"Loaded {len(sequences)} sequences from FASTA")
-    return sequences
-
-
 def parse_tsv_row(
     row: ty.Dict[str, ty.Any],
-    sequences: ty.Dict[str, str],
+    sequences: ty.Mapping,
     assembly_id: ty.Optional[str] = None,
 ) -> ty.Optional[Entry]:
     """
@@ -130,10 +94,11 @@ def parse_tsv_row(
             return None
 
         # Get sequence from FASTA file
-        sequence = sequences.get(circ_id, "")
-        if not sequence:
+        record = sequences.get(circ_id)
+        if record is None:
             LOGGER.warning(f"No sequence found for {circ_id} in FASTA file")
             return None
+        sequence = str(record.seq)
 
         # Ensure sequence is DNA (T not U)
         sequence = sequence.upper().replace("U", "T")
@@ -237,8 +202,8 @@ def parse(
     """
     LOGGER.info(f"Parsing CIRCpedia data from {annotation_file} and {fasta_file}")
 
-    # Load sequences from FASTA
-    sequences = load_fasta_sequences(fasta_file)
+    # Index sequences from FASTA (lazy disk-based access)
+    sequences = SeqIO.index(str(fasta_file), "fasta")
 
     # Read TSV annotation file with polars
     df = pl.read_csv(
