@@ -1,56 +1,67 @@
-process fetch_data {
+process fetch_annotation {
+  tag { species.annotation }
   when { params.databases.circpedia.run }
-  memory '4GB'
+  memory '2GB'
+
+  input:
+  val species
 
   output:
-  tuple path('circpedia_annotation.txt'), path('circpedia_sequences.fa')
+  tuple val(species), path("${species.annotation}.txt")
 
   """
-  # Fetch CIRCpedia V3 annotation file
-  wget --no-check-certificate $params.databases.circpedia.remote.annotation -O circpedia_annotation.txt || \
-  scp $params.databases.circpedia.remote.annotation circpedia_annotation.txt
+  wget --no-check-certificate \
+    "${params.databases.circpedia.annotation_base_url}${species.annotation}.txt.zip" \
+    -O "${species.annotation}.txt.zip"
+  unzip "${species.annotation}.txt.zip"
+  """
+}
 
-  # Fetch CIRCpedia V3 FASTA sequence file
-  wget --no-check-certificate $params.databases.circpedia.remote.fasta -O circpedia_sequences.fa || \
-  scp $params.databases.circpedia.remote.fasta circpedia_sequences.fa
+process fetch_fasta {
+  tag { species.fasta }
+  when { params.databases.circpedia.run }
+  memory '2GB'
 
-  # If the downloaded files are compressed, uncompress them
-  if [[ -f circpedia_annotation.txt.gz ]]; then
-    gunzip circpedia_annotation.txt.gz
-  fi
-  if [[ -f circpedia_sequences.fa.gz ]]; then
-    gunzip circpedia_sequences.fa.gz
-  fi
+  input:
+  tuple val(species), path(annotation_file)
+
+  output:
+  tuple val(species), path(annotation_file), path("${species.fasta}.fa")
+
+  """
+  wget --no-check-certificate \
+    "${params.databases.circpedia.fasta_base_url}${species.fasta}.fa.zip" \
+    -O "${species.fasta}.fa.zip"
+  unzip "${species.fasta}.fa.zip"
   """
 }
 
 process parse_data {
-  tag { "$annotation_file.name" }
+  tag { annotation_file.name }
   memory '8GB'
 
   input:
-  tuple path(annotation_file), path(fasta_file), path(taxonomy)
+  tuple val(species), path(annotation_file), path(fasta_file)
 
   output:
   path('*.csv')
 
   """
-  # Parse CIRCpedia data with both annotation and FASTA files
-  # Use assembly ID if specified in config, otherwise omit
-  if [ -n "$params.databases.circpedia.assembly" ]; then
-    rnac circpedia parse $taxonomy $annotation_file $fasta_file . --assembly $params.databases.circpedia.assembly
-  else
-    rnac circpedia parse $taxonomy $annotation_file $fasta_file .
-  fi
+  rnac circpedia parse \
+    --assembly ${species.assembly} \
+    $annotation_file \
+    $fasta_file \
+    .
   """
 }
 
 workflow circpedia {
-  take: taxonomy
   emit: data
+
   main:
-    fetch_data \
-    | combine(taxonomy) \
-    | parse_data \
+    Channel.fromList(params.databases.circpedia.species)
+    | fetch_annotation
+    | fetch_fasta
+    | parse_data
     | set { data }
 }
