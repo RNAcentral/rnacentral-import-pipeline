@@ -210,7 +210,6 @@ def parse(
         annotation_file,
         separator="\t",
         infer_schema_length=10000,
-        ignore_errors=True,
     )
 
     LOGGER.info(f"Read {len(df)} rows from annotation file")
