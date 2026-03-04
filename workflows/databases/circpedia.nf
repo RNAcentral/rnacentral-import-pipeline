@@ -11,7 +11,7 @@ process fetch_annotation {
   tuple val(species), path("${species.annotation}.txt")
 
   """
-  wget --no-check-certificate \
+  wget \
     "${params.databases.circpedia.annotation_base_url}${species.annotation}.txt.zip" \
     -O "${species.annotation}.txt.zip"
   unzip "${species.annotation}.txt.zip"
