@@ -204,45 +204,47 @@ def parse(
 
     # Index sequences from FASTA (lazy disk-based access)
     sequences = SeqIO.index(str(fasta_file), "fasta")
+    try:
+        # Read TSV annotation file with polars
+        df = pl.read_csv(
+            annotation_file,
+            separator="\t",
+            infer_schema_length=10000,
+        )
 
-    # Read TSV annotation file with polars
-    df = pl.read_csv(
-        annotation_file,
-        separator="\t",
-        infer_schema_length=10000,
-    )
+        LOGGER.info(f"Read {len(df)} rows from annotation file")
+        LOGGER.info(f"Columns: {df.columns}")
 
-    LOGGER.info(f"Read {len(df)} rows from annotation file")
-    LOGGER.info(f"Columns: {df.columns}")
+        # Check for required columns
+        if "circID" not in df.columns and "circid" not in df.columns:
+            raise ValueError("Missing required column: circID")
+        if "Location" not in df.columns and "location" not in df.columns:
+            raise ValueError("Missing required column: Location")
+        if "species" not in df.columns:
+            raise ValueError("Missing required column: species")
 
-    # Check for required columns
-    if "circID" not in df.columns and "circid" not in df.columns:
-        raise ValueError("Missing required column: circID")
-    if "Location" not in df.columns and "location" not in df.columns:
-        raise ValueError("Missing required column: Location")
-    if "species" not in df.columns:
-        raise ValueError("Missing required column: species")
+        # Process each row
+        parsed_count = 0
+        error_count = 0
 
-    # Process each row
-    parsed_count = 0
-    error_count = 0
+        for row in df.iter_rows(named=True):
+            entry = parse_tsv_row(row, sequences, assembly_id)
+            if entry:
+                yield entry
+                parsed_count += 1
+            else:
+                error_count += 1
 
-    for row in df.iter_rows(named=True):
-        entry = parse_tsv_row(row, sequences, assembly_id)
-        if entry:
-            yield entry
-            parsed_count += 1
-        else:
-            error_count += 1
+            # Log progress periodically
+            if (parsed_count + error_count) % 10000 == 0:
+                LOGGER.info(
+                    f"Processed {parsed_count + error_count} rows: "
+                    f"{parsed_count} parsed, {error_count} errors"
+                )
 
-        # Log progress periodically
-        if (parsed_count + error_count) % 10000 == 0:
-            LOGGER.info(
-                f"Processed {parsed_count + error_count} rows: "
-                f"{parsed_count} parsed, {error_count} errors"
-            )
-
-    LOGGER.info(
-        f"Parsing complete: {parsed_count} entries created, "
-        f"{error_count} rows failed"
-    )
+        LOGGER.info(
+            f"Parsing complete: {parsed_count} entries created, "
+            f"{error_count} rows failed"
+        )
+    finally:
+        sequences.close()
