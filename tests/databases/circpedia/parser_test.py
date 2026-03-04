@@ -27,15 +27,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from rnacentral_pipeline.databases.circpedia import parser
-
-
-@pytest.fixture
-def mock_taxonomy():
-    """Create a mock taxonomy database."""
-    mock_db = MagicMock()
-    mock_db.close = MagicMock()
-    return mock_db
 
 
 @pytest.fixture
@@ -46,7 +39,7 @@ hsa_circ_0001\tHomo sapiens\tchr1:1000-2000(+)\tTP53\tENSG00000141510\tcirc-TP53
 hsa_circ_0002\tHomo sapiens\tchr2:3000-4000(-)\tMYC\tENSG00000136997\tcirc-MYC\t1000\tnucleus
 mmu_circ_0001\tMus musculus\tchr3:5000-6000(+)\tTrp53\tENSMUSG00000059552\tcirc-Trp53\t1000\tcytoplasm
 """
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
         f.write(tsv_content)
         temp_path = f.name
 
@@ -66,7 +59,7 @@ GCTAGCTAGCTAGCTA
 >mmu_circ_0001
 TTTTAAAACCCCGGGG
 """
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.fa', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".fa", delete=False) as f:
         f.write(fasta_content)
         temp_path = f.name
 
@@ -76,59 +69,29 @@ TTTTAAAACCCCGGGG
     Path(temp_path).unlink(missing_ok=True)
 
 
-@pytest.fixture
-def mock_taxonomy_file():
-    """Create a mock taxonomy database file."""
-    with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
-        temp_path = f.name
-
-    yield Path(temp_path)
-
-    # Cleanup
-    Path(temp_path).unlink(missing_ok=True)
-
-
-class TestLoadFastaSequences:
-    """Test FASTA sequence loading."""
-
-    def test_loads_sequences_from_fasta(self, sample_fasta_file):
-        """Test loading sequences from FASTA file."""
-        sequences = parser.load_fasta_sequences(sample_fasta_file)
-
-        assert len(sequences) == 3
-        assert sequences["hsa_circ_0001"] == "ATCGATCGATCGATCG"
-        assert sequences["hsa_circ_0002"] == "GCTAGCTAGCTAGCTA"
-        assert sequences["mmu_circ_0001"] == "TTTTAAAACCCCGGGG"
-
-    def test_handles_multiline_sequences(self):
-        """Test handling multi-line FASTA sequences."""
-        fasta_content = """>test_id
-AAAA
-TTTT
-CCCC
-"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.fa', delete=False) as f:
-            f.write(fasta_content)
-            temp_path = f.name
-
-        try:
-            sequences = parser.load_fasta_sequences(temp_path)
-            assert sequences["test_id"] == "AAAATTTTCCCC"
-        finally:
-            Path(temp_path).unlink(missing_ok=True)
+def _mock_seq_record(sequence):
+    """Create a mock SeqRecord with a .seq attribute."""
+    record = MagicMock()
+    record.seq = sequence
+    return record
 
 
 class TestParseTSVRow:
     """Test parsing individual TSV rows."""
 
-    def test_parses_valid_row_with_all_fields(self, mock_taxonomy):
+    def test_parses_valid_row_with_all_fields(self):
         """Test parsing a complete valid row."""
-        sequences = {"hsa_circ_0001": "ATCGATCG"}
+        sequences = {"hsa_circ_0001": _mock_seq_record("ATCGATCG")}
 
-        with patch('rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid') as mock_taxid, \
-             patch('rnacentral_pipeline.databases.helpers.phylogeny.species') as mock_species, \
-             patch('rnacentral_pipeline.databases.helpers.phylogeny.common_name') as mock_common, \
-             patch('rnacentral_pipeline.databases.helpers.phylogeny.lineage') as mock_lineage:
+        with patch(
+            "rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid"
+        ) as mock_taxid, patch(
+            "rnacentral_pipeline.databases.helpers.phylogeny.species"
+        ) as mock_species, patch(
+            "rnacentral_pipeline.databases.helpers.phylogeny.common_name"
+        ) as mock_common, patch(
+            "rnacentral_pipeline.databases.helpers.phylogeny.lineage"
+        ) as mock_lineage:
 
             mock_taxid.return_value = 9606
             mock_species.return_value = "Homo sapiens"
@@ -141,22 +104,22 @@ class TestParseTSVRow:
                 "Location": "chr1:1000-2000(+)",
                 "gene_Refseq": "TP53",
                 "circname": "circ-TP53",
-                "length": "1000",
+                "length": "8",
             }
 
-            entry = parser.parse_tsv_row(row, sequences, mock_taxonomy, assembly_id="GRCh38")
+            entry = parser.parse_tsv_row(row, sequences, assembly_id="GRCh38")
 
             assert entry is not None
             assert entry.primary_id == "hsa_circ_0001"
             assert entry.ncbi_tax_id == 9606
             assert entry.database == "CIRCPEDIA"
             assert entry.sequence == "ATCGATCG"
-            assert entry.rna_type == "SO:0000593"  # circular RNA
+            assert entry.rna_type == "SO:0002291"  # circular RNA
             assert entry.gene == "TP53"
             assert entry.chromosome == "1"
             assert len(entry.regions) > 0
 
-    def test_returns_none_for_missing_circid(self, mock_taxonomy):
+    def test_returns_none_for_missing_circid(self):
         """Test that missing circID returns None."""
         sequences = {}
         row = {
@@ -164,25 +127,27 @@ class TestParseTSVRow:
             "Location": "chr1:1000-2000(+)",
         }
 
-        entry = parser.parse_tsv_row(row, sequences, mock_taxonomy)
+        entry = parser.parse_tsv_row(row, sequences)
         assert entry is None
 
-    def test_returns_none_for_missing_species(self, mock_taxonomy):
+    def test_returns_none_for_missing_species(self):
         """Test that missing species returns None."""
-        sequences = {"hsa_circ_0001": "ATCG"}
+        sequences = {"hsa_circ_0001": _mock_seq_record("ATCG")}
         row = {
             "circID": "hsa_circ_0001",
             "Location": "chr1:1000-2000(+)",
         }
 
-        entry = parser.parse_tsv_row(row, sequences, mock_taxonomy)
+        entry = parser.parse_tsv_row(row, sequences)
         assert entry is None
 
-    def test_returns_none_for_missing_location(self, mock_taxonomy):
+    def test_returns_none_for_missing_location(self):
         """Test that missing location returns None."""
-        sequences = {"hsa_circ_0001": "ATCG"}
+        sequences = {"hsa_circ_0001": _mock_seq_record("ATCG")}
 
-        with patch('rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid') as mock_taxid:
+        with patch(
+            "rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid"
+        ) as mock_taxid:
             mock_taxid.return_value = 9606
 
             row = {
@@ -190,14 +155,16 @@ class TestParseTSVRow:
                 "species": "Homo sapiens",
             }
 
-            entry = parser.parse_tsv_row(row, sequences, mock_taxonomy)
+            entry = parser.parse_tsv_row(row, sequences)
             assert entry is None
 
-    def test_returns_none_for_missing_sequence(self, mock_taxonomy):
+    def test_returns_none_for_missing_sequence(self):
         """Test that missing sequence returns None."""
         sequences = {}  # No sequence for this circID
 
-        with patch('rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid') as mock_taxid:
+        with patch(
+            "rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid"
+        ) as mock_taxid:
             mock_taxid.return_value = 9606
 
             row = {
@@ -206,14 +173,16 @@ class TestParseTSVRow:
                 "Location": "chr1:1000-2000(+)",
             }
 
-            entry = parser.parse_tsv_row(row, sequences, mock_taxonomy)
+            entry = parser.parse_tsv_row(row, sequences)
             assert entry is None
 
-    def test_returns_none_for_unknown_taxid(self, mock_taxonomy):
+    def test_returns_none_for_unknown_taxid(self):
         """Test that unknown taxid returns None."""
-        sequences = {"hsa_circ_0001": "ATCG"}
+        sequences = {"hsa_circ_0001": _mock_seq_record("ATCG")}
 
-        with patch('rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid') as mock_taxid:
+        with patch(
+            "rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid"
+        ) as mock_taxid:
             mock_taxid.return_value = None
 
             row = {
@@ -222,30 +191,29 @@ class TestParseTSVRow:
                 "Location": "chr1:1000-2000(+)",
             }
 
-            entry = parser.parse_tsv_row(row, sequences, mock_taxonomy)
+            entry = parser.parse_tsv_row(row, sequences)
             assert entry is None
 
 
 class TestParse:
     """Test the main parse function."""
 
-    @patch('rnacentral_pipeline.databases.circpedia.parser.SqliteDict')
     def test_parses_tsv_and_fasta_files(
-        self, mock_sqlite, sample_annotation_file, sample_fasta_file, mock_taxonomy_file
+        self, sample_annotation_file, sample_fasta_file
     ):
         """Test parsing TSV annotation and FASTA sequence files."""
-        # Setup mock taxonomy
-        mock_db = MagicMock()
-        mock_db.close = MagicMock()
-        mock_sqlite.return_value = mock_db
-
-        with patch('rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid') as mock_taxid, \
-             patch('rnacentral_pipeline.databases.helpers.phylogeny.species') as mock_species, \
-             patch('rnacentral_pipeline.databases.helpers.phylogeny.common_name') as mock_common, \
-             patch('rnacentral_pipeline.databases.helpers.phylogeny.lineage') as mock_lineage:
+        with patch(
+            "rnacentral_pipeline.databases.circpedia.helpers.get_ncbi_taxid"
+        ) as mock_taxid, patch(
+            "rnacentral_pipeline.databases.helpers.phylogeny.species"
+        ) as mock_species, patch(
+            "rnacentral_pipeline.databases.helpers.phylogeny.common_name"
+        ) as mock_common, patch(
+            "rnacentral_pipeline.databases.helpers.phylogeny.lineage"
+        ) as mock_lineage:
 
             # Mock taxonomy lookups
-            def get_taxid(db, species):
+            def get_taxid(species):
                 return {"Homo sapiens": 9606, "Mus musculus": 10090}.get(species)
 
             mock_taxid.side_effect = get_taxid
@@ -258,7 +226,6 @@ class TestParse:
                 parser.parse(
                     sample_annotation_file,
                     sample_fasta_file,
-                    mock_taxonomy_file,
                     assembly_id="GRCh38",
                 )
             )
@@ -266,28 +233,20 @@ class TestParse:
             # Verify results
             assert len(entries) == 3
             assert all(e.database == "CIRCPEDIA" for e in entries)
-            assert all(e.rna_type == "SO:0000593" for e in entries)
+            assert all(e.rna_type == "SO:0002291" for e in entries)
 
-            # Verify taxonomy database was closed
-            mock_db.close.assert_called_once()
-
-    @patch('rnacentral_pipeline.databases.circpedia.parser.SqliteDict')
-    def test_handles_missing_required_columns(self, mock_sqlite, sample_fasta_file, mock_taxonomy_file):
+    def test_handles_missing_required_columns(self, sample_fasta_file):
         """Test that missing required columns raises error."""
-        mock_db = MagicMock()
-        mock_sqlite.return_value = mock_db
-
         # Create TSV without required columns
         tsv_content = """id\tname
 1\ttest
 """
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write(tsv_content)
             temp_path = f.name
 
         try:
             with pytest.raises(ValueError, match="Missing required column"):
-                list(parser.parse(temp_path, sample_fasta_file, mock_taxonomy_file))
+                list(parser.parse(temp_path, sample_fasta_file))
         finally:
             Path(temp_path).unlink(missing_ok=True)
-            mock_db.close.assert_called_once()
