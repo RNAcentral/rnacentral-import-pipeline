@@ -160,7 +160,7 @@ def parse_tsv_row(
             # common_name=phy.common_name(taxid),
             # lineage=phy.lineage(taxid),
             gene=primary_gene,
-            gene_synonyms=gene_synonyms if gene_synonyms else None,
+            gene_synonyms=gene_synonyms or [],
             product=helpers.product_from_gene(primary_gene),
             description=helpers.description(taxid, primary_gene),
             features=helpers.dis3_features(row.get("DIS3_motif", "none")),
