@@ -54,7 +54,7 @@ def get_ncbi_taxid(species_str: str) -> ty.Optional[int]:
         if taxid:
             return taxid
     except (phy.UnknownTaxonId, phy.FailedTaxonId, Exception):
-        pass
+        raise ValueError(f"Failed to lookup taxid for {species_str}")
 
     # Common species mapping as fallback
     species_map = {
