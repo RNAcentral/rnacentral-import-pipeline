@@ -162,7 +162,7 @@ def accession(circ_id: str, location: ty.Dict[str, ty.Any]) -> str:
     # Prefix with database name to avoid ID conflicts across databases
     # Include location to ensure uniqueness when a circRNA appears at multiple locations
     location_str = f"{location['chromosome']}:{location['start']}-{location['end']}"
-    return f"CIRCPEDIA:{circ_id}_{location_str}"
+    return f"CIRCPEDIA:{circ_id}|{location_str}"
 
 
 def url(circ_id: str) -> str:
