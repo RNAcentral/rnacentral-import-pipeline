@@ -368,6 +368,8 @@ def dis3_features(dis3_motif: str) -> ty.List[SequenceFeature]:
                 start_str, end_str = coord_str.split("-")
                 start = int(start_str) - 1  # convert to 0-based
                 end = int(end_str)  # half-open
+                if start > end:
+                    LOGGER.warning(f"DIS3 coordinates may be inverted! {dis3_motif}")
             except (ValueError, TypeError):
                 LOGGER.warning(f"Could not parse DIS3 coordinates: {coord_str}")
                 continue
