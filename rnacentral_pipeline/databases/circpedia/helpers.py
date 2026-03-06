@@ -439,7 +439,7 @@ def references() -> ty.List[Reference]:
                 "CIRCpedia v3: an interactive database for circular RNA "
                 "characterization and functional exploration"
             ),
-            pmid=None,  # Update when PMID is available
+            pmid=41123017,
             doi="10.1093/nar/gkaf1039",
         )
     ]
