@@ -257,10 +257,7 @@ def note_data_from_tsv(
         notes["subcell_location"] = str(row["subcell_location"])
 
     # Add editing sites if available (filter 'none')
-    if row.get("editing_site") and row["editing_site"] not in [
-        "none",
-        "none;none;none;none",
-    ]:
+    if row.get("editing_site") and set(row["editing_site"].split(";")) != {"none"}:
         notes["editing_site"] = str(row["editing_site"])
 
     # Add DIS3 degradation signals (filter 'none')
