@@ -45,6 +45,7 @@ pub struct Normalized {
     rfam_hits: Vec<RfamHit>,
     r2dt_hits: Vec<R2dtHit>,
     orf_info: Option<OrfInfo>,
+    possible_orf_stopfree: Option<bool>,
     possible_orf_tcode: Option<bool>,
 }
 
@@ -67,6 +68,7 @@ impl Normalized {
             rfam_hits: metadata.rfam_hits,
             r2dt_hits: metadata.r2dt_hits.into_iter().collect(),
             orf_info: metadata.orf_info,
+            possible_orf_stopfree: metadata.possible_orf_stopfree,
             possible_orf_tcode: metadata.possible_orf_tcode,
         });
     }

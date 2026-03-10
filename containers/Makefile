@@ -3,6 +3,7 @@ INFERNAL_VERSION := $(shell cat infernal/VERSION)
 SAMTOOLS_VERSION := $(shell cat samtools/VERSION)
 CPAT_VERSION := $(shell cat cpat/VERSION)
 EMBOSS_VERSION := $(shell cat emboss/VERSION)
+STOPFREE_VERSION := $(shell cat stopfree/VERSION)
 
 # Rust utilities version - auto mode uses git SHA
 RUST_VERSION_RAW := $(shell cat rust-utils/VERSION)
@@ -25,6 +26,8 @@ CPAT_LATEST=$(DOCKER_REPO)/cpat:latest
 CPAT_IMAGE=$(DOCKER_REPO)/cpat:$(CPAT_VERSION)
 EMBOSS_IMAGE=$(DOCKER_REPO)/emboss:$(EMBOSS_VERSION)
 EMBOSS_LATEST=$(DOCKER_REPO)/emboss:latest
+STOPFREE_IMAGE=$(DOCKER_REPO)/stopfree:$(STOPFREE_VERSION)
+STOPFREE_LATEST=$(DOCKER_REPO)/stopfree:latest
 INFERNAL_IMAGE=$(DOCKER_REPO)/infernal:$(INFERNAL_VERSION)
 INFERNAL_LATEST=$(DOCKER_REPO)/infernal:latest
 SAMTOOLS_IMAGE=$(DOCKER_REPO)/samtools:$(SAMTOOLS_VERSION)
@@ -32,9 +35,9 @@ SAMTOOLS_LATEST=$(DOCKER_REPO)/samtools:latest
 RUST_UTILS_IMAGE=$(DOCKER_REPO)/rust-utils:$(RUST_VERSION)
 RUST_UTILS_LATEST=$(DOCKER_REPO)/rust-utils:latest
 
-.PHONY: all cpat emboss infernal samtools rust-utils push-cpat push-emboss push-infernal push-samtools push-rust-utils push-all clean test validate-versions
+.PHONY: all cpat emboss stopfree infernal samtools rust-utils push-cpat push-emboss push-stopfree push-infernal push-samtools push-rust-utils push-all clean test validate-versions
 
-all: infernal samtools rust-utils emboss
+all: infernal samtools rust-utils emboss stopfree
 
 # Build CPAT container (existing target)
 cpat: cpat/Dockerfile
@@ -58,6 +61,18 @@ push-emboss: emboss
 	@echo "Pushing EMBOSS images to Docker Hub..."
 	docker push $(EMBOSS_IMAGE)
 	docker push $(EMBOSS_LATEST)
+
+# Build stopfree container with Python runtime
+stopfree: stopfree/Dockerfile
+	@echo "Building stopfree $(STOPFREE_VERSION) container..."
+	docker buildx build -t $(STOPFREE_IMAGE) -f $^ --platform linux/amd64 .
+	docker tag $(STOPFREE_IMAGE) $(STOPFREE_LATEST)
+
+# Push stopfree to Docker Hub
+push-stopfree: stopfree
+	@echo "Pushing stopfree images to Docker Hub..."
+	docker push $(STOPFREE_IMAGE)
+	docker push $(STOPFREE_LATEST)
 
 # Build Infernal container
 infernal:
@@ -101,10 +116,10 @@ push-rust-utils: rust-utils
 	docker push $(RUST_UTILS_LATEST)
 
 # Push all tool containers
-push-all: push-cpat push-emboss push-infernal push-samtools push-rust-utils
+push-all: push-cpat push-emboss push-stopfree push-infernal push-samtools push-rust-utils
 
 # Test tool containers locally
-test: cpat emboss infernal samtools rust-utils
+test: cpat emboss stopfree infernal samtools rust-utils
 	@echo "Testing CPAT container..."
 	docker run --rm $(CPAT_IMAGE) cpat -h
 	@echo "✓ CPAT tests passed"
@@ -113,6 +128,10 @@ test: cpat emboss infernal samtools rust-utils
 	docker run --rm $(EMBOSS_IMAGE) tcode -help
 	docker run --rm $(EMBOSS_IMAGE) ps --version
 	@echo "✓ EMBOSS tests passed"
+	@echo ""
+	@echo "Testing stopfree container..."
+	docker run --rm $(STOPFREE_IMAGE) python -c "import stopfree; print(stopfree.__doc__ is not None)"
+	@echo "✓ stopfree tests passed"
 	@echo ""
 	@echo "Testing Infernal container..."
 	docker run --rm $(INFERNAL_IMAGE) cmscan -h
@@ -133,7 +152,7 @@ test: cpat emboss infernal samtools rust-utils
 # Validate VERSION files
 validate-versions:
 	@echo "Validating VERSION files..."
-	@for tool in infernal samtools rust-utils cpat emboss; do \
+	@for tool in infernal samtools rust-utils cpat emboss stopfree; do \
 		if [ ! -f $$tool/VERSION ]; then \
 			echo "ERROR: Missing VERSION file: $$tool/VERSION"; \
 			exit 1; \
@@ -146,6 +165,7 @@ clean:
 	@echo "Removing tool container images..."
 	docker rmi $(CPAT_IMAGE) $(CPAT_LATEST) || true
 	docker rmi $(EMBOSS_IMAGE) $(EMBOSS_LATEST) || true
+	docker rmi $(STOPFREE_IMAGE) $(STOPFREE_LATEST) || true
 	docker rmi $(INFERNAL_IMAGE) $(INFERNAL_LATEST) || true
 	docker rmi $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST) || true
 	docker rmi $(RUST_UTILS_IMAGE) $(RUST_UTILS_LATEST) || true

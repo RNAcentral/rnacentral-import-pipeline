@@ -15,6 +15,7 @@ use crate::metadata::{
     previous::Previous,
     r2dt_hit::R2dtHit,
     rfam_hit::RfamHit,
+    stopfree::Stopfree,
     tcode::Tcode,
 };
 
@@ -31,6 +32,7 @@ pub struct Metadata {
     pub rfam_hits: Vec<RfamHit>,
     pub r2dt_hits: Option<R2dtHit>,
     pub orf_info: Option<OrfInfo>,
+    pub possible_orf_stopfree: Option<bool>,
     pub possible_orf_tcode: Option<bool>,
 }
 
@@ -42,6 +44,7 @@ impl Metadata {
         r2dt_hits: Option<R2dtHit>,
         previous: Option<Previous>,
         orfs: Vec<Orf>,
+        stopfree: Option<Stopfree>,
         tcode: Option<Tcode>,
     ) -> Result<Self> {
         if coordinates.len() > 0 {
@@ -62,6 +65,7 @@ impl Metadata {
             )
         }
 
+        let possible_orf_stopfree = stopfree.and_then(|s| s.is_protein_coding);
         let possible_orf_tcode = tcode.and_then(|t| t.is_protein_coding);
 
         return Ok(Self {
@@ -76,6 +80,7 @@ impl Metadata {
             rfam_hits,
             r2dt_hits,
             orf_info: orfs.into_iter().collect(),
+            possible_orf_stopfree,
             possible_orf_tcode,
         });
     }
