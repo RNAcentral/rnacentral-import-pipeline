@@ -1,4 +1,5 @@
 process slack_message {
+  when { params.notify }
 
   input:
   val(message)
@@ -11,6 +12,7 @@ process slack_message {
 
 
 process slack_file {
+  when { params.notify }
 
   input:
   path(message)
@@ -26,6 +28,10 @@ import groovy.json.JsonSlurper
 
 // A groovy function for use in closures - uses groovy's own URL class to make the request
 def slack_closure(msg) {
+  if (!params.notify) {
+    return
+  }
+
   def configFile = new File("secrets.json");
   def config = new JsonSlurper().parseFile(configFile, 'UTF-8');
 

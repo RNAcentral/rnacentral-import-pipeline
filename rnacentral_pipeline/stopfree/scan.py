@@ -48,14 +48,12 @@ def build_results(
     run_probabilities: ty.Iterable[tuple[str, float]],
     max_probability: float,
 ) -> ty.Iterable[StopfreeResult]:
-    lengths = {seq_id: len(sequence) for seq_id, sequence in records}
     gc_by_id = dict(gc_contents)
     probability_by_id = dict(run_probabilities)
 
     for seq_id, run_length in stop_free_runs:
         yield StopfreeResult.build(
             seq_id,
-            lengths.get(seq_id),
             run_length,
             gc_by_id.get(seq_id),
             probability_by_id.get(seq_id),

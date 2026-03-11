@@ -10,7 +10,6 @@ from attr.validators import instance_of as is_a
 @attr.s()
 class StopfreeResult:
     urs = attr.ib(validator=is_a(str))
-    length = attr.ib(validator=is_a(str))
     stop_free_run_length = attr.ib(validator=is_a(str))
     gc_content = attr.ib(validator=is_a(str))
     run_probability = attr.ib(validator=is_a(str))
@@ -20,7 +19,6 @@ class StopfreeResult:
     def build(
         cls,
         urs: str,
-        size: ty.Optional[int],
         stop_free_run_length: ty.Optional[int],
         gc_content: ty.Optional[float],
         run_probability: ty.Optional[float],
@@ -31,7 +29,6 @@ class StopfreeResult:
         )
         return cls(
             urs=urs,
-            length=_format_value(size),
             stop_free_run_length=_format_value(stop_free_run_length),
             gc_content=_format_value(gc_content, "NaN"),
             run_probability=_format_value(run_probability, "NaN"),
@@ -41,7 +38,6 @@ class StopfreeResult:
     def writeable(self) -> ty.List[str]:
         return [
             self.urs,
-            self.length,
             self.stop_free_run_length,
             self.gc_content,
             self.run_probability,

@@ -35,7 +35,6 @@ def test_build_results_uses_probability_threshold():
     assert results == [
         StopfreeResult.build(
             "URS0000000001_9606",
-            9,
             3,
             0.44,
             0.01,
@@ -61,7 +60,6 @@ def test_calculate_results_uses_stopfree_module(monkeypatch):
     assert results == [
         StopfreeResult.build(
             "URS0000A423A4/1-83",
-            12,
             7,
             0.5,
             0.001,
@@ -77,7 +75,7 @@ def test_run_writes_csv(monkeypatch, tmp_path: Path):
         "calculate_results",
         lambda records, max_probability: [
             StopfreeResult.build(
-                records[0][0], len(records[0][1]), 4, 0.4, 0.001, max_probability
+                records[0][0], 4, 0.4, 0.001, max_probability
             )
         ],
     )
@@ -85,4 +83,4 @@ def test_run_writes_csv(monkeypatch, tmp_path: Path):
 
     scan.run(FASTA_FIXTURE, output, 0.05)
 
-    assert (output / "results.csv").read_text() == "URS0000000019,24,4,0.4,0.001,True\n"
+    assert (output / "results.csv").read_text() == "URS0000000019,4,0.4,0.001,True\n"

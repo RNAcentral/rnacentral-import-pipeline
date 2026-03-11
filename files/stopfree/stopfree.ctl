@@ -2,7 +2,6 @@ LOAD CSV
 FROM ALL FILENAMES MATCHING ~<stopfree-results.*csv$>
 HAVING FIELDS (
   urs_taxid,
-  length,
   stop_free_run_length,
   gc_content,
   run_probability,
@@ -11,7 +10,6 @@ HAVING FIELDS (
 INTO {{PGDATABASE}}?load_stopfree
 TARGET COLUMNS (
   urs_taxid,
-  length,
   stop_free_run_length,
   gc_content,
   run_probability,
@@ -22,7 +20,6 @@ BEFORE LOAD DO
 $$
 CREATE TABLE IF NOT EXISTS stopfree_results (
   urs_taxid TEXT PRIMARY KEY,
-  length integer,
   stop_free_run_length integer,
   gc_content float,
   run_probability float,
@@ -35,7 +32,6 @@ $$,
 $$
 CREATE TABLE load_stopfree (
   urs_taxid TEXT not null,
-  length integer,
   stop_free_run_length integer,
   gc_content float,
   run_probability float,
@@ -47,7 +43,6 @@ AFTER LOAD DO
 $$
 INSERT INTO stopfree_results (
   urs_taxid,
-  length,
   stop_free_run_length,
   gc_content,
   run_probability,
@@ -55,7 +50,6 @@ INSERT INTO stopfree_results (
 ) (
 SELECT
   urs_taxid,
-  length,
   stop_free_run_length,
   gc_content,
   run_probability,
@@ -63,7 +57,6 @@ SELECT
 from load_stopfree
 ) ON CONFLICT (urs_taxid) DO UPDATE
 SET
-  length = EXCLUDED.length,
   stop_free_run_length = EXCLUDED.stop_free_run_length,
   gc_content = EXCLUDED.gc_content,
   run_probability = EXCLUDED.run_probability,
