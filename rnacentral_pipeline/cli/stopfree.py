@@ -20,7 +20,7 @@ def cli():
 @click.argument("output", type=click.Path(path_type=Path))
 @click.option(
     "--max-probability",
-    default=0.05,
+    default=0.0023,
     show_default=True,
     type=float,
     help="Maximum null-model probability still considered protein coding.",
