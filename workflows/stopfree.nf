@@ -20,6 +20,7 @@ process build_ranges {
 
 process find_sequences {
   when { params.stopfree.run }
+  maxForks params.stopfree.query_max_forks
 
   input:
   tuple val(min), val(max), path(query)
@@ -28,7 +29,7 @@ process find_sequences {
   path('sequences/*.fasta'), optional: true
 
   """
-  psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -f "$query" "$PGDATABASE" > raw.json
+  PGOPTIONS='-c max_parallel_workers_per_gather=0' psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
   split --lines=${params.stopfree.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
   """
