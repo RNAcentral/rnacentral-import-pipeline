@@ -12,5 +12,4 @@ COPY (
     AND rna.id < :max
     AND pre.is_active = true
     AND pre.id IS NOT NULL
-    AND rna.len > :min_len
 ) TO STDOUT
