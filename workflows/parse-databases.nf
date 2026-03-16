@@ -64,7 +64,7 @@ workflow parse_databases {
 
     Channel.empty() \
     | mix(
-      circpedia(context),
+      circpedia(),
       crw(),
       five_s_rrnadb(),
       ena(),
