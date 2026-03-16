@@ -2,7 +2,7 @@ process fetch_annotation {
   tag { species.annotation }
   when { params.databases.circpedia.run }
   memory '2GB'
-  errorStrategy 'fail'
+  errorStrategy 'terminate'
 
   input:
   val species
@@ -22,7 +22,7 @@ process fetch_fasta {
   tag { species.fasta }
   when { params.databases.circpedia.run }
   memory '2GB'
-  errorStrategy 'fail'
+  errorStrategy 'terminate'
 
   input:
   tuple val(species), path(annotation_file)
