@@ -36,6 +36,7 @@ dependencies = [
     "throttler>=1.2.0",
     "nltk>=3.8.1",
     "openpyxl>=3.0.10",
+    "xlrd>=2.0.1",
     "pybedtools>=0.12.0",
     "psycopg2-binary>=2.9.7",
     "polars>=1.14.0",

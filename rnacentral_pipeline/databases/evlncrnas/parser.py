@@ -30,6 +30,7 @@ from tqdm import tqdm
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
+from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.rnacentral import lookup
 
@@ -78,11 +79,34 @@ def handled_phylogeny(species: str) -> int:
 
 
 def condense_publications(record):
-    pubs_list = [record["PMID_x"]]
-    if record["PMID_y"] and not record["PMID_y"] in pubs_list:
-        pubs_list.append(record["PMID_y"])
+    references = []
+    seen = set()
+    for value in record:
+        if pd.isna(value):
+            continue
+        try:
+            pmid = int(value)
+        except (TypeError, ValueError):
+            continue
+        if pmid in seen:
+            continue
+        seen.add(pmid)
+        references.append(pubs.reference(pmid))
+    return references
 
-    return pubs_list
+
+def resolve_sheet(db_dir: Path, basename: str) -> Path:
+    for suffix in (".xls", ".tsv"):
+        candidate = db_dir.joinpath(f"{basename}{suffix}")
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError(f"Could not find {basename}.xls or {basename}.tsv in {db_dir}")
+
+
+def load_table(path: Path) -> pd.DataFrame:
+    if path.suffix == ".tsv":
+        return pd.read_csv(path, sep="\t")
+    return pd.read_excel(path)
 
 
 def split(input_frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -96,9 +120,10 @@ def split(input_frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
         subset="taxid"
     )
     print("NCBI missing done")
-    e_accessions = no_accessions[no_accessions["Ensembl"].notna()]
+    e_accessions = no_accessions[no_accessions["Ensembl"].notna()].copy()
     print("ensembl subset done")
-    ncbi_accessions = input_frame[input_frame["NCBI accession"].notna()]
+    no_accessions = no_accessions[no_accessions["Ensembl"].isna()].copy()
+    ncbi_accessions = input_frame[input_frame["NCBI accession"].notna()].copy()
     print("NCBI subset done")
     return (no_accessions, e_accessions, ncbi_accessions)
 
@@ -199,60 +224,75 @@ def get_ensembl_accessions(
 
 
 def get_db_matches(match_frame_in: pd.DataFrame, db_dump: Path) -> pd.DataFrame:
-    def split_clean_aliases(al):
-        if al:
-            return [a.strip() for a in str(al).split(",")]
-        return np.nan
+    def lookup_names(row):
+        names = [str(row["external_id"]).strip()]
+        aliases = row.get("Aliases")
+        if pd.notna(aliases):
+            names.extend(a.strip() for a in str(aliases).split(",") if a.strip())
+        return names
 
     match_frame = match_frame_in.copy()
     match_frame["taxid"] = match_frame["taxid"].astype(int)
-
-    match_frame.rename(columns={"Name": "external_id"}, inplace=True)
-    match_frame["external_id"] = match_frame["external_id"].apply(split_clean_aliases)
+    match_frame["lookup_name"] = match_frame.apply(lookup_names, axis="columns")
     match_frame = (
-        match_frame.explode("external_id")
+        match_frame.explode("lookup_name")
         .replace(to_replace=["None"], value=np.nan)
-        .dropna(subset="external_id")
+        .dropna(subset="lookup_name")
+    )
+    match_frame["is_exact_match"] = (
+        match_frame["lookup_name"] == match_frame["external_id"]
     )
 
-    rnc_data = pd.read_csv(db_dump, names=["urs", "taxid", "external_id"], header=0)
-    rnc_data["external_id"] = rnc_data["external_id"].apply(lambda x: str(x).split("|"))
+    rnc_data = pd.read_csv(db_dump, names=["urs", "taxid", "lookup_name"], header=0)
+    rnc_data["lookup_name"] = rnc_data["lookup_name"].apply(lambda x: str(x).split("|"))
     rnc_data = (
-        rnc_data.explode("external_id")
+        rnc_data.explode("lookup_name")
         .replace(to_replace=["", None], value=np.nan)
-        .dropna(subset="external_id")
+        .dropna(subset="lookup_name")
     )
 
     matches = match_frame.merge(
         rnc_data,
-        left_on=["external_id", "taxid"],
-        right_on=["external_id", "taxid"],
+        left_on=["lookup_name", "taxid"],
+        right_on=["lookup_name", "taxid"],
         how="inner",
     )
+    matches.sort_values(["ID", "is_exact_match"], ascending=[True, False], inplace=True)
 
     return matches
 
 
+def load_function_data(function_info: Path) -> pd.DataFrame:
+    function_df = load_table(function_info)
+    return (
+        function_df.groupby("ID", sort=False)["PMID"]
+        .apply(condense_publications)
+        .reset_index(name="publications")
+    )
+
+
 def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     """
-    Parses the 3 excel sheets using pandas and joins them into one massive table
-    which is then parsed to produce entries
+    Parse and join the two EVLncRNAs3 workbooks and build RNAcentral entries.
     """
-    lncRNA = db_dir.joinpath("lncRNA.xlsx")
-    interaction = db_dir.joinpath("interaction2.xlsx")
-    disease = db_dir.joinpath("disease2.xlsx")
+    lncRNA = resolve_sheet(db_dir, "lncRNA_information")
+    function_info = resolve_sheet(db_dir, "function_information")
 
-    assert lncRNA.exists() and interaction.exists() and disease.exists()
-
-    lncRNA_df = pd.read_excel(lncRNA)
-    interaction_df = pd.read_excel(interaction)
-    disease_df = pd.read_excel(disease)
-
-    print("Loaded 3 sheets...")
-
-    lncRNA_df["taxid"] = (
-        lncRNA_df["Species"].apply(handled_phylogeny).dropna().astype(int)
+    lncRNA_df = load_table(lncRNA)
+    function_df = load_function_data(function_info)
+    lncRNA_df.rename(
+        columns={
+            "LncRNA name": "external_id",
+            "Alias": "Aliases",
+        },
+        inplace=True,
     )
+
+    print("Loaded EVLncRNAs3 sheets...")
+
+    lncRNA_df["taxid"] = lncRNA_df["Species"].apply(handled_phylogeny)
+    lncRNA_df = lncRNA_df.dropna(subset=["taxid"]).copy()
+    lncRNA_df["taxid"] = lncRNA_df["taxid"].astype(int)
 
     ## Split the data on the presence of accessions for either NCBI or Ensembl
     no_accession_frame, ensembl_frame, ncbi_frame = split(lncRNA_df)
@@ -272,12 +312,12 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     ## Match with RNAcentral based on the gene name
     ## This is optionally chunked to save memory - 
     ## split the lookup file and provide a list on the commandline
-    matched_frame = pd.concat(
-        [get_db_matches(no_accession_frame, dump_chunk) for dump_chunk in db_dumps]
+    matched_chunks = [get_db_matches(no_accession_frame, dump_chunk) for dump_chunk in db_dumps]
+    matched_frame = pd.concat(matched_chunks, ignore_index=True)
+    matched_frame.drop_duplicates(subset="ID", inplace=True)
+    matched_frame["urs_taxid"] = (
+        matched_frame["urs"] + "_" + matched_frame["taxid"].astype(str)
     )
-    matched_frame["taxid"] = matched_frame["taxid"].astype(str)
-    matched_frame["urs_taxid"] = matched_frame[["urs", "taxid"]].agg("_".join, axis=1)
-    matched_frame.drop_duplicates(subset="urs_taxid", inplace=True)
 
     ## Look up the rest of the data for the hits
     mapping = lookup.as_mapping(db_url, matched_frame["urs_taxid"].values, QUERY)
@@ -289,57 +329,20 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
         lambda x: mapping[x]["sequence"]
     )
 
-    ## Build frame with all hits & accessions
-    ## The full frame is then merged with the disease and interaction frames
-    full_frame = pd.concat([matched_frame, ensembl_frame, ncbi_frame])
-
-    full_frame = full_frame.merge(
-        disease_df.drop(
-            columns=["Name", "Species", "Species category", "exosome", "structure"]
-        ),
-        how="left",
-        on="ID",
+    ## Build frame with all hits & accessions and add aggregated publication data
+    full_frame = pd.concat([matched_frame, ensembl_frame, ncbi_frame], ignore_index=True)
+    full_frame.drop_duplicates(subset="ID", inplace=True)
+    full_frame = full_frame.merge(function_df, how="left", on="ID")
+    full_frame["publications"] = full_frame["publications"].apply(
+        lambda refs: refs if isinstance(refs, list) else []
     )
-
-    full_frame = full_frame.merge(
-        interaction_df.drop(columns=["Name", "Species", "Species category"]),
-        how="left",
-        on="ID",
-    )
-
-    ## Try to ensure one entry per URS_taxid
-    full_frame.drop_duplicates(subset="urs_taxid", inplace=True)
 
     ## Tidy up and apply some normalisations
-    full_frame["publications"] = full_frame.apply(condense_publications, axis="columns")
     full_frame["Chain"] = full_frame["Chain"].apply(
-        lambda x: chain_normalisation.get(x, None)
+        lambda x: chain_normalisation.get(str(x).lower(), None) if pd.notna(x) else None
     )
     full_frame["so_type"] = full_frame["Class"].apply(
         lambda x: type_normalisation.get(x, "SO:0000655")
-    )
-
-    ## Tidy up and rename some columns
-    full_frame.drop(
-        columns=[
-            "Species category",
-            "peptide",
-            "circRNA",
-            "exosome",
-            "structure",
-            "Disease category",
-            "Methods_x",
-            "Sample",
-            "Expression pattern",
-            "Dysfunction type",
-            "Description of disease/function",
-            "Source",
-            "drug Resistance/chemoresistance/stress",
-            "PDBlink",
-            "Description of interaction",
-            "Methods_y",
-        ],
-        inplace=True,
     )
 
     full_frame.replace({np.nan: None}, inplace=True)
