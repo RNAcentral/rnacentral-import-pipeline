@@ -1,5 +1,6 @@
 process modomics {
   when: { params.databases.modomics.run }
+  containerOptions "${params.common_container} --bind /nfs/production/agb/rnacentral/provided-data:/nfs/production/agb/rnacentral/provided-data"
 
   output:
   path('*.csv')
