@@ -25,24 +25,17 @@ from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 
 LOGGER = logging.getLogger(__name__)
 
-def latest_release(ftp: FTP) -> str:
-    ## Parse the readme for the current release to avoid getting a half baked release
-    readme_lines = []
-    ftp.retrlines("RETR current_README", readme_lines.append)
-    cur_readme = "\n".join(readme_lines)
-    pattern = r"Ensembl Release (\d+) Databases\."
-    match = re.search(pattern, cur_readme, re.IGNORECASE)
+CURRENT_RELEASE = "current"
+CORE_DBNAME_PATTERN = re.compile(r"_core_(\d+)(?:_|$)")
 
-    if not match:
-        raise ValueError("Could not find release number in README")
-    release = match.group(1)
-    print(f"Ensembl release {release}")
-    return f"release-{release}"
+
+def current_release(_ftp: FTP) -> str:
+    return CURRENT_RELEASE
 
 
 @contextmanager
 def species_info(ftp: FTP, division: Division, release: str):
-    info_path = f"{release}/species_metadata_{division.division_name}.json"
+    info_path = f"{release}/{division.name}/species_metadata_{division.division_name}.json"
     print(info_path)
     with tempfile.NamedTemporaryFile() as tmp:
         ftp.retrbinary(f"RETR {info_path}", tmp.write)
@@ -54,11 +47,11 @@ def species_info(ftp: FTP, division: Division, release: str):
 def generate_paths(
     ftp: FTP, division: Division, base: str, release: str, handle
 ) -> ty.Iterable[FtpInfo]:
-    _, release_id = release.split("-", 1)
     data = json.load(handle)
     for entry in data:
         info = entry["organism"]
         name = info["name"]
+        release_id = release_suffix(entry)
 
         # So sometimes Ensembl users lower case names for the assemblies but
         # not always, so we try both and generate a name for the existing one.
@@ -75,8 +68,10 @@ def generate_paths(
             if not any(db["dbname"].startswith(name) for db in entry["databases"]):
                 continue
 
-            gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
-            data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
+            gff_path = f"{base}/{release}/{division.name}/gff3/{name}/{organism_name}.gff3.gz"
+            data_files = (
+                f"{base}/{release}/{division.name}/embl/{name}/{organism_name}.*.dat.gz"
+            )
 
             yield FtpInfo(
                 division=division,
@@ -89,12 +84,21 @@ def generate_paths(
             LOGGER.warn("No files found for %s", info)
 
 
+def release_suffix(entry: dict[str, ty.Any]) -> str:
+    for database in entry.get("databases", []):
+        dbname = database.get("dbname", "")
+        match = CORE_DBNAME_PATTERN.search(dbname)
+        if match:
+            return match.group(1)
+    raise ValueError(f"Could not determine release suffix for {entry['organism']['name']}")
+
+
 def urls_for(division: Division, host: str) -> ty.Iterable[FtpInfo]:
     with FTP(host) as ftp:
         ftp.login()
         print("LOGIN")
-        ftp.cwd(f"pub/{division.name}/")
-        latest = latest_release(ftp)
+        ftp.cwd("pub")
+        latest = current_release(ftp)
         with species_info(ftp, division, latest) as info:
-            url_base = f"ftp://{host}/pub/{division.name}"
+            url_base = f"ftp://{host}/pub"
             yield from generate_paths(ftp, division, url_base, latest, info)
