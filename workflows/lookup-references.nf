@@ -17,6 +17,7 @@ process merge_and_split_all_publications {
 process fetch_publications {
   when { params.needs_publications }
   queue 'datamover'
+  memory 8.GB
   container ''
 
   output:
