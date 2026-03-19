@@ -120,10 +120,9 @@ def split(input_frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
         subset="taxid"
     )
     print("NCBI missing done")
-    e_accessions = no_accessions[no_accessions["Ensembl"].notna()].copy()
+    e_accessions = no_accessions[no_accessions["Ensembl"].notna()]
     print("ensembl subset done")
-    no_accessions = no_accessions[no_accessions["Ensembl"].isna()].copy()
-    ncbi_accessions = input_frame[input_frame["NCBI accession"].notna()].copy()
+    ncbi_accessions = input_frame[input_frame["NCBI accession"].notna()]
     print("NCBI subset done")
     return (no_accessions, e_accessions, ncbi_accessions)
 
@@ -224,40 +223,34 @@ def get_ensembl_accessions(
 
 
 def get_db_matches(match_frame_in: pd.DataFrame, db_dump: Path) -> pd.DataFrame:
-    def lookup_names(row):
-        names = [str(row["external_id"]).strip()]
-        aliases = row.get("Aliases")
-        if pd.notna(aliases):
-            names.extend(a.strip() for a in str(aliases).split(",") if a.strip())
-        return names
+    def split_clean_aliases(al):
+        if al:
+            return [a.strip() for a in str(al).split(",")]
+        return np.nan
 
     match_frame = match_frame_in.copy()
     match_frame["taxid"] = match_frame["taxid"].astype(int)
-    match_frame["lookup_name"] = match_frame.apply(lookup_names, axis="columns")
+    match_frame["external_id"] = match_frame["external_id"].apply(split_clean_aliases)
     match_frame = (
-        match_frame.explode("lookup_name")
+        match_frame.explode("external_id")
         .replace(to_replace=["None"], value=np.nan)
-        .dropna(subset="lookup_name")
-    )
-    match_frame["is_exact_match"] = (
-        match_frame["lookup_name"] == match_frame["external_id"]
+        .dropna(subset="external_id")
     )
 
-    rnc_data = pd.read_csv(db_dump, names=["urs", "taxid", "lookup_name"], header=0)
-    rnc_data["lookup_name"] = rnc_data["lookup_name"].apply(lambda x: str(x).split("|"))
+    rnc_data = pd.read_csv(db_dump, names=["urs", "taxid", "external_id"], header=0)
+    rnc_data["external_id"] = rnc_data["external_id"].apply(lambda x: str(x).split("|"))
     rnc_data = (
-        rnc_data.explode("lookup_name")
+        rnc_data.explode("external_id")
         .replace(to_replace=["", None], value=np.nan)
-        .dropna(subset="lookup_name")
+        .dropna(subset="external_id")
     )
 
     matches = match_frame.merge(
         rnc_data,
-        left_on=["lookup_name", "taxid"],
-        right_on=["lookup_name", "taxid"],
+        left_on=["external_id", "taxid"],
+        right_on=["external_id", "taxid"],
         how="inner",
     )
-    matches.sort_values(["ID", "is_exact_match"], ascending=[True, False], inplace=True)
 
     return matches
 
@@ -312,12 +305,14 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     ## Match with RNAcentral based on the gene name
     ## This is optionally chunked to save memory - 
     ## split the lookup file and provide a list on the commandline
-    matched_chunks = [get_db_matches(no_accession_frame, dump_chunk) for dump_chunk in db_dumps]
-    matched_frame = pd.concat(matched_chunks, ignore_index=True)
-    matched_frame.drop_duplicates(subset="ID", inplace=True)
-    matched_frame["urs_taxid"] = (
-        matched_frame["urs"] + "_" + matched_frame["taxid"].astype(str)
+    matched_frame = pd.concat(
+        [get_db_matches(no_accession_frame, dump_chunk) for dump_chunk in db_dumps]
     )
+    matched_frame["taxid"] = matched_frame["taxid"].astype(str)
+    matched_frame["urs_taxid"] = matched_frame["urs"].astype(str) + "_" + matched_frame[
+        "taxid"
+    ]
+    matched_frame.drop_duplicates(subset="urs_taxid", inplace=True)
 
     ## Look up the rest of the data for the hits
     mapping = lookup.as_mapping(db_url, matched_frame["urs_taxid"].values, QUERY)
