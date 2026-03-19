@@ -110,7 +110,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-probability",
         type=float,
-        default=0.0023,
+        default=0.0001,
         help="Maximum null-model probability still considered protein coding",
     )
     return parser
