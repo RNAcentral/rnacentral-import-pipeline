@@ -46,8 +46,12 @@ process fetch_species_data {
   tuple val(division), path("*.dat"), path("${species}.gff")
 
   """
-  wget '$dat_path'
-  wget '$gff_path'
+  lowercase_assembly_url() {
+    PYTHONPATH="${workflow.launchDir}" python -c "from rnacentral_pipeline.databases.ensembl.url_helpers import lowercase_assembly_in_url; print(lowercase_assembly_in_url('$1'))"
+  }
+
+  wget '$dat_path' || wget "$(lowercase_assembly_url '$dat_path')"
+  wget '$gff_path' || wget "$(lowercase_assembly_url '$gff_path')"
   zgrep '^#' *.gff3.gz | grep -v '^###\$' > ${species}.gff
   zcat *.gff3.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${species}.gff
   gzip -d *.gz
