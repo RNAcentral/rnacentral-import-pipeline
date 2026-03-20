@@ -144,7 +144,10 @@ def get_ncbi_accessions(
         search_url.args["term"] = " OR ".join(accession_list)
         search_url.args["usehistory"] = "y"
 
-        search_result = requests.get(search_url.url)
+        try:
+            search_result = requests.get(search_url.url)
+        except requests.RequestException:
+            return sequences
         if search_result.ok:
             search_res_data = BeautifulSoup(search_result.text, features="xml")
             num_hits = search_res_data.find("Count")
@@ -160,7 +163,10 @@ def get_ncbi_accessions(
                 fetch_url.args["rettype"] = "gb"
                 fetch_url.args["retmode"] = "text"
 
-                fetch_res = requests.get(fetch_url.url)
+                try:
+                    fetch_res = requests.get(fetch_url.url)
+                except requests.RequestException:
+                    return sequences
                 if fetch_res.ok:
                     sequence_data = SeqIO.parse(
                         io.StringIO(fetch_res.text),
@@ -186,7 +192,10 @@ def get_ensembl_accessions(
     def pull_ensembl_data(e_id: str):
         id_url = ensembl_rest_url / e_id
 
-        data = requests.get(id_url.url, headers={"Content-Type": "text/x-fasta"})
+        try:
+            data = requests.get(id_url.url, headers={"Content-Type": "text/x-fasta"})
+        except requests.RequestException:
+            return (None, None, None, None, None, None)
         if not data.ok:
             return (None, None, None, None, None, None)
         sequence_data = SeqIO.read(
