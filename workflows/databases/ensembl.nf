@@ -50,8 +50,14 @@ process fetch_species_data {
     PYTHONPATH="${workflow.launchDir}" python -c "from rnacentral_pipeline.databases.ensembl.url_helpers import lowercase_assembly_in_url; print(lowercase_assembly_in_url('\$1'))"
   }
 
-  wget '$dat_path' || wget "$(lowercase_assembly_url '$dat_path')"
-  wget '$gff_path' || wget "$(lowercase_assembly_url '$gff_path')"
+  resolve_ftp_urls() {
+    PYTHONPATH="${workflow.launchDir}" python -c "import sys; from rnacentral_pipeline.databases.ensembl.url_helpers import resolve_ftp_urls; print('\n'.join(resolve_ftp_urls(sys.argv[1])))" "\$1"
+  }
+
+  resolve_ftp_urls '$dat_path' > dat_urls.txt
+  test -s dat_urls.txt
+  xargs -n 1 wget < dat_urls.txt
+  wget '$gff_path' || wget "\$(lowercase_assembly_url '$gff_path')"
   zgrep '^#' *.gff3.gz | grep -v '^###\$' > ${species}.gff
   zcat *.gff3.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${species}.gff
   gzip -d *.gz
