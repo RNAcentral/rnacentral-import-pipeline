@@ -36,12 +36,27 @@ def select_easel(entry):
     return re.match(EASEL_PATTERN, entry["sequence"])
 
 
-def parse(handle):
-    for line in handle:
+def decode_entry(raw):
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as error:
         try:
-            yield json.loads(line)
-        except:
-            yield json.loads(line.replace("\\\\", "\\"))
+            return json.loads(raw.replace("\\\\", "\\"))
+        except json.JSONDecodeError:
+            raise error
+
+
+def parse(handle):
+    pending = ""
+    for line in handle:
+        pending += line
+        try:
+            yield decode_entry(pending)
+            pending = ""
+        except json.JSONDecodeError:
+            continue
+    if pending.strip():
+        yield decode_entry(pending)
 
 
 def sequences(handle, only_valid_easel=False):
