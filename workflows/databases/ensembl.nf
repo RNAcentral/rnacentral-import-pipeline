@@ -47,7 +47,7 @@ process fetch_species_data {
 
   """
   lowercase_assembly_url() {
-    PYTHONPATH="${workflow.launchDir}" python -c "from rnacentral_pipeline.databases.ensembl.url_helpers import lowercase_assembly_in_url; print(lowercase_assembly_in_url('$1'))"
+    PYTHONPATH="${workflow.launchDir}" python -c "from rnacentral_pipeline.databases.ensembl.url_helpers import lowercase_assembly_in_url; print(lowercase_assembly_in_url('\$1'))"
   }
 
   wget '$dat_path' || wget "$(lowercase_assembly_url '$dat_path')"
