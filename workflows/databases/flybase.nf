@@ -12,14 +12,14 @@ process flybase {
       return
     fi
 
-    local index_url="$(dirname "$remote")/index.html"
+    local index_url="\$(dirname "$remote")/index.html"
     local match
-    match=$(curl -fsSL "$index_url" | grep -oE 'ncRNA[^"[:space:]]*\\.json\\.gz' | head -n 1)
+    match=\$(curl -fsSL "$index_url" | grep -oE 'ncRNA[^"[:space:]]*\\.json\\.gz' | head -n 1)
     [[ -n "$match" ]]
-    printf '%s/%s\n' "$(dirname "$remote")" "$match"
+    printf '%s/%s\n' "\$(dirname "$remote")" "$match"
   }
 
-  wget -O - "$(resolve_remote)" | gzip -d > flybase.json
+  wget -O - "\$(resolve_remote)" | gzip -d > flybase.json
   rnac flybase parse flybase.json .
   """
 }
