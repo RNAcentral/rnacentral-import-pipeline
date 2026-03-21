@@ -51,7 +51,7 @@ process fetch_species_data {
   }
 
   resolve_ftp_urls() {
-    PYTHONPATH="${workflow.launchDir}" python -c "import sys; from rnacentral_pipeline.databases.ensembl.url_helpers import resolve_ftp_urls; print('\n'.join(resolve_ftp_urls(sys.argv[1])))" "\$1"
+    PYTHONPATH="${workflow.launchDir}" python -c "import sys; from rnacentral_pipeline.databases.ensembl.url_helpers import resolve_ftp_urls; sys.stdout.write('\\n'.join(resolve_ftp_urls(sys.argv[1])))" "\$1"
   }
 
   resolve_ftp_urls '$dat_path' > dat_urls.txt
