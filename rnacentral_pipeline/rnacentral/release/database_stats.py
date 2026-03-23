@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime
 import json
 import logging
 import typing as ty
@@ -48,6 +49,9 @@ class DatabaseStats:
     num_organisms = attr.ib(validator=is_a(int))
     lineage = attr.ib(validator=is_a(str))
     length_counts = attr.ib(validator=is_a(str))
+    last_import_date = attr.ib(
+        validator=attr.validators.optional(is_a(datetime.datetime)), default=None
+    )
 
 
 def json_lineage_tree(xrefs) -> str:
@@ -200,6 +204,23 @@ def length_counts(conn, db_id: int) -> str:
         return json.dumps(data)
 
 
+def last_import_date(conn, db_id: int) -> ty.Optional[datetime.datetime]:
+    rnc_rel = Table("rnc_release")
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        query = (
+            Query.from_(rnc_rel)
+            .select(rnc_rel.release_date)
+            .where(rnc_rel.dbid == db_id)
+            .orderby(rnc_rel.release_date, order=Order.desc)
+            .limit(1)
+        )
+        cur.execute(str(query))
+        row = cur.fetchone()
+    if row is None:
+        return None
+    return row["release_date"]
+
+
 def update(conn, descr: str, db_id: int) -> DatabaseStats:
     LOGGER.info("Updating data for %s", descr)
     length_info = lengths(conn, db_id)
@@ -212,6 +233,7 @@ def update(conn, descr: str, db_id: int) -> DatabaseStats:
         num_organisms=count_organisms(conn, db_id),
         lineage=lineage(conn, db_id),
         length_counts=length_counts(conn, db_id),
+        last_import_date=last_import_date(conn, db_id),
     )
 
 
@@ -238,6 +260,7 @@ def insert(conn, stats: DatabaseStats):
             "avg_length",
             "num_sequences",
             "num_organisms",
+            "last_import_date",
         ]
         for name in fields:
             update = (
