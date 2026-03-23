@@ -35,7 +35,7 @@ process find_urls {
 
 process fetch_species_data {
   tag { "$species" }
-  errorStrategy { task.exitStatis == 8 ? 'retry' : 'ignore' }
+  errorStrategy { task.exitStatus == 8 ? 'retry' : 'ignore' }
   maxRetries 10
   maxForks 10
 
