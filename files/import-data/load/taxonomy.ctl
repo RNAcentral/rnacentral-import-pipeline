@@ -6,7 +6,8 @@ HAVING FIELDS (
     lineage,
     aliases,
     replaced_by,
-    rank
+    rank,
+    reference_proteome
 )
 INTO {{PGDATABASE}}?load_taxonomy
 TARGET COLUMNS (
@@ -15,7 +16,8 @@ TARGET COLUMNS (
     lineage,
     aliases,
     replaced_by,
-    rank
+    rank,
+    reference_proteome
 )
 WITH skip header = 0,
     fields escaped by double-quote,
@@ -32,7 +34,8 @@ create table load_taxonomy (
     lineage text,
     aliases json,
     replaced_by int,
-    rank text
+    rank text,
+    reference_proteome boolean
 );
 $$
 ;

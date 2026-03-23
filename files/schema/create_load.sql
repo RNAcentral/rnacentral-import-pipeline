@@ -371,7 +371,8 @@ CREATE TABLE load_taxonomy (
     lineage text,
     aliases json,
     replaced_by int,
-    rank text
+    rank text,
+    reference_proteome boolean
 );
 
 DROP TABLE IF EXISTS load_overlaps;
