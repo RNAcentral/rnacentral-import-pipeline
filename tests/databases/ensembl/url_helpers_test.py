@@ -86,3 +86,45 @@ def test_resolve_ftp_urls_falls_back_to_lowercase_assembly(monkeypatch):
     assert found == [
         "ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/arabidopsis_thaliana/Arabidopsis_thaliana.tair10.62.chromosome.1.dat.gz",
     ]
+
+
+def test_resolve_ftp_urls_falls_back_to_single_nonchromosomal_file(monkeypatch):
+    monkeypatch.setattr(
+        url_helpers,
+        "FTP",
+        lambda _host: FakeFtp(
+            [
+                "/pub/release-115/embl/sus_scrofa_gca018555405v1/"
+                "Sus_scrofa_gca018555405v1.ASM1855540v1.115.nonchromosomal.dat.gz",
+            ]
+        ),
+    )
+
+    found = url_helpers.resolve_ftp_urls(
+        "ftp://ftp.ensembl.org/pub/release-115/embl/sus_scrofa_gca018555405v1/"
+        "Sus_scrofa_nihs_2020.ASM1855540v1.115.*.dat.gz"
+    )
+
+    assert found == [
+        "ftp://ftp.ensembl.org/pub/release-115/embl/sus_scrofa_gca018555405v1/"
+        "Sus_scrofa_gca018555405v1.ASM1855540v1.115.nonchromosomal.dat.gz",
+    ]
+
+
+def test_resolve_ftp_urls_does_not_guess_when_multiple_nonchromosomal_files_exist(monkeypatch):
+    monkeypatch.setattr(
+        url_helpers,
+        "FTP",
+        lambda _host: FakeFtp(
+            [
+                "/pub/release-115/embl/example/one.nonchromosomal.dat.gz",
+                "/pub/release-115/embl/example/two.nonchromosomal.dat.gz",
+            ]
+        ),
+    )
+
+    found = url_helpers.resolve_ftp_urls(
+        "ftp://ftp.ensembl.org/pub/release-115/embl/example/missing.*.dat.gz"
+    )
+
+    assert found == []
