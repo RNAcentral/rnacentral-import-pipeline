@@ -370,7 +370,8 @@ CREATE TABLE load_taxonomy (
     name text,
     lineage text,
     aliases json,
-    replaced_by int
+    replaced_by int,
+    rank text
 );
 
 DROP TABLE IF EXISTS load_overlaps;
