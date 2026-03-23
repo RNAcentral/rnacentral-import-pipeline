@@ -12,6 +12,7 @@ process taxonomy {
   tar xvf new_taxdump.tar.gz
   mkdir taxdump
   mv *.dmp taxdump
-  rnac ncbi taxonomy taxdump
+  wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/reference_proteomes/STATS
+  rnac ncbi taxonomy taxdump --ref-proteomes STATS
   """
 }
