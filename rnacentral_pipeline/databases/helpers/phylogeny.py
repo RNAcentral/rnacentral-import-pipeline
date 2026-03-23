@@ -47,6 +47,34 @@ class FailedTaxonId(Exception):
     pass
 
 
+def get_json_with_retries(url: str) -> ty.Any:
+    """
+    Fetch JSON from a URL, retrying transient transport and decoding failures.
+    """
+
+    for count in range(10):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            return response.json()
+        except simplejson.errors.JSONDecodeError:
+            sleep(0.15 * (count + 1) ** 2)
+            continue
+        except (
+            requests.ConnectionError,
+            requests.Timeout,
+            requests.exceptions.SSLError,
+        ) as err:
+            if count == 9:
+                raise FailedTaxonId(f"Could not fetch {url}") from err
+            sleep(0.15 * (count + 1) ** 2)
+            continue
+        except requests.HTTPError:
+            raise
+
+    raise FailedTaxonId(f"Could not fetch {url}")
+
+
 def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
     """
     Sometimes the ENA taxonomy doesn't know what something prefectly reasonable is,
@@ -57,15 +85,12 @@ def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
     things go really wrong
     """
     for count in range(10):
-        response = requests.get(FALLBACK_SPECIES_URL.format(taxon_id=taxon_id))
+        url = FALLBACK_SPECIES_URL.format(taxon_id=taxon_id)
         try:
-            response.raise_for_status()
-            data = response.json()
+            data = get_json_with_retries(url)
             break
-        except simplejson.errors.JSONDecodeError:
-            sleep(0.15 * (count + 1) ** 2)
-            continue
         except requests.HTTPError as err:
+            response = err.response
             if response.status_code == 500:
                 sleep(0.15 * (count + 1) ** 2)
                 continue
@@ -101,15 +126,12 @@ def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
     """
 
     for count in range(10):
-        response = requests.get(TAX_URL.format(taxon_id=taxon_id))
+        url = TAX_URL.format(taxon_id=taxon_id)
         try:
-            response.raise_for_status()
-            data = response.json()
+            data = get_json_with_retries(url)
             break
-        except simplejson.errors.JSONDecodeError:
-            sleep(0.15 * (count + 1) ** 2)
-            continue
         except requests.HTTPError as err:
+            response = err.response
             if response.status_code == 500:
                 sleep(0.15 * (count + 1) ** 2)
                 continue
@@ -174,20 +196,17 @@ def taxid(species: str) -> int:
     """
 
     for count in range(10):
-        response = requests.get(SPECIES_URL.format(species=species))
+        url = SPECIES_URL.format(species=species)
         try:
-            response.raise_for_status()
-            data = response.json()
+            data = get_json_with_retries(url)
             break
-        except simplejson.errors.JSONDecodeError:
-            sleep(0.15 * (count + 1) ** 2)
-            continue
         except requests.HTTPError as err:
+            response = err.response
             if response.status_code == 500:
                 sleep(0.15 * (count + 1) ** 2)
                 continue
             elif response.status_code == 404:
-                raise UnknownTaxonId(taxon_id)
+                raise UnknownTaxonId(species)
             else:
                 LOGGER.exception(err)
                 raise FailedTaxonId("Unknown error")
