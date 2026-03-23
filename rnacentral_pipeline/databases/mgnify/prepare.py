@@ -73,6 +73,7 @@ def prepare_mgnify_data(data, conn_str):
         "human oral genome catalogue": 447426,  # human oral metagenome
         "human vaginal genome catalogue": 1632839,  # human vaginal metagenome
         "marine genome catalogue": 2994539,  # marine eukaryotic metagenome
+        "maize rhizosphere genome catalogue": 939928,  # rhizosphere metagenome
         "mouse gut genome catalogue": 410661,  # mouse gut metagenome
         "non model fish gut genome catalogue": 1602388,  # non model fish gut metagenome
         "non model fish gut genome catalogue": 1602388,  # fish gut metagenome
