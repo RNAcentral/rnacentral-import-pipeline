@@ -66,6 +66,7 @@ def prepare_mgnify_data(data, conn_str):
     ## Define fallback taxids of the general metagenome of the environment
     ## These are used if we can't do any better
     fallback = {
+        "barley rhizosphere genome catalogue": 939928,  # rhizosphere metagenome
         "chicken gut genome catalogue": 506600,  # chicken gut metagenome
         "cow rumen genome catalogue": 506599,  # bovine gut metagenome
         "honeybee gut genome catalogue": 1202446,  # insect gut metagenome
@@ -74,12 +75,15 @@ def prepare_mgnify_data(data, conn_str):
         "human skin genome catalogue": 539655,  # human skin metagenome
         "human vaginal genome catalogue": 1632839,  # human vaginal metagenome
         "marine genome catalogue": 2994539,  # marine eukaryotic metagenome
+        "marine sediment genome catalogue": 412755,  # marine sediment metagenome
         "maize rhizosphere genome catalogue": 939928,  # rhizosphere metagenome
         "mouse gut genome catalogue": 410661,  # mouse gut metagenome
         "non model fish gut genome catalogue": 1602388,  # non model fish gut metagenome
         "non model fish gut genome catalogue": 1602388,  # fish gut metagenome
         "pig gut genome catalogue": 1510822,  # pig gut metagenome
         "sheep rumen genome catalogue": 1904483,  # sheep gut metagenome
+        "soil genome catalogue": 410658,  # soil metagenome
+        "tomato rhizosphere genome catalogue": 939928,  # rhizosphere metagenome
         "zebrafish fecal genome catalogue": 1331678,  # zebrafish metagenome -
         # more accurate then generic fish fecal?
     }
