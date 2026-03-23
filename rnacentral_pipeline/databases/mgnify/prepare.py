@@ -71,6 +71,7 @@ def prepare_mgnify_data(data, conn_str):
         "honeybee gut genome catalogue": 1202446,  # insect gut metagenome
         "human gut genome catalogue": 408170,  # human gut metagenome
         "human oral genome catalogue": 447426,  # human oral metagenome
+        "human skin genome catalogue": 539655,  # human skin metagenome
         "human vaginal genome catalogue": 1632839,  # human vaginal metagenome
         "marine genome catalogue": 2994539,  # marine eukaryotic metagenome
         "maize rhizosphere genome catalogue": 939928,  # rhizosphere metagenome
