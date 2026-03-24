@@ -71,7 +71,7 @@ def text_value(row: ty.Dict[str, str], name: str) -> str | None:
 
 def find_coords(id: str, target: str, query: str) -> ty.List[RelatedCoordinate]:
     if query not in target:
-        LOGGER.warn(f"Mature not found in precusor for %s", id)
+        LOGGER.warning(f"Mature not found in precursor for %s", id)
         return []
     start = target.index(query)
     return [RelatedCoordinate(start=start, stop=start + len(query))]
