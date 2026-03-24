@@ -37,6 +37,7 @@ use super::{
     editing_events::EditingEvent,
     feedback::Feedback,
     go_annotation::GoAnnotation,
+    go_flow_annotations::GoFlowLLMAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
     litsumm::LitsummSummaries,
@@ -98,6 +99,7 @@ pub enum FileTypes {
     PublicationCount,
     LitsummSummaries,
     EditingEvents,
+    GoFlowLLMAnnotations,
     SoTermTree,
 }
 
@@ -116,6 +118,8 @@ pub struct FileJoiner<'de> {
     rfam_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<RfamHit>>,
     publication_counts: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<PublicationCount>>,
     lit_summ: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<LitsummSummaries>>,
+    go_flow_llm_annotations:
+        StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<GoFlowLLMAnnotation>>,
     editing_events: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<EditingEvent>>,
     so_info: SoMapping,
 }
@@ -203,6 +207,7 @@ impl FileJoinerBuilder {
         let publication_counts = self.iterator_for(FileTypes::PublicationCount)?;
         let lit_summ = self.iterator_for(FileTypes::LitsummSummaries)?;
         let editing_events = self.iterator_for(FileTypes::EditingEvents)?;
+        let go_flow_llm_annotations = self.iterator_for(FileTypes::GoFlowLLMAnnotations)?;
         let so_info = so_tree::load(self.path_for(FileTypes::SoTermTree)?)?;
 
         Ok(FileJoiner {
@@ -220,6 +225,7 @@ impl FileJoinerBuilder {
             publication_counts,
             lit_summ,
             editing_events,
+            go_flow_llm_annotations,
             so_info,
         })
     }
@@ -244,10 +250,12 @@ impl<'de> Iterator for FileJoiner<'de> {
             self.publication_counts.next(),
             self.lit_summ.next(),
             self.editing_events.next(),
+            self.go_flow_llm_annotations.next(),
         );
 
         match current {
             (
+                None,
                 None,
                 None,
                 None,
@@ -320,6 +328,10 @@ impl<'de> Iterator for FileJoiner<'de> {
                     id: id14,
                     data: editing_events,
                 })),
+                Some(Ok(Multiple {
+                    id: id15,
+                    data: goflow_llm_annotations,
+                })),
             ) => {
                 if id1 != id2
                     || id1 != id3
@@ -334,17 +346,19 @@ impl<'de> Iterator for FileJoiner<'de> {
                     || id1 != id12
                     || id1 != id13
                     || id1 != id14
+                    || id1 != id15
                 {
                     return Some(Err(Error::OutofSyncData(vec![
                         id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12, id13, id14,
+                        id15,
                     ])));
                 }
 
                 let pre_so_type = precompute.so_rna_type();
-                if !self.so_info.contains_key(pre_so_type) {
+                if !self.so_info.has_tree(&pre_so_type) {
                     return Some(Err(Error::MissingSoTrem(pre_so_type.to_string())));
                 }
-                let so_tree = self.so_info[pre_so_type].clone();
+                let so_tree = self.so_info.tree(&pre_so_type).unwrap();
 
                 let raw = Raw::builder()
                     .id(id1)
@@ -362,6 +376,7 @@ impl<'de> Iterator for FileJoiner<'de> {
                     .publication_counts(publication_counts)
                     .litsumm_summaries(lit_summ)
                     .editing_events(editing_events)
+                    .go_flow_llm_annotations(goflow_llm_annotations)
                     .so_tree(so_tree)
                     .build();
 

@@ -90,6 +90,7 @@ class Sequence:
     last_release = attr.ib(validator=is_a(int))
     r2dt_hits: ty.List[R2dtHit] = attr.ib(validator=is_a(list))
     orf_info = attr.ib(validator=optional(is_a(OrfInfo)))
+    possible_orf_tcode = attr.ib(validator=optional(is_a(bool)))
 
     @classmethod
     def build(cls, so_tree, data) -> Sequence:
@@ -135,6 +136,7 @@ class Sequence:
                 }
             ),
             orf_info=orf_info,
+            possible_orf_tcode=data.get("possible_orf_tcode", None),
         )
 
     @property

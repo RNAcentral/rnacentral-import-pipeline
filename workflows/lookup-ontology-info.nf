@@ -1,4 +1,7 @@
 process lookup {
+  errorStrategy 'retry'
+  maxRetries 3
+
   input:
   path('terms*.csv')
 

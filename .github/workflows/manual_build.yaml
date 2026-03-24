@@ -1,0 +1,193 @@
+# Thid workflow will build and push the import pipeline container.
+# the plan later will be to include unit tests as well
+
+
+name: Manually Building Pipeline Containers
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rust_build:
+        description: 'Force rebuild of Rust containers'
+        required: false
+        type: boolean
+        default: false
+        
+jobs:
+
+  starting-notification:
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v3
+
+     - name: Intital notification
+       uses: rtCamp/action-slack-notify@v2
+       env:
+         SLACK_MESSAGE: 'Creating new pipeline image in docker hub'
+         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+         MSG_MINIMAL: true
+  
+  trigger-rust-build:
+    runs-on: ubuntu-latest
+    if: inputs.force_rust_build == true
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Trigger Rust container build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Triggering rust-container workflow..."
+          gh workflow run rust-container.yaml \
+            --ref ${{ github.ref_name }} \
+            -f force_rebuild=true
+
+  wait-for-rust-build:
+    runs-on: ubuntu-latest
+    outputs:
+      rust_changed: ${{ steps.check-rust.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Check if Rust files changed
+        id: check-rust
+        run: |
+          # Check if force build was requested
+          if [ "${{ inputs.force_rust_build }}" = "true" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Force Rust rebuild requested"
+            exit 0
+          fi
+          
+          # Otherwise check for actual changes
+          if git diff --name-only HEAD^ HEAD | grep -qE '\.(rs|toml|lock)$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Rust files changed, waiting for rust-container workflow..."
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No Rust changes, skipping wait"
+          fi
+
+      - name: Wait for Rust container build
+        if: steps.check-rust.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Waiting for rust-container workflow to complete..."
+          sleep 30  # Give workflow time to start
+
+          # Wait up to 30 minutes for rust-container workflow to complete
+          timeout=1800
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            # Check for running or completed rust-container workflows for this commit
+            status=$(gh run list \
+              --workflow=rust-container.yaml \
+              --commit=${{ github.sha }} \
+              --json status,conclusion \
+              --jq '.[0] | "\(.status):\(.conclusion)"')
+
+            if [ -z "$status" ]; then
+              echo "Warning: rust-container workflow not found yet, waiting..."
+              sleep 10
+              elapsed=$((elapsed + 10))
+              continue
+            fi
+
+            workflow_status=$(echo "$status" | cut -d: -f1)
+            workflow_conclusion=$(echo "$status" | cut -d: -f2)
+
+            if [ "$workflow_status" = "completed" ]; then
+              if [ "$workflow_conclusion" = "success" ]; then
+                echo "✓ Rust container build completed successfully"
+                exit 0
+              else
+                echo "✗ Rust container build failed with conclusion: $workflow_conclusion"
+                exit 1
+              fi
+            fi
+
+            echo "Rust container build status: $workflow_status (elapsed: ${elapsed}s)"
+            sleep 30
+            elapsed=$((elapsed + 30))
+          done
+
+          echo "✗ Timeout waiting for rust-container workflow"
+          exit 1
+
+  create-docker-image:
+    needs: wait-for-rust-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read versions
+        id: versions
+        run: |
+          echo "pipeline=$(cat VERSION)" >> $GITHUB_OUTPUT
+          echo "infernal=$(cat containers/infernal/VERSION)" >> $GITHUB_OUTPUT
+          echo "samtools=$(cat containers/samtools/VERSION)" >> $GITHUB_OUTPUT
+
+          RUST_VERSION=$(cat containers/rust-utils/VERSION)
+          if [ "$RUST_VERSION" = "auto" ]; then
+            RUST_VERSION=$(git rev-parse --short=8 HEAD)
+          fi
+          echo "rust=$RUST_VERSION" >> $GITHUB_OUTPUT
+
+      - name: docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: docker build
+        run: |
+          docker build \
+            --build-arg INFERNAL_VERSION=${{ steps.versions.outputs.infernal }} \
+            --build-arg SAMTOOLS_VERSION=${{ steps.versions.outputs.samtools }} \
+            --build-arg RUST_VERSION=latest \
+            -t rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pipeline }} \
+            -t rnacentral/rnacentral-import-pipeline:latest \
+            -f Dockerfile .
+
+      - name: docker push
+        run: |
+          docker push rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pipeline }}
+          docker push rnacentral/rnacentral-import-pipeline:latest
+
+  finished-notification:
+    needs:
+      - create-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Finished notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'New pipeline image pushed to docker hub'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
+
+  singularity-conversion:
+    needs:
+      - create-docker-image
+    uses: rnacentral/rnacentral-import-pipeline/.github/workflows/singularity.yaml@dev
+    secrets: inherit
+
+
+  finished-singularity:
+    needs:
+      - singularity-conversion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Finished notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'New singularity image pushed to ghcr'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true

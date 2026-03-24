@@ -1,4 +1,15 @@
 [workspace]
 members = [
-  "utils/*",
+  "utils/bed-expander",
+  "utils/expand-urs",
+  "utils/ftp-export",
+  "utils/json2dfasta",
+  "utils/json2fasta",
+  "utils/precompute",
+  "utils/rnc-core",
+  "utils/rnc-test-utils",
+  "utils/rnc-utils",
+  "utils/search-export",
+  "utils/split-ena",
 ]
+exclude = ["utils/genes-preprocessing"]

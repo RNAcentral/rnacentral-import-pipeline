@@ -5,7 +5,8 @@ nextflow.enable.dsl=2
 include { query as locus_query } from './utils'
 
 process merge_and_split {
-  errorStrategy 'finish'
+  memory { 2.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
 
   input:
   tuple path(sequence), path(locus)
@@ -23,11 +24,11 @@ process merge_and_split {
 
 process as_xml {
   tag { "$assembly" }
-  memory 10.GB
+  memory params.export.search.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly), path('raw*.json')
+  tuple val(assembly), path('raw*.json'), path('so_tree.json')
 
   output:
   path "${xml}.gz", emit: xml
@@ -37,7 +38,7 @@ process as_xml {
   xml = "genes_${assembly}_xml.xml"
   """
   cat raw*.json > members.json
-  search-export genes merge-assembly members.json merged.json
+  search-export genes merge-assembly so_tree.json members.json merged.json
   search-export genes as-xml merged.json $xml count
   xmllint $xml --schema ${params.export.search.schema} --stream
   gzip $xml
@@ -49,6 +50,7 @@ workflow genes {
   take:
     max_count
     sequence_json
+    so_tree
   emit:
     xml
     counts
@@ -64,6 +66,7 @@ workflow genes {
     | filter { f -> !f.isEmpty() } \
     | map { fn -> [fn.name, fn] } \
     | groupTuple \
+    | combine(so_tree) \
     | as_xml
 
     as_xml.out.xml | set { xml }

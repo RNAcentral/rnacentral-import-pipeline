@@ -47,7 +47,8 @@ def main(database, output):
     results['ids_in_use'] = cursor.fetchone()[0]
 
     # number of urs in the current version
-    cursor.execute(""" SELECT COUNT(DISTINCT job_id) FROM litscan_database WHERE job_id like 'urs%' """)
+    cursor.execute(
+        """ SELECT COUNT(DISTINCT job_id) FROM litscan_database WHERE job_id like 'urs%' """)
     results['urs'] = cursor.fetchone()[0]
 
     # number of expert dbs

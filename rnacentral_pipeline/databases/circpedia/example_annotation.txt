@@ -1,0 +1,8 @@
+circID	species	Location	circname	length	subcell_location	editing_site	DIS3_signal	Orthology	TGS	gene_Ensembl	gene_Refseq	transcript_Ensembl	transcript_Refseq
+hsa_circ_0001	Homo sapiens	chr1:100000-110000(+)	circ-TP53(1-5)	10000	cytoplasm	A>I;C>U	weak	mouse;rat	Nanopore	ENSG00000141510	TP53	ENST00000269305	NM_000546
+hsa_circ_0002	Homo sapiens	chr2:200000-205000(-)	circ-MYC(2-8)	5000	nucleus	none	strong	mouse	none	ENSG00000136997	MYC	ENST00000377970	NM_002467
+hsa_circ_0003	Homo sapiens	chrX:300000-308000(+)	circ-XIST(1-3)	8000	cytoplasm	none	none	none	PacBio	ENSG00000229807	XIST	ENST00000429829	NR_001564
+mmu_circ_0001	Mus musculus	chr3:400000-405000(+)	circ-Trp53(1-4)	5000	cytoplasm	none	weak	human;rat	none	ENSMUSG00000059552	Trp53	ENSMUST00000171247	NM_011640
+mmu_circ_0002	Mus musculus	chr5:500000-510000(-)	circ-Myc(3-9)	10000	nucleus	none	none	human	Nanopore	ENSMUSG00000022346	Myc	ENSMUST00000025969	NM_010849
+rno_circ_0001	Rattus norvegicus	chr1:150000-155000(+)	circ-Tp53(2-6)	5000	cytoplasm	none	weak	human;mouse	none	ENSRNOG00000010756	Tp53	ENSRNOT00000013085	NM_030989
+dre_circ_0001	Danio rerio	chr10:250000-256000(+)	circ-tp53(1-7)	6000	cytoplasm	none	none	none	none	ENSDARG00000035559	tp53	ENSDART00000050508	NM_131327

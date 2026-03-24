@@ -4,31 +4,17 @@
 file=$1
 database=$2
 
-# read file line by line
-while IFS= read -r line; do
-    IFS=$"|"
-    tmp=($line)
-    if [[ ${#tmp[*]} = 2 ]]; then
-      job_id="${tmp[0]}"
-      urs="${tmp[1]}"
-    else
-      job_id="${tmp[0]}"
-      primary_id="${tmp[1]}"
-      urs="${tmp[2]}"
-    fi
+awk -F'|' '{
+    if (NF == 2) {
+        job_id = $1;
+        urs = $2;
+    } else {
+        job_id = $1;
+        primary_id = $2;
+        urs = $3;
+    }
 
-    if [[ -n "${job_id}" ]]; then
-      echo ${job_id} >> ${database}_all_ids.txt
-    fi
-
-    if [[ -n "${primary_id}" ]]; then
-      echo ${primary_id} >> ${database}_all_ids.txt
-    fi
-
-    if [[ -n "${urs}" ]]; then
-      echo ${urs} >> ${database}_all_ids.txt
-    fi
-done < ${file}
-
-# create file with unique ids
-cat ${database}_all_ids.txt | sort | uniq > ${database}_ids.txt
+    if (job_id) print job_id;
+    if (primary_id) print primary_id;
+    if (urs) print urs;
+}' "$file" | LC_ALL=C sort -u > "${database}_ids.txt"

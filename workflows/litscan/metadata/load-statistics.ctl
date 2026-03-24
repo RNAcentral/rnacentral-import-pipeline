@@ -35,6 +35,6 @@ $$
 
 AFTER LOAD DO
 $$
-GRANT SELECT ON litscan_statistics TO wpk8srnaro;
+GRANT SELECT ON litscan_statistics TO wpk8srnaro, embassy_rw;
 $$
 ;

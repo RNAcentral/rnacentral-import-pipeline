@@ -1,5 +1,7 @@
 process readme {
   publishDir "${params.export.ftp.publish}/genome_coordinates/", mode: 'copy'
+  time '5m'
+  memory '64 MB'
 
   input:
   path(raw)
@@ -13,6 +15,9 @@ process readme {
 }
 
 process find_jobs {
+  time '5m'
+  memory '128 MB'
+
   input:
   path(query)
 
@@ -27,6 +32,8 @@ process find_jobs {
 process fetch {
   tag { "${assembly}-${species}" }
   maxForks 2
+  time '20m'
+  memory '512 MB'
 
   input:
   tuple val(assembly), val(species), val(taxid), path(query)
@@ -42,6 +49,9 @@ process fetch {
 process generate_bed {
   tag { "${assembly}-${species}" }
   publishDir "${params.export.ftp.publish}/genome_coordinates/bed/", mode: 'copy'
+  time '5m'
+  memory '1 GB'
+
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -62,6 +72,8 @@ process generate_gff3 {
   tag { "${assembly}-${species}" }
   memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/genome_coordinates/gff3", mode: 'copy'
+  time '30m'
+  memory '2 GB'
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -82,6 +94,8 @@ process generate_gff3_for_igv {
   tag { "${assembly}-${species}" }
   memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
+  time '30m'
+  memory '2 GB'
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -101,7 +115,8 @@ process generate_gff3_for_igv {
 
 process index_gff3 {
   publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
-
+  time '5m'
+  memory '256 MB'
   input:
   path(gff)
 

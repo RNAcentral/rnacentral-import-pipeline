@@ -105,7 +105,8 @@ def mapping(db_url, data):
 
 
 def as_mapping(db_url, data):
-    # data = data.explode('Aliases').drop_duplicates(subset='Aliases').rename(columns={'Aliases':'external_id'})#.set_index('external_id')
+    # data = data.explode('Aliases').drop_duplicates(subset='Aliases').rename(
+    #           columns={'Aliases':'external_id'})#.set_index('external_id')
     print(len(data))
     data = data.drop(data[data["Name"] == " "].index)
     print(data)

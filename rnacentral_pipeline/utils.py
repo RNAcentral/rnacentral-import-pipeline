@@ -37,7 +37,8 @@ class Cacheable:
         self.done = False
         self.result = None
         self.lock = threading.RLock()
-        ## This needs to be a re-rntrant lock so it is only release by the coroutine that acquired it
+        ## This needs to be a re-rntrant lock so it is only 
+        ## release by the coroutine that acquired it
 
     def __await__(self):
         with self.lock:

@@ -49,5 +49,5 @@ workflow.onError {
 }
 
 workflow.onComplete {
-  slack_closure("Workflow completed ${$workflow.status ? 'Ok' : 'with errors'} ")
+  slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
 }

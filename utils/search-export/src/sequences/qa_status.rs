@@ -15,6 +15,13 @@ pub struct QaStatus {
     incomplete_sequence: bool,
     missing_rfam_match: bool,
     possible_orf: bool,
+    possible_orf_tcode: bool,
+}
+
+impl QaStatus {
+    pub fn has_issue(&self) -> bool {
+        self.has_issue
+    }
 }
 
 impl grouper::HasIndex for QaStatus {

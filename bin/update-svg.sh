@@ -30,11 +30,11 @@ function s3Upload
 
   # upload file
   curl -X PUT -T "${file}" \
-       -H "Host: uk1s3.embassy.ebi.ac.uk/${bucket_name}" \
+       -H "Host: livingobjects.ebi.ac.uk/${bucket_name}" \
        -H "Date: $date" \
        -H "Content-Type: $content_type" \
        -H "Authorization: AWS ${S3_KEY}:${signature}" \
-       "https://uk1s3.embassy.ebi.ac.uk/${bucket_name}/${path}${urs}"
+       "https://livingobjects.ebi.ac.uk/${bucket_name}/${path}${urs}"
 }
 
 # loop through the file

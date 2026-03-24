@@ -1,0 +1,245 @@
+# GitHub Actions workflow for building and pushing tool containers
+# These containers cache slow-to-build bioinformatics tools (Infernal, Samtools)
+
+name: Build and Push Tool Containers
+
+on:
+  push:
+    branches: ['master', 'dev']
+    paths:
+      - 'containers/emboss/**'
+      - 'containers/infernal/**'
+      - 'containers/samtools/**'
+      - 'containers/cpat/**'
+      - '.github/workflows/tool-containers.yaml'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild all tool containers'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      emboss: ${{ steps.changes.outputs.emboss }}
+      infernal: ${{ steps.changes.outputs.infernal }}
+      samtools: ${{ steps.changes.outputs.samtools }}
+      cpat: ${{ steps.changes.outputs.cpat }}
+      force: ${{ github.event.inputs.force_rebuild == 'true' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed files
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.force_rebuild }}" = "true" ]; then
+            echo "emboss=true" >> $GITHUB_OUTPUT
+            echo "infernal=true" >> $GITHUB_OUTPUT
+            echo "samtools=true" >> $GITHUB_OUTPUT
+            echo "cpat=true" >> $GITHUB_OUTPUT
+          else
+            # Check if emboss files changed
+            if git diff --name-only HEAD^ HEAD | grep -q "^containers/emboss/"; then
+              echo "emboss=true" >> $GITHUB_OUTPUT
+            else
+              echo "emboss=false" >> $GITHUB_OUTPUT
+            fi
+
+            # Check if infernal files changed
+            if git diff --name-only HEAD^ HEAD | grep -q "^containers/infernal/"; then
+              echo "infernal=true" >> $GITHUB_OUTPUT
+            else
+              echo "infernal=false" >> $GITHUB_OUTPUT
+            fi
+
+            # Check if samtools files changed
+            if git diff --name-only HEAD^ HEAD | grep -q "^containers/samtools/"; then
+              echo "samtools=true" >> $GITHUB_OUTPUT
+            else
+              echo "samtools=false" >> $GITHUB_OUTPUT
+            fi
+
+            # Check if cpat files changed
+            if git diff --name-only HEAD^ HEAD | grep -q "^containers/cpat/"; then
+              echo "cpat=true" >> $GITHUB_OUTPUT
+            else
+              echo "cpat=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build-emboss:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.emboss == 'true' || needs.detect-changes.outputs.force == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read EMBOSS version
+        id: version
+        run: echo "version=$(cat containers/emboss/VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build EMBOSS container
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker build -t rnacentral/emboss:${VERSION} -f containers/emboss/Dockerfile containers/emboss/
+
+      - name: Tag as latest
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker tag rnacentral/emboss:${VERSION} rnacentral/emboss:latest
+
+      - name: Push versioned tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker push rnacentral/emboss:${VERSION}
+
+      - name: Push latest tag
+        run: docker push rnacentral/emboss:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'EMBOSS ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
+
+  build-infernal:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.infernal == 'true' || needs.detect-changes.outputs.force == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read Infernal version
+        id: version
+        run: echo "version=$(cat containers/infernal/VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build Infernal container
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker build -t rnacentral/infernal:${VERSION} -f containers/infernal/Dockerfile containers/infernal/ --build-arg INFERNAL_VERSION=${VERSION}
+
+      - name: Tag as latest
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker tag rnacentral/infernal:${VERSION} rnacentral/infernal:latest
+
+      - name: Push versioned tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker push rnacentral/infernal:${VERSION}
+
+      - name: Push latest tag
+        run: docker push rnacentral/infernal:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'Infernal ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
+
+  build-samtools:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.samtools == 'true' || needs.detect-changes.outputs.force == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read Samtools version
+        id: version
+        run: echo "version=$(cat containers/samtools/VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build Samtools container
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker build -t rnacentral/samtools:${VERSION} --build-arg SAMTOOLS_VERSION=${VERSION} -f containers/samtools/Dockerfile containers/samtools/
+
+      - name: Tag as latest
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker tag rnacentral/samtools:${VERSION} rnacentral/samtools:latest
+
+      - name: Push versioned tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker push rnacentral/samtools:${VERSION}
+
+      - name: Push latest tag
+        run: docker push rnacentral/samtools:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'Samtools ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
+
+  build-cpat:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.cpat == 'true' || needs.detect-changes.outputs.force == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read CPAT version
+        id: version
+        run: echo "version=$(cat containers/cpat/VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Build CPAT container
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker build -t rnacentral/cpat:${VERSION} -f containers/cpat/Dockerfile containers/cpat/
+
+      - name: Tag as latest
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker tag rnacentral/cpat:${VERSION} rnacentral/cpat:latest
+
+      - name: Push versioned tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          docker push rnacentral/cpat:${VERSION}
+
+      - name: Push latest tag
+        run: docker push rnacentral/cpat:latest
+
+      - name: Slack notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'CPAT ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true

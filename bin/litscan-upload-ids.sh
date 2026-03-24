@@ -17,7 +17,7 @@ function submitJob
   curl -X POST \
        -H "Content-Type:application/json" \
        -d "{\"id\": \"${job_id}\"}" \
-       http://45.88.80.122:8080/api/submit-job && echo ${job_id} >> submitted/${file};
+       http://45.88.80.122:8080/api/submit-job
 }
 
 # loop through the file

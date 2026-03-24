@@ -47,6 +47,10 @@ where
         map.region_id = reg.id
 ;
 
+-- drop indices before doing further updates/deletes
+DROP INDEX IF EXISTS idx_rnc_sequence_regions_id;
+DROP INDEX IF EXISTS idx_rnc_accession_sequence_region_region_id;
+
 -- Make a copy of the data I will delete from rnc_accession_sequence_region into a backup table
 -- Hopefully we can then just drop it...
 drop table if exists rnc_ac_sr_backup;
@@ -153,18 +157,50 @@ where
 
 drop table load_rnc_sequence_regions;
 
--- Create the active materialized view
-CREATE MATERIALIZED VIEW IF NOT EXISTS rnc_sequence_regions_active AS
-  SELECT * FROM rnc_sequence_regions_active_provided
-  UNION
-  SELECT * FROM rnc_sequence_regions_active_mapped
-;
+REFRESH MATERIALIZED VIEW active_urs_taxids;
+ANALYZE active_urs_taxids;
 
--- Update rnc_sequence_regions_active
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active_provided__urs_taxid;
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active_provided__assembly_id;
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active_provided__urs_taxid_assembly_id;
+
+REFRESH MATERIALIZED VIEW rnc_sequence_regions_active_provided;
+
+CREATE INDEX ix_rnc_sequence_regions_active_provided__urs_taxid
+    ON rnc_sequence_regions_active_provided(urs_taxid);
+CREATE INDEX ix_rnc_sequence_regions_active_provided__assembly_id
+    ON rnc_sequence_regions_active_provided(assembly_id);
+CREATE INDEX ix_rnc_sequence_regions_active_provided__urs_taxid_assembly_id
+    ON rnc_sequence_regions_active_provided(urs_taxid, assembly_id);
+
+ANALYZE rnc_sequence_regions_active_provided;
+
+
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active_mapped__urs_taxid;
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active_mapped__assembly_id;
+
+REFRESH MATERIALIZED VIEW rnc_sequence_regions_active_mapped;
+
+CREATE INDEX ix_rnc_sequence_regions_active_mapped__urs_taxid
+    ON rnc_sequence_regions_active_mapped(urs_taxid);
+CREATE INDEX ix_rnc_sequence_regions_active_mapped__assembly_id
+    ON rnc_sequence_regions_active_mapped(assembly_id);
+
+ANALYZE rnc_sequence_regions_active_mapped;
+
 DROP INDEX IF EXISTS ix_rnc_sequence_regions_active__urs_taxid;
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active__assembly_id;
 
 REFRESH MATERIALIZED VIEW rnc_sequence_regions_active;
 
-CREATE INDEX ix_rnc_sequence_regions_active__urs_taxid on rnc_sequence_regions_active (urs_taxid);
+CREATE INDEX ix_rnc_sequence_regions_active__urs_taxid
+    ON rnc_sequence_regions_active(urs_taxid);
+CREATE INDEX ix_rnc_sequence_regions_active__assembly_id
+    ON rnc_sequence_regions_active(assembly_id);
+
+ANALYZE rnc_sequence_regions_active;
+
+CREATE INDEX idx_rnc_sequence_regions_id ON rnc_sequence_regions(id);
+CREATE INDEX idx_rnc_accession_sequence_region_region_id ON rnc_accession_sequence_region(region_id);
 
 COMMIT;

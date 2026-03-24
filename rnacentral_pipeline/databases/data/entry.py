@@ -36,6 +36,8 @@ from .secondary_structure import SecondaryStructure
 
 LOGGER = logging.getLogger(__name__)
 
+ACCESSION_DESCRIPTION_MAX_LENGTH = 500
+
 FEATURE_TYPE_RNAS = set(
     [
         "SO:0000252",
@@ -261,7 +263,7 @@ class Entry:
             self.database_name,
             self.primary_id,
             self.optional_id,
-            self.description,
+            self.description[:ACCESSION_DESCRIPTION_MAX_LENGTH],
             self.organelle,
             self.chromosome,
             self.function,

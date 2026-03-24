@@ -60,7 +60,7 @@ workflow text_search {
 
     sequences()
 
-    genes(sequences.out.search_count, sequences.out.sequence_json)
+    genes(sequences.out.search_count, sequences.out.sequence_json, sequences.out.so_tree)
 
     sequences.out.counts \
     | mix(genes.out.counts) \

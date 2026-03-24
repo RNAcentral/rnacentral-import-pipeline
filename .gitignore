@@ -107,6 +107,7 @@ workflows/litscan/metadata/merged_metadata
 workflows/litscan/backup
 workflows/litscan/submit
 singularity/*
-.python-version
 bin/bed-expander
 .projections.json
+*.slurm
+tmp/*

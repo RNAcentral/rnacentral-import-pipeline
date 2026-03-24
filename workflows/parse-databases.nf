@@ -1,3 +1,4 @@
+include { circpedia } from './databases/circpedia'
 include { crw } from './databases/crw'
 include { ena } from './databases/ena'
 include { ensembl } from './databases/ensembl'
@@ -9,6 +10,7 @@ include { genecards_suite } from './databases/genecards_suite'
 include { gtrnadb } from './databases/gtrnadb'
 include { hgnc } from './databases/hgnc'
 include { intact } from './databases/intact'
+include { japonicusdb } from './databases/japonicusdb'
 include { lncbase } from './databases/lncbase'
 include { lncbook } from './databases/lncbook'
 include { lncipedia } from './databases/lncipedia'
@@ -16,6 +18,7 @@ include { mgnify } from './databases/mgnify'
 include { mirbase } from './databases/mirbase'
 include { mirgenedb } from './databases/mirgenedb'
 include { mirtrondb } from './databases/mirtrondb'
+include { modomics } from './databases/modomics'
 include { pdbe } from './databases/pdbe'
 include { pirbase } from './databases/pirbase'
 include { plncdb } from './databases/plncdb'
@@ -62,6 +65,7 @@ workflow parse_databases {
 
     Channel.empty() \
     | mix(
+      circpedia(),
       crw(),
       five_s_rrnadb(),
       ena(),
@@ -73,6 +77,7 @@ workflow parse_databases {
       gtrnadb(context),
       hgnc(),
       intact(),
+      japonicusdb(),
       lncbase(),
       lncbook(),
       lncipedia(),
@@ -80,6 +85,7 @@ workflow parse_databases {
       mgnify(),
       mirgenedb(),
       mirtrondb(),
+      modomics(),
       pdbe(),
       pirbase(),
       plncdb(),

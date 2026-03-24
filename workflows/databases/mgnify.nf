@@ -10,6 +10,8 @@ process mgnify_fetch {
 }
 
 process mgnify_parse {
+  memory { 4.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
   input:
     path(json)
   output:

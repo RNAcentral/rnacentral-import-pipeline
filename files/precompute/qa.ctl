@@ -10,6 +10,7 @@ HAVING FIELDS (
   missing_rfam_match,
   from_repetitive_region,
   possible_orf,
+  possible_orf_tcode,
   messages
 )
 INTO {{PGDATABASE}}?load_qa_status
@@ -23,6 +24,7 @@ TARGET COLUMNS (
   missing_rfam_match,
   from_repetitive_region,
   possible_orf,
+  possible_orf_tcode,
   messages
 )
 
@@ -34,6 +36,10 @@ WITH
 
 AFTER LOAD DO
 $$
+ALTER TABLE qa_status
+  ADD COLUMN IF NOT EXISTS possible_orf_tcode bool;
+$$,
+$$
 insert into qa_status (
   rna_id,
   upi,
@@ -44,6 +50,7 @@ insert into qa_status (
   missing_rfam_match,
   from_repetitive_region,
   possible_orf,
+  possible_orf_tcode,
   messages
 ) (
 SELECT distinct on (rna_id)
@@ -56,6 +63,7 @@ SELECT distinct on (rna_id)
   missing_rfam_match,
   from_repetitive_region,
   possible_orf,
+  possible_orf_tcode,
   messages
 FROM load_qa_status
 )
@@ -67,6 +75,7 @@ SET
   missing_rfam_match = EXCLUDED.missing_rfam_match,
   from_repetitive_region = EXCLUDED.from_repetitive_region,
   possible_orf = EXCLUDED.possible_orf,
+  possible_orf_tcode = EXCLUDED.possible_orf_tcode,
   messages = EXCLUDED.messages
 ;
 $$,

@@ -17,6 +17,7 @@ import json
 import operator as op
 import re
 
+import fastjsonschema
 from jsonschema import validate
 
 from rnacentral_pipeline import psql
@@ -99,6 +100,8 @@ def generate_file(raw, output, schema_file=None):
 
     if schema_file:
         with open(schema_file, "r") as raw:
-            validate(results, json.load(raw))
+            schema_data = json.load(raw)
+            validate_func = fastjsonschema.compile(schema_data)
+            validate_func(results)
 
     json.dump(results, output)

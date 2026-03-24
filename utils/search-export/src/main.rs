@@ -9,6 +9,7 @@ use strum_macros::{
     EnumString,
 };
 
+pub mod fields;
 pub mod genes;
 pub mod search_xml;
 pub mod sequences;
@@ -33,6 +34,7 @@ pub enum Groupable {
     SoInfo,
     LitsummSummaries,
     EditingEvents,
+    GoFlowAnnotation,
 }
 
 #[derive(Debug, StructOpt)]
@@ -62,6 +64,10 @@ enum GenesCommand {
     /// enough memory to fit information on all members from an assembly into memory
     /// at once.
     MergeAssembly {
+        /// A JSON formatted file of the known sequence ontology terms and their names
+        #[structopt(parse(from_os_str))]
+        so_tree: PathBuf,
+
         /// A file of all gene members for a given assembly. The file does not need to be
         /// sorted.
         #[structopt(parse(from_os_str))]
@@ -139,6 +145,10 @@ enum SequenceCommand {
         #[structopt(parse(from_os_str))]
         /// RNA editing events
         editing_events: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// GoFlowLLM annotations
+        go_flow_llm_annotations: PathBuf,
 
         // Add new arguments above this line!
         #[structopt(parse(from_os_str))]
@@ -255,6 +265,9 @@ fn main() -> Result<()> {
             Groupable::EditingEvents => {
                 sequences::editing_events::group(&path, max_count, &output)?
             },
+            Groupable::GoFlowAnnotation => {
+                sequences::go_flow_annotations::group(&path, max_count, &output)?
+            },
         },
         Subcommand::Sequences {
             command,
@@ -275,6 +288,8 @@ fn main() -> Result<()> {
                 litsumm_summaries,
                 editing_events,
                 so_term_tree,
+                go_flow_llm_annotations,
+                // Add new arguments above this line!
                 output,
             } => sequences::writers::write_merge(
                 vec![
@@ -293,6 +308,7 @@ fn main() -> Result<()> {
                     editing_events,
                     orfs,
                     so_term_tree,
+                    go_flow_llm_annotations,
                 ],
                 &output,
             )?,
@@ -311,9 +327,10 @@ fn main() -> Result<()> {
                 output,
             } => genes::writers::write_split_selected(&locus, &sequences, &output)?,
             GenesCommand::MergeAssembly {
+                so_tree,
                 members,
                 output,
-            } => genes::writers::write_merged_members(&members, &output)?,
+            } => genes::writers::write_merged_members(&so_tree, &members, &output)?,
             GenesCommand::AsXml {
                 genes,
                 xml_output,

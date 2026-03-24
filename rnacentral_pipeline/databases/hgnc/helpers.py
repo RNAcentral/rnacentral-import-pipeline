@@ -124,7 +124,7 @@ def ensembl_sequence(context: Context, ensembl_id: str) -> ty.Optional[str]:
     response = requests.get(url)
     try:
         response.raise_for_status()
-    except Exception:
+    except requests.exceptions.HTTPError:
         return None
     return response.text
 

@@ -25,7 +25,7 @@ process query_chunk {
 
 process process_chunk {
   publishDir "${params.export.ftp.publish}/json/", mode: 'copy'
-
+  memory '2GB'
   input:
   tuple val(min), val(max), file(raw), path(schema)
 

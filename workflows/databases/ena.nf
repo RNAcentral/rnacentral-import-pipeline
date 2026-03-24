@@ -2,7 +2,8 @@ process fetch_directory {
   tag { "$name" }
   when { params.databases.ena.run }
   queue 'datamover'
-  containerOptions '--bind /nfs:/nfs'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+  time '2d'
 
   input:
   tuple val(name), val(remote)

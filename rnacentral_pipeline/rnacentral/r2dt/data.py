@@ -163,6 +163,7 @@ class Source(enum.Enum):
     rfam = enum.auto()
     rnase_p = enum.auto()
     gtrnadb = enum.auto()
+    tmrna_website = enum.auto()
 
     @classmethod
     def build(cls, name: ty.Union[str, Source]) -> Source:
@@ -173,6 +174,8 @@ class Source(enum.Enum):
             return getattr(cls, name)
         if name == "rnase p database":
             return Source.rnase_p
+        if name == "tmrna database":
+            return Source.tmrna_website
         raise ValueError(f"Unknown database name {name}")
 
     def result_directory(self) -> str:
@@ -186,6 +189,8 @@ class Source(enum.Enum):
             return "rnasep"
         if self is Source.gtrnadb:
             return "gtrnadb"
+        if self is Source.tmrna_website:
+            return "tmrna"
         raise ValueError(f"Could not find results for {self}")
 
 
@@ -272,7 +277,7 @@ class R2DTResultInfo(object):
     @property
     def svg(self) -> Path:
         base = self.path / "svg"
-        paths = list(base.glob(f"{self.urs}*.svg"))
+        paths = list(base.glob(f"{self.urs}*colored.svg"))
         if not paths:
             raise ValueError(f"Could not figure out svg filename for {self}")
         if len(paths) > 1:
@@ -350,12 +355,12 @@ class R2DTResultInfo(object):
 
     def __filename__(self, extension):
         if self.source == Source.gtrnadb and extension == "fasta":
-            return f"{self.urs}.{extension}"
+            return f"{self.urs}-{self.model_name.replace('-','_')}.{extension}"
         if self.source == Source.rfam and not self.model_name.startswith("RF"):
             if extension == "fasta":
-                return f"{self.urs}.{extension}"
-            assert self.model_alias.startswith("RF"), f"No existing alias for {self}"
-            return f"{self.urs}-{self.model_alias}.{extension}"
+                return f"{self.urs}-{self.model_alias}.{extension}"
+        #     assert self.model_alias.startswith("RF"), f"No existing alias for {self}"
+        #     return f"{self.urs}-{self.model_alias}.{extension}"
         return f"{self.urs}-{self.model_name}.{extension}"
 
 
@@ -402,9 +407,17 @@ class R2DTResult(object):
         with self.info.fasta.open("r") as raw:
             record = SeqIO.read(raw, "fasta")
             seq_dot = str(record.seq)
-            sequence = re.match(r"^(\w+)", seq_dot).group(1)
-            dot_bracket = re.sub(r"^\w+", "", seq_dot)
-            assert len(sequence) == len(dot_bracket)
+            ## Use indices instead, assert that the string is even length
+            ## If not, then the two parts are not the same length
+            if len(seq_dot) % 2 != 0:
+                raise ValueError(f"Odd length sequence {len(seq_dot)}")
+            seq_dot_len = len(seq_dot)
+            sequence = seq_dot[0 : seq_dot_len // 2]
+            dot_bracket = seq_dot[(seq_dot_len // 2) :]
+            if len(sequence) != len(dot_bracket):
+                raise ValueError(
+                    f"Sequence and dot bracket lengths do not match: {len(sequence)} != {len(dot_bracket)}"
+                )
             return dot_bracket
 
     def basepair_count(self):

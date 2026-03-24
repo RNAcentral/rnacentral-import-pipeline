@@ -3,8 +3,6 @@ nextflow.enable.dsl = 2
 process fetch_data {
   when { !params.databases.plncdb.prefetch and params.databases.plncdb.run }
 
-  containerOptions "--contain --bind $baseDir"
-
   output:
   path("data")
 

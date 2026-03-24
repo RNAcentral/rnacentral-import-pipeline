@@ -15,7 +15,8 @@ async def fetch_records(session, accessions: ty.List[str]):
     try:
         accession_str = ",".join(accessions)
         async with session.get(
-            f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id={accession_str}&rettype=gb&retmode=text"
+            ("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?"
+                + f"db=nuccore&id={accession_str}&rettype=gb&retmode=text")
         ) as response:
             records_text = await response.text()
             handle = io.StringIO(records_text)

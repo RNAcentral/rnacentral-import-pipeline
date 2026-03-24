@@ -709,6 +709,10 @@ def has_litsumm(litsumm):
     return str(bool(litsumm))
 
 
+def has_go_flow_llm_annotation(go_flow):
+    return str(bool(go_flow))
+
+
 def has_editing_event(editing_events):
     return str(bool(editing_events))
 
@@ -771,7 +775,6 @@ builder = entry(
                 field("short_urs", short_urs, keys=("urs", "taxid")),
                 field("active", as_active, keys="deleted"),
                 field("length", given),
-                field("species", first),
                 field("entry_type", entry_type, keys="urs"),
                 fields("organelle", unique_lower, keys="organelles"),
                 fields("expert_db", unique, keys="databases"),
@@ -880,6 +883,11 @@ builder = entry(
                     "edit_repeat_type",
                     edit_repeat_type,
                     keys="editing_events",
+                ),
+                field(
+                    "has_go_flow_llm_annotation",
+                    has_go_flow_llm_annotation,
+                    keys="go_flow_llm_annotations",
                 ),
                 ## Add new fields above this line! Otherwise editing the produced xml is hard.
                 tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),

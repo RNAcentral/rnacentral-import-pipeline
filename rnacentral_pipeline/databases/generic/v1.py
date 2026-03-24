@@ -14,7 +14,9 @@ limitations under the License.
 """
 
 import collections as coll
+import hashlib
 import itertools as it
+import logging
 
 import attr
 from attr.validators import instance_of as is_a
@@ -23,6 +25,8 @@ from attr.validators import optional
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
+
+LOGGER = logging.getLogger(__name__)
 
 
 class UnexpectedCoordinates(Exception):
@@ -191,13 +195,100 @@ def features(record):
     if not record.get("sequenceFeatures", None):
         return []
     features = []
+    provider = record.get("database")
+    if provider is None and "primaryId" in record:
+        if ":" not in record["primaryId"]:
+            raise ValueError(
+                f"Invalid primaryId format (expected PREFIX:ID): {record['primaryId']}"
+            )
+        provider = record["primaryId"].split(":", 1)[0]
+    if provider is None:
+        raise ValueError("Missing provider: expected database or primaryId prefix")
+
+    def modification_features(modifications):
+        if not isinstance(modifications, list):
+            LOGGER.warning(
+                "Skipping sequence feature modifications due to unexpected type %s",
+                type(modifications),
+            )
+            return
+
+        sequence = record.get("sequence", "")
+        if not sequence:
+            raise ValueError(
+                "Missing sequence: cannot compute modification accession"
+            )
+        accession = f"{hashlib.md5(sequence.encode('utf-8')).hexdigest()}_modomics"
+        for raw in modifications:
+            if not isinstance(raw, dict):
+                LOGGER.warning(
+                    "Skipping sequence modification due to unexpected type %s",
+                    type(raw),
+                )
+                continue
+
+            position = raw.get("index", None)
+            if position is None:
+                LOGGER.warning(
+                    "Skipping sequence modification due to missing index"
+                )
+                continue
+
+            modification = raw.get("shortName", None)
+            if modification is None:
+                LOGGER.warning(
+                    "Skipping sequence modification due to missing shortName"
+                )
+                continue
+
+            position = int(position)
+            features.append(
+                data.SequenceFeature(
+                    name="modification",
+                    feature_type="modification",
+                    location=[position, position + 1],
+                    sequence=str(modification),
+                    provider=provider,
+                    metadata={
+                        "accession": accession,
+                        "modification": str(modification),
+                        "index": position,
+                        "RNAmodsCode": raw.get("RNAmodsCode"),
+                        "fullName": raw.get("fullName"),
+                    },
+                )
+            )
+
     for key, feature in record["sequenceFeatures"].items():
+        if key == "modifications":
+            modification_features(feature)
+            continue
+
+        ## Skip sequence features that do not have the required metadata
+        if not isinstance(feature, dict):
+            LOGGER.warning(
+                f"Skipping sequence feature {key} due to unexpected type {type(feature)}"
+            )
+            continue
+        ## Skip sequence features that don't have the required fields
+        if feature.get("indexes", None) is None:
+            LOGGER.warning(
+                f"Skipping sequence feature {key} due to missing indexes or sequence"
+            )
+            continue
+        if feature.get("sequence", None) is None:
+            LOGGER.warning(
+                f"Skipping sequence feature {key} due to missing indexes or sequence"
+            )
+            continue
+
         features.append(
             data.SequenceFeature(
                 name=key,
                 feature_type=key,
-                location=features["indexes"],
-                sequence=features["sequence"],
+                location=feature["indexes"],
+                sequence=feature["sequence"],
+                provider=provider,
             )
         )
     return features

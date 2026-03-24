@@ -18,6 +18,7 @@ import logging
 import click
 
 from rnacentral_pipeline.cli import (
+    circpedia,
     context,
     cpat,
     crw,
@@ -25,7 +26,6 @@ from rnacentral_pipeline.cli import (
     ensembl,
     europepmc,
     evlncrnas,
-    expressionatlas,
     five_s_rrnadb,
     flybase,
     ftp_export,
@@ -35,6 +35,7 @@ from rnacentral_pipeline.cli import (
     gtrnadb,
     hgnc,
     intact,
+    japonicusdb,
     lncbase,
     lncbook,
     lncipedia,
@@ -42,6 +43,7 @@ from rnacentral_pipeline.cli import (
     mirbase,
     mirgenedb,
     mirtrondb,
+    modomics,
     misc,
     ncbi,
     notify,
@@ -68,9 +70,11 @@ from rnacentral_pipeline.cli import (
     snodb,
     snorna_database,
     tarbase,
+    tcode,
     zfin,
     zwd,
 )
+from rnacentral_pipeline.databases.expressionatlas import cli as expressionatlas
 from rnacentral_pipeline.databases.tmrna import cli as tmrna
 
 
@@ -94,6 +98,7 @@ def cli(log_level):
     pass
 
 
+cli.add_command(circpedia.cli)
 cli.add_command(context.cli)
 cli.add_command(cpat.cli)
 cli.add_command(crw.cli)
@@ -111,6 +116,7 @@ cli.add_command(genome_mapping.cli)
 cli.add_command(gtrnadb.cli)
 cli.add_command(hgnc.cli)
 cli.add_command(intact.cli)
+cli.add_command(japonicusdb.cli)
 cli.add_command(lncbase.cli)
 cli.add_command(lncbook.cli)
 cli.add_command(lncipedia.cli)
@@ -118,6 +124,7 @@ cli.add_command(mgnify.cli)
 cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
 cli.add_command(mirtrondb.cli)
+cli.add_command(modomics.cli)
 cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.validate_pgloader)
@@ -147,6 +154,7 @@ cli.add_command(silva.cli)
 cli.add_command(snodb.cli)
 cli.add_command(snorna_database.cli)
 cli.add_command(tarbase.cli)
+cli.add_command(tcode.cli)
 cli.add_command(zfin.cli)
 cli.add_command(zwd.cli)
 cli.add_command(tmrna.cli)

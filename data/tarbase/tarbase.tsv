@@ -1,0 +1,2 @@
+species	mirna_name	mirna_id	gene_name	gene_id	gene_location	transcript_name	transcript_id	chromosome	start	end	strand	experimental_method	regulation	tissue	cell_line	article_pubmed_id	confidence	interaction_group	cell_type	microt_score	comment
+Homo sapiens	hsa-miR-103a-3p	MIMAT0000101	C1orf112	ENSG00000000460	CDS	NA	ENST00000286031	chr1	169823429	169823441	+	PAR-CLIP	Negative	Cervix	TZMBL	23592263	1	primary	CD4+ T cells	0.37	NA

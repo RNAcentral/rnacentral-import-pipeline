@@ -22,6 +22,16 @@ import typing as ty
 class DatabaseValue(ty.NamedTuple):
     id: int
     pretty: str
+    descr: str
+
+    def matches(self, key: int | str) -> bool:
+        if isinstance(key, int):
+            return key == self.id
+        if isinstance(key, str):
+            return (
+                key.lower() == self.pretty.lower() or key.lower() == self.descr.lower()
+            )
+        raise ValueError(f"Cannot match {key}")
 
 
 @enum.unique
@@ -31,60 +41,61 @@ class Database(enum.Enum):
     knows about.
     """
 
-    crw = DatabaseValue(0, "CRW")
-    dictybase = DatabaseValue(1, "DictyBase")
-    ena = DatabaseValue(2, "ENA")
-    ensembl = DatabaseValue(3, "Ensembl")
-    ensembl_fungi = DatabaseValue(4, "Ensembl Fungi")
-    ensembl_metazoa = DatabaseValue(5, "Ensembl Metazoa")
-    ensembl_plants = DatabaseValue(6, "Ensembl Plants")
-    ensembl_protists = DatabaseValue(7, "Ensembl Protists")
-    evlncrnas = DatabaseValue(53, "EVlncRNAs")
-    expression_atlas = DatabaseValue(51, "Expression Atlas")
-    five_srrnadb = DatabaseValue(8, "5SrRNAdb")
-    flybase = DatabaseValue(9, "FlyBase")
-    gencode = DatabaseValue(10, "Ensembl/GENCODE")
-    genecards = DatabaseValue(11, "GeneCards")
-    greengenes = DatabaseValue(12, "Greengenes")
-    gtrnadb = DatabaseValue(13, "GtRNAdb")
-    hgnc = DatabaseValue(14, "HGNC")
-    intact = DatabaseValue(15, "IntAct")
-    lncbase = DatabaseValue(16, "LncBase")
-    lncbook = DatabaseValue(17, "LncBook")
-    lncipedia = DatabaseValue(18, "LNCipedia")
-    lncrnadb = DatabaseValue(19, "lncRNAdb")
-    malacards = DatabaseValue(20, "MalaCards")
-    mgi = DatabaseValue(21, "MGI")
-    mgnify = DatabaseValue(55, "MGNIFY")
-    mirbase = DatabaseValue(22, "miRBase")
-    mirgenedb = DatabaseValue(23, "MirGeneDB")
-    mirtrondb = DatabaseValue(56, "mirtronDB")
-    modomics = DatabaseValue(24, "Modomics")
-    noncode = DatabaseValue(25, "NONCODE")
-    pdbe = DatabaseValue(26, "PDBe")
-    pirbase = DatabaseValue(27, "PirBase")
-    plncdb = DatabaseValue(50, "PLncDB")
-    pombase = DatabaseValue(28, "PomBase")
-    psicquic = DatabaseValue(48, "PSICQUIC")
-    rdp = DatabaseValue(29, "RDP")
-    refseq = DatabaseValue(30, "RefSeq")
-    ribocentre = DatabaseValue(52, "RiboCentre")
-    ribovision = DatabaseValue(49, "RiboVision")
-    rfam = DatabaseValue(31, "Rfam")
-    rgd = DatabaseValue(32, "RGD")
-    sgd = DatabaseValue(33, "SGD")
-    silva = DatabaseValue(34, "SILVA")
-    snodb = DatabaseValue(35, "snoDB")
-    snopy = DatabaseValue(36, "snOPY")
-    snorna_database = DatabaseValue(37, "snoRNA Database")
-    srpdb = DatabaseValue(38, "SRPDB")
-    tair = DatabaseValue(39, "TAIR")
-    tarbase = DatabaseValue(40, "TarBase")
-    tmrna_website = DatabaseValue(41, "tmRNA Website")
-    vega = DatabaseValue(42, "VEGA")
-    wormbase = DatabaseValue(43, "WormBase")
-    zfin = DatabaseValue(44, "Zfin")
-    zwd = DatabaseValue(45, "ZWD")
+    ena = DatabaseValue(1, "ENA", "ENA")
+    rfam = DatabaseValue(2, "RFAM", "RFAM")
+    srpdb = DatabaseValue(3, "SRPDB", "SRPDB")
+    mirbase = DatabaseValue(4, "MIRBASE", "MIRBASE")
+    vega = DatabaseValue(5, "VEGA", "VEGA")
+    tmrna_website = DatabaseValue(6, "tmRNA Website", "TMRNA_WEB")
+    lncrnadb = DatabaseValue(7, "lncRNAdb", "LNCRNADB")
+    gtrnadb = DatabaseValue(8, "GtRNAdb", "GTRNADB")
+    refseq = DatabaseValue(9, "RefSeq", "REFSEQ")
+    rdp = DatabaseValue(10, "RDP", "RDP")
+    pdbe = DatabaseValue(11, "PDBe", "PDBE")
+    snopy = DatabaseValue(12, "snOPY", "SNOPY")
+    greengenes = DatabaseValue(13, "Greengenes", "GREENGENES")
+    tair = DatabaseValue(14, "TAIR", "TAIR")
+    wormbase = DatabaseValue(15, "WormBase", "WORMBASE")
+    sgd = DatabaseValue(16, "SGD", "SGD")
+    silva = DatabaseValue(17, "SILVA", "SILVA")
+    pombase = DatabaseValue(18, "PomBase", "POMBASE")
+    dictybase = DatabaseValue(19, "dictyBase", "DICTYBASE")
+    lncipedia = DatabaseValue(20, "LNCipedia", "LNCIPEDIA")
+    noncode = DatabaseValue(21, "NONCODE", "NONCODE")
+    modomics = DatabaseValue(22, "Modomics", "MODOMICS")
+    hgnc = DatabaseValue(23, "HUGO Gene Nomenclature Committee", "HGNC")
+    flybase = DatabaseValue(24, "FlyBase", "FLYBASE")
+    ensembl = DatabaseValue(25, "Ensembl", "ENSEMBL")
+    mgi = DatabaseValue(27, "Mouse Genome Database", "MGI")
+    rgd = DatabaseValue(28, "Rat Genome Database", "RGD")
+    tarbase = DatabaseValue(29, "TarBase", "TARBASE")
+    zwd = DatabaseValue(30, "ZWD", "ZWD")
+    ensembl_plants = DatabaseValue(31, "Ensembl Plants", "ENSEMBL_PLANTS")
+    lncbase = DatabaseValue(32, "LncBase", "LNCBASE")
+    lncbook = DatabaseValue(33, "LncBook", "LNCBOOK")
+    ensembl_metazoa = DatabaseValue(34, "Ensembl Metazoa", "ENSEMBL_METAZOA")
+    ensembl_protists = DatabaseValue(35, "Ensembl Protists", "ENSEMBL_PROTISTS")
+    ensembl_fungi = DatabaseValue(36, "Ensembl Fungi", "ENSEMBL_FUNGI")
+    snodb = DatabaseValue(37, "snoDB", "SNODB")
+    five_srrnadb = DatabaseValue(38, "5SrRNAdb", "5SRRNADB")
+    mirgenedb = DatabaseValue(39, "MirGeneDB", "MIRGENEDB")
+    malacards = DatabaseValue(40, "MalaCards", "MALACARDS")
+    genecards = DatabaseValue(41, "GeneCards", "GENECARDS")
+    intact = DatabaseValue(42, "IntAct", "INTACT")
+    snorna_database = DatabaseValue(43, "snoRNA Database", "SNORNADB")
+    zfin = DatabaseValue(44, "ZFIN", "ZFIN")
+    crw = DatabaseValue(45, "CRW", "CRW")
+    pirbase = DatabaseValue(46, "PirBase", "PIRBASE")
+    gencode = DatabaseValue(47, "ENSEMBL_GENCODE", "ENSEMBL_GENCODE")
+    psicquic = DatabaseValue(48, "PSICQUIC", "PSICQUIC")
+    ribovision = DatabaseValue(49, "RiboVision", "RIBOVISION")
+    plncdb = DatabaseValue(50, "PLncDB", "PLNCDB")
+    expression_atlas = DatabaseValue(51, "Expression Atlas", "EXPRESSION_ATLAS")
+    ribocentre = DatabaseValue(52, "RiboCentre", "RIBOCENTRE")
+    evlncrnas = DatabaseValue(53, "EVlncRNAs", "EVLNCRNAS")
+    mgnify = DatabaseValue(55, "MGnify", "MGNIFY")
+    mirtrondb = DatabaseValue(56, "mirtronDB", "MIRTRONDB")
+    japonicusdb = DatabaseValue(58, "JaponicusDB", "JAPONICUSDB")
 
     @classmethod
     def build(cls, name: str) -> Database:
@@ -106,6 +117,13 @@ class Database(enum.Enum):
         if attribute == "snornadb":
             return cls.snorna_database
         raise ValueError("Unknown database name %s" % name)
+
+    @classmethod
+    def lookup(cls, db: int | str) -> Database | None:
+        for value in list(cls):
+            if value.value.matches(db):
+                return value
+        return None
 
     def normalized(self) -> str:
         if self is Database.gencode:

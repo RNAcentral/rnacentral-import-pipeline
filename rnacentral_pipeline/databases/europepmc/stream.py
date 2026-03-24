@@ -40,7 +40,7 @@ def fallback(data):
         try:
             ref = fetch.lookup(id_ref)
             yield id_ref, ref, rows
-        except Exception:
+        except (fetch.UnknownReference, fetch.TooManyPublications):
             pass
 
 

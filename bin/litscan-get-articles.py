@@ -51,6 +51,7 @@ def create_xml_file(results, directory):
             ET.SubElement(additional_fields, "field", name="score").text = item['score']
             ET.SubElement(additional_fields, "field", name="cited_by").text = item['cited_by']
             ET.SubElement(additional_fields, "field", name="type").text = item['type']
+            ET.SubElement(additional_fields, "field", name="rna_related").text = item['rna_related']
             ET.SubElement(additional_fields, "field", name="job_id").text = elem["display_id"]
             ET.SubElement(additional_fields, "field", name="title_value").text = elem['id_in_title']
             ET.SubElement(additional_fields, "field", name="abstract_value").text = elem['id_in_abstract']
@@ -81,7 +82,13 @@ def create_xml_file(results, directory):
 @click.argument('directory')
 def main(database, directory):
     """
-    Get the data that will be used by the search index
+    Get the data that will be used by the search index.
+    I tried to fetch all data in one query (query available at the end of this
+    file), but that requires a large amount of RAM. A second approach was made
+    using two queries (the second query was to fetch organism data), but that
+    still requires 65GB of RAM. This task usually takes about 3 hours and for
+    now it will stay like this.
+
     :param database: params to connect to the db
     :param directory: directory to store xml files
     :return: None
@@ -108,6 +115,7 @@ def main(database, directory):
         article['score'] = str(row[8])
         article['cited_by'] = str(row[9])
         article['type'] = row[11]
+        article['rna_related'] = row[12]
         articles_list.append(article)
 
     for article in articles_list:
@@ -173,3 +181,21 @@ def main(database, directory):
 
 if __name__ == "__main__":
     main()
+
+# cursor.execute("""
+#     SELECT
+#         a.pmcid, a.title, a.abstract, a.author, a.pmid, a.doi, a.year, a.journal, a.score, a.cited_by, a.type,
+#         r.id AS result_id, r.job_id, r.id_in_title, r.id_in_abstract, r.id_in_body,
+#         j.display_id,
+#         abs_s.sentence AS abstract_sentence,
+#         bod_s.sentence AS body_sentence,
+#         ma.urs AS manually_annotated
+#     FROM litscan_article a
+#     LEFT JOIN litscan_result r ON r.pmcid = a.pmcid
+#     LEFT JOIN litscan_job j ON r.job_id = j.job_id
+#     LEFT JOIN (SELECT result_id, sentence FROM litscan_abstract_sentence ORDER BY length(sentence) DESC LIMIT 1) abs_s ON abs_s.result_id = r.id
+#     LEFT JOIN (SELECT result_id, sentence FROM litscan_body_sentence ORDER BY length(sentence) DESC LIMIT 1) bod_s ON bod_s.result_id = r.id
+#     LEFT JOIN litscan_manually_annotated ma ON ma.pmcid = a.pmcid
+#     WHERE a.retracted IS NOT TRUE;
+# """)
+# rows = cursor.fetchall()
