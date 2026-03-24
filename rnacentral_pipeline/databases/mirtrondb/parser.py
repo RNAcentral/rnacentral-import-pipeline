@@ -78,10 +78,8 @@ def find_coords(id: str, target: str, query: str) -> ty.List[RelatedCoordinate]:
 
 
 def parse(handle: ty.IO):
-    blank = handle.readline().strip()
-    assert not blank, f"Invalid first line `{blank}`"
-    notification = handle.readline().strip()
-    assert notification == "##mirtronDB tabular format"
+    header = handle.readline().strip()
+    assert header == "##mirtronDB tabular format", f"Invalid header line `{header}`"
     reader = csv.DictReader(handle, delimiter="\t")
 
     pre = {}
