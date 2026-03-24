@@ -88,9 +88,10 @@ def parse(handle: ty.IO):
         rna_type = raw["type"].strip()
         name = raw["name"].strip()
         species = raw["specie"].strip()
+        host_gene = text_value(raw, "host gene")
         description = f"{species} {name} {rna_type} miRNA"
-        if raw["host gene"].strip():
-            description += f" ({raw['host gene'].strip()})"
+        if host_gene:
+            description += f" ({host_gene})"
         entry = Entry(
             primary_id=f"MIRTRONDB:{raw['id'].strip()}",
             accession=name,
@@ -101,7 +102,7 @@ def parse(handle: ty.IO):
             rna_type=RNA_TYPES[rna_type],
             url=f"http://mirtrondb.cp.utfpr.edu.br/fetch_details.php?mrt_details={name}",
             seq_version="1",
-            gene=raw["host gene"].strip(),
+            gene=host_gene or "",
             description=description,
         )
         assert entry.accession not in pre
