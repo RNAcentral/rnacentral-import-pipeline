@@ -105,8 +105,8 @@ def parse(handle: ty.IO):
             gene=host_gene or "",
             description=description,
         )
-        assert entry.accession not in pre
-        assert entry.accession not in mature
+        if entry.accession in pre or entry.accession in mature:
+            raise ValueError(f"Duplicate accession: {entry.accession}")
 
         if rna_type == "mature":
             mature[entry.accession] = entry
