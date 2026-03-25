@@ -9,7 +9,7 @@ from pathlib import Path
 from rnacentral_pipeline.stopfree.data import StopfreeResult
 
 Record = tuple[str, str]
-SEQUENCE_LINE = re.compile(r"^[A-Za-z-]+$")
+SEQUENCE_LINE = re.compile(r"^[A-Za-z]+$")
 
 
 def normalize_sequence(sequence: str) -> str:

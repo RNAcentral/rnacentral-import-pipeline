@@ -20,6 +20,16 @@ def test_read_fasta_records_normalizes_uracil():
 
 
 @pytest.mark.stopfree
+def test_read_fasta_records_keeps_non_acgtun_sequence_content(tmp_path: Path):
+    fasta = tmp_path / "input.fasta"
+    fasta.write_text(">URS0000000001\nAUGRYSWKMBDHVN\n")
+
+    records = list(scan.read_fasta_records(fasta))
+
+    assert records == [("URS0000000001", "ATGRYSWKMBDHVN")]
+
+
+@pytest.mark.stopfree
 def test_build_results_uses_probability_threshold():
     records = [("URS0000000001_9606", "ATGATGATG")]
     results = list(

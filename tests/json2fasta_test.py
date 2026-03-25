@@ -15,6 +15,7 @@ limitations under the License.
 
 import importlib.util
 import io
+import logging
 from pathlib import Path
 
 import pytest
@@ -36,6 +37,19 @@ def test_parse_can_read_multiline_json_entry():
     assert parsed == [
         {"id": "URS0001", "description": "sample", "sequence": "ACGUN"},
     ]
+
+
+@pytest.mark.utils
+def test_parse_logs_when_buffering_multiline_json(caplog):
+    raw = io.StringIO('{"id":"URS0001",\n"description":"sample","sequence":"ACGUN"}\n')
+
+    with caplog.at_level(logging.WARNING):
+        parsed = list(json2fasta.parse(raw))
+
+    assert parsed == [
+        {"id": "URS0001", "description": "sample", "sequence": "ACGUN"},
+    ]
+    assert "Could not decode JSON entry yet" in caplog.text
 
 
 @pytest.mark.utils

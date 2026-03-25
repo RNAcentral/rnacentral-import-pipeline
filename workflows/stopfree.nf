@@ -38,7 +38,6 @@ process find_sequences {
 process stopfree_scan {
   tag { "$sequences" }
   maxForks params.stopfree.max_forks
-  container "${params.stopfree.container}"
 
   input:
   path(sequences)

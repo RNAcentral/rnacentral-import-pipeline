@@ -16,6 +16,7 @@ limitations under the License.
 """
 
 import json
+import logging
 import re
 
 from Bio import SeqIO
@@ -25,6 +26,7 @@ from Bio.SeqRecord import SeqRecord
 import click
 
 EASEL_PATTERN = re.compile(r"^[ACGTN]+$", re.IGNORECASE)
+LOGGER = logging.getLogger(__name__)
 
 
 def as_record(entry):
@@ -54,6 +56,7 @@ def parse(handle):
             yield decode_entry(pending)
             pending = ""
         except json.JSONDecodeError:
+            LOGGER.warning("Could not decode JSON entry yet, buffering additional input")
             continue
     if pending.strip():
         yield decode_entry(pending)
