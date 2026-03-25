@@ -11,7 +11,6 @@ on:
       - 'containers/infernal/**'
       - 'containers/samtools/**'
       - 'containers/cpat/**'
-      - 'containers/stopfree/**'
       - '.github/workflows/tool-containers.yaml'
   workflow_dispatch:
     inputs:
@@ -29,7 +28,6 @@ jobs:
       infernal: ${{ steps.changes.outputs.infernal }}
       samtools: ${{ steps.changes.outputs.samtools }}
       cpat: ${{ steps.changes.outputs.cpat }}
-      stopfree: ${{ steps.changes.outputs.stopfree }}
       force: ${{ github.event.inputs.force_rebuild == 'true' }}
     steps:
       - uses: actions/checkout@v3
@@ -44,7 +42,6 @@ jobs:
             echo "infernal=true" >> $GITHUB_OUTPUT
             echo "samtools=true" >> $GITHUB_OUTPUT
             echo "cpat=true" >> $GITHUB_OUTPUT
-            echo "stopfree=true" >> $GITHUB_OUTPUT
           else
             # Check if emboss files changed
             if git diff --name-only HEAD^ HEAD | grep -q "^containers/emboss/"; then
@@ -74,12 +71,6 @@ jobs:
               echo "cpat=false" >> $GITHUB_OUTPUT
             fi
 
-            # Check if stopfree files changed
-            if git diff --name-only HEAD^ HEAD | grep -q "^containers/stopfree/"; then
-              echo "stopfree=true" >> $GITHUB_OUTPUT
-            else
-              echo "stopfree=false" >> $GITHUB_OUTPUT
-            fi
           fi
 
   build-emboss:
@@ -251,48 +242,5 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_MESSAGE: 'CPAT ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          MSG_MINIMAL: true
-
-  build-stopfree:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.stopfree == 'true' || needs.detect-changes.outputs.force == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Read stopfree version
-        id: version
-        run: echo "version=$(cat containers/stopfree/VERSION)" >> $GITHUB_OUTPUT
-
-      - name: Docker login
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USER }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-
-      - name: Build stopfree container
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          docker build -t rnacentral/stopfree:${VERSION} -f containers/stopfree/Dockerfile containers/stopfree/
-
-      - name: Tag as latest
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          docker tag rnacentral/stopfree:${VERSION} rnacentral/stopfree:latest
-
-      - name: Push versioned tag
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          docker push rnacentral/stopfree:${VERSION}
-
-      - name: Push latest tag
-        run: docker push rnacentral/stopfree:latest
-
-      - name: Slack notification
-        if: always()
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_MESSAGE: 'stopfree ${{ steps.version.outputs.version }} container built and pushed: ${{ job.status }}'
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           MSG_MINIMAL: true
