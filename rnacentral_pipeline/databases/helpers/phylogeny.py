@@ -101,8 +101,19 @@ def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
                 LOGGER.exception(err)
                 raise FailedTaxonId("Unknown error")
 
+    if "scientificName" not in data or "rank" not in data:
+        raise FailedTaxonId(f"UniProt taxonomy payload for {taxon_id} is incomplete")
+
     ## Parse the data a bit to normalise to ENA taxonomy
-    lineage = "; ".join([l["scientificName"] for l in data["lineage"]])
+    raw_lineage = data.get("lineage", [])
+    if isinstance(raw_lineage, list):
+        lineage = "; ".join(
+            level["scientificName"]
+            for level in raw_lineage
+            if isinstance(level, dict) and "scientificName" in level
+        )
+    else:
+        lineage = ""
 
     ena_data = {
         "taxId": str(taxon_id),

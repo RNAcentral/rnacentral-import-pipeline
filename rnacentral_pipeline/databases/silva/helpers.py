@@ -125,8 +125,19 @@ def as_entry(taxonomy, row) -> ty.Optional[data.Entry]:
             inference=inference(row),
             description=description(taxonomy, row),
         )
-    except phy.FailedTaxonId:
-        LOGGER.warning("Could not get phylogeny info for %s", row)
+    except phy.FailedTaxonId as err:
+        LOGGER.warning(
+            "Skipping SILVA entry %s for taxid %s: failed to load taxonomy (%s)",
+            primary_id(row),
+            row["ncbiTaxId"],
+            err,
+        )
         return None
-    except phy.UnknownTaxonId:
+    except phy.UnknownTaxonId as err:
+        LOGGER.warning(
+            "Skipping SILVA entry %s for taxid %s: unknown taxonomy (%s)",
+            primary_id(row),
+            row["ncbiTaxId"],
+            err,
+        )
         return None
