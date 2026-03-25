@@ -85,15 +85,17 @@ def rna_type(row) -> str:
 
 def lineage(taxonomy, row) -> str:
     tid = taxid(row)
-    if tid in taxonomy:
-        return taxonomy[tid].lineage
+    key = str(tid)
+    if key in taxonomy:
+        return taxonomy[key].lineage
     return phy.lineage(tid)
 
 
 def species(taxonomy, row) -> str:
     tid = taxid(row)
-    if tid in taxonomy:
-        return taxonomy[tid].name
+    key = str(tid)
+    if key in taxonomy:
+        return taxonomy[key].name
     return phy.species(tid)
 
 
