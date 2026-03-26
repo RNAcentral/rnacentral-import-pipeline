@@ -15,6 +15,7 @@ pub struct QaStatus {
     incomplete_sequence: bool,
     missing_rfam_match: bool,
     possible_orf: bool,
+    possible_orf_stopfree: bool,
     possible_orf_tcode: bool,
 }
 

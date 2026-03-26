@@ -7,6 +7,7 @@ include { genome_mapping } from './workflows/genome-mapping'
 include { r2dt } from './workflows/r2dt'
 include { rfam_scan } from './workflows/rfam-scan'
 include { rediportal } from './workflows/databases/rediportal'
+include { stopfree } from './workflows/stopfree'
 include { tcode } from './workflows/tcode'
 
 include { slack_closure } from './workflows/utils/slack'
@@ -17,7 +18,7 @@ workflow analyze {
   emit: done
   main:
     Channel.of("Starting analyze pipeline") | slack_message
-    ready | (genome_mapping & rfam_scan & r2dt & cpat & tcode ) | mix | collect | rediportal | set { done }
+    ready | (genome_mapping & rfam_scan & r2dt & cpat & tcode & stopfree ) | mix | collect | rediportal | set { done }
 }
 
 workflow {

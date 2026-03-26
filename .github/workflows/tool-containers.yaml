@@ -70,6 +70,7 @@ jobs:
             else
               echo "cpat=false" >> $GITHUB_OUTPUT
             fi
+
           fi
 
   build-emboss:
