@@ -4,17 +4,69 @@
 #SBATCH --ntasks=1                              # single task (NF master)
 #SBATCH --cpus-per-task=1
 #SBATCH --nodes=1
-#SBATCH --mem=1GB
+#SBATCH --mem=1G
+#SBATCH -p long                                 # long queue for the Nextflow master
 #SBATCH -J "LitScan - full pipeline"
-#SBATCH -D "/path/to/rnacentral-import-pipeline"   # set to your working directory
 #SBATCH -o "logs/litscan_%j.out"
 #SBATCH -e "logs/litscan_%j.err"
-#SBATCH --mail-user=user@ebi.ac.uk
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=your@ebi.ac.uk              # set your email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
 
 set -euo pipefail
 IFS=$'\n\t'
 
+cd /path/to/rnacentral-import-pipeline
+
+# ---------------------------------------------------------------------------
+# Configuration — fill these in before submitting
+# ---------------------------------------------------------------------------
+LITSCAN_INDEX="/path/to/litscan/index" # path where the XML files will be written
+RELEASE_VERSION="XX"                   #release number
+
+# ---------------------------------------------------------------------------
+# Pre-flight checks
+# ---------------------------------------------------------------------------
+
+# 1. Required environment variables
+# PGDB_EMBASSY_USER  — psql DSN; used by psql (get_ids, find_organisms,
+#                      find_manually_annotated) and pgloader (writes to
+#                      litscan_load_organism, litscan_organism,
+#                      litscan_manually_annotated, litscan_database)
+# PGDATABASE         — psql DSN; used by psql (submit_ids / submit_urs dedup
+#                      against litscan_job) and pgloader (litscan_statistics)
+# PSYCOPG_CONN       — psycopg2 DSN; used by all Python scripts
+#                      (retracted-articles, manually-annotated, get-articles,
+#                      get-statistics, create-xml-metadata)
+# LITSCAN_SLACK_WEBHOOK — Slack incoming-webhook URL for start/end/error msgs
+required_vars=(PGDB_EMBASSY_USER PGDATABASE PSYCOPG_CONN LITSCAN_SLACK_WEBHOOK)
+missing=()
+for var in "${required_vars[@]}"; do
+    [[ -z "${!var:-}" ]] && missing+=("$var")
+done
+if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "ERROR: missing required environment variables: ${missing[*]}" >&2
+    exit 1
+fi
+
+# 2. litscan_index must exist and be writable
+if [[ ! -d "$LITSCAN_INDEX" ]]; then
+    echo "ERROR: litscan_index directory does not exist: $LITSCAN_INDEX" >&2
+    exit 1
+fi
+if [[ ! -w "$LITSCAN_INDEX" ]]; then
+    echo "ERROR: litscan_index directory is not writable: $LITSCAN_INDEX" >&2
+    exit 1
+fi
+
+# 3. release_version must be set to something real
+if [[ "$RELEASE_VERSION" == "XX" ]]; then
+    echo "ERROR: RELEASE_VERSION has not been set (still 'XX')" >&2
+    exit 1
+fi
+
+# ---------------------------------------------------------------------------
 module load nextflow
 NF="nextflow"
 
@@ -34,5 +86,5 @@ $NF run litscan.nf \
     -c config/cluster.config \
     -c config/litscan.config \
     -resume \
-    --litscan_index "/path/to/litscan/index" \
-    --release_version "XX"
+    --litscan_index "$LITSCAN_INDEX" \
+    --release_version "$RELEASE_VERSION"
