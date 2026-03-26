@@ -1,5 +1,5 @@
 process zfin {
-  when: { params.databases.zfin.run }
+  when: { params.databases.zfin.run.toString().toBoolean() }
   errorStrategy 'retry'
   maxRetries 3
 
