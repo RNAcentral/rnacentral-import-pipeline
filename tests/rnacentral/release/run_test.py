@@ -39,6 +39,9 @@ def test_run_patches_xref_exchange_before_release(monkeypatch):
 
     sql_calls = [sql for sql, _ in conn.cursor_obj.calls]
     assert "CREATE OR REPLACE FUNCTION rnc_load_xref.do_pel_exchange" in sql_calls[1]
+    assert "FOREACH v_constraint_name IN ARRAY ARRAY[" in sql_calls[1]
+    assert "IF EXISTS (" in sql_calls[1]
+    assert "alter table %I rename constraint %I to %I" in sql_calls[1]
     assert sql_calls[-1] == "SELECT rnc_update.new_update_release(%s, %s)"
     assert conn.cursor_obj.calls[-1][1] == (9, 123)
     assert conn.commits == 1

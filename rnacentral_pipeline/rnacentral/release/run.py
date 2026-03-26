@@ -64,6 +64,7 @@ DECLARE
     v_parent_partition text;
     v_deleted_partition text := 'xref_p' || p_in_db_id || '_deleted';
     v_not_deleted_partition text := 'xref_p' || p_in_db_id || '_not_deleted';
+    v_constraint_name text;
 BEGIN
     --------------------------------------------------------
     --  drop any existing old partition tables
@@ -93,15 +94,55 @@ BEGIN
     --------------------------------------------------------
     --  rename FK constraints on current partition tables as old
     --------------------------------------------------------
-    execute 'alter table xref_p' || p_in_db_id || '_deleted rename constraint xref_p' || p_in_db_id || '_deleted_fk1 to xref_p' || p_in_db_id || '_deleted_fk1_old';
-    execute 'alter table xref_p' || p_in_db_id || '_deleted rename constraint xref_p' || p_in_db_id || '_deleted_fk2 to xref_p' || p_in_db_id || '_deleted_fk2_old';
-    execute 'alter table xref_p' || p_in_db_id || '_deleted rename constraint xref_p' || p_in_db_id || '_deleted_fk3 to xref_p' || p_in_db_id || '_deleted_fk3_old';
-    execute 'alter table xref_p' || p_in_db_id || '_deleted rename constraint xref_p' || p_in_db_id || '_deleted_fk4 to xref_p' || p_in_db_id || '_deleted_fk4_old';
+    FOREACH v_constraint_name IN ARRAY ARRAY[
+        'xref_p' || p_in_db_id || '_deleted_fk1',
+        'xref_p' || p_in_db_id || '_deleted_fk2',
+        'xref_p' || p_in_db_id || '_deleted_fk3',
+        'xref_p' || p_in_db_id || '_deleted_fk4'
+    ]
+    LOOP
+        IF EXISTS (
+            SELECT 1
+            FROM pg_constraint c
+            JOIN pg_class r ON r.oid = c.conrelid
+            JOIN pg_namespace n ON n.oid = r.relnamespace
+            WHERE n.nspname = current_schema()
+              AND r.relname = v_deleted_partition
+              AND c.conname = v_constraint_name
+        ) THEN
+            execute format(
+                'alter table %I rename constraint %I to %I',
+                v_deleted_partition,
+                v_constraint_name,
+                v_constraint_name || '_old'
+            );
+        END IF;
+    END LOOP;
 
-    execute 'alter table xref_p' || p_in_db_id || '_not_deleted rename constraint xref_p' || p_in_db_id || '_not_deleted_fk1 to xref_p' || p_in_db_id || '_not_deleted_fk1_old';
-    execute 'alter table xref_p' || p_in_db_id || '_not_deleted rename constraint xref_p' || p_in_db_id || '_not_deleted_fk2 to xref_p' || p_in_db_id || '_not_deleted_fk2_old';
-    execute 'alter table xref_p' || p_in_db_id || '_not_deleted rename constraint xref_p' || p_in_db_id || '_not_deleted_fk3 to xref_p' || p_in_db_id || '_not_deleted_fk3_old';
-    execute 'alter table xref_p' || p_in_db_id || '_not_deleted rename constraint xref_p' || p_in_db_id || '_not_deleted_fk4 to xref_p' || p_in_db_id || '_not_deleted_fk4_old';
+    FOREACH v_constraint_name IN ARRAY ARRAY[
+        'xref_p' || p_in_db_id || '_not_deleted_fk1',
+        'xref_p' || p_in_db_id || '_not_deleted_fk2',
+        'xref_p' || p_in_db_id || '_not_deleted_fk3',
+        'xref_p' || p_in_db_id || '_not_deleted_fk4'
+    ]
+    LOOP
+        IF EXISTS (
+            SELECT 1
+            FROM pg_constraint c
+            JOIN pg_class r ON r.oid = c.conrelid
+            JOIN pg_namespace n ON n.oid = r.relnamespace
+            WHERE n.nspname = current_schema()
+              AND r.relname = v_not_deleted_partition
+              AND c.conname = v_constraint_name
+        ) THEN
+            execute format(
+                'alter table %I rename constraint %I to %I',
+                v_not_deleted_partition,
+                v_constraint_name,
+                v_constraint_name || '_old'
+            );
+        END IF;
+    END LOOP;
 
     --------------------------------------------------------
     -- find the actual partition parent for the current dbid branch
