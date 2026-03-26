@@ -52,6 +52,8 @@ RRNA_NAME_MAPPING = {
 
 LOGGER = logging.getLogger(__name__)
 
+TaxonomyInfo = tuple[str, str]
+
 
 def primary_id(row) -> str:
     return "SILVA:%s:%s" % (row["insdcAccession"], row["location"])
@@ -83,29 +85,49 @@ def rna_type(row) -> str:
     raise ValueError("Unknown RNA type")
 
 
-def lineage(taxonomy, row) -> str:
+def resolve_taxonomy_info(
+    taxonomy,
+    row,
+    cache: dict[int, TaxonomyInfo] | None = None,
+) -> TaxonomyInfo:
     tid = taxid(row)
+    if tid <= 0:
+        raise phy.UnknownTaxonId(tid)
+
+    if cache is not None and tid in cache:
+        return cache[tid]
+
     key = str(tid)
     if key in taxonomy:
-        return taxonomy[key].lineage
-    return phy.lineage(tid)
+        value = taxonomy[key]
+        result = (value.name, value.lineage)
+    else:
+        result = (phy.species(tid), phy.lineage(tid))
+
+    if cache is not None:
+        cache[tid] = result
+    return result
 
 
-def species(taxonomy, row) -> str:
-    tid = taxid(row)
-    key = str(tid)
-    if key in taxonomy:
-        return taxonomy[key].name
-    return phy.species(tid)
+def lineage(taxonomy, row, cache: dict[int, TaxonomyInfo] | None = None) -> str:
+    return resolve_taxonomy_info(taxonomy, row, cache)[1]
 
 
-def description(taxonomy, row) -> str:
-    organism = species(taxonomy, row)
+def species(taxonomy, row, cache: dict[int, TaxonomyInfo] | None = None) -> str:
+    return resolve_taxonomy_info(taxonomy, row, cache)[0]
+
+
+def description(taxonomy, row, cache: dict[int, TaxonomyInfo] | None = None) -> str:
+    organism = species(taxonomy, row, cache)
     rrna = RRNA_NAME_MAPPING[row["type"]]
     return f"{organism} {rrna}"
 
 
-def as_entry(taxonomy, row) -> ty.Optional[data.Entry]:
+def as_entry(
+    taxonomy,
+    row,
+    cache: dict[int, TaxonomyInfo] | None = None,
+) -> ty.Optional[data.Entry]:
     try:
         return data.Entry(
             primary_id=primary_id(row),
@@ -117,13 +139,13 @@ def as_entry(taxonomy, row) -> ty.Optional[data.Entry]:
             rna_type=rna_type(row),
             url=url(row),
             seq_version=version(row),
-            species=species(taxonomy, row),
-            lineage=lineage(taxonomy, row),
+            species=species(taxonomy, row, cache),
+            lineage=lineage(taxonomy, row, cache),
             references=[
                 pubs.reference("doi:10.1093/nar/gks1219"),
             ],
             inference=inference(row),
-            description=description(taxonomy, row),
+            description=description(taxonomy, row, cache),
         )
     except phy.FailedTaxonId as err:
         LOGGER.warning(
