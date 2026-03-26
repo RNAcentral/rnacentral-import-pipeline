@@ -26,13 +26,25 @@ def cli():
 
 
 @cli.command("parse-bed")
+@click.option("--genome-build", default="hg38", show_default=True)
 @click.argument("redi_bedfile", type=click.File("r"))
 @click.argument("redi_metadata", type=click.File("r"))
 @click.argument("rnc_bedfile", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
-def parse_rediportal(redi_bedfile, redi_metadata, rnc_bedfile, output):
+def parse_rediportal(genome_build, redi_bedfile, redi_metadata, rnc_bedfile, output):
     """
     Intersect REDIportal bedfile with ours, parse the result alongside the metadata
 
     """
-    parser.parse(redi_bedfile, redi_metadata, rnc_bedfile, output)
+    parser.parse(redi_bedfile, redi_metadata, rnc_bedfile, output, genome_build)
+
+
+@cli.command("build-bed")
+@click.option("--genome-build", required=True)
+@click.argument("redi_metadata", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
+def build_bed(genome_build, redi_metadata, output):
+    """
+    Build a BED file from a REDIportal TABLE1 metadata download.
+    """
+    parser.build_bed(redi_metadata, output, genome_build)

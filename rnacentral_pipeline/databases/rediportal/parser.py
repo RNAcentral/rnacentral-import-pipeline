@@ -1,13 +1,82 @@
 import csv
 import json
 import re
+import typing as ty
+from urllib.parse import urlencode
 
 import attr
 import numpy as np
 import pandas as pd
 from attr.validators import instance_of as is_a
 
-REDI_BASE_URL = "http://srv00.recas.ba.infn.it/cgi/atlas/getpage_dev.py?query1=chr{0}:{1}-{2}&query10=hg38&query9=hg"
+REDI_BASE_URL = "https://rediportal.cloud.ba.infn.it/cgi/atlas/getpage_dev.py"
+
+REPEAT_COLUMNS = ("Repeats", "Repeat", "repeat", "Repeat_type", "type", "Location")
+STRAND_COLUMNS = ("Strand", "strand")
+
+
+def species_prefix(genome_build: str) -> str:
+    match = re.match(r"[A-Za-z]+", genome_build)
+    if not match:
+        raise ValueError(f"Cannot determine species prefix for {genome_build}")
+    return match.group(0)
+
+
+def region_id(chromosome: str, position: ty.Any, genome_build: str) -> str:
+    return f"{chromosome}_{position}_{genome_build}"
+
+
+def editing_url(chromosome: str, start: int, stop: int, genome_build: str) -> str:
+    query = {
+        "query1": f"chr{chromosome}:{start}-{stop}",
+        "query10": genome_build,
+        "query9": species_prefix(genome_build),
+    }
+    return f"{REDI_BASE_URL}?{urlencode(query)}"
+
+
+def repeat_type(raw: dict[str, ty.Any]) -> str:
+    for column in REPEAT_COLUMNS:
+        value = raw.get(column)
+        if value and str(value).strip():
+            return str(value).strip()
+    return "NA"
+
+
+def strand(raw: dict[str, ty.Any]) -> str:
+    for column in STRAND_COLUMNS:
+        value = raw.get(column)
+        if value and str(value).strip():
+            return str(value).strip()
+    return "."
+
+
+def metadata_frame(redi_metadata, genome_build: str) -> pd.DataFrame:
+    metadata = pd.read_csv(
+        redi_metadata, delimiter="\t", usecols=["Region", "Position", "Ref", "Ed"]
+    )
+
+    metadata["region_id"] = metadata.apply(
+        lambda row: region_id(row["Region"], row["Position"], genome_build),
+        axis=1,
+    )
+    return metadata
+
+
+def bed_rows(redi_metadata, genome_build: str) -> ty.Iterable[list[ty.Any]]:
+    reader = csv.DictReader(redi_metadata, delimiter="\t")
+    for row in reader:
+        chrom = row["Region"]
+        position = int(row["Position"])
+        yield [
+            chrom,
+            position,
+            position + 1,
+            region_id(chrom, position, genome_build),
+            0,
+            strand(row),
+            repeat_type(row),
+        ]
 
 
 @attr.s(frozen=True)
@@ -36,6 +105,7 @@ class RNAEditFeature:
     start: int = attr.ib(validator=is_a(int), converter=int)
     stop: int = attr.ib(validator=is_a(int), converter=int)
     genomic_location: GenomicLocation = attr.ib(validator=is_a(GenomicLocation))
+    genome_build: str = attr.ib(validator=is_a(str))
 
     @classmethod
     def build(cls, raw_feature):
@@ -49,6 +119,7 @@ class RNAEditFeature:
             start=raw_feature.start_rel_URS,
             stop=raw_feature.end_rel_URS,
             genomic_location=GenomicLocation.build(raw_feature),
+            genome_build=raw_feature.genome_build,
         )
 
     def writeable(self):
@@ -60,10 +131,11 @@ class RNAEditFeature:
             "genomic_location": metadata["genomic_location"],
             "reference": self.ref,
             "edit": self.ed,
-            "url": REDI_BASE_URL.format(
+            "url": editing_url(
                 self.genomic_location.chromosome,
                 self.genomic_location.start,
                 self.genomic_location.stop,
+                self.genome_build,
             ),
         }
 
@@ -79,19 +151,19 @@ class RNAEditFeature:
         ]
 
 
-def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
+def build_bed(redi_metadata, output, genome_build: str) -> None:
+    writer = csv.writer(output, delimiter="\t", lineterminator="\n")
+    for row in bed_rows(redi_metadata, genome_build):
+        writer.writerow(row)
+
+
+def parse(redi_bedfile, redi_metadata, rnc_bedfile, output, genome_build: str):
     import pybedtools as pbt
 
     redi_bed = pbt.BedTool(redi_bedfile)
     rnc_bed = pbt.BedTool(rnc_bedfile)
 
-    metadata = pd.read_csv(
-        redi_metadata, delimiter="\t", usecols=["Region", "Position", "Ref", "Ed"]
-    )
-
-    metadata["region_id"] = (
-        metadata["Region"] + "_" + metadata["Position"].astype(str) + "_hg38"
-    )
+    metadata = metadata_frame(redi_metadata, genome_build)
 
     ## Make a dataframe from a bed file. Prefix things I want to drop with an underscore, but they all
     ## Need to be present for the conversion to work
@@ -134,6 +206,7 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
         intersection["start_rel_genome"] - intersection["rnc_transcript_start"],
     )
     intersection["end_rel_URS"] = intersection["start_rel_URS"]
+    intersection["genome_build"] = genome_build
 
     complete_data = intersection.merge(metadata, how="inner", on="region_id")
 
