@@ -1,5 +1,6 @@
 process create_load_tables {
   time '2d'
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -17,6 +18,7 @@ process merge_and_import {
   tag { name }
   memory 9.GB
   maxForks 2
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -34,6 +36,7 @@ process release {
   time '5d'
   maxForks 1
   when { params.should_release }
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory  4.GB
 
