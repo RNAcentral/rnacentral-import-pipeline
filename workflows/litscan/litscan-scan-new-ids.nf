@@ -9,7 +9,9 @@ nextflow.enable.dsl=2
  *
  * Required environment variables (set in local.config):
  *   PSYCOPG_CONN    - PostgreSQL connection URI
- *   LITSCAN_MODEL   - path to svc_pipeline.pkl (scikit-learn SVC classifier)
+ *
+ * The ML classifier model (svc_pipeline.pkl) is bundled in the repo at
+ * workflows/litscan/svc_pipeline.pkl and is located automatically.
  */
 
 process scan_job {
@@ -21,7 +23,8 @@ process scan_job {
 
     script:
     """
-    litscan-scan-job.py --job-id "${job_id}"
+    LITSCAN_MODEL="${baseDir}/workflows/litscan/svc_pipeline.pkl" \
+        litscan-scan-job.py --job-id "${job_id}"
     """
 }
 
