@@ -88,14 +88,16 @@ def test_resolve_ftp_urls_falls_back_to_lowercase_assembly(monkeypatch):
     ]
 
 
-def test_resolve_ftp_urls_falls_back_to_single_nonchromosomal_file(monkeypatch):
+def test_resolve_ftp_urls_falls_back_to_all_dat_files(monkeypatch):
     monkeypatch.setattr(
         url_helpers,
         "FTP",
         lambda _host: FakeFtp(
             [
                 "/pub/release-115/embl/sus_scrofa_gca018555405v1/"
-                "Sus_scrofa_gca018555405v1.ASM1855540v1.115.nonchromosomal.dat.gz",
+                "Sus_scrofa_gca018555405v1.ASM1855540v1.115.primary_assembly.1.dat.gz",
+                "/pub/release-115/embl/sus_scrofa_gca018555405v1/"
+                "Sus_scrofa_gca018555405v1.ASM1855540v1.115.primary_assembly.2.dat.gz",
             ]
         ),
     )
@@ -107,18 +109,23 @@ def test_resolve_ftp_urls_falls_back_to_single_nonchromosomal_file(monkeypatch):
 
     assert found == [
         "ftp://ftp.ensembl.org/pub/release-115/embl/sus_scrofa_gca018555405v1/"
-        "Sus_scrofa_gca018555405v1.ASM1855540v1.115.nonchromosomal.dat.gz",
+        "Sus_scrofa_gca018555405v1.ASM1855540v1.115.primary_assembly.1.dat.gz",
+        "ftp://ftp.ensembl.org/pub/release-115/embl/sus_scrofa_gca018555405v1/"
+        "Sus_scrofa_gca018555405v1.ASM1855540v1.115.primary_assembly.2.dat.gz",
     ]
 
 
-def test_resolve_ftp_urls_does_not_guess_when_multiple_nonchromosomal_files_exist(monkeypatch):
+def test_resolve_ftp_urls_falls_back_to_all_dat_files_when_nonchromosomal_is_missing(
+    monkeypatch,
+):
     monkeypatch.setattr(
         url_helpers,
         "FTP",
         lambda _host: FakeFtp(
             [
-                "/pub/release-115/embl/example/one.nonchromosomal.dat.gz",
-                "/pub/release-115/embl/example/two.nonchromosomal.dat.gz",
+                "/pub/release-115/embl/example/species.115.primary_assembly.1.dat.gz",
+                "/pub/release-115/embl/example/species.115.primary_assembly.2.dat.gz",
+                "/pub/release-115/embl/example/species.115.primary_assembly.3.dat.gz",
             ]
         ),
     )
@@ -127,4 +134,8 @@ def test_resolve_ftp_urls_does_not_guess_when_multiple_nonchromosomal_files_exis
         "ftp://ftp.ensembl.org/pub/release-115/embl/example/missing.*.dat.gz"
     )
 
-    assert found == []
+    assert found == [
+        "ftp://ftp.ensembl.org/pub/release-115/embl/example/species.115.primary_assembly.1.dat.gz",
+        "ftp://ftp.ensembl.org/pub/release-115/embl/example/species.115.primary_assembly.2.dat.gz",
+        "ftp://ftp.ensembl.org/pub/release-115/embl/example/species.115.primary_assembly.3.dat.gz",
+    ]
