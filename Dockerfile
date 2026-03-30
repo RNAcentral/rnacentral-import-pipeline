@@ -33,7 +33,7 @@ COPY --from=rust-utils /rna/wheels/*.whl /tmp/wheels/
 RUN uv pip install /tmp/wheels/*.whl
 
 # Download NLTK data
-RUN /app/.venv/bin/python3 -m nltk.downloader words
+RUN /app/.venv/bin/python3 -m nltk.downloader -d /app/.venv/nltk_data words
 
 # Stage 5: Final runtime image
 FROM python:3.11.14-trixie
