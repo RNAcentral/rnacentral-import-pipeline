@@ -17,6 +17,7 @@ import os
 import sys
 
 import psycopg2
+from psycopg2.extras import execute_values
 
 
 def main():
@@ -34,21 +35,30 @@ def main():
         open(output_file, "w").close()
         return
 
+    now = datetime.datetime.now()
+    rows = [(job_id.lower(), job_id, now) for job_id in ids]
+
     conn = psycopg2.connect(conn_str)
     registered = []
     try:
         with conn.cursor() as cur:
-            for job_id in ids:
-                cur.execute(
-                    """
-                    INSERT INTO litscan_job (job_id, display_id, submitted, status)
-                    VALUES (%s, %s, %s, 'pending')
-                    ON CONFLICT (job_id) DO NOTHING
-                    """,
-                    (job_id.lower(), job_id, datetime.datetime.now()),
+            execute_values(
+                cur,
+                """
+                INSERT INTO litscan_job (job_id, display_id, submitted, status)
+                SELECT v.job_id, v.display_id, v.submitted, 'pending'
+                FROM (VALUES %s) AS v(job_id, display_id, submitted)
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM litscan_job j
+                    WHERE j.job_id = v.job_id
+                    AND j.status IN ('pending', 'success')
                 )
-                if cur.rowcount > 0:
-                    registered.append(job_id)
+                RETURNING job_id
+                """,
+                rows,
+                page_size=1000,
+            )
+            registered = [r[0] for r in cur.fetchall()]
         conn.commit()
     except Exception:
         conn.rollback()
