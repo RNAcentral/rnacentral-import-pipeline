@@ -89,15 +89,15 @@ process register_ids {
 
     touch registered_ids.txt
     if [ -s new_ids.txt ]; then
-      # get original ids (not in lowercase)
-      # TODO: improve performance. This step may take a long time depending on the number of IDs.
-      while IFS= read -r line; do
-        grep -ixF "\$line" all_ids.txt | head -1 >> results.txt
-      done < new_ids.txt
+      # get original ids (not in lowercase) - single pass, no subprocess per line
+      awk '
+        NR==FNR { ids[tolower(\$0)] = 1; next }
+        tolower(\$0) in ids && !seen[tolower(\$0)]++ { print }
+      ' new_ids.txt all_ids.txt >> results.txt
 
       # register new ids in the database
       litscan-register-ids.py results.txt registered_ids.txt
-      count=\$(wc -l < registered_ids.txt)
+      count=$(wc -l < registered_ids.txt)
       curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new id/gene/synonym registered for scanning"}' \$LITSCAN_SLACK_WEBHOOK
     else
       curl -X POST -H 'Content-type: application/json' --data '{"text":"No new id/gene/synonym to register"}' \$LITSCAN_SLACK_WEBHOOK
