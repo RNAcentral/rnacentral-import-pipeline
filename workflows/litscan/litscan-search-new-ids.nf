@@ -97,7 +97,7 @@ process register_ids {
 
       # register new ids in the database
       litscan-register-ids.py results.txt registered_ids.txt
-      count=$(wc -l < registered_ids.txt)
+      count=\$(wc -l < registered_ids.txt)
       curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new id/gene/synonym registered for scanning"}' \$LITSCAN_SLACK_WEBHOOK
     else
       curl -X POST -H 'Content-type: application/json' --data '{"text":"No new id/gene/synonym to register"}' \$LITSCAN_SLACK_WEBHOOK
