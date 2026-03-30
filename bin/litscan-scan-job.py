@@ -19,17 +19,13 @@ import os
 import re
 import sys
 import time
+from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import ParseError
 
 import joblib
 import nltk
 import psycopg2
 import requests
-from xml.etree import ElementTree as ET
-from xml.etree.ElementTree import ParseError
-
-# Download NLTK tokenizer data if not already present
-nltk.download("punkt", quiet=True)
-nltk.download("punkt_tab", quiet=True)
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -40,6 +36,7 @@ EUROPE_PMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
 # ---------------------------------------------------------------------------
 # Text helpers  (from rnacentral-references/training/export_data.py)
 # ---------------------------------------------------------------------------
+
 
 def clean_text(text):
     text = text.lower()
@@ -55,10 +52,28 @@ def clean_text(text):
 # ---------------------------------------------------------------------------
 
 _AVOID_TAGS = {
-    "xref", "ext-link", "media", "caption", "monospace", "label",
-    "disp-formula", "inline-formula", "inline-graphic", "def", "def-list",
-    "def-item", "term", "funding-source", "award-id", "graphic",
-    "alternatives", "tex-math", "sec-meta", "kwd-group", "kwd", "object-id",
+    "xref",
+    "ext-link",
+    "media",
+    "caption",
+    "monospace",
+    "label",
+    "disp-formula",
+    "inline-formula",
+    "inline-graphic",
+    "def",
+    "def-list",
+    "def-item",
+    "term",
+    "funding-source",
+    "award-id",
+    "graphic",
+    "alternatives",
+    "tex-math",
+    "sec-meta",
+    "kwd-group",
+    "kwd",
+    "object-id",
     "{http://www.w3.org/1998/Math/MathML}math",
     "{http://www.w3.org/1998/Math/MathML}mrow",
     "{http://www.w3.org/1998/Math/MathML}mi",
@@ -120,10 +135,12 @@ def get_sections(tree):
 # Europe PMC API
 # ---------------------------------------------------------------------------
 
+
 def articles_list(job_id, query_filter, date, page="*"):
     search_date = (
         f" AND (FIRST_PDATE:[{date} TO {datetime.date.today().strftime('%Y-%m-%d')}])"
-        if date else ""
+        if date
+        else ""
     )
     qf = f" AND {query_filter}" if query_filter else ""
     query = (
@@ -160,8 +177,11 @@ def articles_list(job_id, query_filter, date, page="*"):
 # DB helpers (synchronous psycopg2)
 # ---------------------------------------------------------------------------
 
+
 def get_query_and_limit(cur, job_id):
-    cur.execute("SELECT query, search_limit FROM litscan_job WHERE job_id = %s", (job_id,))
+    cur.execute(
+        "SELECT query, search_limit FROM litscan_job WHERE job_id = %s", (job_id,)
+    )
     row = cur.fetchone()
     return (row[0], row[1]) if row else (None, None)
 
@@ -206,11 +226,19 @@ def save_article(cur, article):
         ON CONFLICT (pmcid) DO NOTHING
         """,
         (
-            article["pmcid"], article["title"], article.get("abstract", ""),
-            article["author"], article["pmid"], article["doi"],
-            article["year"], article["journal"], article["score"],
-            article["cited_by"], article["retracted"],
-            article["rna_related"], article["probability"],
+            article["pmcid"],
+            article["title"],
+            article.get("abstract", ""),
+            article["author"],
+            article["pmid"],
+            article["doi"],
+            article["year"],
+            article["journal"],
+            article["score"],
+            article["cited_by"],
+            article["retracted"],
+            article["rna_related"],
+            article["probability"],
             article.get("type", ""),
         ),
     )
@@ -225,8 +253,11 @@ def save_result(cur, result):
         RETURNING id
         """,
         (
-            result["pmcid"], result["job_id"], result["id_in_title"],
-            result["id_in_abstract"], result["id_in_body"],
+            result["pmcid"],
+            result["job_id"],
+            result["id_in_title"],
+            result["id_in_abstract"],
+            result["id_in_body"],
         ),
     )
     row = cur.fetchone()
@@ -263,6 +294,7 @@ def save_hit_count(cur, job_id, hit_count):
 # ---------------------------------------------------------------------------
 # Core scan logic  (ported from seek_references() in submit_job.py)
 # ---------------------------------------------------------------------------
+
 
 def scan_job(job_id, conn, rna_pipeline):
     start = datetime.datetime.now()
@@ -302,7 +334,9 @@ def scan_job(job_id, conn, rna_pipeline):
         # on re-scan, skip articles already processed for this job
         if date and pmcid_list:
             pmcid_in_db = get_pmcid_in_result(cur, job_id.lower())
-            pmcid_list = [item for item in pmcid_list if item["pmcid"] not in pmcid_in_db]
+            pmcid_list = [
+                item for item in pmcid_list if item["pmcid"] not in pmcid_in_db
+            ]
 
         # ---- process each article ----
         for element in pmcid_list:
@@ -322,9 +356,13 @@ def scan_job(job_id, conn, rna_pipeline):
                 continue
 
             # extract text sections
-            abstract_txt = re.search(r"<abstract(.*?)</abstract>", get_article, re.DOTALL)
+            abstract_txt = re.search(
+                r"<abstract(.*?)</abstract>", get_article, re.DOTALL
+            )
             body_txt = re.search(r"<body(.*?)</body>", get_article, re.DOTALL)
-            floats_txt = re.search(r"<floats-group(.*?)</floats-group>", get_article, re.DOTALL)
+            floats_txt = re.search(
+                r"<floats-group(.*?)</floats-group>", get_article, re.DOTALL
+            )
 
             if abstract_txt and body_txt and floats_txt:
                 full_txt = abstract_txt[0] + body_txt[0] + floats_txt[0]
@@ -354,7 +392,10 @@ def scan_job(job_id, conn, rna_pipeline):
                 continue
 
             # skip non-English articles
-            if article.find("./front/article-meta/title-group/trans-title-group") is not None:
+            if (
+                article.find("./front/article-meta/title-group/trans-title-group")
+                is not None
+            ):
                 continue
 
             # title
@@ -372,18 +413,23 @@ def scan_job(job_id, conn, rna_pipeline):
 
             # abstract
             abstract_types = [
-                "teaser", "web-summary", "summary", "precis", "graphical", "author-highlights"
+                "teaser",
+                "web-summary",
+                "summary",
+                "precis",
+                "graphical",
+                "author-highlights",
             ]
             get_abstract_tags = [
-                item for item in article.findall(".//abstract")
+                item
+                for item in article.findall(".//abstract")
                 if not any(v in item.attrib.values() for v in abstract_types)
             ]
             abstract_text = [" ".join(item.itertext()) for item in get_abstract_tags]
             abstract = " ".join(abstract_text).replace(" .", ".").replace("  ", " ")
 
             abstract_sentences = [
-                s for s in nltk.sent_tokenize(abstract)
-                if re.search(regex, s.lower())
+                s for s in nltk.sent_tokenize(abstract) if re.search(regex, s.lower())
             ]
             result_response["id_in_abstract"] = bool(abstract_sentences)
 
@@ -397,9 +443,13 @@ def scan_job(job_id, conn, rna_pipeline):
                 for idx, sentence in enumerate(tokenized):
                     if re.search(regex, sentence.lower()) and len(sentence.split()) > 3:
                         prev_s = tokenized[idx - 1] if idx > 0 else None
-                        next_s = tokenized[idx + 1] if idx < len(tokenized) - 1 else None
+                        next_s = (
+                            tokenized[idx + 1] if idx < len(tokenized) - 1 else None
+                        )
                         if prev_s and next_s:
-                            body_sentences[section_name].append(prev_s + " " + sentence + " " + next_s)
+                            body_sentences[section_name].append(
+                                prev_s + " " + sentence + " " + next_s
+                            )
                         elif prev_s:
                             body_sentences[section_name].append(prev_s + " " + sentence)
                         elif next_s:
@@ -435,7 +485,10 @@ def scan_job(job_id, conn, rna_pipeline):
                 article_response["cited_by"] = cited_by
 
                 article_response["type"] = (
-                    article.attrib.get("article-type", "").strip().replace("-", " ").capitalize()
+                    article.attrib.get("article-type", "")
+                    .strip()
+                    .replace("-", " ")
+                    .capitalize()
                 )
 
                 # authors
@@ -446,7 +499,9 @@ def scan_job(job_id, conn, rna_pipeline):
                     for auth in contrib_group.findall(".//name"):
                         surname_el = auth.find("surname")
                         given_el = auth.find("given-names")
-                        surname = (surname_el.text or "") if surname_el is not None else ""
+                        surname = (
+                            (surname_el.text or "") if surname_el is not None else ""
+                        )
                         given = (given_el.text or "") if given_el is not None else ""
                         if surname and given:
                             authors.append(f"{surname}, {given}")
@@ -473,7 +528,9 @@ def scan_job(job_id, conn, rna_pipeline):
 
                 # journal
                 article_response["journal"] = ""
-                journal_el = article.find("./front/journal-meta/journal-title-group/journal-title")
+                journal_el = article.find(
+                    "./front/journal-meta/journal-title-group/journal-title"
+                )
                 if journal_el is None:
                     journal_el = article.find("./front/journal-meta/journal-title")
                 if journal_el is not None:
@@ -496,12 +553,18 @@ def scan_job(job_id, conn, rna_pipeline):
                 if abstract_sentences:
                     save_abstract_sentences(
                         cur,
-                        [{"result_id": result_id, "sentence": s} for s in abstract_sentences],
+                        [
+                            {"result_id": result_id, "sentence": s}
+                            for s in abstract_sentences
+                        ],
                     )
 
                 loc_prefix_map = {
-                    "intro": "intro", "results": "results", "discussion": "discussion",
-                    "conclusion": "conclusion", "method": "method",
+                    "intro": "intro",
+                    "results": "results",
+                    "discussion": "discussion",
+                    "conclusion": "conclusion",
+                    "method": "method",
                 }
                 body_to_save = []
                 for loc, sentences in body_sentences.items():
@@ -510,7 +573,13 @@ def scan_job(job_id, conn, rna_pipeline):
                         "other",
                     )
                     for s in sentences:
-                        body_to_save.append({"result_id": result_id, "sentence": s, "location": location})
+                        body_to_save.append(
+                            {
+                                "result_id": result_id,
+                                "sentence": s,
+                                "location": location,
+                            }
+                        )
                 if body_to_save:
                     save_body_sentences(cur, body_to_save)
 
@@ -532,6 +601,7 @@ def scan_job(job_id, conn, rna_pipeline):
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main():
     parser = argparse.ArgumentParser(
