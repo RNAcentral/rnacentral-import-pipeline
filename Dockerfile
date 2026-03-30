@@ -144,5 +144,6 @@ ENV PATH="$RNA/blat_suite:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE/bin:$PATH"
 ENV PATH="$RNA/venv/bin:$PATH"
+ENV NLTK_DATA="$RNA/venv/nltk_data"
 
 ENTRYPOINT ["/bin/bash"]
