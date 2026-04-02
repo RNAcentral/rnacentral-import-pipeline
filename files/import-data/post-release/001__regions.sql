@@ -60,6 +60,35 @@ drop table if exists rnc_ac_sr_backup;
 -- location. It is possible that the overall region has the same endpoints but
 -- different exon/intron boundaries because of mapping. So we delete the mapped
 -- coordinates that will be overwritten by the given locations to be load.
+
+-- New problems introduced by the genes infrastructure:
+-- We can't just delete a region now, because of fk constraints in the rnc_gene_members
+-- table. We also can't just delete genes, so we have to back up the regions
+-- that were in genes, then delete them from the membership table
+-- Only after this can we delete the region so it can be reloaded
+-- As a precaution, we are going to mark any gene with zero members as inactive
+-- at this step. They will hopefully be recovered later in the pipeline when the
+-- gene prediction runs.
+
+DROP TABLE IF EXISTS tmp_deleted_gene_members;
+CREATE TABLE tmp_deleted_gene_members AS
+SELECT gm.*
+FROM rnc_gene_members gm
+JOIN rnc_sequence_regions regions ON gm.locus_id = regions.id
+JOIN load_rnc_sequence_regions load
+  ON load.region_name = regions.region_name
+  AND load.assembly_id = regions.assembly_id
+WHERE regions.was_mapped = true;
+
+DELETE FROM rnc_gene_members gm
+USING rnc_sequence_regions regions,
+      load_rnc_sequence_regions load
+WHERE gm.locus_id = regions.id
+  AND load.region_name = regions.region_name
+  AND load.assembly_id = regions.assembly_id
+  AND regions.was_mapped = true;
+
+
 DELETE FROM rnc_sequence_regions regions
 USING load_rnc_sequence_regions load
 WHERE
@@ -67,6 +96,28 @@ WHERE
   AND load.assembly_id = regions.assembly_id
   AND regions.was_mapped = true
 ;
+
+-- We need to re-count the transcript numbers for these altered genes
+UPDATE rnc_genes g
+SET num_transcripts = (
+  SELECT COUNT(*)
+  FROM rnc_gene_members gm
+  WHERE gm.gene_id = g.id
+)
+WHERE g.id IN (
+  SELECT DISTINCT gene_id
+  FROM tmp_deleted_gene_members
+);
+
+-- Any gene where there are 0 regions is now marked as inactive
+UPDATE rnc_genes g
+SET is_active = false
+WHERE g.id IN (
+  SELECT DISTINCT gene_id
+  FROM tmp_deleted_gene_members
+)
+AND num_transcripts = 0;
+
 
 -- Upsert regions table with needed info. Note the max's (for all but
 -- exon_start/stop) in the select are meaningless as they will all be the same
