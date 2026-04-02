@@ -42,7 +42,7 @@ def main():
     registered = []
     try:
         with conn.cursor() as cur:
-            execute_values(
+            inserted = execute_values(
                 cur,
                 """
                 INSERT INTO litscan_job (job_id, display_id, submitted, status)
@@ -57,8 +57,9 @@ def main():
                 """,
                 rows,
                 page_size=1000,
+                fetch=True,
             )
-            registered = [r[0] for r in cur.fetchall()]
+        registered = [r[0] for r in inserted]
         conn.commit()
     except Exception:
         conn.rollback()
