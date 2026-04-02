@@ -94,6 +94,7 @@ class Database(enum.Enum):
     ribocentre = DatabaseValue(52, "RiboCentre", "RIBOCENTRE")
     evlncrnas = DatabaseValue(53, "EVlncRNAs", "EVLNCRNAS")
     mgnify = DatabaseValue(55, "MGnify", "MGNIFY")
+    mirtrondb = DatabaseValue(56, "mirtronDB", "MIRTRONDB")
     japonicusdb = DatabaseValue(58, "JaponicusDB", "JAPONICUSDB")
 
     @classmethod

@@ -42,6 +42,7 @@ from rnacentral_pipeline.cli import (
     mgnify,
     mirbase,
     mirgenedb,
+    mirtrondb,
     modomics,
     misc,
     ncbi,
@@ -56,7 +57,6 @@ from rnacentral_pipeline.cli import (
     qa,
     quickgo,
     r2dt,
-    rediportal,
     refseq,
     release,
     rgd,
@@ -125,6 +125,7 @@ cli.add_command(lncipedia.cli)
 cli.add_command(mgnify.cli)
 cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
+cli.add_command(mirtrondb.cli)
 cli.add_command(modomics.cli)
 cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
