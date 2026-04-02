@@ -99,7 +99,7 @@ WHERE
 
 -- We need to re-count the transcript numbers for these altered genes
 UPDATE rnc_genes g
-SET num_transcripts = (
+SET member_count = (
   SELECT COUNT(*)
   FROM rnc_gene_members gm
   WHERE gm.rnc_gene_id = g.id
@@ -116,7 +116,7 @@ WHERE g.id IN (
   SELECT DISTINCT rnc_gene_id
   FROM tmp_deleted_gene_members
 )
-AND num_transcripts = 0;
+AND member_count = 0;
 
 
 -- Upsert regions table with needed info. Note the max's (for all but
