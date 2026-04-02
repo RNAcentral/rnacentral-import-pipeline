@@ -102,10 +102,10 @@ UPDATE rnc_genes g
 SET num_transcripts = (
   SELECT COUNT(*)
   FROM rnc_gene_members gm
-  WHERE gm.gene_id = g.id
+  WHERE gm.rnc_gene_id = g.id
 )
 WHERE g.id IN (
-  SELECT DISTINCT gene_id
+  SELECT DISTINCT rnc_gene_id
   FROM tmp_deleted_gene_members
 );
 
@@ -113,7 +113,7 @@ WHERE g.id IN (
 UPDATE rnc_genes g
 SET is_active = false
 WHERE g.id IN (
-  SELECT DISTINCT gene_id
+  SELECT DISTINCT rnc_gene_id
   FROM tmp_deleted_gene_members
 )
 AND num_transcripts = 0;
