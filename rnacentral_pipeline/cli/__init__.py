@@ -34,6 +34,7 @@ from rnacentral_pipeline.cli import (
     genome_mapping,
     gtrnadb,
     hgnc,
+    huggingface,
     intact,
     japonicusdb,
     lncbase,
@@ -43,8 +44,8 @@ from rnacentral_pipeline.cli import (
     mirbase,
     mirgenedb,
     mirtrondb,
-    modomics,
     misc,
+    modomics,
     ncbi,
     notify,
     ols,
@@ -59,9 +60,9 @@ from rnacentral_pipeline.cli import (
     r2dt,
     refseq,
     release,
-    rgd,
     repeats,
     rfam,
+    rgd,
     ribocentre,
     ribovision,
     scan_imports,
@@ -117,6 +118,7 @@ cli.add_command(genes.cli)
 cli.add_command(genome_mapping.cli)
 cli.add_command(gtrnadb.cli)
 cli.add_command(hgnc.cli)
+cli.add_command(huggingface.cli)
 cli.add_command(intact.cli)
 cli.add_command(japonicusdb.cli)
 cli.add_command(lncbase.cli)
