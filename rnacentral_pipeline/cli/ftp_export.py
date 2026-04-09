@@ -15,14 +15,17 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral.ftp_export import fasta
-from rnacentral_pipeline.rnacentral.ftp_export import go_terms
-from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
-from rnacentral_pipeline.rnacentral.ftp_export import release_note
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3
+from rnacentral_pipeline.db import connection
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
-from rnacentral_pipeline.rnacentral.ftp_export import gpi
+from rnacentral_pipeline.rnacentral.ftp_export import (
+    fasta,
+    go_terms,
+    gpi,
+    id_mapping,
+    parquet,
+    release_note,
+)
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed, gff3
 
 
 @click.group("ftp-export")
@@ -62,6 +65,19 @@ def export_sequences():
     This is a group of commands dealing with exporting sequences.
     """
     pass
+
+
+@export_sequences.command("parquet")
+@click.argument("query", type=str)
+@click.argument("output", default="-", type=click.File("w"))
+@click.option("--db-url", envvar="PGDATABASE")
+def sequences_parquet(query, output, db_url):
+    with connection(db_url) as conn:
+        dataframe = parquet.query_2_dataframe(query, conn)
+
+    if dataframe is not None:
+        ## Means the query ran ok and we have stuff to write
+        dataframe.write_parquet(output)
 
 
 @export_sequences.command("valid-nhmmer")
