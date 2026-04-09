@@ -25,7 +25,7 @@ process save_organisms {
     val('done')
 
     """
-    pgloader --on-error-stop $ctl
+    pgloader --on-error-stop --with "drop indexes" $ctl
     """
 }
 

@@ -51,7 +51,7 @@ process import_manually_annotated_articles {
     val('done')
 
     """
-    pgloader --on-error-stop $ctl
+    pgloader --on-error-stop --with "drop indexes" $ctl
     """
 }
 
