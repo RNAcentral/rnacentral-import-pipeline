@@ -50,6 +50,7 @@ dependencies = [
     "datasets>=3.5.0",
     "fastjsonschema>=2.21.2",
     "stopfree>=0.2.4",
+    "huggingface-hub>=1.2.3",
 ]
 
 
