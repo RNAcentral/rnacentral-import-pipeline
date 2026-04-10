@@ -25,6 +25,11 @@ import psycopg2
 import psycopg2.extras
 
 
+def _text(value):
+    """Coerce any DB value into a string safe for ElementTree serialization."""
+    return "" if value is None else str(value)
+
+
 def create_xml_file(results, directory):
     """
     Creates the XML that will be used by the search index
@@ -128,11 +133,11 @@ def fetch_results_by_pmcid(conn):
             results_by_pmcid[row["pmcid"]].append(
                 {
                     "id": row["id"],
-                    "job_id": row["job_id"],
-                    "display_id": row["display_id"],
-                    "id_in_title": str(row["id_in_title"]),
-                    "id_in_abstract": str(row["id_in_abstract"]),
-                    "id_in_body": str(row["id_in_body"]),
+                    "job_id": _text(row["job_id"]),
+                    "display_id": _text(row["display_id"]),
+                    "id_in_title": _text(row["id_in_title"]),
+                    "id_in_abstract": _text(row["id_in_abstract"]),
+                    "id_in_body": _text(row["id_in_body"]),
                 }
             )
     return results_by_pmcid
@@ -153,7 +158,7 @@ def fetch_longest_sentences(conn, table):
         """
         )
         for row in cur:
-            sentences[row["result_id"]] = row["sentence"]
+            sentences[row["result_id"]] = _text(row["sentence"])
     return sentences
 
 
@@ -162,7 +167,7 @@ def fetch_manually_annotated(conn):
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute("SELECT pmcid, urs FROM litscan_manually_annotated")
         for row in cur:
-            manually_annotated[row["pmcid"]].append(row["urs"])
+            manually_annotated[row["pmcid"]].append(_text(row["urs"]))
     return manually_annotated
 
 
@@ -177,7 +182,7 @@ def fetch_organisms(conn):
         """
         )
         for row in cur:
-            organisms[row["pmcid"]].append(row["name"])
+            organisms[row["pmcid"]].append(_text(row["name"]))
     return organisms
 
 
@@ -223,18 +228,18 @@ def main(database, directory):
         for row in cur:
             pmcid = row["pmcid"]
             article = {
-                "pmcid": pmcid,
-                "title": row["title"],
-                "abstract": row["abstract"],
-                "author": row["author"],
-                "pmid": row["pmid"],
-                "doi": row["doi"],
-                "year": str(row["year"]),
-                "journal": row["journal"],
-                "score": str(row["score"]),
-                "cited_by": str(row["cited_by"]),
-                "type": row["type"],
-                "rna_related": str(row["rna_related"]),
+                "pmcid": _text(pmcid),
+                "title": _text(row["title"]),
+                "abstract": _text(row["abstract"]),
+                "author": _text(row["author"]),
+                "pmid": _text(row["pmid"]),
+                "doi": _text(row["doi"]),
+                "year": _text(row["year"]),
+                "journal": _text(row["journal"]),
+                "score": _text(row["score"]),
+                "cited_by": _text(row["cited_by"]),
+                "type": _text(row["type"]),
+                "rna_related": _text(row["rna_related"]),
             }
 
             results = results_by_pmcid.get(pmcid, [])
