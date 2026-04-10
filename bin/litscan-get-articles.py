@@ -234,7 +234,7 @@ def main(database, directory):
                 "score": str(row["score"]),
                 "cited_by": str(row["cited_by"]),
                 "type": row["type"],
-                "rna_related": row["rna_related"],
+                "rna_related": str(row["rna_related"]),
             }
 
             results = results_by_pmcid.get(pmcid, [])
