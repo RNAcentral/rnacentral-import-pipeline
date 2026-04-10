@@ -11,7 +11,7 @@ process fetch {
   """
 }
 
-process modomics {
+process parse {
   when { params.databases.modomics.run }
 
   input:
@@ -28,5 +28,5 @@ process modomics {
 workflow modomics {
   emit: data
   main:
-  fetch | modomics | set { data }
+  fetch | parse | set { data }
 }

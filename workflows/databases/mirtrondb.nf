@@ -11,7 +11,7 @@ process fetch {
   """
 }
 
-process mirtrondb {
+process parse {
   when { params.databases.mirtrondb.run }
 
   input:
@@ -28,5 +28,5 @@ process mirtrondb {
 workflow mirtrondb {
   emit: data
   main:
-  fetch | mirtrondb | set { data }
+  fetch | parse | set { data }
 }
