@@ -51,6 +51,17 @@ gene = op.itemgetter("SYMBOL")
 locus_tag = op.itemgetter("SYMBOL")
 
 
+PREFERRED_ASSEMBLIES = ["mRatBN7.2", "GRCr8", "Rnor_6.0", "Rnor_5.0"]
+
+
+def _assembly_suffix(entry):
+    available = {key[len("CHROMOSOME_"):] for key in entry if key.startswith("CHROMOSOME_")}
+    for assembly in PREFERRED_ASSEMBLIES:
+        if assembly in available:
+            return assembly
+    raise ValueError("Cannot find a known chromosome column in entry: %s" % list(entry.keys()))
+
+
 def known_organisms():
     """
     Get the names of organisms that RGD annotates. This will only return 'rat'
@@ -105,13 +116,14 @@ class RgdLocation(object):
 
     @classmethod
     def from_dict(cls, entry):
-        if not entry["CHROMOSOME_6.0"]:
+        suffix = _assembly_suffix(entry)
+        if not entry[f"CHROMOSOME_{suffix}"]:
             return None
 
-        chromosomes = entry["CHROMOSOME_6.0"].split(";")
-        starts = [int(p) for p in entry["START_POS_6.0"].split(";")]
-        stops = [int(p) for p in entry["STOP_POS_6.0"].split(";")]
-        strands = entry["STRAND_6.0"].split(";")
+        chromosomes = entry[f"CHROMOSOME_{suffix}"].split(";")
+        starts = [int(p) for p in entry[f"START_POS_{suffix}"].split(";")]
+        stops = [int(p) for p in entry[f"STOP_POS_{suffix}"].split(";")]
+        strands = entry[f"STRAND_{suffix}"].split(";")
         assert len(chromosomes) == len(starts) == len(stops) == len(strands)
 
         return cls(
@@ -294,13 +306,14 @@ def as_region(chromosomes, starts, stops, strands, index):
 
 
 def regions(entry):
-    if not entry["CHROMOSOME_6.0"]:
+    suffix = _assembly_suffix(entry)
+    if not entry[f"CHROMOSOME_{suffix}"]:
         return []
 
-    chromosomes = entry["CHROMOSOME_6.0"].split(";")
-    starts = [int(p) for p in entry["START_POS_6.0"].split(";")]
-    stops = [int(p) for p in entry["STOP_POS_6.0"].split(";")]
-    strands = entry["STRAND_6.0"].split(";")
+    chromosomes = entry[f"CHROMOSOME_{suffix}"].split(";")
+    starts = [int(p) for p in entry[f"START_POS_{suffix}"].split(";")]
+    stops = [int(p) for p in entry[f"STOP_POS_{suffix}"].split(";")]
+    strands = entry[f"STRAND_{suffix}"].split(";")
     assert len(chromosomes) == len(starts) == len(stops) == len(strands)
 
     total = range(len(chromosomes))
