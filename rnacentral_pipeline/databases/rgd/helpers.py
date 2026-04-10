@@ -51,7 +51,7 @@ gene = op.itemgetter("SYMBOL")
 locus_tag = op.itemgetter("SYMBOL")
 
 
-PREFERRED_ASSEMBLIES = ["mRatBN7.2", "GRCr8", "Rnor_6.0", "Rnor_5.0"]
+PREFERRED_ASSEMBLIES = ["Rnor_6.0", "mRatBN7.2", "GRCr8", "Rnor_5.0"]
 
 
 def _assembly_suffix(entry):
