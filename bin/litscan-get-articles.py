@@ -13,21 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import collections
-import click
 import gzip
-import psycopg2
-import psycopg2.extras
 import random
 import string
 import xml.etree.ElementTree as ET
+from collections import defaultdict
+from pathlib import Path
+
+import click
+import psycopg2
+import psycopg2.extras
 
 
 def create_xml_file(results, directory):
     """
     Creates the XML that will be used by the search index
     :param results: list of results
-    :param directory: directory to store xml files
+    :param directory: Path to directory to store xml files
     :return: None
     """
     # start to create a XML file
@@ -36,166 +38,223 @@ def create_xml_file(results, directory):
     entries = ET.SubElement(database, "entries")
 
     for item in results:
-        for elem in item['result']:
-            entry = ET.SubElement(entries, "entry", id=elem["job_id"] + "_" + item['pmcid'])
+        for elem in item["result"]:
+            entry = ET.SubElement(
+                entries, "entry", id=elem["job_id"] + "_" + item["pmcid"]
+            )
             additional_fields = ET.SubElement(entry, "additional_fields")
-            ET.SubElement(additional_fields, "field", name="entry_type").text = "Publication"
-            ET.SubElement(additional_fields, "field", name="pmcid").text = item['pmcid']
-            ET.SubElement(additional_fields, "field", name="title").text = item['title']
-            ET.SubElement(additional_fields, "field", name="abstract").text = item['abstract']
-            ET.SubElement(additional_fields, "field", name="author").text = item['author']
-            ET.SubElement(additional_fields, "field", name="pmid").text = item['pmid']
-            ET.SubElement(additional_fields, "field", name="doi").text = item['doi']
-            ET.SubElement(additional_fields, "field", name="journal").text = item['journal']
-            ET.SubElement(additional_fields, "field", name="year").text = item['year']
-            ET.SubElement(additional_fields, "field", name="score").text = item['score']
-            ET.SubElement(additional_fields, "field", name="cited_by").text = item['cited_by']
-            ET.SubElement(additional_fields, "field", name="type").text = item['type']
-            ET.SubElement(additional_fields, "field", name="rna_related").text = item['rna_related']
-            ET.SubElement(additional_fields, "field", name="job_id").text = elem["display_id"]
-            ET.SubElement(additional_fields, "field", name="title_value").text = elem['id_in_title']
-            ET.SubElement(additional_fields, "field", name="abstract_value").text = elem['id_in_abstract']
-            ET.SubElement(additional_fields, "field", name="body_value").text = elem['id_in_body']
-            if 'abstract_sentence' in elem:
-                ET.SubElement(additional_fields, "field", name="abstract_sentence").text = elem['abstract_sentence']
-            if 'body_sentence' in elem:
-                ET.SubElement(additional_fields, "field", name="body_sentence").text = elem['body_sentence']
-            if 'manually_annotated' in item:
-                for urs in item['manually_annotated']:
-                    ET.SubElement(additional_fields, "field", name="manually_annotated").text = urs
-            if 'organisms' in item:
-                for organism in item['organisms']:
-                    ET.SubElement(additional_fields, "field", name="organism").text = organism
+            ET.SubElement(
+                additional_fields, "field", name="entry_type"
+            ).text = "Publication"
+            ET.SubElement(additional_fields, "field", name="pmcid").text = item["pmcid"]
+            ET.SubElement(additional_fields, "field", name="title").text = item["title"]
+            ET.SubElement(additional_fields, "field", name="abstract").text = item[
+                "abstract"
+            ]
+            ET.SubElement(additional_fields, "field", name="author").text = item[
+                "author"
+            ]
+            ET.SubElement(additional_fields, "field", name="pmid").text = item["pmid"]
+            ET.SubElement(additional_fields, "field", name="doi").text = item["doi"]
+            ET.SubElement(additional_fields, "field", name="journal").text = item[
+                "journal"
+            ]
+            ET.SubElement(additional_fields, "field", name="year").text = item["year"]
+            ET.SubElement(additional_fields, "field", name="score").text = item["score"]
+            ET.SubElement(additional_fields, "field", name="cited_by").text = item[
+                "cited_by"
+            ]
+            ET.SubElement(additional_fields, "field", name="type").text = item["type"]
+            ET.SubElement(additional_fields, "field", name="rna_related").text = item[
+                "rna_related"
+            ]
+            ET.SubElement(additional_fields, "field", name="job_id").text = elem[
+                "display_id"
+            ]
+            ET.SubElement(additional_fields, "field", name="title_value").text = elem[
+                "id_in_title"
+            ]
+            ET.SubElement(
+                additional_fields, "field", name="abstract_value"
+            ).text = elem["id_in_abstract"]
+            ET.SubElement(additional_fields, "field", name="body_value").text = elem[
+                "id_in_body"
+            ]
+            if "abstract_sentence" in elem:
+                ET.SubElement(
+                    additional_fields, "field", name="abstract_sentence"
+                ).text = elem["abstract_sentence"]
+            if "body_sentence" in elem:
+                ET.SubElement(
+                    additional_fields, "field", name="body_sentence"
+                ).text = elem["body_sentence"]
+            if "manually_annotated" in item:
+                for urs in item["manually_annotated"]:
+                    ET.SubElement(
+                        additional_fields, "field", name="manually_annotated"
+                    ).text = urs
+            if "organisms" in item:
+                for organism in item["organisms"]:
+                    ET.SubElement(
+                        additional_fields, "field", name="organism"
+                    ).text = organism
 
     ET.SubElement(database, "entry_count").text = str(len(results))
 
     # save the file
     tree = ET.ElementTree(database)
     ET.indent(tree, space="\t", level=0)
-    name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
-    with gzip.open(str(directory) + "/references_" + name + ".xml.gz", "wb") as file:
+    name = "".join(random.choices(string.ascii_uppercase + string.digits, k=16))
+    output_path = directory / f"references_{name}.xml.gz"
+    with gzip.open(output_path, "wb") as file:
         tree.write(file)
 
 
+def fetch_results_by_pmcid(conn):
+    """Fetch all litscan_result rows joined with display_id, grouped by pmcid."""
+    results_by_pmcid = defaultdict(list)
+    with conn.cursor(
+        name="results_cursor", cursor_factory=psycopg2.extras.DictCursor
+    ) as cur:
+        cur.itersize = 50000
+        cur.execute(
+            """
+            SELECT r.pmcid, r.id, r.job_id, r.id_in_title, r.id_in_abstract, r.id_in_body, j.display_id
+            FROM litscan_result r
+            JOIN litscan_job j ON r.job_id = j.job_id
+        """
+        )
+        for row in cur:
+            results_by_pmcid[row["pmcid"]].append(
+                {
+                    "id": row["id"],
+                    "job_id": row["job_id"],
+                    "display_id": row["display_id"],
+                    "id_in_title": str(row["id_in_title"]),
+                    "id_in_abstract": str(row["id_in_abstract"]),
+                    "id_in_body": str(row["id_in_body"]),
+                }
+            )
+    return results_by_pmcid
+
+
+def fetch_longest_sentences(conn, table):
+    """Fetch the longest sentence per result_id from the given sentence table."""
+    sentences = {}
+    with conn.cursor(
+        name=f"{table}_cursor", cursor_factory=psycopg2.extras.DictCursor
+    ) as cur:
+        cur.itersize = 50000
+        cur.execute(
+            f"""
+            SELECT DISTINCT ON (result_id) result_id, sentence
+            FROM {table}
+            ORDER BY result_id, length(sentence) DESC
+        """
+        )
+        for row in cur:
+            sentences[row["result_id"]] = row["sentence"]
+    return sentences
+
+
+def fetch_manually_annotated(conn):
+    manually_annotated = defaultdict(list)
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute("SELECT pmcid, urs FROM litscan_manually_annotated")
+        for row in cur:
+            manually_annotated[row["pmcid"]].append(row["urs"])
+    return manually_annotated
+
+
+def fetch_organisms(conn):
+    organisms = defaultdict(list)
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute(
+            """
+            SELECT o.pmcid, t.name
+            FROM litscan_organism o
+            JOIN rnc_taxonomy t ON o.organism = t.id
+        """
+        )
+        for row in cur:
+            organisms[row["pmcid"]].append(row["name"])
+    return organisms
+
+
 @click.command()
-@click.argument('database')
-@click.argument('directory')
+@click.argument("database")
+@click.argument("directory")
 def main(database, directory):
     """
     Get the data that will be used by the search index.
-    I tried to fetch all data in one query (query available at the end of this
-    file), but that requires a large amount of RAM. A second approach was made
-    using two queries (the second query was to fetch organism data), but that
-    still requires 65GB of RAM. This task usually takes about 3 hours and for
-    now it will stay like this.
 
     :param database: params to connect to the db
     :param directory: directory to store xml files
     :return: None
     """
-    conn_string = database
-    conn = psycopg2.connect(conn_string)
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
 
-    # get articles
-    articles_list = []
-    cursor.execute(""" SELECT * FROM litscan_article WHERE retracted IS NOT TRUE """)
-    rows = cursor.fetchall()
+    conn = psycopg2.connect(database)
 
-    for row in rows:
-        article = collections.OrderedDict()
-        article['pmcid'] = row[0]
-        article['title'] = row[1]
-        article['abstract'] = row[2]
-        article['author'] = row[3]
-        article['pmid'] = row[4]
-        article['doi'] = row[5]
-        article['year'] = str(row[6])
-        article['journal'] = row[7]
-        article['score'] = str(row[8])
-        article['cited_by'] = str(row[9])
-        article['type'] = row[11]
-        article['rna_related'] = row[12]
-        articles_list.append(article)
+    # Pre-fetch all related data into in-memory lookups so we avoid the
+    # per-article N+1 query pattern that previously made this script crawl.
+    results_by_pmcid = fetch_results_by_pmcid(conn)
+    abstract_sentences = fetch_longest_sentences(conn, "litscan_abstract_sentence")
+    body_sentences = fetch_longest_sentences(conn, "litscan_body_sentence")
+    manually_annotated_by_pmcid = fetch_manually_annotated(conn)
+    organisms_by_pmcid = fetch_organisms(conn)
 
-    for article in articles_list:
-        # get results
-        results_list = []
-        cursor.execute("SELECT * FROM litscan_result WHERE pmcid=%s", (article['pmcid'],))
-        rows = cursor.fetchall()
+    # Stream articles via a server-side cursor and write XML in batches.
+    batch = []
+    batch_size = 50000
+    with conn.cursor(
+        name="articles_cursor", cursor_factory=psycopg2.extras.DictCursor
+    ) as cur:
+        cur.itersize = 10000
+        cur.execute(
+            """
+            SELECT pmcid, title, abstract, author, pmid, doi, year, journal,
+                   score, cited_by, type, rna_related
+            FROM litscan_article
+            WHERE retracted IS NOT TRUE
+        """
+        )
+        for row in cur:
+            pmcid = row["pmcid"]
+            article = {
+                "pmcid": pmcid,
+                "title": row["title"],
+                "abstract": row["abstract"],
+                "author": row["author"],
+                "pmid": row["pmid"],
+                "doi": row["doi"],
+                "year": str(row["year"]),
+                "journal": row["journal"],
+                "score": str(row["score"]),
+                "cited_by": str(row["cited_by"]),
+                "type": row["type"],
+                "rna_related": row["rna_related"],
+            }
 
-        for row in rows:
-            result = collections.OrderedDict()
-            result['id'] = row[0]
-            result['job_id'] = row[2]
-            result['id_in_title'] = str(row[3])
-            result['id_in_abstract'] = str(row[4])
-            result['id_in_body'] = str(row[5])
-            results_list.append(result)
+            results = results_by_pmcid.get(pmcid, [])
+            for result in results:
+                result["abstract_sentence"] = abstract_sentences.get(result["id"], "")
+                result["body_sentence"] = body_sentences.get(result["id"], "")
+            article["result"] = results
+            article["manually_annotated"] = manually_annotated_by_pmcid.get(pmcid, [])
+            article["organisms"] = organisms_by_pmcid.get(pmcid, [])
 
-        for result in results_list:
-            # get display_id
-            cursor.execute("SELECT display_id FROM litscan_job WHERE job_id=%s", (result['job_id'],))
-            result['display_id'] = cursor.fetchone()[0]
+            batch.append(article)
+            if len(batch) >= batch_size:
+                create_xml_file(batch, directory)
+                batch = []
 
-            # get abstract sentence
-            cursor.execute("SELECT sentence FROM litscan_abstract_sentence WHERE result_id=%s ORDER BY length(sentence) DESC LIMIT 1", (result['id'],))
-            sentence = cursor.fetchone()
-            result['abstract_sentence'] = sentence[0] if sentence else ""
+    if batch:
+        create_xml_file(batch, directory)
 
-            # get body sentence
-            cursor.execute("SELECT sentence FROM litscan_body_sentence WHERE result_id=%s ORDER BY length(sentence) DESC LIMIT 1", (result['id'],))
-            sentence = cursor.fetchone()
-            result['body_sentence'] = sentence[0] if sentence else ""
-
-        article['result'] = results_list
-
-        # check if this article was manually annotated for any URS
-        manually_annotated = []
-        cursor.execute("SELECT urs FROM litscan_manually_annotated WHERE pmcid=%s", (article['pmcid'],))
-        rows = cursor.fetchall()
-
-        for row in rows:
-            manually_annotated.append(row[0])
-
-        article['manually_annotated'] = manually_annotated
-
-        # get organism
-        organisms = []
-        cursor.execute("SELECT organism FROM litscan_organism WHERE pmcid=%s", (article['pmcid'],))
-        rows = cursor.fetchall()
-
-        for row in rows:
-            organisms.append(row[0])
-
-        organisms_names = []
-        for organism in organisms:
-            cursor.execute("SELECT name FROM rnc_taxonomy WHERE id=%s", (organism,))
-            organisms_names.append(cursor.fetchone()[0])
-
-        article['organisms'] = organisms_names
-
-    for i in range(0, len(articles_list), 50000):
-        create_xml_file(articles_list[i:i + 50000], directory)
+    conn.close()
 
 
 if __name__ == "__main__":
     main()
-
-# cursor.execute("""
-#     SELECT
-#         a.pmcid, a.title, a.abstract, a.author, a.pmid, a.doi, a.year, a.journal, a.score, a.cited_by, a.type,
-#         r.id AS result_id, r.job_id, r.id_in_title, r.id_in_abstract, r.id_in_body,
-#         j.display_id,
-#         abs_s.sentence AS abstract_sentence,
-#         bod_s.sentence AS body_sentence,
-#         ma.urs AS manually_annotated
-#     FROM litscan_article a
-#     LEFT JOIN litscan_result r ON r.pmcid = a.pmcid
-#     LEFT JOIN litscan_job j ON r.job_id = j.job_id
-#     LEFT JOIN (SELECT result_id, sentence FROM litscan_abstract_sentence ORDER BY length(sentence) DESC LIMIT 1) abs_s ON abs_s.result_id = r.id
-#     LEFT JOIN (SELECT result_id, sentence FROM litscan_body_sentence ORDER BY length(sentence) DESC LIMIT 1) bod_s ON bod_s.result_id = r.id
-#     LEFT JOIN litscan_manually_annotated ma ON ma.pmcid = a.pmcid
-#     WHERE a.retracted IS NOT TRUE;
-# """)
-# rows = cursor.fetchall()
