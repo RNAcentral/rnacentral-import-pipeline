@@ -12,7 +12,7 @@ on:
         required: false
         type: boolean
         default: false
-        
+
 jobs:
 
   starting-notification:
@@ -26,7 +26,7 @@ jobs:
          SLACK_MESSAGE: 'Creating new pipeline image in docker hub'
          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
          MSG_MINIMAL: true
-  
+
   trigger-rust-build:
     runs-on: ubuntu-latest
     if: inputs.force_rust_build == true
@@ -60,9 +60,9 @@ jobs:
             echo "Force Rust rebuild requested"
             exit 0
           fi
-          
+
           # Otherwise check for actual changes
-          if git diff --name-only HEAD^ HEAD | grep -qE '\.(rs|toml|lock)$'; then
+          if git diff --name-only HEAD^ HEAD | grep -qE '^(utils/|Cargo\.(toml|lock))'; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "Rust files changed, waiting for rust-container workflow..."
           else

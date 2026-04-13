@@ -67,12 +67,12 @@ process prepare_to_submit {
     """
 }
 
-process submit_ids {
+process register_ids {
     input:
     val(_flag)
 
     output:
-    val('done')
+    path("registered_ids.txt")
 
     script:
     """
@@ -80,38 +80,37 @@ process submit_ids {
     find $baseDir/workflows/litscan/submit/ -name "*.txt" -print0 | xargs -0 sed '/^URS/d' > all_ids.txt
     tr A-Z a-z < all_ids.txt | sort -u > all_ids_sorted.txt
 
-    # get ids already scanned by LitScan (Expert DB ids only)
-    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id not like 'urs%' ORDER BY job_id) TO STDOUT;" $PGDATABASE > old_ids.txt
+    # get ids already registered in LitScan (Expert DB ids only)
+    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id not like 'urs%' AND status = 'success' ORDER BY job_id) TO STDOUT;" \$PGDATABASE > old_ids.txt
     sort old_ids.txt > old_ids_sorted.txt
 
     # get new ids
     comm -13 old_ids_sorted.txt all_ids_sorted.txt > new_ids.txt
 
+    touch registered_ids.txt
     if [ -s new_ids.txt ]; then
-      # new_ids.txt is not empty
-      # get original ids (not in lowercase)
-      # TODO: improve performance. This step may take a long time depending on the number of IDs.
-      while IFS= read -r line; do
-        grep -ixF "\$line" all_ids.txt | head -1 >> results.txt
-      done < new_ids.txt
+      # get original ids (not in lowercase) - single pass, no subprocess per line
+      awk '
+        NR==FNR { ids[tolower(\$0)] = 1; next }
+        tolower(\$0) in ids && !seen[tolower(\$0)]++ { print }
+      ' new_ids.txt all_ids.txt >> results.txt
 
-      # submit new ids only
-      litscan-upload-ids.sh results.txt
-      count=\$(sed -n '\$=' results.txt)
-      curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new id/gene/synonym submitted"}' \$LITSCAN_SLACK_WEBHOOK
+      # register new ids in the database
+      litscan-register-ids.py results.txt registered_ids.txt
+      count=\$(wc -l < registered_ids.txt)
+      curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new id/gene/synonym registered for scanning"}' \$LITSCAN_SLACK_WEBHOOK
     else
-      # new_ids.txt is empty
-      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new id/gene/synonym to submit"}' $LITSCAN_SLACK_WEBHOOK
+      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new id/gene/synonym to register"}' \$LITSCAN_SLACK_WEBHOOK
     fi
     """
 }
 
-process submit_urs {
+process register_urs {
     input:
-    val(_flag)
+    path(registered_ids)
 
     output:
-    val('done')
+    path("registered_urs.txt")
 
     script:
     """
@@ -119,28 +118,26 @@ process submit_urs {
     find $baseDir/workflows/litscan/submit/ -name "*.txt" -print0 | xargs -0 sed '/^URS/!d' > output.txt
     tr a-z A-Z < output.txt | sort -u > urs.txt
 
-    # get URS already scanned by LitScan
-    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id like 'urs%' ORDER BY job_id) TO STDOUT;" $PGDATABASE > urs_lower.txt
+    # get URS already registered in LitScan
+    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id like 'urs%' AND status = 'success' ORDER BY job_id) TO STDOUT;" \$PGDATABASE > urs_lower.txt
     tr a-z A-Z < urs_lower.txt > urs_in_db.txt
 
     # get new URS
     comm -13 urs_in_db.txt urs.txt > new_urs.txt
 
+    touch registered_urs.txt
     if [ -s new_urs.txt ]; then
-      # new_urs.txt is not empty
-      # submit new URS
-      litscan-upload-ids.sh new_urs.txt
-      count=\$(sed -n '\$=' new_urs.txt)
-      curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new URS submitted"}' \$LITSCAN_SLACK_WEBHOOK
+      litscan-register-ids.py new_urs.txt registered_urs.txt
+      count=\$(wc -l < registered_urs.txt)
+      curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new URS registered for scanning"}' \$LITSCAN_SLACK_WEBHOOK
     else
-      # new_urs.txt is empty
-      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new URS to submit"}' $LITSCAN_SLACK_WEBHOOK
+      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new URS to register"}' \$LITSCAN_SLACK_WEBHOOK
     fi
     """
 }
 
 workflow search_new_ids {
-    emit: done
+    emit: new_ids
     main:
       Channel.of("Starting LitScan pipeline") | slack_message
 
@@ -150,9 +147,11 @@ workflow search_new_ids {
       | sort_ids \
       | prepare_to_submit \
       | collect \
-      | submit_ids \
-      | submit_urs \
-      | set { done }
+      | register_ids
+
+      register_ids.out | register_urs
+
+      new_ids = register_ids.out.mix(register_urs.out)
 }
 
 workflow {

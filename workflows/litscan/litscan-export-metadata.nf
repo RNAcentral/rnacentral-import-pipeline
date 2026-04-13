@@ -74,7 +74,7 @@ process load_database_table {
 
     script:
     """
-    pgloader --on-error-stop $ctl
+    pgloader --on-error-stop --with "drop indexes" $ctl
     """
 }
 
@@ -102,7 +102,7 @@ process save_statistics {
     val('done')
 
     """
-    pgloader --on-error-stop $ctl
+    pgloader --on-error-stop --with "drop indexes" $ctl
     curl -X POST -H 'Content-type: application/json' --data '{"text":"LitScan workflow completed"}' $LITSCAN_SLACK_WEBHOOK
     """
 }

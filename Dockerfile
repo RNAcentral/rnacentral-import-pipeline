@@ -33,7 +33,7 @@ COPY --from=rust-utils /rna/wheels/*.whl /tmp/wheels/
 RUN uv pip install /tmp/wheels/*.whl
 
 # Download NLTK data
-RUN /app/.venv/bin/python3 -m nltk.downloader words
+RUN /app/.venv/bin/python3 -m nltk.downloader -d /app/.venv/nltk_data words punkt punkt_tab
 
 # Stage 5: Final runtime image
 FROM python:3.11.14-trixie
@@ -144,5 +144,6 @@ ENV PATH="$RNA/blat_suite:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE/bin:$PATH"
 ENV PATH="$RNA/venv/bin:$PATH"
+ENV NLTK_DATA="$RNA/venv/nltk_data"
 
 ENTRYPOINT ["/bin/bash"]
