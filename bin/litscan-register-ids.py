@@ -53,6 +53,10 @@ def main():
                     WHERE j.job_id = v.job_id
                     AND j.status IN ('pending', 'success')
                 )
+                ON CONFLICT (job_id) DO UPDATE
+                    SET status = 'pending',
+                        submitted = EXCLUDED.submitted,
+                        display_id = EXCLUDED.display_id
                 RETURNING job_id
                 """,
                 rows,
