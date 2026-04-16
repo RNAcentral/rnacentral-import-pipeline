@@ -46,6 +46,8 @@ process load_job {
   input:
     path csv_files
 
+  output:
+    val true
 
   """
   psql "$PSYCOPG_CONN" << EOF
@@ -145,6 +147,7 @@ workflow scan_new_ids {
         | toList
         | load_job
 
+      done = load_job.out
 }
 
 workflow {
