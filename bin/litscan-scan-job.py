@@ -17,101 +17,94 @@ import datetime
 import logging
 import os
 import re
-import sys
-import time
-from xml.etree import ElementTree as ET
-from xml.etree.ElementTree import ParseError
+from contextlib import ExitStack
+from functools import partial
+from pathlib import Path
 
 import joblib
 import nltk
+import polars as pl
 import psycopg2
-import requests
+from lxml.etree import ElementTree as ET
 
-logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-EUROPE_PMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
+
+def get_previous_searches(conn, job_ids):
+    """
+    PostgreSQL/psycopg2 optimized version using the ANY() operator.
+    """
+    query = "SELECT job_id, pmcid FROM litscan_result WHERE job_id = ANY(%s)"
+
+    df = pl.read_database(
+        query=query, connection=conn, execute_options={"parameters": (job_ids,)}
+    )
+    return df
 
 
 # ---------------------------------------------------------------------------
-# Text helpers  (from rnacentral-references/training/export_data.py)
+# Core scan logic  (ported from seek_references() in submit_job.py)
 # ---------------------------------------------------------------------------
 
-
-def clean_text(text):
-    text = text.lower()
-    text = re.sub(r"<[^>]*>", " ", text)
-    text = re.sub(r"\[.*?\]", "", text)
-    text = re.sub(r"https?://\S+|www\.\S+", "", text)
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
-
-
-# ---------------------------------------------------------------------------
-# XML helpers  (from rnacentral-references/consumer/views/submit_job.py)
-# ---------------------------------------------------------------------------
-
-_AVOID_TAGS = {
-    "xref",
-    "ext-link",
-    "media",
-    "caption",
-    "monospace",
-    "label",
-    "disp-formula",
-    "inline-formula",
-    "inline-graphic",
-    "def",
-    "def-list",
-    "def-item",
-    "term",
-    "funding-source",
-    "award-id",
-    "graphic",
-    "alternatives",
-    "tex-math",
-    "sec-meta",
-    "kwd-group",
-    "kwd",
-    "object-id",
-    "{http://www.w3.org/1998/Math/MathML}math",
-    "{http://www.w3.org/1998/Math/MathML}mrow",
-    "{http://www.w3.org/1998/Math/MathML}mi",
-    "{http://www.w3.org/1998/Math/MathML}mo",
-    "{http://www.w3.org/1998/Math/MathML}msub",
-    "{http://www.w3.org/1998/Math/MathML}mn",
-    "{http://www.w3.org/1998/Math/MathML}msup",
-    "{http://www.w3.org/1998/Math/MathML}mtext",
-    "{http://www.w3.org/1998/Math/MathML}msubsup",
-    "{http://www.w3.org/1998/Math/MathML}mover",
-    "{http://www.w3.org/1998/Math/MathML}mstyle",
-    "{http://www.w3.org/1998/Math/MathML}munderover",
-    "{http://www.w3.org/1998/Math/MathML}mspace",
-    "{http://www.w3.org/1998/Math/MathML}mfenced",
-    "{http://www.w3.org/1998/Math/MathML}mpadded",
-    "{http://www.w3.org/1998/Math/MathML}mfrac",
-    "{http://www.w3.org/1998/Math/MathML}msqrt",
+bad_tags = {
+    "counts",
+    "table-wrap",
+    "table",
+    "fig-group",
+    "fig",
+    "supplementary-material",
 }
 
 
-def get_text(sec):
-    sec_sentences = [
-        "".join(item.itertext())
-        for item in sec.iter(tag="p")
-        if item.text and item.tag not in _AVOID_TAGS
-    ]
-    sec_sentences = [" ".join(s.split()) for s in sec_sentences if len(s.split()) > 1]
-    return " ".join(sec_sentences) if sec_sentences else ""
+def extract_clean_text(element):
+    # .itertext() grabs all text fragments inside the element and its children
+    raw_text_pieces = element.itertext()
+
+    # We strip out weird XML whitespace/newlines and ignore empty chunks,
+    # then join everything back together with a single clean space.
+    clean_text = " ".join(piece.strip() for piece in raw_text_pieces if piece.strip())
+
+    return clean_text
 
 
-def get_sections(tree):
-    sections = tree.findall("./body/sec")
-    section_map = {}
-    count = 0
-    for sec in sections:
-        sec_title = sec.find("title")
-        try:
-            t = sec_title.text.lower()
+def get_section_text(element, ignore_tags):
+    """Extracts text, but stops at nested <sec> tags to prevent duplication."""
+    if not isinstance(element.tag, str):
+        return ""
+
+    text_pieces = []
+    if element.text:
+        text_pieces.append(element.text)
+
+    for child in element:
+        if not isinstance(child.tag, str):
+            continue
+
+        # We add 'sec' to the ignore list so we don't recurse into sub-sections.
+        # We also ignore 'title' so the section header isn't duplicated in the body text.
+        if child.tag not in ignore_tags and child.tag not in ["sec", "title"]:
+            text_pieces.append(get_section_text(child, ignore_tags))
+
+        # ALWAYS grab the tail, even if we ignored the tag itself!
+        if child.tail:
+            text_pieces.append(child.tail)
+
+    return " ".join(piece.strip() for piece in text_pieces if piece and piece.strip())
+
+
+def parse_body_to_dict(body_elem, ignore_tags):
+    sections_dict = {}
+
+    # Find every <sec> tag anywhere in the body
+    for i, sec in enumerate(body_elem.findall(".//sec")):
+
+        # 1. Grab the Title
+        title_tag = sec.find("title")
+        if title_tag is not None:
+            # Use itertext() just in case the title has bold/italic tags inside it
+            section_name = "".join(title_tag.itertext()).strip()
+            t = section_name.lower()
             if re.match(r".*intro.+", t):
                 key = "intro"
             elif re.match(r".*results", t):
@@ -124,478 +117,254 @@ def get_sections(tree):
                 key = "method"
             else:
                 key = "other"
-        except AttributeError:
+        else:
             key = "other"
-        section_map[key + str(count)] = sec
-        count += 1
-    return section_map
+
+        # Prevent key collisions (e.g., if there are two "Results" sub-sections)
+        if key in sections_dict:
+            section_name = f"{key}_{i+1}"
+
+        # 2. Grab the Text (excluding nested sections)
+        section_text = get_section_text(sec, ignore_tags)
+
+        # 3. Add to dictionary if it actually contains text
+        if section_text:
+            sections_dict[key] = section_text
+
+    return sections_dict
 
 
-# ---------------------------------------------------------------------------
-# Europe PMC API
-# ---------------------------------------------------------------------------
+def parse_floats_to_dict(floats_elem):
+    floats_dict = {"figures": {}, "tables": {}}
+    if floats_elem is not None:
+        # Set up a dictionary with sub-categories
+
+        # --- 1. Process Figures ---
+        for fig in floats_elem.findall(".//fig"):
+            # .findtext() safely grabs the text, or returns None if the tag doesn't exist
+            fig_label = fig.findtext("label") or "Unknown_Figure"
+
+            caption_tag = fig.find("caption")
+            if caption_tag is not None:
+                caption_text = get_section_text(caption_tag, ignore_tags=[])
+                floats_dict["figures"][fig_label] = nltk.sent_tokenize(caption_text)
+
+        # --- 2. Process Tables ---
+        for table in floats_elem.findall(".//table-wrap"):
+            table_label = table.findtext("label") or "Unknown_Table"
+
+            caption_tag = table.find("caption")
+            if caption_tag is not None:
+                # We use the exact same get_section_text function here!
+                caption_text = get_section_text(caption_tag, ignore_tags=[])
+                floats_dict["tables"][table_label] = nltk.sent_tokenize(caption_text)
+
+    return floats_dict
 
 
-def articles_list(job_id, query_filter, date, page="*"):
-    search_date = (
-        f" AND (FIRST_PDATE:[{date} TO {datetime.date.today().strftime('%Y-%m-%d')}])"
-        if date
-        else ""
-    )
-    qf = f" AND {query_filter}" if query_filter else ""
-    query = (
-        f'search?query=("{job_id}"{qf} AND IN_EPMC:Y AND OPEN_ACCESS:Y AND NOT SRC:PPR{search_date})'
-        f"&sort_date:y&pageSize=500&cursorMark={page}"
-    )
-    try:
-        response = requests.get(EUROPE_PMC + query, timeout=60)
-        response.raise_for_status()
-        articles = response.text
-    except requests.exceptions.RequestException as e:
-        logger.warning("Error fetching article list from Europe PMC: %s", e)
-        return [], None
+def extract_article(elem, rna_pipeline, regex):
+    title = ""
+    abstract = ""
+    body = {}
+    floats = {}
 
-    try:
-        root = ET.fromstring(articles)
-    except ParseError:
-        return [], None
+    title = extract_clean_text(elem.find(".//article-title"))
+    abstract = extract_clean_text(elem.find(".//abstract"))
+    body = parse_body_to_dict(elem.find(".//body"), ignore_tags=bad_tags)
+    floats = parse_floats_to_dict(elem)
 
-    pmcid_list = [
-        {"pmcid": item.find("pmcid").text, "cited_by": item.find("citedByCount").text}
-        for item in root.findall("./resultList/result")
-        if item.find("pmcid") is not None and item.find("citedByCount") is not None
+    ## Use regex to find stuff
+    abstract_sentences = [
+        s for s in nltk.sent_tokenize(abstract) if re.search(regex, s.lower())
     ]
-    try:
-        next_page = root.find("nextCursorMark").text
-    except AttributeError:
-        next_page = None
+    id_in_abstract = len(abstract_sentences) > 0
+    id_in_title = bool(re.search(regex, title.lower()))
 
-    return pmcid_list, next_page
+    body_sentences = []
+    locations = []
+    for key, section_text in body.items():
+        section_sentences = [
+            s for s in nltk.sent_tokenize(section_text) if re.search(regex, s.lower())
+        ]
+        body_sentences.extend(section_sentences)
+        locations.extend([key] * len(section_sentences))
 
+    id_in_body = len(body_sentences) > 0
 
-# ---------------------------------------------------------------------------
-# DB helpers (synchronous psycopg2)
-# ---------------------------------------------------------------------------
+    doi = elem.find('.//article-id[@pub-id-type="doi"]') or ""
+    pmid = elem.find('.//article-id[@pub-id-type="pmid"]') or ""
 
+    year = 0
+    for item in elem.findall("./front/article-meta/pub-date"):
+        if {"epub", "ppub", "pub"}.intersection(item.attrib.values()):
+            year_el = item.find("year")
+            if year_el is not None and year_el.text:
+                year = int(year_el.text)
 
-def get_query_and_limit(cur, job_id):
-    cur.execute(
-        "SELECT query, search_limit FROM litscan_job WHERE job_id = %s", (job_id,)
-    )
-    row = cur.fetchone()
-    return (row[0], row[1]) if row else (None, None)
+    journal = ""
+    journal_el = elem.find("./front/journal-meta/journal-title-group/journal-title")
+    if journal_el is None:
+        journal_el = elem.find("./front/journal-meta/journal-title")
+    if journal_el is not None:
+        journal = journal_el.text or ""
 
+    authors = []
 
-def get_search_date(cur, job_id):
-    cur.execute("SELECT finished FROM litscan_job WHERE job_id = %s", (job_id,))
-    row = cur.fetchone()
-    return row[0] if row else None
+    for auth in elem.findall(".//contrib-group//name"):
+        surname = auth.findtext("surname", default="").strip()
+        given = auth.findtext("given-names", default="").strip()
 
+        if surname and given:
+            authors.append(f"{surname}, {given}")
+        elif surname or given:
+            authors.append(surname + given)
 
-def set_job_status(cur, job_id, status):
-    if status in ("success", "error"):
-        cur.execute(
-            "UPDATE litscan_job SET status = %s, finished = %s WHERE job_id = %s",
-            (status, datetime.datetime.now(), job_id),
-        )
-    else:
-        cur.execute(
-            "UPDATE litscan_job SET status = %s WHERE job_id = %s",
-            (status, job_id),
-        )
+    author = "; ".join(authors)
 
-
-def get_pmcid_in_result(cur, job_id):
-    cur.execute("SELECT pmcid FROM litscan_result WHERE job_id = %s", (job_id,))
-    return [row[0] for row in cur.fetchall()]
-
-
-def get_pmcid(cur, pmcid):
-    cur.execute("SELECT pmcid FROM litscan_article WHERE pmcid = %s", (pmcid,))
-    row = cur.fetchone()
-    return row[0] if row else None
-
-
-def save_article(cur, article):
-    cur.execute(
-        """
-        INSERT INTO litscan_article
-            (pmcid, title, abstract, author, pmid, doi, year, journal,
-             score, cited_by, retracted, rna_related, probability, type)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT (pmcid) DO NOTHING
-        """,
-        (
-            article["pmcid"],
-            article["title"],
-            article.get("abstract", ""),
-            article["author"],
-            article["pmid"],
-            article["doi"],
-            article["year"],
-            article["journal"],
-            article["score"],
-            article["cited_by"],
-            article["retracted"],
-            article["rna_related"],
-            article["probability"],
-            article.get("type", ""),
-        ),
+    article_type = (
+        elem.attrib.get("article-type", "").strip().replace("-", " ").capitalize()
     )
 
+    probability, rna_related = classify_abstract(abstract, rna_pipeline)
 
-def save_result(cur, result):
-    cur.execute(
-        """
-        INSERT INTO litscan_result (pmcid, job_id, id_in_title, id_in_abstract, id_in_body)
-        VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (pmcid, job_id) DO NOTHING
-        RETURNING id
-        """,
-        (
-            result["pmcid"],
-            result["job_id"],
-            result["id_in_title"],
-            result["id_in_abstract"],
-            result["id_in_body"],
-        ),
-    )
-    row = cur.fetchone()
-    return row[0] if row else None
-
-
-def save_abstract_sentences(cur, sentences):
-    cur.executemany(
-        "INSERT INTO litscan_abstract_sentence (result_id, sentence) VALUES (%s, %s)",
-        [(s["result_id"], s["sentence"]) for s in sentences],
-    )
+    return {
+        "title": title,
+        "abstract": nltk.sent_tokenize(abstract),
+        "body": body,
+        "floats": floats,
+        "doi": doi,
+        "pmid": pmid,
+        "year": year,
+        "journal": journal,
+        "author": author,
+        "rna_related": rna_related,
+        "probability": probability,
+        "id_in_title": id_in_title,
+        "id_in_abstract": id_in_abstract,
+        "id_in_body": id_in_body,
+        "abstract_sentences": abstract_sentences,
+        "body_sentences": body_sentences,
+        "locations": locations,
+        "score": len(abstract_sentences) + len(body_sentences),
+        "retracted": False,
+        "type": article_type,
+    }
 
 
-def save_body_sentences(cur, sentences):
-    cur.executemany(
-        "INSERT INTO litscan_body_sentence (result_id, sentence, location) VALUES (%s, %s, %s)",
-        [(s["result_id"], s["sentence"], s["location"]) for s in sentences],
-    )
+def classify_abstract(abstract_text, rna_pipeline):
+    probability = rna_pipeline.predict_proba([abstract_text])[0][1]
+    rna_related = probability >= 0.5
+    probability = round(float(probability), 2)
+
+    return probability, rna_related
 
 
-def get_hit_count(cur, job_id):
-    cur.execute("SELECT hit_count FROM litscan_job WHERE job_id = %s", (job_id,))
-    row = cur.fetchone()
-    return row[0] if (row and row[0] is not None) else 0
-
-
-def save_hit_count(cur, job_id, hit_count):
-    cur.execute(
-        "UPDATE litscan_job SET hit_count = %s WHERE job_id = %s",
-        (hit_count, job_id),
-    )
-
-
-# ---------------------------------------------------------------------------
-# Core scan logic  (ported from seek_references() in submit_job.py)
-# ---------------------------------------------------------------------------
-
-
-def scan_job(job_id, conn, rna_pipeline):
+def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
     start = datetime.datetime.now()
+    n_requested = len(pmcid_list)
+    logger.info(
+        "scan_job start job_id=%s pmcids=%d xml=%s",
+        job_id,
+        n_requested,
+        xml_file_path,
+    )
+
+    context = ET.iterparse(xml_file_path, events=("end",))
+    cite_lookup = {pmcid: cc for pmcid, cc in zip(pmcid_list, cite_counts)}
+    pmcid_list = set(pmcid_list)
+    articles = []
+
     # word-boundary regex matching the job_id in article text
     regex = (
         r"(^|\s|\(|\u201c|\u2018|\u201d|\;)"
         + re.escape(job_id.lower())
         + r"($|[\s.,:;?\u2019\u201d\u201c\"/)])"
     )
-    pmcid_list = []
-    hit_count = 0
 
-    with conn.cursor() as cur:
-        set_job_status(cur, job_id.lower(), "started")
-        conn.commit()
+    for event, elem in context:
 
-        last_search = get_search_date(cur, job_id.lower())
-        date = last_search.date() if last_search else None
-
-        query_filter, search_limit = get_query_and_limit(cur, job_id.lower())
-        if query_filter:
-            query_filter = query_filter.lower().replace(job_id.lower(), "")
-        search_limit = search_limit if search_limit else 1_000_000
-
-        # ---- collect article list from Europe PMC ----
-        temp_list, next_page = articles_list(job_id, query_filter, date)
-        for item in temp_list:
-            if len(pmcid_list) < search_limit and item not in pmcid_list:
-                pmcid_list.append(item)
-
-        while len(pmcid_list) < search_limit and next_page:
-            temp_list, next_page = articles_list(job_id, query_filter, date, next_page)
-            for item in temp_list:
-                if len(pmcid_list) < search_limit and item not in pmcid_list:
-                    pmcid_list.append(item)
-
-        # on re-scan, skip articles already processed for this job
-        if date and pmcid_list:
-            pmcid_in_db = get_pmcid_in_result(cur, job_id.lower())
-            pmcid_list = [
-                item for item in pmcid_list if item["pmcid"] not in pmcid_in_db
-            ]
-
-        # ---- process each article ----
-        for element in pmcid_list:
-            time.sleep(0.6)  # respect Europe PMC rate limit (10 req/s)
-
-            try:
-                response = requests.get(
-                    EUROPE_PMC + element["pmcid"] + "/fullTextXML", timeout=60
-                )
-                response.raise_for_status()
-                get_article = response.text
-            except requests.exceptions.RequestException as e:
-                logger.warning("Error fetching %s: %s", element["pmcid"], e)
-                get_article = None
-
-            if not get_article:
-                continue
-
-            # extract text sections
-            abstract_txt = re.search(
-                r"<abstract(.*?)</abstract>", get_article, re.DOTALL
-            )
-            body_txt = re.search(r"<body(.*?)</body>", get_article, re.DOTALL)
-            floats_txt = re.search(
-                r"<floats-group(.*?)</floats-group>", get_article, re.DOTALL
-            )
-
-            if abstract_txt and body_txt and floats_txt:
-                full_txt = abstract_txt[0] + body_txt[0] + floats_txt[0]
-            elif abstract_txt and body_txt:
-                full_txt = abstract_txt[0] + body_txt[0]
-            elif body_txt:
-                full_txt = body_txt[0]
-            else:
-                continue
-
-            # quick check: job_id actually appears in the text
-            full_txt_no_tags = re.sub(r"<[^>]*>", " ", full_txt)
-            if not re.search(regex, full_txt_no_tags.lower()):
-                continue
-
-            # remove tables, figures, supplementary material before full parse
-            full_txt = re.sub(
-                r"(?is)<(counts|table-wrap|table|fig-group|fig|supplementary-material).*?>.*?(</\1>)",
-                "",
-                get_article,
-            )
-
-            try:
-                article = ET.fromstring(full_txt)
-            except ParseError as e:
-                logger.warning("XML parse error for %s: %s", element["pmcid"], e)
-                continue
-
-            # skip non-English articles
-            if (
-                article.find("./front/article-meta/title-group/trans-title-group")
-                is not None
-            ):
-                continue
-
-            # title
-            get_title = article.find("./front/article-meta/title-group/article-title")
-            try:
-                title = "".join(get_title.itertext()).strip()
-            except AttributeError:
-                continue
-
-            result_response = {
-                "id_in_title": job_id.lower() in title.lower(),
-                "job_id": job_id.lower(),
-                "pmcid": element["pmcid"],
-            }
-
-            # abstract
-            abstract_types = [
-                "teaser",
-                "web-summary",
-                "summary",
-                "precis",
-                "graphical",
-                "author-highlights",
-            ]
-            get_abstract_tags = [
-                item
-                for item in article.findall(".//abstract")
-                if not any(v in item.attrib.values() for v in abstract_types)
-            ]
-            abstract_text = [" ".join(item.itertext()) for item in get_abstract_tags]
-            abstract = " ".join(abstract_text).replace(" .", ".").replace("  ", " ")
-
-            abstract_sentences = [
-                s for s in nltk.sent_tokenize(abstract) if re.search(regex, s.lower())
-            ]
-            result_response["id_in_abstract"] = bool(abstract_sentences)
-
-            # body sentences
-            sections = get_sections(article)
-            body_sentences = {}
-            for section_name, section in sections.items():
-                item_text = get_text(section)
-                tokenized = nltk.sent_tokenize(item_text)
-                body_sentences[section_name] = []
-                for idx, sentence in enumerate(tokenized):
-                    if re.search(regex, sentence.lower()) and len(sentence.split()) > 3:
-                        prev_s = tokenized[idx - 1] if idx > 0 else None
-                        next_s = (
-                            tokenized[idx + 1] if idx < len(tokenized) - 1 else None
+        if elem.tag == "article":
+            id_tag = elem.find('.//article-id[@pub-id-type="pmcid"]')
+            if id_tag is not None:
+                current_id = id_tag.text
+                if current_id in pmcid_list:
+                    logger.debug("Found %s for job_id=%s", current_id, job_id)
+                    if elem.find(".//trans-title-group") is not None:
+                        logger.debug(
+                            "Skipping %s: trans-title-group present", current_id
                         )
-                        if prev_s and next_s:
-                            body_sentences[section_name].append(
-                                prev_s + " " + sentence + " " + next_s
-                            )
-                        elif prev_s:
-                            body_sentences[section_name].append(prev_s + " " + sentence)
-                        elif next_s:
-                            body_sentences[section_name].append(sentence + " " + next_s)
-                        else:
-                            body_sentences[section_name].append(sentence)
-
-            if abstract_sentences and not any(body_sentences.values()):
-                result_response["id_in_body"] = False
-            elif not abstract_sentences and not any(body_sentences.values()):
-                result_response["id_in_body"] = True
-                body_sentences["other"] = [
-                    "%s found in an image, table or supplementary material" % job_id
-                ]
-            else:
-                result_response["id_in_body"] = True
-
-            # save article metadata if not already in DB
-            article_in_db = get_pmcid(cur, element["pmcid"])
-            if not article_in_db:
-                article_response = {
-                    "pmcid": element["pmcid"],
-                    "title": title,
-                    "abstract": abstract,
-                    "retracted": False,
-                    "score": len(abstract_sentences) + len(body_sentences),
-                }
-
-                try:
-                    cited_by = int(element.get("cited_by") or 0)
-                except (ValueError, TypeError):
-                    cited_by = 0
-                article_response["cited_by"] = cited_by
-
-                article_response["type"] = (
-                    article.attrib.get("article-type", "")
-                    .strip()
-                    .replace("-", " ")
-                    .capitalize()
-                )
-
-                # authors
-                article_response["author"] = ""
-                contrib_group = article.find("./front/article-meta/contrib-group")
-                if contrib_group is not None:
-                    authors = []
-                    for auth in contrib_group.findall(".//name"):
-                        surname_el = auth.find("surname")
-                        given_el = auth.find("given-names")
-                        surname = (
-                            (surname_el.text or "") if surname_el is not None else ""
-                        )
-                        given = (given_el.text or "") if given_el is not None else ""
-                        if surname and given:
-                            authors.append(f"{surname}, {given}")
-                        elif surname or given:
-                            authors.append(surname + given)
-                    article_response["author"] = "; ".join(authors)
-
-                # pmid and doi
-                article_response["doi"] = ""
-                article_response["pmid"] = ""
-                for item in article.findall("./front/article-meta/article-id"):
-                    if item.attrib == {"pub-id-type": "doi"}:
-                        article_response["doi"] = item.text or ""
-                    elif item.attrib == {"pub-id-type": "pmid"}:
-                        article_response["pmid"] = item.text or ""
-
-                # year
-                article_response["year"] = 0
-                for item in article.findall("./front/article-meta/pub-date"):
-                    if {"epub", "ppub", "pub"}.intersection(item.attrib.values()):
-                        year_el = item.find("year")
-                        if year_el is not None and year_el.text:
-                            article_response["year"] = int(year_el.text)
-
-                # journal
-                article_response["journal"] = ""
-                journal_el = article.find(
-                    "./front/journal-meta/journal-title-group/journal-title"
-                )
-                if journal_el is None:
-                    journal_el = article.find("./front/journal-meta/journal-title")
-                if journal_el is not None:
-                    article_response["journal"] = journal_el.text or ""
-
-                # ML classification
-                cleaned = clean_text(abstract)
-                relevance_label = rna_pipeline.predict([cleaned])[0]
-                article_response["rna_related"] = bool(int(relevance_label))
-                probability = rna_pipeline.predict_proba([cleaned])[0][1]
-                article_response["probability"] = round(float(probability), 2)
-
-                save_article(cur, article_response)
-
-            # save result and sentences
-            result_id = save_result(cur, result_response)
-            conn.commit()
-
-            if result_id:
-                if abstract_sentences:
-                    save_abstract_sentences(
-                        cur,
-                        [
-                            {"result_id": result_id, "sentence": s}
-                            for s in abstract_sentences
-                        ],
-                    )
-
-                loc_prefix_map = {
-                    "intro": "intro",
-                    "results": "results",
-                    "discussion": "discussion",
-                    "conclusion": "conclusion",
-                    "method": "method",
-                }
-                body_to_save = []
-                for loc, sentences in body_sentences.items():
-                    location = next(
-                        (v for k, v in loc_prefix_map.items() if loc.startswith(k)),
-                        "other",
-                    )
-                    for s in sentences:
-                        body_to_save.append(
-                            {
-                                "result_id": result_id,
-                                "sentence": s,
-                                "location": location,
-                            }
-                        )
-                if body_to_save:
-                    save_body_sentences(cur, body_to_save)
-
-                conn.commit()
-
-            hit_count += 1
-
-        # ---- finalise job ----
-        if date:
-            hit_count += get_hit_count(cur, job_id.lower())
-        save_hit_count(cur, job_id.lower(), hit_count)
-        set_job_status(cur, job_id.lower(), "success")
-        conn.commit()
+                        continue
+                    article = extract_article(elem, rna_pipeline, regex)
+                    article["job_id"] = job_id
+                    article["cite_count"] = cite_lookup[current_id]
+                    articles.append(article)
+                    pmcid_list.remove(current_id)
+                    if len(pmcid_list) == 0:
+                        break
+            elem.clear()
 
     elapsed = (datetime.datetime.now() - start).total_seconds()
-    print(f"job_id={job_id} hit_count={hit_count} elapsed={elapsed:.1f}s")
+    found = n_requested - len(pmcid_list)
+
+    if not articles:
+        logger.warning(
+            "job_id=%s found=0/%d elapsed=%.1fs — no articles extracted",
+            job_id,
+            n_requested,
+            elapsed,
+        )
+        empty = pl.DataFrame()
+        return empty, empty, empty, empty
+
+    ## Now the articles list contains a load of dicts, which we can convert to a dataframe, then delete
+    articles = pl.DataFrame(articles)
+
+    ## Now slice the dataframe up to create the various CSVs that will be loaded
+
+    results_csv = articles.select(
+        ["pmcid", "job_id", "id_in_title", "id_in_abstract", "id_in_body"]
+    )
+    articles_csv = articles.select(
+        [
+            "pmcid",
+            "title",
+            "abstract",
+            "author",
+            "pmid",
+            "doi",
+            "year",
+            "journal",
+            "score",
+            "cite_count",
+            "retracted",
+            "rna_related",
+            "probability",
+            "type",
+        ]
+    )
+    abstract_sentences = articles.select(
+        ["pmcid", "job_id", "abstract_sentences"]
+    ).explode("abstract_sentences")
+    body_sentences = articles.select(
+        ["pmcid", "job_id", "body_sentences", "locations"]
+    ).explode("body_sentences", "locations")
+
+    logger.info(
+        "job_id=%s found=%d/%d elapsed=%.1fs",
+        job_id,
+        found,
+        n_requested,
+        elapsed,
+    )
+
+    return results_csv, articles_csv, abstract_sentences, body_sentences
+
+
+def add_xml_shard(pmcid: str, xml_lookup: dict[int, Path]) -> str:
+    keys = sorted(xml_lookup.keys())
+    pmc_number = int(re.match("PMC(\d+)", pmcid).group(1))
+    xml_to_use = max(filter(lambda x: pmc_number > x, keys))
+    return str(xml_lookup[xml_to_use])
 
 
 # ---------------------------------------------------------------------------
@@ -605,9 +374,18 @@ def scan_job(job_id, conn, rna_pipeline):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Scan an RNA ID against Europe PMC and store results in the litscan DB"
+        description="Extract RNA mentions from ePMC OA articles. Writes loadable CSV files in cwd"
     )
-    parser.add_argument("--job-id", required=True, help="The RNA ID / job_id to scan")
+    parser.add_argument(
+        "--search-results",
+        required=True,
+        help="Output of the search results. A csv with no header, 3 columns: job_id, pmcid, cite count",
+    )
+    parser.add_argument(
+        "--xml-directory",
+        required=True,
+        help="Path to the directory containing the ePMC XML dumps",
+    )
     args = parser.parse_args()
 
     conn_str = os.environ["PSYCOPG_CONN"]
@@ -617,15 +395,90 @@ def main():
 
     conn = psycopg2.connect(conn_str)
     try:
-        scan_job(args.job_id, conn, rna_pipeline)
-    except Exception:
-        try:
-            with conn.cursor() as cur:
-                set_job_status(cur, args.job_id.lower(), "error")
-                conn.commit()
-        except Exception:
-            pass
-        raise
+        ## Skip searching if we searched this article for the same job_id before
+        search_results = pl.read_csv(
+            args.search_results,
+            new_columns=[
+                "job_id",
+                "last_search_date",
+                "hit_count",
+                "pmcid",
+                "cite_count",
+            ],
+        )
+        logger.info("Loaded %d search result rows", search_results.height)
+
+        previous_searches = get_previous_searches(
+            conn, search_results["job_id"].to_list()
+        )
+        new_searches = search_results.join(
+            previous_searches, on=["pmcid", "job_id"], how="anti"
+        )
+        logger.info(
+            "Filtered previously-searched rows: %d -> %d",
+            search_results.height,
+            new_searches.height,
+        )
+
+        ## Build lookup for pmcid -> xml path
+        xml_directory = Path(args.xml_directory)
+        xml_files = list(xml_directory.glob("*.xml.gz"))
+        logger.info("Found %d XML shards in %s", len(xml_files), xml_directory)
+
+        regex = r"PMC(\d+).*"
+        xml_lookup = {int(re.match(regex, f.name).group(1)): f for f in xml_files}
+        add_xml_shard_partial = partial(add_xml_shard, xml_lookup=xml_lookup)
+        scan_jobs = new_searches.with_columns(
+            xml_path=pl.col("pmcid").map_elements(
+                add_xml_shard_partial, return_dtype=str
+            )
+        )
+
+        scan_jobs_grouped = scan_jobs.group_by(
+            "job_id", "xml_path", maintain_order=True
+        ).agg([pl.col("pmcid"), pl.col("cite_count"), pl.first("hit_count")])
+        logger.info(
+            "Grouped into %d (job_id, xml_shard) scan tasks",
+            scan_jobs_grouped.height,
+        )
+
+        ## scan_jobs_grouped is now 1 row -> 1 JobID + xml file + N PMCIDs
+        ## Iterate over rows and accumulate results
+
+        with ExitStack() as stack:
+            results_csv_fh = stack.enter_context(
+                Path("litscan_results.csv").open(mode="a")
+            )
+            articles_csv_fh = stack.enter_context(
+                Path("litscan_articles.csv").open(mode="a")
+            )
+            abstract_csv_fh = stack.enter_context(
+                Path("litscan_abstract_sentences.csv").open(mode="a")
+            )
+            body_csv_fh = stack.enter_context(
+                Path("litscan_body_sentences.csv").open(mode="a")
+            )
+
+            for row in scan_jobs_grouped.iter_rows(named=True):
+                job_id = row["job_id"]
+                xml_file_path = row["xml_path"]
+
+                pmcid_list = row["pmcid"]
+                cite_counts = row["cite_count"]
+                results, articles, abstract, body = scan_job(
+                    job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline
+                )
+
+                results.write_csv(results_csv_fh, include_header=False)
+                articles.write_csv(articles_csv_fh, include_header=False)
+                abstract.write_csv(abstract_csv_fh, include_header=False)
+                body.write_csv(body_csv_fh, include_header=False)
+
+        hit_counts = scan_jobs.select(["job_id", "hit_count"])
+        hit_counts.write_csv("litscan_hit_counts.csv", include_header=False)
+        status = scan_jobs.select("job_id").with_columns(status=pl.lit("success"))
+        status.write_csv("litscan_job_status.csv", include_header=False)
+        logger.info("Wrote hit_counts and job_status CSVs")
     finally:
         conn.close()
 

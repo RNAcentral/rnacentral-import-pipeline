@@ -49,6 +49,8 @@ dependencies = [
     "skl2onnx>=1.19.1",
     "datasets>=3.5.0",
     "fastjsonschema>=2.21.2",
+    "aiohttp>=3.13.2",
+    "aiolimiter>=1.2.1",
 ]
 
 
