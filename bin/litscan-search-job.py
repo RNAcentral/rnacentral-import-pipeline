@@ -85,6 +85,7 @@ def search_article(
 async def search_article_async(
     session: aiohttp.ClientSession,
     limiter: AsyncLimiter,
+    semaphore: asyncio.Semaphore,
     job_id: str,
     date: datetime.date,
     search_limit: int,
@@ -107,7 +108,7 @@ async def search_article_async(
         articles = None
         for attempt in range(max_retries):
             try:
-                async with limiter:
+                async with semaphore, limiter:
                     async with session.get(
                         EUROPE_PMC + query,
                         timeout=aiohttp.ClientTimeout(total=60),
@@ -123,7 +124,6 @@ async def search_article_async(
                                     attempt + 1,
                                     max_retries,
                                 )
-                                # Sleep outside the limiter context below
                                 raise _RetryableError(delay)
                             response.raise_for_status()
                         articles = await response.text()
@@ -207,10 +207,6 @@ async def fetch_all_epmc_data(
     # Limit concurrent in-flight requests to avoid overwhelming the server
     semaphore = asyncio.Semaphore(20)
 
-    async def limited_search(session, jid, d):
-        async with semaphore:
-            return await search_article_async(session, limiter, jid, d, search_limit)
-
     # Extract data to Python lists
     job_ids = df["job_id"].to_list()
     dates = df["finished"].to_list()
@@ -218,7 +214,10 @@ async def fetch_all_epmc_data(
     # Open a single persistent HTTP session for all requests
     connector = aiohttp.TCPConnector(limit=20)
     async with aiohttp.ClientSession(connector=connector) as session:
-        tasks = [limited_search(session, jid, d) for jid, d in zip(job_ids, dates)]
+        tasks = [
+            search_article_async(session, limiter, semaphore, jid, d, search_limit)
+            for jid, d in zip(job_ids, dates)
+        ]
 
         print(f"Executing {len(tasks)} requests at 10 req/sec...")
         results = await asyncio.gather(*tasks)
