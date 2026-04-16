@@ -27,6 +27,8 @@ nextflow.enable.dsl=2
  }
 
 process scan_job {
+    queue 'datamover'
+
     input:
     path search_results, stageAs: "input_search_results.dat"
 
