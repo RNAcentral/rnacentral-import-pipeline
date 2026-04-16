@@ -26,6 +26,7 @@ import nltk
 import polars as pl
 import psycopg2
 from lxml.etree import ElementTree as ET
+from polars.exceptions import NoDataError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -479,6 +480,10 @@ def main():
         status = scan_jobs.select("job_id").with_columns(status=pl.lit("success"))
         status.write_csv("litscan_job_status.csv", include_header=False)
         logger.info("Wrote hit_counts and job_status CSVs")
+    except NoDataError:
+        logger.warning(
+            "No data in search result CSV, no papers to scan for this batch!"
+        )
     finally:
         conn.close()
 
