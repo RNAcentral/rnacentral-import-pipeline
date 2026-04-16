@@ -199,7 +199,10 @@ def get_search_dates(conn, job_ids, chunk_size=5000):
     query = "SELECT job_id, finished FROM litscan_job WHERE job_id = ANY(%s)"
 
     df = pl.read_database(
-        query=query, connection=conn, execute_options={"parameters": (job_ids,)}
+        query=query,
+        connection=conn,
+        execute_options={"parameters": (job_ids,)},
+        schema_overrides={"finished": pl.Datetime("us")},
     )
     return df
 
