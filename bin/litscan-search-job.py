@@ -198,20 +198,22 @@ async def fetch_all_epmc_data(
     """
     # 10 requests per 1 second
     limiter = AsyncLimiter(10, 1.0)
+    # Limit concurrent in-flight requests to avoid overwhelming the server
+    semaphore = asyncio.Semaphore(20)
+
+    async def limited_search(session, jid, d):
+        async with semaphore:
+            return await search_article_async(session, limiter, jid, d, search_limit)
 
     # Extract data to Python lists
     job_ids = df["job_id"].to_list()
     dates = df["finished"].to_list()
 
     # Open a single persistent HTTP session for all requests
-    async with aiohttp.ClientSession() as session:
-        # Create a list of tasks (they don't run yet)
-        tasks = [
-            search_article_async(session, limiter, jid, d, search_limit)
-            for jid, d in zip(job_ids, dates)
-        ]
+    connector = aiohttp.TCPConnector(limit=20)
+    async with aiohttp.ClientSession(connector=connector) as session:
+        tasks = [limited_search(session, jid, d) for jid, d in zip(job_ids, dates)]
 
-        # Run them all concurrently and wait for them to finish
         print(f"Executing {len(tasks)} requests at 10 req/sec...")
         results = await asyncio.gather(*tasks)
 
