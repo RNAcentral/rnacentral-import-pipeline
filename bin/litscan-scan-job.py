@@ -406,8 +406,7 @@ def main():
                 "pmcid",
                 "cite_count",
             ],
-            schema_overrides={"hit_count": pl.Int64, "cite_count": pl.Int64},
-        )
+        ).cast({"hit_count": pl.Int64, "cite_count": pl.Int64})
         if search_results.filter(pl.col("hit_count") > 0).height == 0:
             logger.warning(
                 "Search results report no hits for anything, creating empty files and moving on"
