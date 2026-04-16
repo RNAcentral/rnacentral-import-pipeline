@@ -2,6 +2,12 @@
 
 BEGIN;
 
+-- Drop indexes to speed up bulk inserts
+DROP INDEX IF EXISTS rnacen.ix_rnc_related_sequences__target_ac;
+DROP INDEX IF EXISTS rnacen.rnc_related_relationship_type_idx;
+DROP INDEX IF EXISTS rnacen.rnc_related_sequences_source_urs_taxid_idx;
+DROP INDEX IF EXISTS rnacen.rnc_related_sequences_target_urs_taxid_idx;
+
 -- Update the load table to contain the source URS
 UPDATE load_rnc_related_sequences load
 SET
@@ -164,5 +170,11 @@ where
 ;
 
 drop table load_rnc_related_sequences;
+
+-- Recreate indexes
+CREATE INDEX ix_rnc_related_sequences__target_ac ON rnacen.rnc_related_sequences USING btree (target_accession);
+CREATE INDEX rnc_related_relationship_type_idx ON rnacen.rnc_related_sequences USING btree (relationship_type);
+CREATE INDEX rnc_related_sequences_source_urs_taxid_idx ON rnacen.rnc_related_sequences USING btree (source_urs_taxid);
+CREATE INDEX rnc_related_sequences_target_urs_taxid_idx ON rnacen.rnc_related_sequences USING btree (target_urs_taxid);
 
 COMMIT;

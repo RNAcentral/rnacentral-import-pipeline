@@ -47,6 +47,10 @@ WHERE urs_taxid IS NULL
 -- Remove all old compara data so we don't have stale data.
 TRUNCATE TABLE ensembl_compara;
 
+-- Drop indexes before bulk insert (safe to drop all non-pkey since table is empty after TRUNCATE)
+DROP INDEX IF EXISTS rnacen.fk_ensembl_compara__urs_taxid;
+DROP INDEX IF EXISTS rnacen.ix_ensembl_compara__homology_id;
+
 INSERT INTO ensembl_compara (
   urs_taxid,
   ensembl_transcript_id,
@@ -61,5 +65,9 @@ FROM load_compara load
 ;
 
 DROP TABLE load_compara;
+
+-- Recreate indexes
+CREATE INDEX fk_ensembl_compara__urs_taxid ON rnacen.ensembl_compara USING btree (urs_taxid);
+CREATE INDEX ix_ensembl_compara__homology_id ON rnacen.ensembl_compara USING btree (homology_id);
 
 COMMIT;
