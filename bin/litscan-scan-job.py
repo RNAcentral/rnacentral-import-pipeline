@@ -41,7 +41,7 @@ def get_previous_searches(conn, job_ids):
     df = pl.read_database(
         query=query, connection=conn, execute_options={"parameters": (job_ids,)}
     )
-    return df
+    return df.cast({"job_id": pl.String, "pmcid": pl.String})
 
 
 # ---------------------------------------------------------------------------
