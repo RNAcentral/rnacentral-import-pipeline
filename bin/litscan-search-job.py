@@ -98,21 +98,52 @@ async def search_article_async(
             f"&pageSize=500&cursorMark={page}"
         )
 
-        try:
-            # 1. Wait for permission from the rate limiter
-            async with limiter:
-                # 2. Make the async HTTP request
-                async with session.get(EUROPE_PMC + query, timeout=60) as response:
-                    response.raise_for_status()
-                    # 3. Await the text response
-                    articles = await response.text()
-
-        # Catch aiohttp specific exceptions instead of requests exceptions
-        except aiohttp.ClientError as e:
-            logger.warning("Network error for %s: %s", job_id, e)
-            return {"hit_count": [], "pmcids": [], "cite_counts": []}
-        except asyncio.TimeoutError:
-            logger.warning("Timeout fetching article list for %s", job_id)
+        max_retries = 3
+        articles = None
+        for attempt in range(max_retries):
+            try:
+                async with limiter:
+                    async with session.get(EUROPE_PMC + query, timeout=60) as response:
+                        if (
+                            response.status in (429, 500, 502, 503, 504)
+                            and attempt < max_retries - 1
+                        ):
+                            delay = 2**attempt
+                            logger.warning(
+                                "Got %d for %s, retrying in %ds (attempt %d/%d)",
+                                response.status,
+                                job_id,
+                                delay,
+                                attempt + 1,
+                                max_retries,
+                            )
+                            await asyncio.sleep(delay)
+                            continue
+                        response.raise_for_status()
+                        articles = await response.text()
+            except aiohttp.ClientError as e:
+                if attempt < max_retries - 1:
+                    delay = 2**attempt
+                    logger.warning(
+                        "Network error for %s: %s, retrying in %ds", job_id, e, delay
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                logger.warning(
+                    "Network error for %s after %d attempts: %s", job_id, max_retries, e
+                )
+                return {"hit_count": [], "pmcids": [], "cite_counts": []}
+            except asyncio.TimeoutError:
+                if attempt < max_retries - 1:
+                    delay = 2**attempt
+                    logger.warning("Timeout for %s, retrying in %ds", job_id, delay)
+                    await asyncio.sleep(delay)
+                    continue
+                logger.warning("Timeout for %s after %d attempts", job_id, max_retries)
+                return {"hit_count": [], "pmcids": [], "cite_counts": []}
+            else:
+                break
+        if articles is None:
             return {"hit_count": [], "pmcids": [], "cite_counts": []}
 
         try:
