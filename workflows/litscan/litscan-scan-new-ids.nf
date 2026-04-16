@@ -16,6 +16,7 @@ nextflow.enable.dsl=2
 
  process search_job {
   time '4h'
+  memory '4GB'
 
   input:
     path id_chunk
