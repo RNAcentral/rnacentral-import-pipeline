@@ -362,9 +362,21 @@ def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
 
 
 def add_xml_shard(pmcid: str, xml_lookup: dict[int, Path]) -> str:
+    if not xml_lookup:
+        raise ValueError("xml_lookup is empty — no XML shards available")
     keys = sorted(xml_lookup.keys())
     pmc_number = int(re.match("PMC(\d+)", pmcid).group(1))
-    xml_to_use = max(filter(lambda x: pmc_number > x, keys))
+    candidates = [x for x in keys if pmc_number > x]
+    if not candidates:
+        xml_to_use = keys[0]
+        logger.warning(
+            "pmcid=%s (num=%d) is below smallest shard key %d; falling back to it",
+            pmcid,
+            pmc_number,
+            xml_to_use,
+        )
+    else:
+        xml_to_use = max(candidates)
     return str(xml_lookup[xml_to_use])
 
 
@@ -440,8 +452,18 @@ def main():
 
         ## Build lookup for pmcid -> xml path
         xml_directory = Path(args.xml_directory)
+        if not xml_directory.is_dir():
+            raise FileNotFoundError(
+                f"XML directory does not exist or is not a directory: {xml_directory}"
+            )
         xml_files = list(xml_directory.glob("*.xml.gz"))
+        if not xml_files:
+            xml_files = list(xml_directory.rglob("*.xml.gz"))
         logger.info("Found %d XML shards in %s", len(xml_files), xml_directory)
+        if not xml_files:
+            raise FileNotFoundError(
+                f"No *.xml.gz files found under {xml_directory} (checked non-recursive and recursive)"
+            )
 
         regex = r"PMC(\d+).*"
         xml_lookup = {int(re.match(regex, f.name).group(1)): f for f in xml_files}
