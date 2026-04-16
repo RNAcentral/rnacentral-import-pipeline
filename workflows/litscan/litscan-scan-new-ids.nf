@@ -140,7 +140,7 @@ workflow scan_new_ids {
       // Split each registered-IDs file into individual job_id values,
       // then run one SLURM scan_job per ID in parallel.
       new_ids_files
-        .splitText(by: 10000, file: true)
+        .splitText(by: 2000, file: true)
         .filter { it.size() > 0 }
         | search_job
         | scan_job
