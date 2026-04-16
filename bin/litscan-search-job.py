@@ -228,9 +228,7 @@ def main():
 
     search_results = articles_list(last_search, search_limit=1_000_000)
 
-    search_results = search_results.explode(
-        "pmcids", "cite_counts", "hit_count"
-    ).filter(pl.col("pmcids").is_not_null())
+    search_results = search_results.explode("pmcids", "cite_counts", "hit_count")
 
     search_results.sort(by="pmcids").write_csv(args.output, include_header=False)
 
