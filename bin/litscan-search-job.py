@@ -14,7 +14,7 @@ import psycopg2
 import requests
 from aiolimiter import AsyncLimiter
 
-logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 EUROPE_PMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
@@ -182,10 +182,12 @@ async def search_article_async(
         page = next_page
 
     if not articles_list:
+        logger.info("Search for %s completed - 0 hits", job_id)
         return {"hit_count": [], "pmcids": [], "cite_counts": []}
 
     hit_counts, pmcids, cite_counts = zip(*articles_list)
 
+    logger.info("Search for %s completed - %d hits", job_id, len(articles_list))
     return {
         "hit_count": list(hit_counts),
         "pmcids": list(pmcids),
