@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 EUROPE_PMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/"
 
 
+class _RetryableError(Exception):
+    def __init__(self, delay):
+        self.delay = delay
+
+
 def search_article(
     job_id: str, date: datetime.date, search_limit: int
 ) -> dict[str, list]:
@@ -103,25 +108,29 @@ async def search_article_async(
         for attempt in range(max_retries):
             try:
                 async with limiter:
-                    async with session.get(EUROPE_PMC + query, timeout=60) as response:
-                        if (
-                            response.status in (429, 500, 502, 503, 504)
-                            and attempt < max_retries - 1
-                        ):
-                            delay = 2**attempt
-                            logger.warning(
-                                "Got %d for %s, retrying in %ds (attempt %d/%d)",
-                                response.status,
-                                job_id,
-                                delay,
-                                attempt + 1,
-                                max_retries,
-                            )
-                            await asyncio.sleep(delay)
-                            continue
-                        response.raise_for_status()
+                    async with session.get(
+                        EUROPE_PMC + query,
+                        timeout=aiohttp.ClientTimeout(total=60),
+                    ) as response:
+                        if response.status in (429, 500, 502, 503, 504):
+                            if attempt < max_retries - 1:
+                                delay = 2**attempt
+                                logger.warning(
+                                    "Got %d for %s, retrying in %ds (attempt %d/%d)",
+                                    response.status,
+                                    job_id,
+                                    delay,
+                                    attempt + 1,
+                                    max_retries,
+                                )
+                                # Sleep outside the limiter context below
+                                raise _RetryableError(delay)
+                            response.raise_for_status()
                         articles = await response.text()
-            except aiohttp.ClientError as e:
+            except _RetryableError as e:
+                await asyncio.sleep(e.delay)
+                continue
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 if attempt < max_retries - 1:
                     delay = 2**attempt
                     logger.warning(
@@ -130,16 +139,11 @@ async def search_article_async(
                     await asyncio.sleep(delay)
                     continue
                 logger.warning(
-                    "Network error for %s after %d attempts: %s", job_id, max_retries, e
+                    "Network error for %s after %d attempts: %s",
+                    job_id,
+                    max_retries,
+                    e,
                 )
-                return {"hit_count": [], "pmcids": [], "cite_counts": []}
-            except asyncio.TimeoutError:
-                if attempt < max_retries - 1:
-                    delay = 2**attempt
-                    logger.warning("Timeout for %s, retrying in %ds", job_id, delay)
-                    await asyncio.sleep(delay)
-                    continue
-                logger.warning("Timeout for %s after %d attempts", job_id, max_retries)
                 return {"hit_count": [], "pmcids": [], "cite_counts": []}
             else:
                 break
