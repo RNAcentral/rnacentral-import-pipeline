@@ -225,6 +225,7 @@ def main():
     conn = psycopg2.connect(conn_str)
     with conn.cursor() as cur:
         last_search = get_search_dates(cur, job_ids)
+    conn.close()
 
     search_results = articles_list(last_search, search_limit=1_000_000)
 
