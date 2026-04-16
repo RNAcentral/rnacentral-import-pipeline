@@ -484,6 +484,16 @@ def main():
         logger.warning(
             "No data in search result CSV, no papers to scan for this batch!"
         )
+        Path("litscan_results.csv").touch()
+        Path("litscan_articles.csv").touch()
+        Path("litscan_abstract_sentences.csv").touch()
+        Path("litscan_body_sentences.csv").touch()
+        hit_counts = scan_jobs.select(["job_id", "hit_count"])
+        status = scan_jobs.select("job_id").with_columns(status=pl.lit("success"))
+
+        hit_counts.write_csv("litscan_hit_counts.csv", include_header=False)
+        status.write_csv("litscan_job_status.csv", include_header=False)
+
     finally:
         conn.close()
 
