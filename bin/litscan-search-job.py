@@ -151,7 +151,11 @@ async def search_article_async(
         except ParseError:
             logger.warning(f"Parse failure for {job_id}")
             return {"hit_count": [], "pmcids": [], "cite_counts": []}
-        hit_count = int(root.find("hitCount").text)
+        hit_count_el = root.find("hitCount")
+        if hit_count_el is None:
+            logger.warning("No hitCount in response for %s, skipping page", job_id)
+            break
+        hit_count = int(hit_count_el.text)
 
         articles_list.extend(
             [
