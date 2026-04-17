@@ -27,9 +27,18 @@ def test_runs_validation_on_data():
     "filename,count",
     [
         ("data/json-schema/v020/flybase.json", 5),
+        ("data/json-schema/v020/flybase-scaRNA.json", 1),
+        ("data/json-schema/v020/japonicusdb.json", 3),
         ("data/json-schema/v020/lincipedia.json", 1),
+        ("data/json-schema/v020/lncbook.json", 3),
         ("data/json-schema/v020/lncipedia-5.0.json", 1),
+        ("data/json-schema/v020/lncipedia-with-isoforms.json", 5),
         ("data/json-schema/v020/missing-mirbase.json", 2),
+        ("data/json-schema/v020/modomics-modifications.json", 1),
+        ("data/json-schema/v020/pombase.json", 1),
+        ("data/json-schema/v020/shift-mirbase.json", 1),
+        ("data/json-schema/v020/shift-mirbase-2.json", 1),
+        ("data/json-schema/v020/tarbase.json", 1),
     ],
 )
 def test_can_parse_v0_2_0_data(filename, count):

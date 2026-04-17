@@ -29,10 +29,17 @@ from rnacentral_pipeline.databases.helpers import publications as pub
     [  # pylint: disable=no-member
         ("data/json-schema/v020/flybase.json", [7227, 7227, 7227, 7227, 7227]),
         ("data/json-schema/v020/flybase-scaRNA.json", [7227]),
+        ("data/json-schema/v020/japonicusdb.json", [4897, 4897, 4897]),
         ("data/json-schema/v020/lincipedia.json", [9606]),
-        ("data/json-schema/v020/tarbase.json", [9606]),
-        ("data/json-schema/v020/pombase.json", [4896]),
         ("data/json-schema/v020/lncbook.json", [9606, 9606, 9606]),
+        ("data/json-schema/v020/lncipedia-5.0.json", [9606]),
+        ("data/json-schema/v020/lncipedia-with-isoforms.json", [9606, 9606, 9606, 9606, 9606]),
+        ("data/json-schema/v020/missing-mirbase.json", [10116, 15368]),
+        ("data/json-schema/v020/modomics-modifications.json", [562]),
+        ("data/json-schema/v020/pombase.json", [4896]),
+        ("data/json-schema/v020/shift-mirbase.json", [9606]),
+        ("data/json-schema/v020/shift-mirbase-2.json", [9606]),
+        ("data/json-schema/v020/tarbase.json", [9606]),
     ],
 )
 def test_can_extract_taxid(filename, taxids):

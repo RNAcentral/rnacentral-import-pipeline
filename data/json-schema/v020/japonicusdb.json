@@ -1,0 +1,91 @@
+{
+  "data": [
+    {
+      "primaryId": "JaponicusDB:SJAG_08000.1",
+      "taxonId": "NCBITaxon:4897",
+      "symbolSynonyms": [],
+      "soTermId": "SO:0000253",
+      "sequence": "TCCCGTGTGCTCAATCGGTTTAGAGCGTCTGACTCTTACGCAGATCAATCAGAAGGTTGCGAGTTCGAGTCTCGCCATGGAGG",
+      "url": "https://www.japonicusdb.org/gene/SJAG_08000",
+      "gene": {
+        "geneId": "JaponicusDB:SJAG_08000",
+        "url": "https://www.japonicusdb.org/gene/SJAG_08000",
+        "synonyms": []
+      },
+      "genomeLocations": [
+        {
+          "assembly": "v1",
+          "exons": [
+            {
+              "chromosome": "II",
+              "startPosition": 2379189,
+              "endPosition": 2379272,
+              "strand": "+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "primaryId": "JaponicusDB:SJAG_08001.1",
+      "taxonId": "NCBITaxon:4897",
+      "symbolSynonyms": [],
+      "soTermId": "SO:0000253",
+      "sequence": "TCCCGTGTGCTCAATCGGTTTAGAGCGTCTGACTCTACGCAGATCAATCAGAGGTTGCGAGTTCGAGTCTCGCCATGGAGG",
+      "url": "https://www.japonicusdb.org/gene/SJAG_08001",
+      "gene": {
+        "geneId": "JaponicusDB:SJAG_08001",
+        "url": "https://www.japonicusdb.org/gene/SJAG_08001",
+        "synonyms": []
+      },
+      "genomeLocations": [
+        {
+          "assembly": "v1",
+          "exons": [
+            {
+              "chromosome": "II",
+              "startPosition": 2390671,
+              "endPosition": 2390752,
+              "strand": "+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "primaryId": "JaponicusDB:SJAG_08002.1",
+      "taxonId": "NCBITaxon:4897",
+      "symbolSynonyms": [],
+      "soTermId": "SO:0000253",
+      "sequence": "GCTCACATGGTCCAGTGGTCAAGACTCAACGTTGTGGCCGTTGCAACCGTTCGAGTCTTGTTGTGGGCA",
+      "url": "https://www.japonicusdb.org/gene/SJAG_08002",
+      "gene": {
+        "geneId": "JaponicusDB:SJAG_08002",
+        "url": "https://www.japonicusdb.org/gene/SJAG_08002",
+        "synonyms": []
+      },
+      "genomeLocations": [
+        {
+          "assembly": "v1",
+          "exons": [
+            {
+              "chromosome": "I",
+              "startPosition": 4227882,
+              "endPosition": 4227951,
+              "strand": "+"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metaData": {
+    "dateProduced": "2022-01-07T03:54:51.867785671+00:00",
+    "dataProvider": "JaponicusDB",
+    "schemaVersion": "0.3.0",
+    "genomicCoordinateSystem": "1-start, fully-closed",
+    "publications": [
+      "PMID:22039153"
+    ]
+  }
+}
