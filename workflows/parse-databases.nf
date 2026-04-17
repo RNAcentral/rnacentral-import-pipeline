@@ -1,3 +1,4 @@
+include { circatlas } from './databases/circatlas'
 include { circpedia } from './databases/circpedia'
 include { crw } from './databases/crw'
 include { ena } from './databases/ena'
@@ -65,6 +66,7 @@ workflow parse_databases {
 
     Channel.empty() \
     | mix(
+      circatlas(),
       circpedia(),
       crw(),
       five_s_rrnadb(),

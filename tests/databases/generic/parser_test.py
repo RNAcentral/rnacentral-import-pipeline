@@ -26,6 +26,7 @@ def test_runs_validation_on_data():
 @pytest.mark.parametrize(
     "filename,count",
     [
+        ("data/json-schema/v020/circatlas.json", 3),
         ("data/json-schema/v020/flybase.json", 5),
         ("data/json-schema/v020/flybase-scaRNA.json", 1),
         ("data/json-schema/v020/japonicusdb.json", 3),

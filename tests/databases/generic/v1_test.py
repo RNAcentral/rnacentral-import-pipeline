@@ -27,6 +27,7 @@ from rnacentral_pipeline.databases.helpers import publications as pub
 @pytest.mark.parametrize(
     "filename,taxids",
     [  # pylint: disable=no-member
+        ("data/json-schema/v020/circatlas.json", [9606, 9606, 9606]),
         ("data/json-schema/v020/flybase.json", [7227, 7227, 7227, 7227, 7227]),
         ("data/json-schema/v020/flybase-scaRNA.json", [7227]),
         ("data/json-schema/v020/japonicusdb.json", [4897, 4897, 4897]),

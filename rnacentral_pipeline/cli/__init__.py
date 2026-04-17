@@ -18,6 +18,7 @@ import logging
 import click
 
 from rnacentral_pipeline.cli import (
+    circatlas,
     circpedia,
     context,
     cpat,
@@ -100,6 +101,7 @@ def cli(log_level):
     pass
 
 
+cli.add_command(circatlas.cli)
 cli.add_command(circpedia.cli)
 cli.add_command(context.cli)
 cli.add_command(cpat.cli)
