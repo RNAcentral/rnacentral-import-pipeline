@@ -168,34 +168,19 @@ def parse_floats_to_dict(floats_elem):
     return floats_dict
 
 
-def extract_article(elem, rna_pipeline, regex):
-    title = ""
-    abstract = ""
-    body = {}
-    floats = {}
-
+def extract_article_base(elem, rna_pipeline):
+    """Extract the job-agnostic fields of an article. Expensive work (text
+    extraction, sentence tokenization, classifier) happens here once per article
+    so it can be reused across all jobs scanning the same pmcid."""
     title = extract_clean_text(elem.find(".//article-title"))
     abstract = extract_clean_text(elem.find(".//abstract"))
     body = parse_body_to_dict(elem.find(".//body"), ignore_tags=bad_tags)
     floats = parse_floats_to_dict(elem)
 
-    ## Use regex to find stuff
-    abstract_sentences = [
-        s for s in nltk.sent_tokenize(abstract) if re.search(regex, s.lower())
-    ]
-    id_in_abstract = len(abstract_sentences) > 0
-    id_in_title = bool(re.search(regex, title.lower()))
-
-    body_sentences = []
-    locations = []
-    for key, section_text in body.items():
-        section_sentences = [
-            s for s in nltk.sent_tokenize(section_text) if re.search(regex, s.lower())
-        ]
-        body_sentences.extend(section_sentences)
-        locations.extend([key] * len(section_sentences))
-
-    id_in_body = len(body_sentences) > 0
+    abstract_all_sentences = nltk.sent_tokenize(abstract) if abstract else []
+    body_section_sentences = {
+        key: nltk.sent_tokenize(section_text) for key, section_text in body.items()
+    }
 
     doi_el = elem.find('.//article-id[@pub-id-type="doi"]')
     doi = doi_el.text if doi_el is not None else ""
@@ -217,16 +202,13 @@ def extract_article(elem, rna_pipeline, regex):
         journal = journal_el.text or ""
 
     authors = []
-
     for auth in elem.findall(".//contrib-group//name"):
         surname = auth.findtext("surname", default="").strip()
         given = auth.findtext("given-names", default="").strip()
-
         if surname and given:
             authors.append(f"{surname}, {given}")
         elif surname or given:
             authors.append(surname + given)
-
     author = "; ".join(authors)
 
     article_type = (
@@ -237,6 +219,7 @@ def extract_article(elem, rna_pipeline, regex):
 
     return {
         "title": title,
+        "title_lower": title.lower(),
         "abstract": abstract,
         "body": body,
         "floats": floats,
@@ -247,6 +230,51 @@ def extract_article(elem, rna_pipeline, regex):
         "author": author,
         "rna_related": rna_related,
         "probability": probability,
+        "abstract_all_sentences": abstract_all_sentences,
+        "body_section_sentences": body_section_sentences,
+        "type": article_type,
+    }
+
+
+def _job_regex(job_id):
+    return (
+        r"(^|\s|\(|\u201c|\u2018|\u201d|\;)"
+        + re.escape(job_id.lower())
+        + r"($|[\s.,:;?\u2019\u201d\u201c\"/)])"
+    )
+
+
+def finalize_for_job(base, pmcid, job_id, cite_count):
+    """Apply the per-job regex to cached article text and produce a row dict."""
+    regex = _job_regex(job_id)
+
+    abstract_sentences = [
+        s for s in base["abstract_all_sentences"] if re.search(regex, s.lower())
+    ]
+    id_in_abstract = len(abstract_sentences) > 0
+    id_in_title = bool(re.search(regex, base["title_lower"]))
+
+    body_sentences = []
+    locations = []
+    for key, section_sentences in base["body_section_sentences"].items():
+        matched = [s for s in section_sentences if re.search(regex, s.lower())]
+        body_sentences.extend(matched)
+        locations.extend([key] * len(matched))
+    id_in_body = len(body_sentences) > 0
+
+    return {
+        "pmcid": pmcid,
+        "job_id": job_id,
+        "cite_count": cite_count,
+        "title": base["title"],
+        "abstract": base["abstract"],
+        "doi": base["doi"],
+        "pmid": base["pmid"],
+        "year": base["year"],
+        "journal": base["journal"],
+        "author": base["author"],
+        "rna_related": base["rna_related"],
+        "probability": base["probability"],
         "id_in_title": id_in_title,
         "id_in_abstract": id_in_abstract,
         "id_in_body": id_in_body,
@@ -255,7 +283,7 @@ def extract_article(elem, rna_pipeline, regex):
         "locations": locations,
         "score": len(abstract_sentences) + len(body_sentences),
         "retracted": False,
-        "type": article_type,
+        "type": base["type"],
     }
 
 
@@ -267,77 +295,75 @@ def classify_abstract(abstract_text, rna_pipeline):
     return probability, rna_related
 
 
-def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
+def scan_shard(xml_file_path, pmcid_to_jobs, rna_pipeline):
+    """Parse a single .xml.gz shard once and produce article rows for every
+    (pmcid, job_id) pair that wants it.
+
+    `pmcid_to_jobs` is a dict: pmcid -> list[(job_id, cite_count)].
+    Returns the four polars DataFrames in the same shape scan_job used to return.
+    """
     start = datetime.datetime.now()
-    n_requested = len(pmcid_list)
+    n_requested_pmcids = len(pmcid_to_jobs)
+    n_requested_rows = sum(len(v) for v in pmcid_to_jobs.values())
     logger.info(
-        "scan_job start job_id=%s pmcids=%s xml=%s",
-        job_id,
-        pmcid_list,
+        "scan_shard start xml=%s pmcids=%d jobs=%d",
         xml_file_path,
+        n_requested_pmcids,
+        n_requested_rows,
     )
     if xml_file_path is None:
         empty = pl.DataFrame()
         return empty, empty, empty, empty
 
-    cite_lookup = {pmcid: cc for pmcid, cc in zip(pmcid_list, cite_counts)}
-    pmcid_list = set(pmcid_list)
+    pending = set(pmcid_to_jobs.keys())
     articles = []
 
-    # word-boundary regex matching the job_id in article text
-    regex = (
-        r"(^|\s|\(|\u201c|\u2018|\u201d|\;)"
-        + re.escape(job_id.lower())
-        + r"($|[\s.,:;?\u2019\u201d\u201c\"/)])"
-    )
-
     with gzip.open(xml_file_path, "rb") as xml_file:
-        context = ET.iterparse(xml_file, events=("end",))
-        for event, elem in context:
-
-            if elem.tag == "article":
-                id_tag = elem.find('.//article-id[@pub-id-type="pmcid"]')
-                if id_tag is not None:
-                    current_id = id_tag.text
-                    if current_id in pmcid_list:
-                        logger.debug("Found %s for job_id=%s", current_id, job_id)
-                        if elem.find(".//trans-title-group") is not None:
-                            logger.debug(
-                                "Skipping %s: trans-title-group present", current_id
+        context = ET.iterparse(xml_file, events=("end",), tag="article")
+        for _event, elem in context:
+            id_tag = elem.find('.//article-id[@pub-id-type="pmcid"]')
+            if id_tag is not None:
+                current_id = id_tag.text
+                if current_id in pending:
+                    if elem.find(".//trans-title-group") is not None:
+                        logger.debug(
+                            "Skipping %s: trans-title-group present", current_id
+                        )
+                        pending.remove(current_id)
+                    else:
+                        base = extract_article_base(elem, rna_pipeline)
+                        for job_id, cite_count in pmcid_to_jobs[current_id]:
+                            articles.append(
+                                finalize_for_job(base, current_id, job_id, cite_count)
                             )
-                            continue
-                        article = extract_article(elem, rna_pipeline, regex)
-                        article["pmcid"] = current_id
-                        article["job_id"] = job_id
-                        article["cite_count"] = cite_lookup[current_id]
-                        articles.append(article)
-                        pmcid_list.remove(current_id)
-                        if len(pmcid_list) == 0:
-                            break
-                elem.clear()
+                        pending.remove(current_id)
+                    if not pending:
+                        elem.clear()
+                        break
+            elem.clear()
+            # keep memory flat on large shards
+            while elem.getprevious() is not None:
+                del elem.getparent()[0]
 
     elapsed = (datetime.datetime.now() - start).total_seconds()
-    found = n_requested - len(pmcid_list)
+    found_pmcids = n_requested_pmcids - len(pending)
 
     if not articles:
         logger.warning(
-            "job_id=%s found=0/%d elapsed=%.1fs — no articles extracted",
-            job_id,
-            n_requested,
+            "xml=%s found=0/%d pmcids elapsed=%.1fs — no articles extracted",
+            xml_file_path,
+            n_requested_pmcids,
             elapsed,
         )
         empty = pl.DataFrame()
         return empty, empty, empty, empty
 
-    ## Now the articles list contains a load of dicts, which we can convert to a dataframe, then delete
-    articles = pl.DataFrame(articles)
+    articles_df = pl.DataFrame(articles)
 
-    ## Now slice the dataframe up to create the various CSVs that will be loaded
-
-    results_csv = articles.select(
+    results_csv = articles_df.select(
         ["pmcid", "job_id", "id_in_title", "id_in_abstract", "id_in_body"]
     )
-    articles_csv = articles.select(
+    articles_csv = articles_df.select(
         [
             "pmcid",
             "title",
@@ -355,18 +381,19 @@ def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
             "type",
         ]
     )
-    abstract_sentences = articles.select(
+    abstract_sentences = articles_df.select(
         ["pmcid", "job_id", "abstract_sentences"]
     ).explode("abstract_sentences")
-    body_sentences = articles.select(
+    body_sentences = articles_df.select(
         ["pmcid", "job_id", "body_sentences", "locations"]
     ).explode("body_sentences", "locations")
 
     logger.info(
-        "job_id=%s found=%d/%d elapsed=%.1fs",
-        job_id,
-        found,
-        n_requested,
+        "xml=%s found=%d/%d pmcids rows=%d elapsed=%.1fs",
+        xml_file_path,
+        found_pmcids,
+        n_requested_pmcids,
+        len(articles),
         elapsed,
     )
 
@@ -486,16 +513,14 @@ def main():
             )
         )
 
-        scan_jobs_grouped = scan_jobs.group_by(
-            "job_id", "xml_path", maintain_order=True
-        ).agg([pl.col("pmcid"), pl.col("cite_count"), pl.first("hit_count")])
-        logger.info(
-            "Grouped into %d (job_id, xml_shard) scan tasks",
-            scan_jobs_grouped.height,
+        shard_groups = scan_jobs.group_by("xml_path", maintain_order=True).agg(
+            [pl.col("pmcid"), pl.col("job_id"), pl.col("cite_count")]
         )
-
-        ## scan_jobs_grouped is now 1 row -> 1 JobID + xml file + N PMCIDs
-        ## Iterate over rows and accumulate results
+        logger.info(
+            "Grouped into %d shard scan tasks (from %d job/pmcid rows)",
+            shard_groups.height,
+            scan_jobs.height,
+        )
 
         with ExitStack() as stack:
             results_csv_fh = stack.enter_context(
@@ -511,14 +536,16 @@ def main():
                 Path("litscan_body_sentences.csv").open(mode="a")
             )
 
-            for row in scan_jobs_grouped.iter_rows(named=True):
-                job_id = row["job_id"]
+            for row in shard_groups.iter_rows(named=True):
                 xml_file_path = row["xml_path"]
+                pmcid_to_jobs: dict[str, list[tuple[str, int]]] = {}
+                for pmcid, job_id, cite_count in zip(
+                    row["pmcid"], row["job_id"], row["cite_count"]
+                ):
+                    pmcid_to_jobs.setdefault(pmcid, []).append((job_id, cite_count))
 
-                pmcid_list = row["pmcid"]
-                cite_counts = row["cite_count"]
-                results, articles, abstract, body = scan_job(
-                    job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline
+                results, articles, abstract, body = scan_shard(
+                    xml_file_path, pmcid_to_jobs, rna_pipeline
                 )
 
                 results.write_csv(results_csv_fh, include_header=False)
