@@ -303,6 +303,7 @@ def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
                             )
                             continue
                         article = extract_article(elem, rna_pipeline, regex)
+                        article["pmcid"] = current_id
                         article["job_id"] = job_id
                         article["cite_count"] = cite_lookup[current_id]
                         articles.append(article)
