@@ -264,9 +264,9 @@ def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
     start = datetime.datetime.now()
     n_requested = len(pmcid_list)
     logger.info(
-        "scan_job start job_id=%s pmcids=pmcid_list xml=%s",
+        "scan_job start job_id=%s pmcids=%s xml=%s",
         job_id,
-        n_requested,
+        pmcid_list,
         xml_file_path,
     )
     if xml_file_path is None:
