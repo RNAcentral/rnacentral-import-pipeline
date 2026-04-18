@@ -193,8 +193,10 @@ def extract_article(elem, rna_pipeline, regex):
 
     id_in_body = len(body_sentences) > 0
 
-    doi = elem.find('.//article-id[@pub-id-type="doi"]') or ""
-    pmid = elem.find('.//article-id[@pub-id-type="pmid"]') or ""
+    doi_el = elem.find('.//article-id[@pub-id-type="doi"]')
+    doi = doi_el.text if doi_el is not None else ""
+    pmid_el = elem.find('.//article-id[@pub-id-type="pmid"]')
+    pmid = pmid_el.text if pmid_el is not None else ""
 
     year = 0
     for item in elem.findall("./front/article-meta/pub-date"):
