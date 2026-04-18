@@ -25,7 +25,7 @@ import joblib
 import nltk
 import polars as pl
 import psycopg2
-from lxml.etree import ElementTree as ET
+from lxml import etree as ET
 from polars.exceptions import NoDataError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
