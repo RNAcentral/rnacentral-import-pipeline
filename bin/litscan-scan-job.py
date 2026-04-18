@@ -14,6 +14,7 @@ Environment variables:
 """
 import argparse
 import datetime
+import gzip
 import logging
 import os
 import re
@@ -273,7 +274,6 @@ def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
         empty = pl.DataFrame()
         return empty, empty, empty, empty
 
-    context = ET.iterparse(xml_file_path, events=("end",))
     cite_lookup = {pmcid: cc for pmcid, cc in zip(pmcid_list, cite_counts)}
     pmcid_list = set(pmcid_list)
     articles = []
@@ -285,27 +285,29 @@ def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
         + r"($|[\s.,:;?\u2019\u201d\u201c\"/)])"
     )
 
-    for event, elem in context:
+    with gzip.open(xml_file_path, "rb") as xml_file:
+        context = ET.iterparse(xml_file, events=("end",))
+        for event, elem in context:
 
-        if elem.tag == "article":
-            id_tag = elem.find('.//article-id[@pub-id-type="pmcid"]')
-            if id_tag is not None:
-                current_id = id_tag.text
-                if current_id in pmcid_list:
-                    logger.debug("Found %s for job_id=%s", current_id, job_id)
-                    if elem.find(".//trans-title-group") is not None:
-                        logger.debug(
-                            "Skipping %s: trans-title-group present", current_id
-                        )
-                        continue
-                    article = extract_article(elem, rna_pipeline, regex)
-                    article["job_id"] = job_id
-                    article["cite_count"] = cite_lookup[current_id]
-                    articles.append(article)
-                    pmcid_list.remove(current_id)
-                    if len(pmcid_list) == 0:
-                        break
-            elem.clear()
+            if elem.tag == "article":
+                id_tag = elem.find('.//article-id[@pub-id-type="pmcid"]')
+                if id_tag is not None:
+                    current_id = id_tag.text
+                    if current_id in pmcid_list:
+                        logger.debug("Found %s for job_id=%s", current_id, job_id)
+                        if elem.find(".//trans-title-group") is not None:
+                            logger.debug(
+                                "Skipping %s: trans-title-group present", current_id
+                            )
+                            continue
+                        article = extract_article(elem, rna_pipeline, regex)
+                        article["job_id"] = job_id
+                        article["cite_count"] = cite_lookup[current_id]
+                        articles.append(article)
+                        pmcid_list.remove(current_id)
+                        if len(pmcid_list) == 0:
+                            break
+                elem.clear()
 
     elapsed = (datetime.datetime.now() - start).total_seconds()
     found = n_requested - len(pmcid_list)
