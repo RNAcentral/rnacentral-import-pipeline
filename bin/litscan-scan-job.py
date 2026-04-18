@@ -60,6 +60,8 @@ bad_tags = {
 
 
 def extract_clean_text(element):
+    if element is None:
+        return ""
     # .itertext() grabs all text fragments inside the element and its children
     raw_text_pieces = element.itertext()
 
@@ -97,6 +99,8 @@ def get_section_text(element, ignore_tags):
 
 def parse_body_to_dict(body_elem, ignore_tags):
     sections_dict = {}
+    if body_elem is None:
+        return sections_dict
 
     # Find every <sec> tag anywhere in the body
     for i, sec in enumerate(body_elem.findall(".//sec")):
