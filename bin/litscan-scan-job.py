@@ -233,7 +233,7 @@ def extract_article(elem, rna_pipeline, regex):
 
     return {
         "title": title,
-        "abstract": nltk.sent_tokenize(abstract),
+        "abstract": abstract,
         "body": body,
         "floats": floats,
         "doi": doi,
