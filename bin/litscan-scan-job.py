@@ -264,11 +264,14 @@ def scan_job(job_id, pmcid_list, cite_counts, xml_file_path, rna_pipeline):
     start = datetime.datetime.now()
     n_requested = len(pmcid_list)
     logger.info(
-        "scan_job start job_id=%s pmcids=%d xml=%s",
+        "scan_job start job_id=%s pmcids=pmcid_list xml=%s",
         job_id,
         n_requested,
         xml_file_path,
     )
+    if xml_file_path is None:
+        empty = pl.DataFrame()
+        return empty, empty, empty, empty
 
     context = ET.iterparse(xml_file_path, events=("end",))
     cite_lookup = {pmcid: cc for pmcid, cc in zip(pmcid_list, cite_counts)}
