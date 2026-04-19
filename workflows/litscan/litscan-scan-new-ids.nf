@@ -58,27 +58,27 @@ process load_job {
   psql "$PSYCOPG_CONN" << EOF
   BEGIN;
 
-  -- Load the results table first...
-  CREATE TEMP TABLE load_litscan_result (LIKE litscan_result INCLUDING ALL);
 
-  \\copy load_litscan_result (pmcid, job_id, id_in_title, id_in_abstract, id_in_body)
-    FROM 'litscan_results.csv' WITH (FORMAT CSV, HEADER false);
+
+  -- Load the articles
+  CREATE TEMP TABLE load_litscan_article (LIKE litscan_article INCLUDING DEFAULTS);
+
+  \\copy load_litscan_article (pmcid,title,abstract,author,pmid,doi,year,journal,score,cited_by,retracted,rna_related,probability,type) FROM 'litscan_articles.csv' WITH (FORMAT CSV, HEADER false);
+
+  INSERT INTO litscan_article (pmcid,title,abstract,author,pmid,doi,year,journal,score,cited_by,retracted,rna_related,probability,type)
+   SELECT pmcid,title,abstract,author,pmid,doi,year,journal,score,cited_by,retracted,rna_related,probability,type
+    FROM load_litscan_article
+    ON CONFLICT (pmcid) DO NOTHING;
+
+  -- Load the results table first...
+  CREATE TEMP TABLE load_litscan_result (LIKE litscan_result INCLUDING DEFAULTS);
+
+  \\copy load_litscan_result (pmcid, job_id, id_in_title, id_in_abstract, id_in_body) FROM 'litscan_results.csv' WITH (FORMAT CSV, HEADER false);
 
   INSERT INTO litscan_result  (pmcid, job_id, id_in_title, id_in_abstract, id_in_body)
     SELECT pmcid, job_id, id_in_title, id_in_abstract, id_in_body
     FROM load_litscan_result
     ON CONFLICT (pmcid, job_id) DO NOTHING;
-
-  -- Load the articles
-  CREATE TEMP TABLE load_litscan_article (LIKE litscan_article INCLUDING ALL);
-
-  \\copy load_litscan_article (pmcid,title,abstract,author,pmid,doi,year,journal,score,cite_count,retracted,rna_related,probability,type)
-            FROM 'litscan_articles.csv' WITH (FORMAT CSV, HEADER false);
-
-  INSERT INTO litscan_article (pmcid,title,abstract,author,pmid,doi,year,journal,score,cite_count,retracted,rna_related,probability,type)
-   SELECT pmcid,title,abstract,author,pmid,doi,year,journal,score,cite_count,retracted,rna_related,probability,type
-    FROM load_litscan_article
-    ON CONFLICT (pmcid) DO NOTHING;
 
   -- Load abstract sentences
   CREATE TEMP TABLE load_litscan_abstract_sentence (pmcid text, job_id text, sentence text);
@@ -87,7 +87,7 @@ process load_job {
 
   INSERT INTO litscan_abstract_sentence (result_id, sentence)
     SELECT
-        r.result_id,
+        r.id,
         s.sentence
     FROM load_litscan_abstract_sentence s
     JOIN litscan_result r
@@ -95,14 +95,15 @@ process load_job {
 
 
   -- Load body sentences
-  CREATE TEMP TABLE load_litscan_body_sentence (pmcid text, job_id text, sentence text);
+  CREATE TEMP TABLE load_litscan_body_sentence (pmcid text, job_id text, sentence text, location text);
 
-  \\copy load_litscan_body_sentence (pmcid, job_id, sentence) FROM 'litscan_body_sentences.csv' WITH (FORMAT CSV, HEADER false);
+  \\copy load_litscan_body_sentence (pmcid, job_id, sentence, location) FROM 'litscan_body_sentences.csv' WITH (FORMAT CSV, HEADER false);
 
-  INSERT INTO litscan_body_sentence (result_id, sentence)
+  INSERT INTO litscan_body_sentence (result_id, sentence, location)
     SELECT
-        r.result_id,
-        s.sentence
+        r.id,
+        s.sentence,
+        s.location
     FROM load_litscan_body_sentence s
     JOIN litscan_result r
       ON s.pmcid = r.pmcid AND s.job_id = r.job_id;
@@ -128,7 +129,7 @@ process load_job {
     WHERE litscan_job.job_id = staging.job_id;
 
   COMMIT;
-  EOF
+EOF
   """
 
 
