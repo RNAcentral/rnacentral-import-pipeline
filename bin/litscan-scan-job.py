@@ -435,7 +435,7 @@ def main():
     parser.add_argument(
         "--search-results",
         required=True,
-        help="Output of the search results. A csv with no header, 3 columns: job_id, pmcid, cite count",
+        help="Output of the search results. A csv with no header, 5 columns: job_id, last_search_date, hit_count, pmcid, cite_count",
     )
     parser.add_argument(
         "--xml-directory",
