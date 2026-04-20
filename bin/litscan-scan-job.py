@@ -454,6 +454,7 @@ def main():
         ## Skip searching if we searched this article for the same job_id before
         search_results = pl.read_csv(
             args.search_results,
+            has_header=False,
             new_columns=[
                 "job_id",
                 "last_search_date",
@@ -559,7 +560,9 @@ def main():
 
         hit_counts = scan_jobs.select(["job_id", "hit_count"]).unique()
         hit_counts.write_csv("litscan_hit_counts.csv", include_header=False)
-        status = scan_jobs.select("job_id").unique().with_columns(status=pl.lit("success"))
+        status = (
+            scan_jobs.select("job_id").unique().with_columns(status=pl.lit("success"))
+        )
         status.write_csv("litscan_job_status.csv", include_header=False)
         logger.info("Wrote hit_counts and job_status CSVs")
     except NoDataError:
