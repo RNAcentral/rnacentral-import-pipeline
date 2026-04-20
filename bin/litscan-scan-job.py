@@ -381,12 +381,16 @@ def scan_shard(xml_file_path, pmcid_to_jobs, rna_pipeline):
             "type",
         ]
     )
-    abstract_sentences = articles_df.select(
-        ["pmcid", "job_id", "abstract_sentences"]
-    ).explode("abstract_sentences")
-    body_sentences = articles_df.select(
-        ["pmcid", "job_id", "body_sentences", "locations"]
-    ).explode("body_sentences", "locations")
+    abstract_sentences = (
+        articles_df.select(["pmcid", "job_id", "abstract_sentences"])
+        .explode("abstract_sentences")
+        .filter(pl.col("abstract_sentences").is_not_null())
+    )
+    body_sentences = (
+        articles_df.select(["pmcid", "job_id", "body_sentences", "locations"])
+        .explode("body_sentences", "locations")
+        .filter(pl.col("body_sentences").is_not_null())
+    )
 
     logger.info(
         "xml=%s found=%d/%d pmcids rows=%d elapsed=%.1fs",
