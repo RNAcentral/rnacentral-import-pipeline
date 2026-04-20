@@ -12,7 +12,11 @@ process dump_data {
   script:
   prod = params.dbs.production
   """
-  export PGPASSWORD='${prod.password}'
+  umask 077
+  cat > .pgpass <<EOF
+${prod.host}:*:${prod.db_name}:${prod.user}:${prod.password}
+EOF
+  export PGPASSFILE="\$PWD/.pgpass"
 
   /usr/pgsql-11/bin/pg_dump \
     -h ${prod.host} -U ${prod.user} -d ${prod.db_name} -j 4 --schema ${prod.schema} -F d -O -f 'prod-dump' \
@@ -61,7 +65,11 @@ process populate_public {
   psql -c 'drop schema if exists rnacen cascade' \$PUBLIC
   psql -c "ALTER ROLE rnacen SET statement_timeout = '2d';" \$PUBLIC
 
-  export PGPASSWORD='${public_db.password}'
+  umask 077
+  cat > .pgpass <<EOF
+${public_db.host}:*:${public_db.db_name}:${public_db.user}:${public_db.password}
+EOF
+  export PGPASSFILE="\$PWD/.pgpass"
   /usr/pgsql-10/bin/pg_restore -x -h ${public_db.host} -U ${public_db.user} -d ${public_db.db_name} -j 2 $dump_file
 
   psql -c 'revoke usage on schema rnacen from public' \$PUBLIC
