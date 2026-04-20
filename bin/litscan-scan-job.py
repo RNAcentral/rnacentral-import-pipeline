@@ -510,7 +510,17 @@ def main():
             )
 
         regex = r"PMC(\d+).*"
-        xml_lookup = {int(re.match(regex, f.name).group(1)): f for f in xml_files}
+        xml_lookup = {}
+        for f in xml_files:
+            m = re.match(regex, f.name)
+            if m is None:
+                logger.warning("Skipping XML file with unexpected name: %s", f.name)
+                continue
+            xml_lookup[int(m.group(1))] = f
+        if not xml_lookup:
+            raise FileNotFoundError(
+                f"No XML files matching {regex!r} found under {xml_directory}"
+            )
         add_xml_shard_partial = partial(add_xml_shard, xml_lookup=xml_lookup)
         scan_jobs = new_searches.with_columns(
             xml_path=pl.col("pmcid").map_elements(
