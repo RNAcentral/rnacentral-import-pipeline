@@ -109,6 +109,8 @@ def main(conn_string, filename, output):
             if not line:
                 continue
             parts = line.split("|")
+            if len(parts) < 2:
+                continue
             job_id = parts[0]
             database = parts[1]
             primary_id = parts[2] if len(parts) >= 3 else ""
