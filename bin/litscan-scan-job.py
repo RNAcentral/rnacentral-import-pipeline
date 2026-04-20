@@ -557,9 +557,9 @@ def main():
                 abstract.write_csv(abstract_csv_fh, include_header=False)
                 body.write_csv(body_csv_fh, include_header=False)
 
-        hit_counts = scan_jobs.select(["job_id", "hit_count"])
+        hit_counts = scan_jobs.select(["job_id", "hit_count"]).unique()
         hit_counts.write_csv("litscan_hit_counts.csv", include_header=False)
-        status = scan_jobs.select("job_id").with_columns(status=pl.lit("success"))
+        status = scan_jobs.select("job_id").unique().with_columns(status=pl.lit("success"))
         status.write_csv("litscan_job_status.csv", include_header=False)
         logger.info("Wrote hit_counts and job_status CSVs")
     except NoDataError:
