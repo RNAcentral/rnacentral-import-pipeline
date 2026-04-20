@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import collections as coll
+import enum
 import typing as ty
 
 import psycopg2
@@ -23,6 +24,12 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 from pypika import CustomFunction, Query, Table
 from pypika import functions as fn
+
+
+class GpiFilter(enum.Enum):
+    NONE = "none"
+    SPECIES = "species"
+    REFERENCE_PROTEOME = "reference-proteome"
 
 
 @define
@@ -94,17 +101,25 @@ class GpiEntry:
         ]
 
 
-def generic_query() -> Query:
+def generic_query(gpi_filter: GpiFilter = GpiFilter.NONE) -> Query:
     pre = Table("rnc_rna_precomputed")
     ont = Table("ontology_terms")
     so_rna_type = fn.Coalesce(pre.assigned_so_rna_type, pre.so_rna_type)
-    return (
+    query = (
         Query.from_(pre)
         .select(pre.id, pre.taxid, pre.description, ont.name.as_("rna_type"))
         .join(ont)
         .on(ont.ontology_term_id == so_rna_type)
         .where((pre.taxid.notnull()) & (pre.is_active == True))
     )
+    if gpi_filter in (GpiFilter.SPECIES, GpiFilter.REFERENCE_PROTEOME):
+        tax = Table("rnc_taxonomy")
+        query = query.join(tax).on(tax.id == pre.taxid)
+        if gpi_filter == GpiFilter.SPECIES:
+            query = query.where(tax.rank == "species")
+        elif gpi_filter == GpiFilter.REFERENCE_PROTEOME:
+            query = query.where(tax.reference_proteome == True)
+    return query
 
 
 # select
@@ -146,10 +161,11 @@ def mirbase_info_query() -> Query:
 
 
 def get_generic(
-    conn, mirbase_info, generic_query=generic_query(), **kwargs
+    conn, mirbase_info, gpi_filter: GpiFilter = GpiFilter.NONE, **kwargs
 ) -> ty.Iterable[GpiEntry]:
+    query = kwargs.get("generic_query", generic_query(gpi_filter))
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(str(generic_query))
+        cur.execute(str(query))
         for result in cur:
             precursors = set()
             aliases = []
@@ -189,16 +205,20 @@ def write(results: ty.Iterable[GpiEntry], out: ty.IO):
         out.write("\n")
 
 
-def load(conn, **kwargs) -> ty.Iterable[GpiEntry]:
-    precusors = get_mirbase_info(conn, **kwargs)
-    return get_generic(conn, precusors, **kwargs)
+def load(
+    conn, gpi_filter: GpiFilter = GpiFilter.NONE, **kwargs
+) -> ty.Iterable[GpiEntry]:
+    precursors = get_mirbase_info(conn, **kwargs)
+    return get_generic(conn, precursors, gpi_filter=gpi_filter, **kwargs)
 
 
-def export(db_url: str, output: ty.IO, **kwargs):
+def export(
+    db_url: str, output: ty.IO, gpi_filter: GpiFilter = GpiFilter.NONE, **kwargs
+):
     """
     Create a GPI file of for all active RNAcentral sequences. This will
     generate a file formatted for version 1.2.
     """
     with psycopg2.connect(db_url) as conn:
-        results = load(conn)
+        results = load(conn, gpi_filter=gpi_filter)
         write(results, output)

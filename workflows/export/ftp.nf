@@ -96,6 +96,32 @@ process gpi {
   """
 }
 
+process gpi_species {
+  memory params.export.ftp.gpi.memory
+  publishDir "${params.export.ftp.publish}/gpi/", mode: 'copy'
+
+  output:
+  path("rnacentral.species.gpi*")
+
+  """
+  rnac ftp-export gpi --filter species rnacentral.species.gpi
+  gzip -k rnacentral.species.gpi
+  """
+}
+
+process gpi_reference_proteome {
+  memory params.export.ftp.gpi.memory
+  publishDir "${params.export.ftp.publish}/gpi/", mode: 'copy'
+
+  output:
+  path("rnacentral.reference_proteome.gpi*")
+
+  """
+  rnac ftp-export gpi --filter reference-proteome rnacentral.reference_proteome.gpi
+  gzip -k rnacentral.reference_proteome.gpi
+  """
+}
+
 workflow ftp {
   take: _flag
   main:
@@ -112,6 +138,8 @@ workflow ftp {
       rfam_annotations(rfam_annotation_query, rfam_readme)
 
       gpi()
+      gpi_species()
+      gpi_reference_proteome()
       id_mapping()
       export_coordinates()
       ensembl_export()

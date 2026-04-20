@@ -281,7 +281,9 @@ Each row is a taxon and all taxons should have a row.
 | `lineage`     | text    | A `; ` separated string of the lineage of the taxon.          |
 | `aliases`     | text[]  | A list of known aliases for the taxon.                        |
 | `replaced_by` | integer | The id of the taxon which replaced this one, if any.          |
-| `common_name` | text    | The common name, if any for this taxon.                       |
+| `rank`                | text    | The taxonomic rank (e.g. "species", "genus", "family").       |
+| `reference_proteome`  | boolean | Whether this taxon is in the UniProt reference proteome set.  |
+| `common_name`         | text    | The common name, if any for this taxon.                       |
 | `is_deleted`  | boolean | A flag if this taxon was deleted.                             |
 
 ## `protein_info`
