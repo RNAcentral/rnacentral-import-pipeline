@@ -34,7 +34,7 @@ SELECT distinct lineage, taxid
 from xref, rnc_taxonomy
 WHERE
     xref.taxid = rnc_taxonomy.id
-    and xref.dbid = {dbid}
+    and xref.dbid = {db_id}
     and xref.deleted = 'N'
 """
 
@@ -147,7 +147,7 @@ def json_lineage_tree(xrefs) -> str:
 def lineage(conn, db_id: int):
 
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(LINEAGE_QUERY.format(dbid=db_id))
+        cur.execute(LINEAGE_QUERY, (db_id,))
         data = [(r["lineage"], r["taxid"]) for r in cur]
         return json_lineage_tree(data)
 
