@@ -1,0 +1,124 @@
+{
+  "data": [
+    {
+      "primaryId": "CIRCATLAS:hsa-RP11-206L10_0001",
+      "taxonId": "NCBITaxon:9606",
+      "soTermId": "SO:0001904",
+      "sequence": "TATCTTAAATAGTGAAGATGGAGAAATAGTCAATAATGAAGAGCATGAATATGCATCCAAAAAAAGGAAAAAGGACCATTTTAGAAATGACACAAATACTCAAATTACTAGGACTTGGTACTGTCTGAAATCATTGTTCATATCTTAAACTGATTTAAGAAACAAAGCAATTCTGTTTGCATTCAACCAAGTAAAAGCATTTCTTGTCAATATAGTTTTTATCATGAAAAATGGATCTATGTCCATAAAGAAAGCACAAAAGAAAGGCATGGCTATTGCACCTTGGGAGAAGCCTTTAATCGGTTAGACTTCTCAAGTGCAATTCAAGATATCCGAAGGTTCAATTATGTGGTCAAA",
+      "url": "https://ngdc.cncb.ac.cn/circatlas/circ_detail1.php?ID=hsa-RP11-206L10_0001",
+      "name": "circ(chr1).1",
+      "description": "Intronic circRNA, mature isoform length: 357nt",
+      "symbolSynonyms": [
+        "hsa-RP11-206L10_0001",
+        "hsa-circ(chr1).1"
+      ],
+      "version": "1",
+      "gene": {
+        "geneId": "ENSEMBL:ENSG00000230092.7",
+        "synonyms": [
+          "RP11-206L10.8"
+        ],
+        "url": "https://www.ensembl.org/Multi/Search/Results?q=ENSG00000230092;site=ensembl;page=1"
+      },
+      "genomeLocations": [
+        {
+          "assembly": "GRCh38",
+          "gca_accession": "GCF_000001405.40",
+          "ucsc_accession": "hg38",
+          "exons": [
+            {
+              "chromosome": "chr1",
+              "startPosition": 805799,
+              "endPosition": 810170,
+              "strand": "-"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "primaryId": "CIRCATLAS:hsa-RP11-206L10_0002",
+      "taxonId": "NCBITaxon:9606",
+      "soTermId": "SO:0001904",
+      "sequence": "TATCTTAAATAGTGAAGATGGAGAAATAGTCAATAATGAAGAGCATGAATATGCATCCAAAAAAAGGAAAAAGGACCATTTTAGAAATGACACAAATACTCAAAGTTTTTATCATGAAAAATGGATCTATGTCCATAAAGAAAGCACAAAAGAA",
+      "url": "https://ngdc.cncb.ac.cn/circatlas/circ_detail1.php?ID=hsa-RP11-206L10_0002",
+      "name": "circ(chr1).2",
+      "description": "Intronic circRNA, mature isoform length: 154nt",
+      "symbolSynonyms": [
+        "hsa-RP11-206L10_0002",
+        "hsa-circ(chr1).2"
+      ],
+      "version": "1",
+      "gene": {
+        "geneId": "ENSEMBL:ENSG00000230092.7",
+        "synonyms": [
+          "RP11-206L10.8"
+        ],
+        "url": "https://www.ensembl.org/Multi/Search/Results?q=ENSG00000230092;site=ensembl;page=1"
+      },
+      "genomeLocations": [
+        {
+          "assembly": "GRCh38",
+          "gca_accession": "GCF_000001405.40",
+          "ucsc_accession": "hg38",
+          "exons": [
+            {
+              "chromosome": "chr1",
+              "startPosition": 808574,
+              "endPosition": 810170,
+              "strand": "-"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "primaryId": "CIRCATLAS:hsa-SAMD11_0013",
+      "taxonId": "NCBITaxon:9606",
+      "soTermId": "SO:0001904",
+      "sequence": "GTGCGGCTGTGTCCCCTTCCCCTGCCCAACATGCTGTATGTCTGAGGGACCAGCCGTCTTCACAGGTGTGTCTGCAGCCGCCCAGCTCCCTGGCTACGGCACTCATGGCTCACAGGCCCCTGGGCATCCCCTCCCCCATCCTACCTCAGGCCCAAAGCAGGCAAGCGGAGGTACGCCCGGGACCCTCAGGCCCATTTTGCACCTCTGCCTCTCCTACCCTTTCCTGGAAGAAGGGGTTCCTGAGTGTGTCAGGAATTGCAGCCCCCACCCCCAGCAGCCATGGCCCTAATTGGCTCCAAACTAGTCCTTCCCAACAGGCATTCTTCCTTTTCAGATCAATCCTCTAACCCTTGCTGCCCAACTAGGGGGCTGGAGACTGGGTAGGGGGTGCAG",
+      "url": "https://ngdc.cncb.ac.cn/circatlas/circ_detail1.php?ID=hsa-SAMD11_0013",
+      "name": "circSAMD11(I002).1",
+      "description": "Antisense circRNA, mature isoform length: 393nt",
+      "symbolSynonyms": [
+        "hsa-SAMD11_0013",
+        "hsa-circSAMD11(I002).1"
+      ],
+      "version": "1",
+      "gene": {
+        "geneId": "ENSEMBL:ENSG00000187634.11",
+        "synonyms": [
+          "SAMD11"
+        ],
+        "url": "https://www.ensembl.org/Multi/Search/Results?q=ENSG00000187634;site=ensembl;page=1"
+      },
+      "genomeLocations": [
+        {
+          "assembly": "GRCh38",
+          "gca_accession": "GCF_000001405.40",
+          "ucsc_accession": "hg38",
+          "exons": [
+            {
+              "chromosome": "chr1",
+              "startPosition": 926703,
+              "endPosition": 927095,
+              "strand": "-"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metaData": {
+    "dateProduced": "2026-04-17T15:47:39+08:00",
+    "dataProvider": "CIRCATLAS",
+    "release": "3.0",
+    "schemaVersion": "0.4.0",
+    "genomicCoordinateSystem": "1-start, fully-closed",
+    "publications": [
+      "PMID:37739414",
+      "PMID:32345360",
+      "PMID:30893614"
+    ]
+  }
+}
