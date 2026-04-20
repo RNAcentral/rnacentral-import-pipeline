@@ -15,6 +15,8 @@ limitations under the License.
 
 import csv
 
+from psycopg2 import sql
+
 from ..db import cursor
 
 
@@ -37,7 +39,7 @@ def upi_ranges(dbconf, table_name, max_size):
     """
 
     with cursor(dbconf) as cur:
-        cur.execute("select max(id) from %s" % table_name)
+        cur.execute("select MAX(id) FROM {}".format(sql.Identifier(table_name)))
         stop = cur.fetchone()[0]
 
     return ranges_between(1, stop, max_size)
