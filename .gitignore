@@ -111,3 +111,7 @@ bin/bed-expander
 .projections.json
 *.slurm
 tmp/*
+
+## Security additions
+secrets.json
+.env
