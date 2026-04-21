@@ -26,7 +26,7 @@ WITH
     batch rows = 500,
     batch size = 32MB,
     prefetch rows = 500,
-    workers = 4, concurrency = 2,
+    workers = 1, concurrency = 1,
     skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
