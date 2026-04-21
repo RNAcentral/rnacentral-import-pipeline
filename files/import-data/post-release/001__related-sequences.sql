@@ -134,7 +134,7 @@ DELETE FROM load_rnc_related_sequences load
 USING gene_upi_mapping gene
 WHERE
   gene.versionless_gene = load.target_accession
-  and load.relationship_type IN ('target_rna', 'isoform')
+  and load.relationship_type = 'target_rna'
 ;
 
 -- Insert whatever remains with empty source_urs_taxid
