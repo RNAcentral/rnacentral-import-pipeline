@@ -55,7 +55,8 @@ process load_job {
     val true
 
   """
-  psql "$PSYCOPG_CONN" << EOF
+  set -euo pipefail
+  psql -v ON_ERROR_STOP=1 "$PSYCOPG_CONN" << EOF
   BEGIN;
 
 
