@@ -125,7 +125,10 @@ process load_job {
   \\copy load_litscan_job_status (job_id, status) from 'litscan_job_status.csv' WITH (FORMAT CSV, HEADER false);
 
     UPDATE litscan_job
-    SET status = staging.status
+    SET status   = staging.status,
+        finished = CASE WHEN staging.status = 'success' THEN now()
+                        ELSE litscan_job.finished
+                   END
     FROM load_litscan_job_status AS staging
     WHERE litscan_job.job_id = staging.job_id;
 
