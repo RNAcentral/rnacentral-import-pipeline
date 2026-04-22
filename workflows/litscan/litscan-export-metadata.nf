@@ -53,14 +53,15 @@ process create_release_file {
     publishDir "$params.litscan_index", mode: 'copy'
 
     input:
-    val(_flag)
+    path(metadata_files)
+    path(reference_files)
 
     output:
     path("release_note.txt")
 
     script:
     """
-    litscan-create-release-note-file.sh $params.litscan_index $params.release_version
+    litscan-create-release-note-file.sh . $params.release_version
     """
 }
 
@@ -109,12 +110,15 @@ process save_statistics {
 
 
 workflow export_metadata {
-    take: ready
+    take:
+      ready
+      reference_files
     main:
       database = Channel.fromPath('workflows/litscan/results/*.txt')
       database | combine(ready) | create_metadata | collect | merge_metadata | set{ metadata }
 
-      create_xml(metadata) | create_release_file
+      create_xml(metadata) | collect | set{ xml_metadata }
+      create_release_file(xml_metadata, reference_files.collect())
 
       load = Channel.of("$baseDir/workflows/litscan/metadata/load-metadata.ctl")
       load_database_table(metadata, load) | get_statistics | set{ statistics }
@@ -124,5 +128,5 @@ workflow export_metadata {
 }
 
 workflow {
-  export_metadata(Channel.of('ready'))
+  export_metadata(Channel.of('ready'), Channel.empty())
 }

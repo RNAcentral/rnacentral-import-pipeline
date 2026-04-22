@@ -26,5 +26,5 @@ workflow {
   find_retracted_articles(find_organisms.out)
   find_manually_annotated(find_retracted_articles.out)
   export_articles(find_manually_annotated.out)
-  export_metadata(export_articles.out)
+  export_metadata(find_manually_annotated.out, export_articles.out)
 }
