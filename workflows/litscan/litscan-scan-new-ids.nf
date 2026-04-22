@@ -115,7 +115,7 @@ process load_job {
     \\copy load_litscan_hit_counts (job_id, hit_count) FROM 'litscan_hit_counts.csv' WITH (FORMAT CSV, HEADER false);
 
     UPDATE litscan_job
-    SET hit_count = staging.hit_count
+    SET hit_count = COALESCE(litscan_job.hit_count, 0) + staging.hit_count
     FROM load_litscan_hit_counts AS staging
     WHERE litscan_job.job_id = staging.job_id;
 
