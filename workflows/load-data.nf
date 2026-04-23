@@ -18,6 +18,7 @@ process merge_and_import {
   tag { name }
   memory 9.GB
   maxForks 2
+  cpus 4
   cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
