@@ -60,17 +60,17 @@ TARGET COLUMNS (
 
 WITH truncate,
     drop indexes,
-    batch rows = 500,
-    batch size = 32MB,
-    prefetch rows = 500,
-    workers = 2, concurrency = 1,
+    batch rows = 50000,
+    batch size = 256MB,
+    prefetch rows = 50000,
+    workers = 4, concurrency = 2,
     skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
 
 SET
-    work_mem to '256 MB',
-    maintenance_work_mem to '256 GB'
+    work_mem to '128 MB',
+    maintenance_work_mem to '1280 MB'
 
 BEFORE LOAD DO
 $$
