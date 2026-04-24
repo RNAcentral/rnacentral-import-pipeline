@@ -287,18 +287,18 @@ class Entry:
         # pylint: disable=no-member
         return self.secondary_structure.writeable(self.accession)
 
-    def write_sequence(self) -> ty.Iterable[ty.List[str]]:
+    def write_sequence(self) -> ty.Iterable[ty.List]:
         if not self.is_valid():
             return
         yield [
             self.crc64(),
-            str(len(self.sequence)),
+            len(self.sequence),
             self.sequence,
             self.database_name,
             self.accession,
             self.optional_id,
             self.seq_version,
-            str(self.ncbi_tax_id),
+            self.ncbi_tax_id,
             self.md5(),
         ]
 
