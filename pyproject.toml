@@ -50,6 +50,8 @@ dependencies = [
     "datasets>=3.5.0",
     "fastjsonschema>=2.21.2",
     "stopfree>=0.2.4",
+    "pyarrow>=18.0.0",
+    "duckdb>=1.1.0",
 ]
 
 
