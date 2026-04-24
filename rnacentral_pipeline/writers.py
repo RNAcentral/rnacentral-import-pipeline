@@ -17,6 +17,7 @@ limitations under the License.
 
 import csv
 import logging
+import os
 import typing as ty
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
@@ -113,6 +114,8 @@ class OntologyAnnnotationWriter:
 
 @contextmanager
 def build(cls: ty.Type[_C], path: Path) -> ty.Iterator[_C]:
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
     handles = {}
     with ExitStack() as stack:
         for field in attr.fields(cls):
@@ -132,7 +135,15 @@ def build(cls: ty.Type[_C], path: Path) -> ty.Iterator[_C]:
         yield cls(**handles)
 
 
-def entry_writer(path: Path) -> ty.ContextManager[EntryWriter]:
+def entry_writer(path: Path):
+    """
+    Open the standard entry writer at ``path``. Honours the
+    ``RNAC_OUTPUT_FORMAT`` environment variable: set to ``parquet`` to emit
+    streaming Parquet files (see :func:`parquet_entry_writer`). Defaults to
+    the historical CSV path.
+    """
+    if os.environ.get("RNAC_OUTPUT_FORMAT", "csv").lower() == "parquet":
+        return parquet_entry_writer(path)
     return build(EntryWriter, path)
 
 
