@@ -23,14 +23,30 @@ process merge_and_import {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(name), path(ctl), path('raw*.csv')
+  // Stage pattern uses the active writer_format so files land as raw*.csv or
+  // raw*.parquet and can be globbed by the branch below.
+  tuple val(name), path(ctl), path("raw*.${params.writer_format}")
 
   output:
   val(name)
 
-  """
-  split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
-  """
+  script:
+  if (params.writer_format == 'parquet') {
+    // TODO(phase-1): add a parquet-equivalent of `rnac validate-pgloader` so
+    // this branch verifies rows loaded == rows in the parquet files.
+    //
+    // No --truncate: create_load_tables drops+recreates all load tables once
+    // at the start of load_data, so targets are empty when we append. Keeping
+    // --truncate would wipe load_rnacentral_all between the short_sequences
+    // and long_sequences runs (both map to it).
+    """
+    load-parquet $name 'raw*.parquet'
+    """
+  } else {
+    """
+    split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
+    """
+  }
 }
 
 process release {
