@@ -1,0 +1,110 @@
+#!/usr/bin/env -S uv run python3
+"""
+Load Parquet files into a Postgres staging table via DuckDB.
+
+Phase 0 spike: a minimal analogue of ``bin/split-and-load`` that reads one or
+more Parquet files (a "data lake" glob across per-database outputs) and COPYs
+them into a single Postgres table using DuckDB's ``postgres`` extension.
+
+Usage:
+    bin/load-parquet <table> <parquet_glob> [--truncate] [--pg-url <dsn>]
+
+Examples:
+    # Load every accessions.parquet under results/ into the staging table:
+    bin/load-parquet load_rnc_accessions 'results/**/accessions.parquet' --truncate
+
+The Postgres DSN is taken from the ``PGDATABASE_URL`` env var unless
+``--pg-url`` is given. Expected form:
+    postgresql://user:pass@host:port/dbname
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+
+import duckdb
+
+
+def _connect(pg_url: str) -> duckdb.DuckDBPyConnection:
+    con = duckdb.connect()
+    con.execute("INSTALL postgres")
+    con.execute("LOAD postgres")
+    con.execute(f"ATTACH '{pg_url}' AS pg (TYPE postgres)")
+    return con
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("table", help="Target Postgres table (schema-qualified OK).")
+    parser.add_argument(
+        "parquet_glob",
+        help="Glob pattern for input parquet files, e.g. '**/accessions.parquet'.",
+    )
+    parser.add_argument(
+        "--truncate",
+        action="store_true",
+        help="TRUNCATE the target table before loading.",
+    )
+    parser.add_argument(
+        "--pg-url",
+        default=os.environ.get("PGDATABASE"),
+        help="Postgres DSN. Defaults to $PGDATABASE.",
+    )
+    parser.add_argument(
+        "--schema",
+        default=os.environ.get("PGSCHEMA", "rnacen"),
+        help="Postgres schema holding the target table. Defaults to $PGSCHEMA or 'rnacen'.",
+    )
+    args = parser.parse_args()
+
+    if not args.pg_url:
+        parser.error("Postgres DSN required via --pg-url or $PGDATABASE")
+
+    # Allow the user to pass schema.table directly; otherwise prepend --schema.
+    qualified = args.table if "." in args.table else f"{args.schema}.{args.table}"
+
+    con = _connect(args.pg_url)
+
+    # Quick sanity check that the glob matches at least one file before we
+    # touch Postgres, so a typo doesn't accidentally truncate a populated table.
+    matched = con.execute(
+        "SELECT count(*) FROM glob(?)", [args.parquet_glob]
+    ).fetchone()[0]
+    if matched == 0:
+        sys.stderr.write(f"error: no files match '{args.parquet_glob}'\n")
+        return 1
+    sys.stderr.write(f"matched {matched} parquet file(s)\n")
+
+    if args.truncate:
+        sys.stderr.write(f"truncating pg.{qualified}\n")
+        con.execute(f"TRUNCATE pg.{qualified}")
+
+    # Read column names from the parquet schema so we insert only the columns
+    # the parser actually produces, leaving other columns in the staging table
+    # (legacy/unused fields) at their defaults. Mirrors pgloader's TARGET COLUMNS.
+    columns = [
+        row[0]
+        for row in con.execute(
+            "SELECT name FROM parquet_schema(?) WHERE num_children IS NULL",
+            [args.parquet_glob],
+        ).fetchall()
+    ]
+    col_list = ", ".join(columns)
+    sys.stderr.write(
+        f"copying {len(columns)} column(s) into pg.{qualified}: {col_list}\n"
+    )
+    con.execute(
+        f"INSERT INTO pg.{qualified} ({col_list}) "
+        f"SELECT {col_list} FROM read_parquet(?, union_by_name = true)",
+        [args.parquet_glob],
+    )
+
+    loaded = con.execute(f"SELECT count(*) FROM pg.{qualified}").fetchone()[0]
+    sys.stderr.write(f"pg.{qualified} now has {loaded} row(s)\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
