@@ -5,7 +5,7 @@ process lncipedia {
   params.databases.lncipedia.run == true
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   wget -O lncipedia.json ${params.databases.lncipedia.remote}

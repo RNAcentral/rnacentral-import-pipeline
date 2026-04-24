@@ -2,7 +2,7 @@ process hgnc {
   when: { params.databases.hgnc.run }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   wget -O raw.json $params.databases.hgnc.remote

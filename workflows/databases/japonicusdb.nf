@@ -2,7 +2,7 @@ process japonicusdb {
   when: { params.databases.japonicusdb.run }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   wget -O japonicusdb.json ${params.databases.japonicusdb.remote}

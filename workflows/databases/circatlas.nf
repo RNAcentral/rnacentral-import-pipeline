@@ -18,7 +18,7 @@ process parse {
   path(data)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac circatlas parse $data .

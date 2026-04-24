@@ -74,7 +74,7 @@ process parse_data {
   tuple val(division), path(embl), path(gff), path(rfam)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac ensembl parse $division --family-file $rfam $embl $gff .

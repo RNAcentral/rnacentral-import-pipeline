@@ -57,7 +57,7 @@ process process_file {
   tuple path(raw), path(tpa), path(model_lengths)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   ena2fasta.py $raw sequences.fasta

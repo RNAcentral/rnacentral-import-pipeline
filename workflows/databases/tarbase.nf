@@ -33,7 +33,7 @@ process parse {
   path tsv_file
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac tarbase parse ${tsv_file} .

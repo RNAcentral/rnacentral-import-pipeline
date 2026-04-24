@@ -8,7 +8,7 @@ process assemblies {
   path(known)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac ensembl assemblies $connections $query $examples $known

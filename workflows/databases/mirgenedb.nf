@@ -5,7 +5,7 @@ process mirgenedb {
   when { params.databases.mirgenedb.run }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   scp $params.databases.mirgenedb.remote mirgenedb.json

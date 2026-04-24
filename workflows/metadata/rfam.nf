@@ -6,7 +6,7 @@ process generic {
   tuple val(name), path(query)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   def conn = params.connections.rfam

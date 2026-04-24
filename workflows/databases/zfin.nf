@@ -4,7 +4,7 @@ process zfin {
   maxRetries 3
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac zfin fetch $params.databases.zfin.remote zfin.json

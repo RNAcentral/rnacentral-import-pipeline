@@ -2,7 +2,7 @@ process lncbase {
   when: { params.databases.lncbase.run }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   cp ${params.databases.lncbase.remote} lncbase.json

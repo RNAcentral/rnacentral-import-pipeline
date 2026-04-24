@@ -4,7 +4,7 @@ process pdbe {
   maxRetries 5
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   wget  http://ftp.ebi.ac.uk/pub/databases/Rfam/.preview/pdb_full_region.txt.gz

@@ -24,7 +24,7 @@ process parse_data {
   path data
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   # rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data

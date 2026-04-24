@@ -95,7 +95,7 @@ process group_and_convert {
     tuple path(genes), path(lookup)
 
   output:
-    path('*.csv')
+    path('*.{csv,parquet}')
 
   """
   rnac expressionatlas parse ${genes} ${lookup} .

@@ -3,7 +3,7 @@ process taxonomy {
   errorStrategy 'retry'
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz

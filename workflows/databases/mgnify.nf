@@ -15,7 +15,7 @@ process mgnify_parse {
   input:
     path(json)
   output:
-    path('*.csv')
+    path('*.{csv,parquet}')
 
   """
   rnac mgnify parse $json .

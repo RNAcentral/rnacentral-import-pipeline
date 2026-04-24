@@ -2,7 +2,7 @@ process snodb {
   when { params.databases.snodb.run }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   scp $params.databases.snodb.remote snodb.json

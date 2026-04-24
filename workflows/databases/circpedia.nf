@@ -46,7 +46,7 @@ process parse_data {
   tuple val(species), path(annotation_file), path(fasta_file)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac circpedia parse \

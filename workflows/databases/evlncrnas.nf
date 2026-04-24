@@ -20,7 +20,7 @@ process rnc_dump {
   path(query)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   psql -f $query $PGDATABASE > ev_lookup.csv
@@ -35,7 +35,7 @@ process parse {
   tuple path(ev_data), path(rnc_data)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac evlncrnas parse $ev_data $rnc_data .

@@ -2,7 +2,7 @@ process flybase {
   when: { params.databases.flybase.run }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   resolve_remote() {

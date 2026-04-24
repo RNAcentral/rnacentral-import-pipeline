@@ -5,7 +5,7 @@ process fetch_and_process {
   path(metadata_query)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   psql -f "$metadata_query" "$PGDATABASE" > metadata.json

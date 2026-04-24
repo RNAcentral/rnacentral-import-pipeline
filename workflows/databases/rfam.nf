@@ -91,7 +91,7 @@ process parse {
   tuple val(family), path(sequence_info), path(families_info)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   cp '/hps/nobackup/agb/rfam/test-fasta-export/release/results/ftp/fasta_files/${family}.fa.gz' sequences.fa.gz

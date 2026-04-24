@@ -20,7 +20,7 @@ process quickgo_parse {
   path(data)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac quickgo parse $data .

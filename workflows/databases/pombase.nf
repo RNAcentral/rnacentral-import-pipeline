@@ -2,7 +2,7 @@ process pombase {
   when: { params.databases.pombase.run }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   wget -O pombase.json ${params.databases.pombase.remote}

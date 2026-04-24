@@ -2,7 +2,7 @@ process rgd {
   when { params.databases.rgd.run }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   wget -O sequences.fasta.gz $params.databases.rgd.sequences

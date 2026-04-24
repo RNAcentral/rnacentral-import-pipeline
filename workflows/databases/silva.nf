@@ -17,7 +17,7 @@ process parse {
   tuple path(raw), path(taxonomy)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   rnac silva parse $raw $taxonomy .

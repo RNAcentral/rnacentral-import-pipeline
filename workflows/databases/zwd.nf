@@ -5,7 +5,7 @@ process zwd {
   path(context)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   """
   wget -O zwd.json $params.databases.zwd.remote
