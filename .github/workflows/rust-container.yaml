@@ -19,12 +19,18 @@ on:
         required: false
         type: boolean
         default: false
+      tag:
+        description: 'Floating tag to publish alongside the versioned tag. Defaults to "latest"; set to something else for isolated test builds.'
+        required: false
+        type: string
+        default: 'latest'
 
 jobs:
   build-rust-utils:
     runs-on: ubuntu-latest
     env:
       FORCE_REBUILD: ${{ github.event.inputs.force_rebuild || 'false' }}
+      FLOATING_TAG: ${{ github.event.inputs.tag || 'latest' }}
     steps:
       - uses: actions/checkout@v3
 
@@ -72,18 +78,18 @@ jobs:
               -f containers/rust-utils/Dockerfile .
           fi
 
-      - name: Tag as latest
+      - name: Tag as floating tag
         run: |
           VERSION=${{ steps.rust-version.outputs.version }}
-          docker tag rnacentral/rust-utils:${VERSION} rnacentral/rust-utils:latest
+          docker tag rnacentral/rust-utils:${VERSION} rnacentral/rust-utils:${FLOATING_TAG}
 
       - name: Push versioned tag
         run: |
           VERSION=${{ steps.rust-version.outputs.version }}
           docker push rnacentral/rust-utils:${VERSION}
 
-      - name: Push latest tag
-        run: docker push rnacentral/rust-utils:latest
+      - name: Push floating tag
+        run: docker push rnacentral/rust-utils:${FLOATING_TAG}
 
       - name: Slack notification
         if: always()
