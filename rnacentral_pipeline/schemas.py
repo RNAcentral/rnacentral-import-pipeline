@@ -236,6 +236,33 @@ GO_PUBLICATION_MAPPINGS = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# Logical name -> Postgres staging table name. Lifted from the INTO clauses
+# of files/import-data/load/*.ctl so the Parquet load path mirrors pgloader's
+# table targets exactly. Used by bin/load-parquet when it receives a logical
+# name (matching a key in ENTRY_WRITER_SCHEMAS) instead of an explicit table.
+#
+# Note: ref_ids has no pgloader ctl today; it's parser output the CSV path
+# never loaded. Mapping to None signals "skip load" rather than a typo.
+# terms.parquet is a 1-column listing used downstream for joins and doesn't
+# land in load_ontology_terms (which has a different 4-column shape) either.
+ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
+    "accessions": "load_rnc_accessions",
+    "short_sequences": "load_rnacentral_all",
+    "long_sequences": "load_rnacentral_all",
+    "references": "load_rnc_references",
+    "ref_ids": None,
+    "regions": "load_rnc_sequence_regions",
+    "secondary_structure": "load_rnc_secondary_structure",
+    "related_sequences": "load_rnc_related_sequences",
+    "features": "load_rnc_sequence_features",
+    "interactions": "load_interactions",
+    "terms": None,
+    "go_annotations": "load_go_term_annotations",
+    "go_publication_mappings": "load_go_term_publication_map",
+}
+
+
+# ---------------------------------------------------------------------------
 # Mapping used by ParquetEntryWriter. Keys match EntryWriter attr names so the
 # two writers stay structurally aligned.
 ENTRY_WRITER_SCHEMAS = {

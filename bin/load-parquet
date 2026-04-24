@@ -23,8 +23,15 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 
 import duckdb
+
+# Make the top-level package importable regardless of cwd (the package is not
+# installed into the venv; pyproject has package-mode = false).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from rnacentral_pipeline.schemas import ENTRY_WRITER_LOAD_TABLES
 
 
 def _connect(pg_url: str) -> duckdb.DuckDBPyConnection:
@@ -62,8 +69,22 @@ def main() -> int:
     if not args.pg_url:
         parser.error("Postgres DSN required via --pg-url or $PGDATABASE")
 
+    # Resolve logical parser-output names (keys of ENTRY_WRITER_LOAD_TABLES,
+    # e.g. 'accessions') to their Postgres staging table; a None value means
+    # the output has no load target today, so exit cleanly rather than error.
+    target = args.table
+    if target in ENTRY_WRITER_LOAD_TABLES:
+        mapped = ENTRY_WRITER_LOAD_TABLES[target]
+        if mapped is None:
+            sys.stderr.write(
+                f"'{target}' has no pgloader target today; skipping load\n"
+            )
+            return 0
+        sys.stderr.write(f"resolved logical name '{target}' -> {mapped}\n")
+        target = mapped
+
     # Allow the user to pass schema.table directly; otherwise prepend --schema.
-    qualified = args.table if "." in args.table else f"{args.schema}.{args.table}"
+    qualified = target if "." in target else f"{args.schema}.{target}"
 
     con = _connect(args.pg_url)
 
