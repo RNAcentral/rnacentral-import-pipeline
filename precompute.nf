@@ -125,6 +125,7 @@ process process_range {
 }
 
 process load_data {
+  memory 9.GB
 
   input:
   path('precompute*.csv')

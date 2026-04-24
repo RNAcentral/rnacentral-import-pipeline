@@ -217,6 +217,7 @@ process select_mapped_locations {
 }
 
 process load_mapping {
+  memory 6.GB
   maxForks 1
 
   input:

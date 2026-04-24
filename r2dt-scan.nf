@@ -170,7 +170,7 @@ process parse_crw_models {
 
 process load_models {
 
-  memory '256 MB'
+  memory 6.GB
 
   input:
     path(all_data)

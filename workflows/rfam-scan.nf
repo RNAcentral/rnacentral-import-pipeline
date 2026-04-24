@@ -81,7 +81,7 @@ process scan {
 
 process import_data {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
+  memory 6.GB
   input:
   path('raw*.csv')
   path(ctl)

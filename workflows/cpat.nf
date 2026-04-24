@@ -66,6 +66,7 @@ process parse_results {
 }
 
 process store_results {
+  memory 6.GB
   input:
   path('results*.csv')
   path('orfs.*.csv')

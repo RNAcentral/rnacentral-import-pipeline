@@ -51,6 +51,8 @@ process intersect_rnc_rediportal {
 
 process load_rediportal {
 
+  memory 6.GB
+
   input:
     tuple path(features), path(ctl)
 

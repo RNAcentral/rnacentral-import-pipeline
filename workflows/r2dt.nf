@@ -179,7 +179,7 @@ process parse_layout {
 }
 
 process store_secondary_structures {
-  memory params.r2dt.store.memory
+  memory 9.GB
 
   input:
   path('data*.csv')

@@ -52,6 +52,7 @@ process stopfree_scan {
 
 process store_results {
   when { params.stopfree.load }
+  memory 9.GB
 
   input:
   path('results*.csv')

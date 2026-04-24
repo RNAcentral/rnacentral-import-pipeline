@@ -53,6 +53,7 @@ process build {
 
 process load_data {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory 6.GB
 
   input:
   path('locus*.csv')

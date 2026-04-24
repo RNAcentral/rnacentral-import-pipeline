@@ -63,6 +63,7 @@ process parse_results {
 
 process store_results {
   when { params.tcode.load }
+  memory 9.GB
 
   input:
   path('results*.csv')
