@@ -20,10 +20,12 @@ import pyarrow as pa
 # ---------------------------------------------------------------------------
 # Entry.write_ac_info() -> accessions.parquet
 # Source of truth for column names: files/import-data/load/accessions.ctl
-# TODO: tighten NOT NULLs (accession, database, external_id, description, ...)
+# NOT NULLs reflect destination rnc_accessions constraints (only 'accession').
+# Sequence-related fields (short/long_sequences) are held for the
+# update_rnc_accessions() stored-procedure audit.
 ACCESSIONS = pa.schema(
     [
-        pa.field("accession", pa.string()),
+        pa.field("accession", pa.string(), nullable=False),
         pa.field("parent_ac", pa.string()),
         pa.field("seq_version", pa.string()),
         pa.field("feature_start", pa.int64()),
@@ -59,26 +61,36 @@ ACCESSIONS = pa.schema(
 # Same 9-column shape; split purely by sequence length (<=4000 vs >4000) for
 # legacy Postgres schema reasons (ex-Oracle VARCHAR2 limit).
 # TODO: tighten NOT NULLs (all columns in practice)
+# NOT NULLs per the downstream functions: they dedupe/lookup sequences by
+# combinations of (database, ac, version, taxid, crc64, md5) and the sequence
+# split by database id, so every one of those must be present. optional_id is
+# the one genuinely optional field.
 _SEQUENCES_FIELDS = [
-    pa.field("crc64", pa.string()),
-    # len and taxid are yielded stringified by Entry.write_sequence(). Kept as
-    # string to avoid touching parser code in Phase 0; DuckDB casts on COPY.
-    pa.field("len", pa.string()),
-    pa.field("database", pa.string()),
-    pa.field("ac", pa.string()),
+    pa.field("crc64", pa.string(), nullable=False),
+    pa.field("len", pa.int64(), nullable=False),
+    pa.field("database", pa.string(), nullable=False),
+    pa.field("ac", pa.string(), nullable=False),
     pa.field("optional_id", pa.string()),
-    pa.field("version", pa.string()),
-    pa.field("taxid", pa.string()),
-    pa.field("md5", pa.string()),
+    pa.field("version", pa.string(), nullable=False),
+    pa.field("taxid", pa.int64(), nullable=False),
+    pa.field("md5", pa.string(), nullable=False),
 ]
 
 SHORT_SEQUENCES = pa.schema(
-    [_SEQUENCES_FIELDS[0], _SEQUENCES_FIELDS[1], pa.field("seq_short", pa.string())]
+    [
+        _SEQUENCES_FIELDS[0],
+        _SEQUENCES_FIELDS[1],
+        pa.field("seq_short", pa.string(), nullable=False),
+    ]
     + _SEQUENCES_FIELDS[2:]
 )
 
 LONG_SEQUENCES = pa.schema(
-    [_SEQUENCES_FIELDS[0], _SEQUENCES_FIELDS[1], pa.field("seq_long", pa.string())]
+    [
+        _SEQUENCES_FIELDS[0],
+        _SEQUENCES_FIELDS[1],
+        pa.field("seq_long", pa.string(), nullable=False),
+    ]
     + _SEQUENCES_FIELDS[2:]
 )
 
@@ -87,10 +99,14 @@ LONG_SEQUENCES = pa.schema(
 # Entry.write_refs() -> references.parquet
 # Source of truth: files/import-data/load/references.ctl
 # Reference.writeable() yields: [md5, accession, authors, location, title, pmid, doi]
+# NOT NULLs:
+#   - md5: enforced on rnc_references (PK).
+#   - accession: feeds rnc_reference_map.accession in the second INSERT of
+#     rnc_update.update_literature_references(), which requires non-null.
 REFERENCES = pa.schema(
     [
-        pa.field("md5", pa.string()),
-        pa.field("accession", pa.string()),
+        pa.field("md5", pa.string(), nullable=False),
+        pa.field("accession", pa.string(), nullable=False),
         pa.field("authors", pa.string()),
         pa.field("location", pa.string()),
         pa.field("title", pa.string()),
@@ -116,16 +132,22 @@ REF_IDS = pa.schema(
 # Entry.write_sequence_regions() -> regions.parquet
 # Source: files/import-data/load/regions.ctl
 # SequenceRegion.writeable(accession) yields one row per exon.
+# NOT NULLs reflect rnc_sequence_regions (via 001__regions.sql):
+#   - urs_taxid is derived by joining on accession, so accession must be non-null.
+#   - region_name, chromosome, strand, exon_count are passed through directly.
+#   - region_start/region_stop on the destination are min/max of exon_start/stop,
+#     so the exon coordinates themselves must be non-null.
+#   - assembly_id stays nullable (destination allows NULL).
 REGIONS = pa.schema(
     [
-        pa.field("accession", pa.string()),
-        pa.field("region_name", pa.string()),
-        pa.field("chromosome", pa.string()),
-        pa.field("strand", pa.int32()),
+        pa.field("accession", pa.string(), nullable=False),
+        pa.field("region_name", pa.string(), nullable=False),
+        pa.field("chromosome", pa.string(), nullable=False),
+        pa.field("strand", pa.int32(), nullable=False),
         pa.field("assembly_id", pa.string()),
-        pa.field("exon_count", pa.int32()),
-        pa.field("exon_start", pa.int64()),
-        pa.field("exon_stop", pa.int64()),
+        pa.field("exon_count", pa.int32(), nullable=False),
+        pa.field("exon_start", pa.int64(), nullable=False),
+        pa.field("exon_stop", pa.int64(), nullable=False),
     ]
 )
 
@@ -151,11 +173,14 @@ SECONDARY_STRUCTURE = pa.schema(
 # `methods` is currently a Postgres-array literal string like '{"a","b"}'. Kept
 # as pa.string() so behaviour matches the CSV path exactly; tighten to
 # pa.list_(pa.string()) in a later pass when we know DuckDB's COPY is happy.
+# NOT NULLs on rnc_related_sequences: source_accession, target_accession,
+# relationship_type (source_urs_taxid is derived from source_accession via a
+# join). methods stays nullable.
 RELATED_SEQUENCES = pa.schema(
     [
-        pa.field("source_accession", pa.string()),
-        pa.field("target_accession", pa.string()),
-        pa.field("relationship_type", pa.string()),
+        pa.field("source_accession", pa.string(), nullable=False),
+        pa.field("target_accession", pa.string(), nullable=False),
+        pa.field("relationship_type", pa.string(), nullable=False),
         pa.field("methods", pa.string()),
     ]
 )
@@ -166,13 +191,16 @@ RELATED_SEQUENCES = pa.schema(
 # Source: files/import-data/load/features.ctl
 # SequenceFeature.writeable(accession, taxid) yields:
 #   [accession, taxid, start, stop, feature_name, metadata(json string)]
+# NOT NULLs on rnc_sequence_features: upi (from accession join), start, stop,
+# feature_name. taxid is NOT NULL on load_rnc_sequence_features itself.
+# metadata is jsonb-typed and nullable.
 FEATURES = pa.schema(
     [
-        pa.field("accession", pa.string()),
-        pa.field("taxid", pa.int64()),
-        pa.field("start", pa.int64()),
-        pa.field("stop", pa.int64()),
-        pa.field("feature_name", pa.string()),
+        pa.field("accession", pa.string(), nullable=False),
+        pa.field("taxid", pa.int64(), nullable=False),
+        pa.field("start", pa.int64(), nullable=False),
+        pa.field("stop", pa.int64(), nullable=False),
+        pa.field("feature_name", pa.string(), nullable=False),
         pa.field("metadata", pa.string()),
     ]
 )
@@ -182,13 +210,14 @@ FEATURES = pa.schema(
 # Entry.write_interactions() -> interactions.parquet
 # Source: files/import-data/load/interactions.ctl
 # Interaction.writeable() yields: [intact_id, urs_taxid, interacting_id, names(json string), taxid]
+# Every column NOT NULL on both load_interactions and rnc_interactions.
 INTERACTIONS = pa.schema(
     [
-        pa.field("intact_id", pa.string()),
-        pa.field("urs_taxid", pa.string()),
-        pa.field("interacting_id", pa.string()),
-        pa.field("names", pa.string()),
-        pa.field("taxid", pa.int64()),
+        pa.field("intact_id", pa.string(), nullable=False),
+        pa.field("urs_taxid", pa.string(), nullable=False),
+        pa.field("interacting_id", pa.string(), nullable=False),
+        pa.field("names", pa.string(), nullable=False),
+        pa.field("taxid", pa.int64(), nullable=False),
     ]
 )
 
@@ -208,12 +237,15 @@ TERMS = pa.schema(
 # ---------------------------------------------------------------------------
 # GoTermAnnotation.writeable() -> go_annotations.parquet
 # Source: files/import-data/load/go-annotations.ctl
+# NOT NULLs on go_term_annotations: rna_id, qualifier, ontology_term_id,
+# evidence_code. assigned_by and extensions stay nullable (destination allows
+# NULL even though un_go_term_annotations uniqueness includes assigned_by).
 GO_ANNOTATIONS = pa.schema(
     [
-        pa.field("rna_id", pa.string()),
-        pa.field("qualifier", pa.string()),
-        pa.field("ontology_term_id", pa.string()),
-        pa.field("evidence_code", pa.string()),
+        pa.field("rna_id", pa.string(), nullable=False),
+        pa.field("qualifier", pa.string(), nullable=False),
+        pa.field("ontology_term_id", pa.string(), nullable=False),
+        pa.field("evidence_code", pa.string(), nullable=False),
         pa.field("extensions", pa.string()),
         pa.field("assigned_by", pa.string()),
     ]
@@ -223,14 +255,19 @@ GO_ANNOTATIONS = pa.schema(
 # ---------------------------------------------------------------------------
 # GoTermAnnotation.writeable_publication_mappings() -> go_publication_mappings.parquet
 # Source: files/import-data/load/go-publication-mappings.ctl
+# go_term_publication_map has two NOT NULL columns (go_term_annotation_id,
+# reference_id), both resolved by joins: the annotation FK joins on
+# (rna_id, qualifier, ontology_term_id, evidence_code, assigned_by) against
+# go_term_annotations, and reference_id joins on pubmed_id. All six parser
+# fields therefore must be non-null for the post-release INSERT to succeed.
 GO_PUBLICATION_MAPPINGS = pa.schema(
     [
-        pa.field("rna_id", pa.string()),
-        pa.field("qualifier", pa.string()),
-        pa.field("ontology_term_id", pa.string()),
-        pa.field("assigned_by", pa.string()),
-        pa.field("evidence_code", pa.string()),
-        pa.field("pubmed_id", pa.string()),
+        pa.field("rna_id", pa.string(), nullable=False),
+        pa.field("qualifier", pa.string(), nullable=False),
+        pa.field("ontology_term_id", pa.string(), nullable=False),
+        pa.field("assigned_by", pa.string(), nullable=False),
+        pa.field("evidence_code", pa.string(), nullable=False),
+        pa.field("pubmed_id", pa.string(), nullable=False),
     ]
 )
 
