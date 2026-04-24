@@ -215,9 +215,7 @@ def features(record):
 
         sequence = record.get("sequence", "")
         if not sequence:
-            raise ValueError(
-                "Missing sequence: cannot compute modification accession"
-            )
+            raise ValueError("Missing sequence: cannot compute modification accession")
         accession = f"{hashlib.md5(sequence.encode('utf-8')).hexdigest()}_modomics"
         for raw in modifications:
             if not isinstance(raw, dict):
@@ -229,9 +227,7 @@ def features(record):
 
             position = raw.get("index", None)
             if position is None:
-                LOGGER.warning(
-                    "Skipping sequence modification due to missing index"
-                )
+                LOGGER.warning("Skipping sequence modification due to missing index")
                 continue
 
             modification = raw.get("shortName", None)
@@ -465,9 +461,9 @@ def as_entry(record, context):
         note_data=note_data(record),
         xref_data=xrefs(record),
         related_sequences=related_sequences(record),
-        species=species(record),
-        lineage=lineage(record),
-        common_name=common_name(record),
+        species=None,
+        lineage=None,
+        common_name=None,
         secondary_structure=secondary_structure(record),
         references=references(record),
         organelle=record.get("localization", None),
