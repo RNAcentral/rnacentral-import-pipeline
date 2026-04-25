@@ -27,7 +27,7 @@ TARGET COLUMNS (
 WITH
     drop indexes,
     batch rows = 50000,
-    batch size =  512MB,
+    batch size =  256MB,
     prefetch rows = 100000,
     workers = 4,
     concurrency = 2,
