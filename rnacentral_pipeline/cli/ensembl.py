@@ -89,9 +89,11 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
             writer.write(entries)
     except ValueError:
         print("Empty entries, implies no ncRNAs. You should check that")
-        message = (f"No ncRNA entries found for {embl_file.name}, or {gff_file.name}. " 
-                   + "Empty data supplied for now"
-                   + ", but you should check the legitimacy of this result.\n")
+        message = (
+            f"No ncRNA entries found for {embl_file.name}, or {gff_file.name}. "
+            + "Empty data supplied for now"
+            + ", but you should check the legitimacy of this result.\n"
+        )
         message += "For reference, the other parameters to the parser were:\n"
         message += f"division: {division}\n"
         message += f"embl_file: {embl_file.name}\n"
@@ -133,7 +135,7 @@ def ensembl_coordinates(connections, query, output):
 
 
 @cli.command("karyotypes")
-@click.argument("output", default="karyotypes.csv", type=click.File("w"))
+@click.argument("output", default="karyotypes.csv")
 @click.argument("species", nargs=-1)
 def ensembl_write_karyotypes(output, species):
     """
@@ -161,7 +163,7 @@ def ensembl_proteins_cmd(connections, query, output):
 
 @cli.command("compara")
 @click.argument("fasta", default="-", type=click.File("rb"))
-@click.argument("output", default="compara.csv", type=click.File("wb"))
+@click.argument("output", default="compara.csv")
 def ensembl_compara(fasta, output):
     """
     Parse the FASTA file of Ensembl compara data. This will produce a CSV file
