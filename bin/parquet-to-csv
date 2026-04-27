@@ -1,0 +1,38 @@
+#!/usr/bin/env -S uv run python3
+"""
+Stream-decode one or more Parquet files into a single CSV on stdout.
+
+Used by Nextflow processes that pre-date the Parquet migration and still
+operate on plain-text CSV (e.g. ``merge_and_split_all_publications``). Reads
+each file row-group at a time so memory stays bounded regardless of input
+size. No header is emitted — output mirrors the format pgloader/CSV consumers
+already expect.
+
+Usage:
+    bin/parquet-to-csv <file.parquet> [<file.parquet> ...]
+"""
+
+from __future__ import annotations
+
+import csv
+import sys
+
+import pyarrow.parquet as pq
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2:
+        print("usage: parquet-to-csv <file.parquet> ...", file=sys.stderr)
+        return 2
+
+    writer = csv.writer(sys.stdout)
+    for path in argv[1:]:
+        pf = pq.ParquetFile(path)
+        for batch in pf.iter_batches():
+            for row in zip(*(col.to_pylist() for col in batch.columns)):
+                writer.writerow(row)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

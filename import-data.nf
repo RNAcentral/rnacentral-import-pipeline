@@ -22,8 +22,12 @@ workflow import_data {
       parse_metadata(),
     ) \
     | branch {
-      terms: it.name == "terms.csv"
-      ref_ids: it.name == "ref_ids.csv"
+      // Match either CSV or Parquet emissions of these auxiliary tables —
+      // parsers pick one format based on params.writer_format. Both branches
+      // route to bespoke processing (ontology lookup / publication lookup);
+      // their outputs feed back into the load stream.
+      terms: it.name == "terms.csv" || it.name == "terms.parquet"
+      ref_ids: it.name == "ref_ids.csv" || it.name == "ref_ids.parquet"
       csv: true
     } \
     | set { results }

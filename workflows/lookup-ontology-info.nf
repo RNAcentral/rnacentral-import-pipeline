@@ -3,7 +3,9 @@ process lookup {
   maxRetries 3
 
   input:
-  path('terms*.csv')
+  // CSV (legacy) or Parquet (writer_format=parquet) emissions of terms; the
+  // ontology lookup is text-based, so decode parquet to CSV before merging.
+  path('terms*.{csv,parquet}')
 
   output:
   path('ontology_terms.csv')
@@ -12,7 +14,14 @@ process lookup {
   """
   set -o pipefail
 
-  find . -name 'terms*.csv' | xargs cat | sort -u >> unique-terms.txt
+  : > merged-terms.csv
+  for f in terms*.csv; do
+    [ -e "\$f" ] && cat "\$f" >> merged-terms.csv
+  done
+  for f in terms*.parquet; do
+    [ -e "\$f" ] && parquet-to-csv "\$f" >> merged-terms.csv
+  done
+  sort -u merged-terms.csv >> unique-terms.txt
   rnac ols lookup-terms unique-terms.txt ontology_terms.csv
   """
 }
