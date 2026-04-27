@@ -12,6 +12,6 @@ process taxonomy {
   tar xvf new_taxdump.tar.gz
   mkdir taxdump
   mv *.dmp taxdump
-  rnac ncbi taxonomy taxdump
+  rnac ncbi taxonomy taxdump taxonomy.${params.writer_format}
   """
 }
