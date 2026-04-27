@@ -30,11 +30,12 @@ def cli():
 @click.argument("redi_bedfile", type=click.File("r"))
 @click.argument("redi_metadata", type=click.File("r"))
 @click.argument("rnc_bedfile", type=click.File("r"))
-@click.argument("output", type=click.File("w"))
+@click.argument("output", type=click.Path())
 def parse_rediportal(genome_build, redi_bedfile, redi_metadata, rnc_bedfile, output):
     """
-    Intersect REDIportal bedfile with ours, parse the result alongside the metadata
-
+    Intersect REDIportal bedfile with ours, parse the result alongside the
+    metadata. ``output`` is a filesystem path; a ``.parquet`` suffix triggers
+    Parquet output, anything else writes CSV.
     """
     parser.parse(redi_bedfile, redi_metadata, rnc_bedfile, output, genome_build)
 
