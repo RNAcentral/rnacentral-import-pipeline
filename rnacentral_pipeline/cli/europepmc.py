@@ -83,12 +83,13 @@ def lookup(db, ids, output, column=0, allow_fallback=False, ignore_missing=True)
 @click.option("--ignore-missing/--no-ignore-missing", default=True)
 @click.argument("directory", default="out", type=click.Path())
 @click.argument("ids", default="ref_ids.csv", type=click.File("r"))
-@click.argument("output", default="references.csv", type=click.File("w"))
+@click.argument("output", default="references.csv", type=click.Path())
 def stream_lookup(
     directory, ids, output, column=0, allow_fallback=False, ignore_missing=True
 ):
     """
-    Load all ids to write in
+    Load all ids to write in. ``output`` is a filesystem path; a ``.parquet``
+    suffix triggers Parquet output, anything else writes CSV.
     """
     stream.write_lookup(
         ids,
