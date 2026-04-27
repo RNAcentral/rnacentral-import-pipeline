@@ -2,12 +2,16 @@ import csv
 import json
 import re
 import typing as ty
+from pathlib import Path
 from urllib.parse import urlencode
 
 import attr
 import numpy as np
 import pandas as pd
 from attr.validators import instance_of as is_a
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import parquet_writer
 
 REDI_BASE_URL = "https://rediportal.cloud.ba.infn.it/cgi/atlas/getpage_dev.py"
 
@@ -210,7 +214,23 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output, genome_build: str):
 
     complete_data = intersection.merge(metadata, how="inner", on="region_id")
 
+    def _rows():
+        for hit in complete_data.itertuples(index=False):
+            yield RNAEditFeature.build(hit).writeable()
+
+    if isinstance(output, (str, Path)):
+        path = Path(output)
+        if path.suffix == ".parquet":
+            with parquet_writer(path, schemas.REDIPORTAL_FEATURES) as writer:
+                for row in _rows():
+                    writer.writerow(row)
+            return
+        with path.open("w") as handle:
+            writer = csv.writer(handle, delimiter=",")
+            for row in _rows():
+                writer.writerow(row)
+        return
+
     writer = csv.writer(output, delimiter=",")
-    for hit in complete_data.itertuples(index=False):
-        ef = RNAEditFeature.build(hit)
-        writer.writerow(ef.writeable())
+    for row in _rows():
+        writer.writerow(row)
