@@ -18,11 +18,14 @@ import csv
 import itertools as it
 import json
 from functools import lru_cache
+from pathlib import Path
 
 import requests
 from retry import retry
 from throttler import throttle
 
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import parquet_writer
 from rnacentral_pipeline.utils import cacheable
 
 DOMAINS = {
@@ -103,7 +106,25 @@ def data(species=None):
     return it.chain.from_iterable(results)
 
 
-def write(output, species=None):
-    writer = csv.writer(output)
+def _rows(species=None):
     for (assembly_id, bands) in data(species=species):
-        writer.writerow([assembly_id, json.dumps(bands)])
+        yield (assembly_id, json.dumps(bands))
+
+
+def write(output, species=None):
+    if isinstance(output, (str, Path)):
+        path = Path(output)
+        if path.suffix == ".parquet":
+            with parquet_writer(path, schemas.KARYOTYPES) as writer:
+                for row in _rows(species=species):
+                    writer.writerow(row)
+            return
+        with path.open("w") as handle:
+            writer = csv.writer(handle)
+            for row in _rows(species=species):
+                writer.writerow(list(row))
+        return
+
+    writer = csv.writer(output)
+    for row in _rows(species=species):
+        writer.writerow(list(row))
