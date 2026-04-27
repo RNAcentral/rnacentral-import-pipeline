@@ -36,10 +36,12 @@ process process_compara {
   path(gz)
 
   output:
-  path('compara.csv')
+  path("compara.${params.writer_format}")
 
+  script:
+  def out = "compara.${params.writer_format}"
   """
-  zcat $gz | rnac ensembl compara - compara.csv
+  zcat $gz | rnac ensembl compara - $out
   """
 }
 
@@ -81,10 +83,12 @@ process karyotypes {
   maxRetries 10
 
   output:
-  path('karyotypes.csv')
+  path("karyotypes.${params.writer_format}")
 
+  script:
+  def out = "karyotypes.${params.writer_format}"
   """
-  rnac ensembl karyotypes karyotypes.csv
+  rnac ensembl karyotypes $out
   """
 }
 
