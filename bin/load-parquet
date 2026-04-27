@@ -8,14 +8,24 @@ them into a single Postgres table using DuckDB's ``postgres`` extension.
 
 Usage:
     bin/load-parquet <table> <parquet_glob> [--truncate] [--pg-url <dsn>]
+                     [--post-load <sql_path>] [--allow-empty]
 
 Examples:
     # Load every accessions.parquet under results/ into the staging table:
     bin/load-parquet load_rnc_accessions 'results/**/accessions.parquet' --truncate
 
-The Postgres DSN is taken from the ``PGDATABASE_URL`` env var unless
-``--pg-url`` is given. Expected form:
+    # Load + run a merge step after, all-or-nothing in one transaction:
+    bin/load-parquet load_rfam_model_hits 'raw*.parquet' --truncate \\
+        --post-load files/rfam-scan/post-load.sql
+
+The Postgres DSN is taken from the ``PGDATABASE`` env var unless ``--pg-url``
+is given. Expected form:
     postgresql://user:pass@host:port/dbname
+
+If ``--post-load`` is given, the script runs the SQL file via psycopg2 after
+the COPY succeeds, in a single transaction. The post-load step is skipped if
+zero rows were loaded (replacing pgloader's implicit "AFTER LOAD DO only runs
+on a successful load" behaviour) — pass ``--allow-empty`` to force it.
 """
 
 from __future__ import annotations
@@ -26,6 +36,7 @@ import sys
 from pathlib import Path
 
 import duckdb
+import psycopg2
 
 # Make the top-level package importable regardless of cwd (the package is not
 # installed into the venv; pyproject has package-mode = false).
@@ -63,6 +74,25 @@ def main() -> int:
         "--schema",
         default=os.environ.get("PGSCHEMA", "rnacen"),
         help="Postgres schema holding the target table. Defaults to $PGSCHEMA or 'rnacen'.",
+    )
+    parser.add_argument(
+        "--post-load",
+        type=Path,
+        default=None,
+        help=(
+            "Optional SQL file to run after the COPY completes. Runs via "
+            "psycopg2 in a single transaction; rolls back on any error. "
+            "Skipped when zero rows were loaded unless --allow-empty is set."
+        ),
+    )
+    parser.add_argument(
+        "--allow-empty",
+        action="store_true",
+        help=(
+            "Run --post-load even if zero rows were loaded. Default behaviour "
+            "skips it to avoid e.g. wiping production rows from a "
+            "DELETE-then-INSERT merge against an empty staging table."
+        ),
     )
     args = parser.parse_args()
 
@@ -116,14 +146,67 @@ def main() -> int:
     sys.stderr.write(
         f"copying {len(columns)} column(s) into pg.{qualified}: {col_list}\n"
     )
+    # Count rows in the parquet input up front so we can report how much we
+    # actually loaded (vs. the post-INSERT table count, which conflates with
+    # any rows already present when --truncate isn't passed).
+    inserted = con.execute(
+        "SELECT count(*) FROM read_parquet(?, union_by_name = true)",
+        [args.parquet_glob],
+    ).fetchone()[0]
+
     con.execute(
         f"INSERT INTO pg.{qualified} ({col_list}) "
         f"SELECT {col_list} FROM read_parquet(?, union_by_name = true)",
         [args.parquet_glob],
     )
 
-    loaded = con.execute(f"SELECT count(*) FROM pg.{qualified}").fetchone()[0]
-    sys.stderr.write(f"pg.{qualified} now has {loaded} row(s)\n")
+    total = con.execute(f"SELECT count(*) FROM pg.{qualified}").fetchone()[0]
+    sys.stderr.write(
+        f"loaded {inserted} row(s); pg.{qualified} now has {total} row(s)\n"
+    )
+
+    if args.post_load is not None:
+        return _run_post_load(args.pg_url, args.post_load, inserted, args.allow_empty)
+    return 0
+
+
+def _run_post_load(
+    pg_url: str, sql_path: Path, inserted: int, allow_empty: bool
+) -> int:
+    """
+    Execute ``sql_path`` against Postgres in a single transaction. Skipped
+    when ``inserted == 0`` unless ``allow_empty`` is set — most post-load
+    scripts do a DELETE-then-INSERT merge against the staging table, which
+    would silently wipe production rows if run on an empty load.
+    """
+    if inserted == 0 and not allow_empty:
+        sys.stderr.write(
+            f"skipping post-load {sql_path}: 0 rows loaded "
+            "(pass --allow-empty to override)\n"
+        )
+        return 0
+
+    if not sql_path.is_file():
+        sys.stderr.write(f"error: post-load file not found: {sql_path}\n")
+        return 1
+
+    sql = sql_path.read_text()
+    sys.stderr.write(f"running post-load {sql_path} ({len(sql)} bytes)\n")
+
+    conn = psycopg2.connect(pg_url)
+    conn.set_session(autocommit=False)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+        conn.commit()
+    except Exception as exc:
+        conn.rollback()
+        sys.stderr.write(f"error: post-load failed, transaction rolled back: {exc}\n")
+        return 1
+    finally:
+        conn.close()
+
+    sys.stderr.write(f"post-load {sql_path} committed\n")
     return 0
 
 
