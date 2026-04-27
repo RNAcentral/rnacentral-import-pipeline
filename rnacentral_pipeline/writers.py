@@ -133,6 +133,39 @@ def build(cls: ty.Type[_C], path: Path) -> ty.Iterator[_C]:
         yield cls(**handles)
 
 
+@contextmanager
+def build_parquet(
+    cls: ty.Type[_C],
+    path: Path,
+    field_schemas: ty.Mapping[str, ty.Any],
+    batch_size: int = PARQUET_ROW_GROUP_SIZE,
+    compression: str = "zstd",
+) -> ty.Iterator[_C]:
+    """
+    Generic parquet analogue of :func:`build`. Opens one streaming Parquet
+    writer per ``attr`` field of ``cls``, using the schema from
+    ``field_schemas[field_name]``, and yields a populated ``cls(**writers)``.
+
+    Mirrors the EntryWriter-specific :func:`parquet_entry_writer` so smaller
+    Writer classes (e.g. ``rfam.cross_references.Writer``,
+    ``precompute.process.Writer``) can swap their ``writers.build(...)`` call
+    for a parquet path without each duplicating the ExitStack plumbing.
+    """
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+
+    tables: ty.Dict[str, _ParquetTable] = {}
+    with ExitStack() as stack:
+        for field in attr.fields(cls):
+            schema = field_schemas[field.name]
+            out = path / f"{field.name}.parquet"
+            pq_writer = pq.ParquetWriter(out, schema, compression=compression)
+            table = _ParquetTable(pq_writer, schema, batch_size)
+            stack.callback(table.close)
+            tables[field.name] = table
+        yield cls(**tables)
+
+
 def entry_writer(path: Path):
     """
     Open the standard entry writer at ``path``. Honours the
