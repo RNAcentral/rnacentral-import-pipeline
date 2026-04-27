@@ -23,20 +23,18 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 import attr
-import pyarrow as pa
 import pyarrow.parquet as pq
 
 from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.parquet_writers import (
+    DEFAULT_BATCH_SIZE as PARQUET_ROW_GROUP_SIZE,
+)
+from rnacentral_pipeline.parquet_writers import ParquetTable as _ParquetTable
 
 _C = ty.TypeVar("_C")
 
 LOGGER = logging.getLogger(__name__)
-
-# Number of rows buffered per logical table before we emit a Parquet row group.
-# Chosen as a middle ground between memory footprint and row-group overhead;
-# profile during the spike and retune if needed.
-PARQUET_ROW_GROUP_SIZE = 64_000
 
 
 @attr.s()
@@ -150,56 +148,6 @@ def entry_writer(path: Path):
 # ---------------------------------------------------------------------------
 # Parquet path
 # ---------------------------------------------------------------------------
-
-
-class _ParquetTable:
-    """
-    Minimal csv.writer-compatible facade around a streaming Parquet writer.
-
-    Rows are buffered as tuples; every ``batch_size`` rows we transpose to
-    per-column lists, build a ``pa.RecordBatch`` against the declared schema,
-    and append it as a Parquet row group. Memory is O(batch_size * row_width).
-
-    Exposes ``writerow`` / ``writerows`` so it drops into code paths that
-    previously expected a ``csv.writer``.
-    """
-
-    def __init__(
-        self, writer: pq.ParquetWriter, schema: pa.Schema, batch_size: int
-    ) -> None:
-        self._writer = writer
-        self._schema = schema
-        self._batch_size = batch_size
-        self._buffer: ty.List[ty.Sequence] = []
-
-    def writerow(self, row: ty.Sequence) -> None:
-        self._buffer.append(tuple(row))
-        if len(self._buffer) >= self._batch_size:
-            self._flush()
-
-    def writerows(self, rows: ty.Iterable[ty.Sequence]) -> None:
-        buf = self._buffer
-        batch_size = self._batch_size
-        for row in rows:
-            buf.append(tuple(row))
-            if len(buf) >= batch_size:
-                self._flush()
-
-    def _flush(self) -> None:
-        if not self._buffer:
-            return
-        columns = list(zip(*self._buffer))
-        arrays = [
-            pa.array(list(col), type=field.type)
-            for col, field in zip(columns, self._schema)
-        ]
-        batch = pa.RecordBatch.from_arrays(arrays, schema=self._schema)
-        self._writer.write_batch(batch)
-        self._buffer.clear()
-
-    def close(self) -> None:
-        self._flush()
-        self._writer.close()
 
 
 @attr.s()
