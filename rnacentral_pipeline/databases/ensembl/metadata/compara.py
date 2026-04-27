@@ -15,10 +15,13 @@ limitations under the License.
 
 import csv
 import hashlib
-
-from six.moves import cStringIO as StringIO
+from pathlib import Path
 
 from Bio import AlignIO
+from six.moves import cStringIO as StringIO
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import parquet_writer
 
 
 def alignments(fasta):
@@ -56,12 +59,30 @@ def data(fasta):
         yield (unique.hexdigest(), ids)
 
 
+def _rows(fasta):
+    for key, ids in data(fasta):
+        for eid in ids:
+            yield (key, eid)
+
+
 def write(fasta, output):
     """
     Write the homology data in the given fasta file to the given output file.
     """
 
+    if isinstance(output, (str, Path)):
+        path = Path(output)
+        if path.suffix == ".parquet":
+            with parquet_writer(path, schemas.COMPARA) as writer:
+                for row in _rows(fasta):
+                    writer.writerow(row)
+            return
+        with path.open("w") as handle:
+            writer = csv.writer(handle)
+            for row in _rows(fasta):
+                writer.writerow(list(row))
+        return
+
     writer = csv.writer(output)
-    for key, ids in data(fasta):
-        for eid in ids:
-            writer.writerow([key, eid])
+    for row in _rows(fasta):
+        writer.writerow(list(row))
