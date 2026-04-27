@@ -1,13 +1,13 @@
 process fetch_data {
   when { params.databases.gtrnadb.run }
-  memory '4GB'
+  queue 'datamover'
+  container ''
 
   output:
   path('*.json')
 
   """
-  wget --no-check-certificate $params.databases.gtrnadb.remote
-  tar xvf *.tar.gz
+  cp $params.databases.gtrnadb.remote/*.json .
   """
 }
 
