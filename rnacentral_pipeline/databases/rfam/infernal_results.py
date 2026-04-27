@@ -15,8 +15,13 @@ limitations under the License.
 
 import csv
 import re
+import sys
+from pathlib import Path
 
 import attr
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import parquet_writer
 
 CSV_COLUMNS = [
     "seq_name",
@@ -30,6 +35,23 @@ CSV_COLUMNS = [
     "e_value",
     "score",
 ]
+
+
+# Order of fields emitted into the Parquet file. Matches schemas.RFAM_HITS
+# and therefore the destination ``load_rfam_model_hits`` columns. The
+# legacy CSV ``strand`` column is dropped — the pgloader ctl already
+# discarded it via TARGET COLUMNS.
+_PARQUET_HIT_FIELDS = (
+    ("seq_name", "upi"),
+    ("seq_from", "sequence_start"),
+    ("seq_to", "sequence_stop"),
+    ("rfam_acc", "rfam_model_id"),
+    ("mdl_from", "model_start"),
+    ("mdl_to", "model_stop"),
+    ("overlap", "overlap"),
+    ("e_value", "e_value"),
+    ("score", "score"),
+)
 
 
 def as_0_based(raw):
@@ -190,14 +212,15 @@ def parse(raw, clan_competition=False):
         yield model(*parts)  # pylint: disable=star-args
 
 
-def as_csv(tblout, output):
-    """
-    This will parse the givn tblout filehandle and turn the data into a CSV
-    file that can be loaded into the database.
-    """
+def _filtered_hits(tblout):
+    for hit in parse(tblout, clan_competition=True):
+        if hit.overlap == "unique" or hit.overlap == "best":
+            yield hit
 
+
+def _write_csv(tblout, handle):
     writer = csv.DictWriter(
-        output,
+        handle,
         CSV_COLUMNS,
         extrasaction="ignore",
         delimiter=",",
@@ -205,7 +228,34 @@ def as_csv(tblout, output):
         quoting=csv.QUOTE_ALL,
         lineterminator="\n",
     )
+    for hit in _filtered_hits(tblout):
+        writer.writerow(attr.asdict(hit))
 
-    for hit in parse(tblout, clan_competition=True):
-        if hit.overlap == "unique" or hit.overlap == "best":
-            writer.writerow(attr.asdict(hit))
+
+def _write_parquet(tblout, path):
+    with parquet_writer(path, schemas.RFAM_HITS) as writer:
+        for hit in _filtered_hits(tblout):
+            writer.writerow(tuple(getattr(hit, src) for src, _ in _PARQUET_HIT_FIELDS))
+
+
+def as_csv(tblout, output):
+    """
+    Parse the given tblout filehandle and write rows to ``output``. The name is
+    historical; ``output`` may now be a writable file handle (legacy CSV path)
+    or a filesystem path. Paths ending in ``.parquet`` stream rows through the
+    shared Parquet writer using the canonical ``schemas.RFAM_HITS`` schema; the
+    sentinel ``"-"`` writes CSV to stdout; anything else writes a CSV file.
+    """
+    if isinstance(output, (str, Path)):
+        if str(output) == "-":
+            _write_csv(tblout, sys.stdout)
+            return
+        path = Path(output)
+        if path.suffix == ".parquet":
+            _write_parquet(tblout, path)
+            return
+        with path.open("w") as handle:
+            _write_csv(tblout, handle)
+        return
+
+    _write_csv(tblout, output)

@@ -15,8 +15,7 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.databases import rfam
-from rnacentral_pipeline.databases import dfam
+from rnacentral_pipeline.databases import dfam, rfam
 from rnacentral_pipeline.rnacentral import attempted
 
 
@@ -30,11 +29,12 @@ def cli():
 
 @cli.command("rfam")
 @click.argument("tblout", default="-", type=click.File("r"))
-@click.argument("output", default="-", type=click.File("w"))
+@click.argument("output", default="-", type=click.Path(allow_dash=True))
 def process_tblout(tblout, output):
     """
-    Process a table out file and create a CSV for importing into our database.
-    This will overwrite the given file.
+    Process a tblout file and write rows for importing into our database.
+    ``output`` is a filesystem path; a ``.parquet`` suffix triggers Parquet
+    output, ``-`` writes CSV to stdout, anything else writes a CSV file.
     """
     rfam.infernal_results.as_csv(tblout, output)
 
