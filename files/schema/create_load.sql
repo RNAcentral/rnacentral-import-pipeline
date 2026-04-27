@@ -217,13 +217,6 @@ CREATE TABLE load_rfam_model_hits (
   upi character varying(13) COLLATE pg_catalog."default" NOT NULL
 );
 
-DROP TABLE IF EXISTS load_rfam_model_hits;
-CREATE TABLE load_rfam_model_hits (
-  urs text PRIMARY KEY REFERENCES rna(upi),
-  qa_analysis text NOT NULL,
-  last_run timestamp NOT NULL
-);
-
 DROP TABLE IF EXISTS load_rnc_sequence_features;
 CREATE TABLE load_rnc_sequence_features (
     accession varchar(100) NOT NULL,
