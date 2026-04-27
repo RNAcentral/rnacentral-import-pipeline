@@ -13,22 +13,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
+import collections as col
 import csv
+import itertools as it
 import json
 import operator as op
-from pathlib import Path
+import os
 import typing as ty
-import itertools as it
-import collections as col
 from contextlib import ExitStack
+from pathlib import Path
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
-
+from attr.validators import optional
 from sqlitedict import SqliteDict
 
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import parquet_writer
 
 NAME_ALIASES = {
     "common name",
@@ -116,6 +117,20 @@ def parse_directory(directory: Path) -> ty.Iterable[TaxonomyEntry]:
 
 
 def write(directory: Path, output):
+    if isinstance(output, (str, Path)):
+        path = Path(output)
+        if path.suffix == ".parquet":
+            with parquet_writer(path, schemas.TAXONOMY) as writer:
+                for entry in parse_directory(directory):
+                    for row in entry.writeable():
+                        writer.writerow(row)
+            return
+        with path.open("w") as handle:
+            writer = csv.writer(handle)
+            for entry in parse_directory(directory):
+                writer.writerows(entry.writeable())
+        return
+
     writer = csv.writer(output)
     for entry in parse_directory(directory):
         writer.writerows(entry.writeable())
