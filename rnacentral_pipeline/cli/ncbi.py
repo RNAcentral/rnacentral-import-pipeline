@@ -41,7 +41,7 @@ def cli():
         file_okay=False,
     ),
 )
-@click.argument("output", default="taxonomy.csv", type=click.File("w"))
+@click.argument("output", default="taxonomy.csv")
 def parse_taxonomy(ncbi, output):
     taxonomy.write(ncbi, output)
 
