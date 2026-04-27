@@ -37,11 +37,12 @@ process lookup_publications {
   tuple path(refs), path(pubs)
 
   output:
-  path("references.csv")
+  path("references.${params.writer_format}")
 
   script:
+  def out = "references.${params.writer_format}"
   """
-  rnac europepmc stream-lookup --ignore-missing --allow-fallback $pubs $refs references.csv
+  rnac europepmc stream-lookup --ignore-missing --allow-fallback $pubs $refs $out
   """
 }
 
