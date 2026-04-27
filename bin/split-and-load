@@ -21,20 +21,7 @@ cp $ctl "$merged/$ctl"
 pushd "$merged"
 if compgen -G "$split_name*.$split_ext" > /dev/null; then
   tmp="pgloader-output"
-  max_attempts=3
-  for attempt in $(seq 1 $max_attempts); do
-    pgloader_exit=0
-    pgloader --dynamic-space-size 4096 --on-error-stop $ctl | tee "$tmp" || pgloader_exit=$?
-    if [ $pgloader_exit -eq 0 ]; then
-      break
-    fi
-    if [ $attempt -lt $max_attempts ]; then
-      echo "pgloader failed (attempt $attempt/$max_attempts), retrying in 10s..."
-      sleep 10
-    else
-      exit $pgloader_exit
-    fi
-  done
+  pgloader --dynamic-space-size 4096 --on-error-stop $ctl | tee "$tmp"
   rnac validate-pgloader "$tmp"
 fi
 popd
