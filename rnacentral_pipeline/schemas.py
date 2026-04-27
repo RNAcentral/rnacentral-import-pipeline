@@ -273,6 +273,30 @@ GO_PUBLICATION_MAPPINGS = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# rfam.infernal_results.as_csv() -> hits.parquet (rfam-scan workflow)
+# Source: files/rfam-scan/load.ctl + files/schema/create_load.sql.
+# Column names match the destination ``load_rfam_model_hits`` table directly
+# (parquet col names must match destination col names; bin/load-parquet has
+# no equivalent of pgloader's TARGET COLUMNS re-mapping). The ``strand``
+# column the writer historically emitted is dropped here — pgloader was
+# already discarding it via the ctl's narrower TARGET COLUMNS list.
+# All nine columns are NOT NULL on the destination table.
+RFAM_HITS = pa.schema(
+    [
+        pa.field("upi", pa.string(), nullable=False),
+        pa.field("sequence_start", pa.int64(), nullable=False),
+        pa.field("sequence_stop", pa.int64(), nullable=False),
+        pa.field("rfam_model_id", pa.string(), nullable=False),
+        pa.field("model_start", pa.int64(), nullable=False),
+        pa.field("model_stop", pa.int64(), nullable=False),
+        pa.field("overlap", pa.string(), nullable=False),
+        pa.field("e_value", pa.float64(), nullable=False),
+        pa.field("score", pa.float64(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
 # Logical name -> Postgres staging table name. Lifted from the INTO clauses
 # of files/import-data/load/*.ctl so the Parquet load path mirrors pgloader's
 # table targets exactly. Used by bin/load-parquet when it receives a logical
