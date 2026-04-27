@@ -346,6 +346,37 @@ COMPARA = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# ncbi.taxonomy.write() -> taxonomy.parquet (taxonomy metadata workflow).
+# Source: files/import-data/load/taxonomy.ctl. Loaded into ``load_taxonomy``
+# (created by files/schema/create_load.sql), then merged into ``rnc_taxonomy``
+# by files/import-data/pre-release/000__taxonomy.sql. ``aliases`` is JSON-
+# encoded by the parser and lands in a json staging column — DuckDB casts
+# string->json on COPY.
+TAXONOMY = pa.schema(
+    [
+        pa.field("taxid", pa.int64(), nullable=False),
+        pa.field("name", pa.string(), nullable=False),
+        pa.field("lineage", pa.string(), nullable=False),
+        pa.field("aliases", pa.string(), nullable=False),
+        pa.field("replaced_by", pa.int64()),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# rfam.cross_references.from_file() Writer.rfam_ontology_mappings ->
+# rfam_ontology_mappings.parquet. Source:
+# files/import-data/load/rfam-ontology-mappings.ctl. Loaded into
+# ``load_rfam_go_terms`` (created by files/schema/create_load.sql).
+RFAM_GO_TERMS = pa.schema(
+    [
+        pa.field("rfam_model_id", pa.string(), nullable=False),
+        pa.field("ontology_term_id", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
 # Logical name -> Postgres staging table name. Lifted from the INTO clauses
 # of files/import-data/load/*.ctl so the Parquet load path mirrors pgloader's
 # table targets exactly. Used by bin/load-parquet when it receives a logical
@@ -371,6 +402,8 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "go_publication_mappings": "load_go_term_publication_map",
     "karyotypes": "load_karyotypes",
     "compara": "load_compara",
+    "taxonomy": "load_taxonomy",
+    "rfam_ontology_mappings": "load_rfam_go_terms",
 }
 
 
