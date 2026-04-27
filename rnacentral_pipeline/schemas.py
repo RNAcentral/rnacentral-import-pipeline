@@ -297,6 +297,29 @@ RFAM_HITS = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# rediportal.parser.parse() -> features.parquet (rediportal workflow)
+# Source: files/rediportal/load.ctl + the parser's RNAEditFeature.writeable().
+# Loaded into ``load_rediportal_features``; the staging table itself has no
+# NOT NULL constraints (see files/rediportal/pre-load.sql), but the parser
+# always populates everything except ``accession`` (hardcoded None).
+# ``metadata`` is JSON-encoded by the parser and lands in a jsonb destination
+# column — DuckDB casts string→jsonb on COPY (same pattern as FEATURES.metadata
+# and INTERACTIONS.names).
+REDIPORTAL_FEATURES = pa.schema(
+    [
+        pa.field("upi", pa.string(), nullable=False),
+        pa.field("taxid", pa.int64(), nullable=False),
+        pa.field("accession", pa.string()),
+        pa.field("start", pa.int64(), nullable=False),
+        pa.field("stop", pa.int64(), nullable=False),
+        pa.field("feature_name", pa.string(), nullable=False),
+        pa.field("metadata", pa.string(), nullable=False),
+        pa.field("feature_provider", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
 # Logical name -> Postgres staging table name. Lifted from the INTO clauses
 # of files/import-data/load/*.ctl so the Parquet load path mirrors pgloader's
 # table targets exactly. Used by bin/load-parquet when it receives a logical
