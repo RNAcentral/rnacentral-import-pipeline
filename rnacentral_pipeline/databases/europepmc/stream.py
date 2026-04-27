@@ -13,12 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
 import csv
 import logging
-import collections as coll
+from pathlib import Path
 
-from rnacentral_pipeline.databases.helpers.publications import reference
+from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.europepmc import fetch
+from rnacentral_pipeline.databases.helpers.publications import reference
+from rnacentral_pipeline.parquet_writers import parquet_writer
 
 from . import xml
 
@@ -66,10 +69,7 @@ def lookup(ids, directory, column, allow_fallback=True, ignore_missing=False):
             raise ValueError("Could not lookup %s" % id_ref)
 
 
-def write_lookup(
-    ids, directory, output, column=0, allow_fallback=True, ignore_missing=False
-):
-    writer = csv.writer(output)
+def _stream_rows(writer, ids, directory, column, allow_fallback, ignore_missing):
     for ref, rows in lookup(
         ids,
         directory,
@@ -79,3 +79,30 @@ def write_lookup(
     ):
         for rest in rows:
             writer.writerows(ref.writeable(rest))
+
+
+def write_lookup(
+    ids, directory, output, column=0, allow_fallback=True, ignore_missing=False
+):
+    """
+    Stream looked-up references to ``output``. ``output`` may be either a
+    writable file handle (CSV path, legacy behaviour) or a filesystem path.
+    Paths ending in ``.parquet`` are streamed through the shared Parquet
+    writer using the canonical ``schemas.REFERENCES`` schema; everything else
+    is written as CSV.
+    """
+    if isinstance(output, (str, Path)):
+        path = Path(output)
+        if path.suffix == ".parquet":
+            with parquet_writer(path, schemas.REFERENCES) as writer:
+                _stream_rows(
+                    writer, ids, directory, column, allow_fallback, ignore_missing
+                )
+            return
+        with path.open("w") as handle:
+            writer = csv.writer(handle)
+            _stream_rows(writer, ids, directory, column, allow_fallback, ignore_missing)
+        return
+
+    writer = csv.writer(output)
+    _stream_rows(writer, ids, directory, column, allow_fallback, ignore_missing)
