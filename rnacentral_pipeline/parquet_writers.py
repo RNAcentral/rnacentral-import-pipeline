@@ -74,6 +74,83 @@ class ParquetTable:
         self._writer.close()
 
 
+def _to_int_or_none(value):
+    if value in ("", "NaN", "nan", None):
+        return None
+    return int(value)
+
+
+def _to_float_or_none(value):
+    if value in ("", "NaN", "nan", None):
+        return None
+    return float(value)
+
+
+def _to_bool(value):
+    if value in (True, "1", "t", "T", "true", "True"):
+        return True
+    if value in (False, "0", "f", "F", "false", "False"):
+        return False
+    raise ValueError(f"Cannot interpret {value!r} as bool")
+
+
+def _to_bool_or_none(value):
+    if value in ("", None):
+        return None
+    return _to_bool(value)
+
+
+def converter_for(field: pa.Field) -> ty.Callable[[ty.Any], ty.Any]:
+    """
+    Return a callable that converts a CSV-string row value into the typed
+    value required by ``field.type``. Used by adapters that wrap a
+    :class:`ParquetTable` to bridge the legacy stringly-typed ``writeable()``
+    methods to typed Arrow batches.
+    """
+    t = field.type
+    if pa.types.is_boolean(t):
+        return _to_bool_or_none if field.nullable else _to_bool
+    if pa.types.is_integer(t):
+        return _to_int_or_none if field.nullable else (lambda v: int(v))
+    if pa.types.is_floating(t):
+        return _to_float_or_none if field.nullable else (lambda v: float(v))
+    return lambda v: v
+
+
+class TypedParquetWrapper:
+    """
+    Wrap a :class:`ParquetTable` with per-column converters so callers that
+    emit string rows (from CSV-era ``writeable()`` methods) can write to a
+    typed Parquet schema without changing the producer.
+    """
+
+    def __init__(self, table: "ParquetTable", schema: pa.Schema) -> None:
+        self._table = table
+        self._converters = [converter_for(f) for f in schema]
+
+    def writerow(self, row: ty.Sequence) -> None:
+        self._table.writerow(tuple(c(v) for c, v in zip(self._converters, row)))
+
+    def writerows(self, rows: ty.Iterable[ty.Sequence]) -> None:
+        for row in rows:
+            self.writerow(row)
+
+
+@contextmanager
+def typed_parquet_writer(
+    path: Path,
+    schema: pa.Schema,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    compression: str = "zstd",
+) -> ty.Iterator[TypedParquetWrapper]:
+    """
+    Open a streaming parquet file and wrap it in :class:`TypedParquetWrapper`,
+    so writers that emit stringly-typed rows can target a typed schema.
+    """
+    with parquet_writer(path, schema, batch_size, compression) as table:
+        yield TypedParquetWrapper(table, schema)
+
+
 @contextmanager
 def parquet_writer(
     path: Path,
