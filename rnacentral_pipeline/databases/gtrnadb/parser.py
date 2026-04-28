@@ -60,7 +60,9 @@ def gtrnadb_entries(
                 optional_id=helpers.optional_id(data),
                 product=helpers.product(data),
                 parent_accession=helpers.parent_accession(location),
-                description=helpers.description(taxonomy, data),
+                description=helpers.description(
+                    taxonomy, data
+                ),  ## This is likely to be a bottleneck for weird taxa
                 mol_type="genomic DNA",
                 gene_synonyms=helpers.gene_synonyms(data),
                 references=helpers.references(metadata),
@@ -72,13 +74,13 @@ def gtrnadb_entries(
             LOGGER.warning("Unknown taxon id in %s", data)
 
 
-def parse(raw: ty.IO, taxonomy_file: Path) -> ty.Iterable[Entry]:
+def parse(raw_fh: ty.IO, taxonomy_file: Path) -> ty.Iterable[Entry]:
     """
     This will parse a JSON file produced by GtRNAdb and yield the RNAcentral
     entries that it represents.
     """
 
     taxonomy = SqliteDict(filename=taxonomy_file)
-    data: ty.Dict[str, ty.Any] = json.load(raw)
+    data: ty.Dict[str, ty.Any] = json.load(raw_fh)
     for raw in data["data"]:
         yield from gtrnadb_entries(taxonomy, raw, data["metaData"])
