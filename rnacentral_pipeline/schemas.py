@@ -490,6 +490,71 @@ PRECOMPUTE_QA = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# cpat.data.CpatWriter.results -> cpat-results.parquet (cpat workflow).
+# Source: files/cpat/results.ctl. Loaded into ``load_cpat`` then merged into
+# ``cpat_results`` via INSERT ON CONFLICT.
+CPAT_RESULTS = pa.schema(
+    [
+        pa.field("urs_taxid", pa.string(), nullable=False),
+        pa.field("fickett_score", pa.float64(), nullable=False),
+        pa.field("hexamer_score", pa.float64(), nullable=False),
+        pa.field("coding_probability", pa.float64(), nullable=False),
+        pa.field("is_protein_coding", pa.bool_(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# cpat.data.CpatWriter.orfs -> cpat-orfs.parquet (cpat workflow).
+# Source: files/cpat/orfs.ctl. Loaded into ``load_cpat_orfs`` then merged into
+# ``rnc_sequence_features`` (DELETE existing cpat_orf rows + INSERT). The
+# ``metadata`` column lands in a jsonb destination — DuckDB casts string->jsonb
+# on COPY (same pattern as REDIPORTAL_FEATURES.metadata).
+CPAT_ORFS = pa.schema(
+    [
+        pa.field("urs", pa.string(), nullable=False),
+        pa.field("taxid", pa.int32(), nullable=False),
+        pa.field("start_index", pa.int32(), nullable=False),
+        pa.field("stop_index", pa.int32(), nullable=False),
+        pa.field("metadata", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# stopfree.data.StopfreeWriter.results -> stopfree-results.parquet (stopfree
+# workflow). Source: files/stopfree/stopfree.ctl. Loaded into ``load_stopfree``
+# then merged into ``stopfree_results`` via INSERT ON CONFLICT. All numeric
+# fields are nullable: the writer emits "" or "NaN" for missing values and the
+# typed-parquet adapter maps both to NULL.
+STOPFREE_RESULTS = pa.schema(
+    [
+        pa.field("urs_taxid", pa.string(), nullable=False),
+        pa.field("stop_free_run_length", pa.int32()),
+        pa.field("gc_content", pa.float64()),
+        pa.field("run_probability", pa.float64()),
+        pa.field("is_protein_coding", pa.bool_()),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# tcode.data.TcodeWriter.results -> tcode-results.parquet (tcode workflow).
+# Source: files/tcode/tcode.ctl. Loaded into ``load_tcode`` then merged into
+# ``tcode_results`` via INSERT ON CONFLICT. Numeric fields nullable for the
+# same reason as STOPFREE_RESULTS.
+TCODE_RESULTS = pa.schema(
+    [
+        pa.field("urs_taxid", pa.string(), nullable=False),
+        pa.field("length", pa.int32()),
+        pa.field("mean_score", pa.float64()),
+        pa.field("std_score", pa.float64()),
+        pa.field("is_protein_coding", pa.bool_()),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
 # Logical name -> Postgres staging table name. Lifted from the INTO clauses
 # of files/import-data/load/*.ctl so the Parquet load path mirrors pgloader's
 # table targets exactly. Used by bin/load-parquet when it receives a logical
