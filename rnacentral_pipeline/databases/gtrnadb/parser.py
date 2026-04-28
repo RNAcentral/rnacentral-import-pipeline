@@ -56,8 +56,6 @@ def gtrnadb_entries(
                 seq_version=helpers.seq_version(data),
                 note_data=helpers.note_data(data),
                 chromosome=helpers.chromosome(location),
-                species=helpers.species(taxonomy, data),
-                lineage=helpers.lineage(taxonomy, data),
                 gene=helpers.gene(data),
                 optional_id=helpers.optional_id(data),
                 product=helpers.product(data),
