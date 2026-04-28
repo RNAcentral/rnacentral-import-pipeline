@@ -195,7 +195,7 @@ def rnase_p_model_info(filename, db_url, output):
 @cli.command("create-attempted")
 @click.argument("filename", type=click.File("r"))
 @click.argument("version", type=click.File("r"))
-@click.argument("output", default="-", type=click.File("w"))
+@click.argument("output", type=click.Path())
 def r2dt_create_attempted(filename, version, output):
     version_string = version.read().strip()
     attempted.r2dt(filename, version_string, output)
