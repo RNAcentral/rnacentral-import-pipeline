@@ -16,18 +16,21 @@ limitations under the License.
 """
 
 import csv
-import operator as op
 import itertools as it
 import logging
+import operator as op
 import typing as ty
+from pathlib import Path
 
 from attrs import frozen
 
-
-from rnacentral_pipeline import utils
-from rnacentral_pipeline.databases.data.regions import Exon
-from rnacentral_pipeline.databases.data.regions import SequenceRegion
-from rnacentral_pipeline.databases.data.regions import CoordinateSystem
+from rnacentral_pipeline import schemas, utils
+from rnacentral_pipeline.databases.data.regions import (
+    CoordinateSystem,
+    Exon,
+    SequenceRegion,
+)
+from rnacentral_pipeline.parquet_writers import parquet_writer
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +44,7 @@ FIELDS = [
     "tNumInsert",  # Number of inserts in target
     "tBaseInsert",  # Number of bases inserted in target
     "strand",  # "+" or "-" for query strand. For translated alignments,
-                    # second "+"or "-" is for target genomic strand.
+    # second "+"or "-" is for target genomic strand.
     "qName",  # Query sequence name
     "qSize",  # Query sequence size.
     "qStart",  # Alignment start position in query
@@ -51,10 +54,10 @@ FIELDS = [
     "tStart",  # Alignment start position in target
     "tEnd",  # Alignment end position in target
     "blockCount",  # Number of blocks in the alignment (a block contains no gaps)
-    "blockSizes",  # Comma-separated list of sizes of each block. 
-                        # If the query is a protein and the target the genome,
-                        #  blockSizes are in amino acids. 
-                        # See below for more information on protein query PSLs.
+    "blockSizes",  # Comma-separated list of sizes of each block.
+    # If the query is a protein and the target the genome,
+    #  blockSizes are in amino acids.
+    # See below for more information on protein query PSLs.
     "qStarts",  # Comma-separated list of starting positions of each block in query
     "tStarts",  # Comma-separated list of starting positions of each block in target
 ]
@@ -157,11 +160,23 @@ def select_hits(hits: ty.Iterable[BlatHit], sort=False) -> ty.Iterable[BlatHit]:
             yield hit
 
 
-def write_importable(handle, output):
+def write_importable(handle, output: ty.Union[str, Path]):
+    """
+    Stream selected BLAT hits to ``output``. ``output`` is a path; a
+    ``.parquet`` suffix dispatches to the streaming Parquet helper using the
+    canonical :data:`schemas.GENOME_MAPPING_HITS` schema, otherwise CSV is
+    produced for the legacy pgloader path.
+    """
     hits = utils.unpickle_stream(handle)
     writeable = map(op.methodcaller("writeable"), hits)
     writeable = it.chain.from_iterable(writeable)
-    csv.writer(output).writerows(writeable)
+    path = Path(output)
+    if path.suffix == ".parquet":
+        with parquet_writer(path, schemas.GENOME_MAPPING_HITS) as writer:
+            writer.writerows(writeable)
+    else:
+        with path.open("w") as out:
+            csv.writer(out).writerows(writeable)
 
 
 def as_pickle(assembly_id, hits, output):
