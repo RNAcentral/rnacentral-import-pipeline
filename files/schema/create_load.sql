@@ -185,6 +185,20 @@ CREATE TABLE load_genome_mapping_attempted (
   last_run timestamp not null default CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS load_genome_mapping;
+CREATE TABLE load_genome_mapping (
+  urs_taxid text not null,
+  region_name text not null,
+  chromosome text,
+  strand int4,
+  assembly_id varchar(255),
+  exon_count int,
+  exon_start int4,
+  exon_stop int4,
+  identity float,
+  providing_database text
+);
+
 DROP TABLE IF EXISTS load_assemblies;
 CREATE TABLE load_assemblies (
   assembly_id varchar(255) NOT NULL,
@@ -386,6 +400,12 @@ CREATE TABLE load_qa_status (
   possible_orf_stopfree bool,
   possible_orf_tcode bool,
   messages jsonb
+);
+
+DROP TABLE IF EXISTS load_traveler_attempted;
+CREATE TABLE load_traveler_attempted (
+  urs text PRIMARY KEY,
+  r2dt_version text
 );
 
 DROP TABLE IF EXISTS load_qa_rfam_attempted;
