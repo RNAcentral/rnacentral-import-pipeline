@@ -173,8 +173,10 @@ process blat {
 
   output:
   tuple val(species), path('selected.json'), emit: hits
-  path 'attempted.csv', emit: attempted
+  path "attempted.${params.writer_format}", emit: attempted
 
+  script:
+  def attempted_out = "attempted.${params.writer_format}"
   """
   set -o pipefail
 
@@ -192,7 +194,7 @@ process blat {
     rnac genome-mapping blat serialize $assembly - - |\
     rnac genome-mapping blat select - selected.json
 
-  rnac genome-mapping create-attempted $chunk $assembly attempted.csv
+  rnac genome-mapping create-attempted $chunk $assembly $attempted_out
   """
 }
 
@@ -204,15 +206,17 @@ process select_mapped_locations {
   tuple val(species), path('selected*.json')
 
   output:
-  path('locations.csv')
+  path("locations.${params.writer_format}")
 
+  script:
+  def out = "locations.${params.writer_format}"
   """
   set -o pipefail
 
   find . -name 'selected*.json' |\
     xargs cat |\
     rnac genome-mapping blat select --sort - - |\
-    rnac genome-mapping blat as-importable - locations.csv
+    rnac genome-mapping blat as-importable - $out
   """
 }
 
@@ -221,18 +225,32 @@ process load_mapping {
   maxForks 1
 
   input:
-  path('raw*.csv')
+  path("raw*.${params.writer_format}")
   path(ctl)
-  path('attempted*.csv')
+  path(post_load)
+  path("attempted*.${params.writer_format}")
   path(attempted_ctl)
+  path(attempted_post_load)
 
   output:
   val('done')
 
-  """
-  split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
-  split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
-  """
+  script:
+  if (params.writer_format == 'parquet') {
+    """
+    load-parquet load_genome_mapping 'raw*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    load-parquet load_genome_mapping_attempted 'attempted*.parquet' \\
+      --truncate \\
+      --post-load $attempted_post_load
+    """
+  } else {
+    """
+    split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
+    split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
+    """
+  }
 }
 
 workflow genome_mapping {
@@ -244,7 +262,9 @@ workflow genome_mapping {
     Channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
     Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
     Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
+    Channel.fromPath('files/genome-mapping/post-load.sql').set { post_load }
     Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
+    Channel.fromPath('files/genome-mapping/attempted-post-load.sql').set { attempted_post_load }
 
     setup(ready, find_species) \
     | splitCsv \
@@ -282,7 +302,7 @@ workflow genome_mapping {
     blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
     blat.out.attempted | collect | set { attempted }
 
-    load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
+    load_mapping(hits, hits_ctl, post_load, attempted, attempted_ctl, attempted_post_load) | set { done }
 }
 
 workflow {
