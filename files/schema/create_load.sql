@@ -199,23 +199,6 @@ CREATE TABLE load_genome_mapping (
   providing_database text
 );
 
-DROP TABLE IF EXISTS load_assemblies;
-CREATE TABLE load_assemblies (
-  assembly_id varchar(255) NOT NULL,
-  assembly_full_name varchar(255) NOT NULL,
-  gca_accession varchar(20) NULL,
-  assembly_ucsc varchar(100) NULL,
-  common_name varchar(255),
-  taxid int4 NOT NULL,
-  ensembl_url varchar(100) NULL,
-  division varchar(20) NULL,
-  blat_mapping int4 NULL,
-  example_chromosome varchar(20) NULL,
-  example_end int4 NULL,
-  example_start int4 NULL,
-  subdomain varchar(100) NOT NULL
-);
-
 DROP TABLE IF EXISTS load_rfam_model_hits;
 CREATE TABLE load_rfam_model_hits (
   sequence_start integer NOT NULL,
@@ -414,21 +397,6 @@ CREATE TABLE load_qa_rfam_attempted (
   model_source text NOT NULL,
   source_version text NOT NULL,
   last_run timestamp default CURRENT_TIMESTAMP
-);
-
-DROP TABLE IF EXISTS load_rfam_model_hits;
-CREATE TABLE load_rfam_model_hits (
-  sequence_start integer NOT NULL,
-  sequence_stop integer NOT NULL,
-  sequence_completeness double precision,
-  model_start integer NOT NULL,
-  model_stop integer NOT NULL,
-  model_completeness double precision,
-  overlap character varying(30) COLLATE pg_catalog."default" NOT NULL,
-  e_value double precision NOT NULL,
-  score double precision NOT NULL,
-  rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-  upi character varying(13) COLLATE pg_catalog."default" NOT NULL
 );
 
 DROP TABLE IF EXISTS load_rnc_text_mining;
