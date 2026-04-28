@@ -377,6 +377,119 @@ RFAM_GO_TERMS = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# genome_mapping.blat.write_importable() -> locations.parquet (genome-mapping
+# workflow). Source: files/genome-mapping/load.ctl. Loaded into
+# ``load_genome_mapping`` (created by files/schema/create_load.sql). The
+# ctl's TARGET COLUMNS list is 9 columns; the BlatHit.writeable() tuple
+# matches that order. ``providing_database`` exists in the staging table but
+# is never populated by the parser (left to the post-load merge).
+GENOME_MAPPING_HITS = pa.schema(
+    [
+        pa.field("urs_taxid", pa.string(), nullable=False),
+        pa.field("region_name", pa.string(), nullable=False),
+        pa.field("chromosome", pa.string(), nullable=False),
+        pa.field("strand", pa.int32(), nullable=False),
+        pa.field("assembly_id", pa.string(), nullable=False),
+        pa.field("exon_count", pa.int32(), nullable=False),
+        pa.field("exon_start", pa.int32(), nullable=False),
+        pa.field("exon_stop", pa.int32(), nullable=False),
+        pa.field("identity", pa.float64(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# rnacentral.attempted.genome_mapping() -> attempted.parquet (genome-mapping
+# workflow). Source: files/genome-mapping/attempted.ctl. Loaded into
+# ``load_genome_mapping_attempted`` (created by files/schema/create_load.sql).
+GENOME_MAPPING_ATTEMPTED = pa.schema(
+    [
+        pa.field("urs_taxid", pa.string(), nullable=False),
+        pa.field("assembly_id", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# rnacentral.attempted.qa() (rfam variant) -> attempted.parquet (rfam-scan
+# workflow). Source: files/rfam-scan/load-attempted.ctl. Loaded into
+# ``load_qa_rfam_attempted`` (created by files/schema/create_load.sql); the
+# destination's ``last_run`` column defaults to CURRENT_TIMESTAMP and is not
+# emitted by the parser.
+QA_RFAM_ATTEMPTED = pa.schema(
+    [
+        pa.field("urs", pa.string(), nullable=False),
+        pa.field("model_source", pa.string(), nullable=False),
+        pa.field("source_version", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# rnacentral.attempted.r2dt() -> attempted.parquet (r2dt workflow). Source:
+# files/r2dt/attempted.ctl. Loaded into ``load_traveler_attempted`` (created
+# by files/schema/create_load.sql). ``urs`` is the primary key on the staging
+# table; both columns are NOT NULL because the parser always emits both.
+R2DT_ATTEMPTED = pa.schema(
+    [
+        pa.field("urs", pa.string(), nullable=False),
+        pa.field("r2dt_version", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# rnacentral.precompute.process.Writer.precompute -> precompute.parquet
+# (precompute workflow). Source: files/precompute/load.ctl + the destination
+# DDL in files/precompute/schema.sql (load_precomputed). Column order matches
+# SequenceUpdate.as_writeables() / GenericUpdate.as_writeables().
+#
+# Numeric/bool columns are typed; the writer adapter converts the string rows
+# from as_writeables() into typed tuples on the way in. ``taxid`` is nullable
+# because GenericUpdate emits an empty string (translated to None).
+PRECOMPUTE_DATA = pa.schema(
+    [
+        pa.field("id", pa.string(), nullable=False),
+        pa.field("upi", pa.string(), nullable=False),
+        pa.field("taxid", pa.int64()),
+        pa.field("is_active", pa.bool_(), nullable=False),
+        pa.field("description", pa.string()),
+        pa.field("rna_type", pa.string()),
+        pa.field("has_coordinates", pa.bool_(), nullable=False),
+        pa.field("databases", pa.string()),
+        pa.field("short_description", pa.string()),
+        pa.field("last_release", pa.int32(), nullable=False),
+        pa.field("so_rna_type", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
+# rnacentral.precompute.process.Writer.qa -> qa.parquet (precompute workflow).
+# Source: files/precompute/qa.ctl + the destination DDL in
+# files/precompute/schema.sql (load_qa_status). Column order matches
+# QaStatus.writeable(). ``messages`` is JSON-encoded by the writer and lands
+# in a jsonb destination column — DuckDB casts string->jsonb on COPY (same
+# pattern as REDIPORTAL_FEATURES.metadata).
+PRECOMPUTE_QA = pa.schema(
+    [
+        pa.field("rna_id", pa.string(), nullable=False),
+        pa.field("upi", pa.string(), nullable=False),
+        pa.field("taxid", pa.int64(), nullable=False),
+        pa.field("has_issue", pa.bool_(), nullable=False),
+        pa.field("incomplete_sequence", pa.bool_(), nullable=False),
+        pa.field("possible_contamination", pa.bool_(), nullable=False),
+        pa.field("missing_rfam_match", pa.bool_(), nullable=False),
+        pa.field("from_repetitive_region", pa.bool_(), nullable=False),
+        pa.field("possible_orf", pa.bool_(), nullable=False),
+        pa.field("possible_orf_stopfree", pa.bool_(), nullable=False),
+        pa.field("possible_orf_tcode", pa.bool_(), nullable=False),
+        pa.field("messages", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
 # Logical name -> Postgres staging table name. Lifted from the INTO clauses
 # of files/import-data/load/*.ctl so the Parquet load path mirrors pgloader's
 # table targets exactly. Used by bin/load-parquet when it receives a logical
