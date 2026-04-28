@@ -300,7 +300,7 @@ RFAM_HITS = pa.schema(
 # rediportal.parser.parse() -> features.parquet (rediportal workflow)
 # Source: files/rediportal/load.ctl + the parser's RNAEditFeature.writeable().
 # Loaded into ``load_rediportal_features``; the staging table itself has no
-# NOT NULL constraints (see files/rediportal/pre-load.sql), but the parser
+# NOT NULL constraints (see files/schema/create_load.sql), but the parser
 # always populates everything except ``accession`` (hardcoded None).
 # ``metadata`` is JSON-encoded by the parser and lands in a jsonb destination
 # column — DuckDB casts string→jsonb on COPY (same pattern as FEATURES.metadata
