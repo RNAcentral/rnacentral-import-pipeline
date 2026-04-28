@@ -482,3 +482,39 @@ create table load_ensembl_pseudogenes (
     assembly_id varchar(255) not null,
     exon_count int not null
 );
+
+DROP TABLE IF EXISTS load_cpat;
+CREATE TABLE load_cpat (
+    urs_taxid TEXT NOT NULL,
+    fickett_score float NOT NULL,
+    hexamer_score float NOT NULL,
+    coding_probability float NOT NULL,
+    is_protein_coding bool NOT NULL
+);
+
+DROP TABLE IF EXISTS load_cpat_orfs;
+CREATE TABLE load_cpat_orfs (
+    urs TEXT NOT NULL,
+    taxid int NOT NULL,
+    start_index int NOT NULL,
+    stop_index int NOT NULL,
+    metadata jsonb NOT NULL
+);
+
+DROP TABLE IF EXISTS load_stopfree;
+CREATE TABLE load_stopfree (
+    urs_taxid TEXT NOT NULL,
+    stop_free_run_length integer,
+    gc_content float,
+    run_probability float,
+    is_protein_coding bool
+);
+
+DROP TABLE IF EXISTS load_tcode;
+CREATE TABLE load_tcode (
+    urs_taxid TEXT NOT NULL,
+    length integer,
+    mean_score float,
+    std_score float,
+    is_protein_coding bool
+);
