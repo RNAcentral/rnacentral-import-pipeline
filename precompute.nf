@@ -114,8 +114,8 @@ process process_range {
   tuple val(min), val(max), path(accessions), path(metadata)
 
   output:
-  path 'precompute.csv', emit: data
-  path 'qa.csv', emit: qa
+  path "precompute.${params.writer_format}", emit: data
+  path "qa.${params.writer_format}", emit: qa
 
   """
   mkdir context
@@ -128,18 +128,31 @@ process load_data {
   memory 9.GB
 
   input:
-  path('precompute*.csv')
-  path('qa*.csv')
+  path("precompute*.${params.writer_format}")
+  path("qa*.${params.writer_format}")
   path(pre_ctl)
   path(qa_ctl)
+  path(data_post_load)
+  path(qa_post_load)
   path(post)
 
   script:
-  """
-  split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
-  split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
-  psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
-  """
+  if (params.writer_format == 'parquet')
+    """
+    load-parquet load_precomputed 'precompute*.parquet' \\
+      --truncate \\
+      --post-load $data_post_load
+    load-parquet load_qa_status 'qa*.parquet' \\
+      --truncate \\
+      --post-load $qa_post_load
+    psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+    """
+  else
+    """
+    split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
+    split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
+    psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+    """
 }
 
 workflow precompute {
@@ -151,6 +164,8 @@ workflow precompute {
     Channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
     Channel.fromPath('files/precompute/load.ctl') | set { data_ctl }
     Channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
+    Channel.fromPath('files/precompute/data-post-load.sql') | set { data_post_load }
+    Channel.fromPath('files/precompute/qa-post-load.sql') | set { qa_post_load }
     Channel.fromPath('files/precompute/post-load.sql') | set { post_load }
 
     Channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
@@ -201,7 +216,7 @@ workflow precompute {
     process_range.out.data | collect | set { data }
     process_range.out.qa | collect | set { qa }
 
-    load_data(data, qa, data_ctl, qa_ctl, post_load)
+    load_data(data, qa, data_ctl, qa_ctl, data_post_load, qa_post_load, post_load)
 }
 
 workflow {
