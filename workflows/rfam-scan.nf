@@ -90,7 +90,6 @@ process import_data {
   // Parquet, depending on params.writer_format.
   path("raw*.${params.writer_format}")
   path(ctl)
-  path(pre_load)
   path(post_load)
   path("attempted*.${params.writer_format}")
   path('attempted.ctl')
@@ -102,7 +101,6 @@ process import_data {
   script:
   if (params.writer_format == 'parquet') {
     """
-    psql -v ON_ERROR_STOP=1 -f $pre_load "\$PGDATABASE"
     load-parquet load_rfam_model_hits 'raw*.parquet' \\
       --truncate \\
       --post-load $post_load
@@ -126,7 +124,6 @@ workflow rfam_scan {
     Channel.fromPath("files/qa/computed.sql").set { computed_sql }
     Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
     Channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
-    Channel.fromPath("files/rfam-scan/pre-load.sql").set { pre_load }
     Channel.fromPath("files/rfam-scan/post-load.sql").set { post_load }
     Channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
     Channel.fromPath("files/rfam-scan/attempted-post-load.sql").set { attempted_post_load }
@@ -148,5 +145,5 @@ workflow rfam_scan {
     scan.out.hits | collect | set { hits }
     scan.out.attempted | collect | set { attempted }
 
-    import_data(hits, ctl, pre_load, post_load, attempted, attempted_ctl, attempted_post_load) | set { done }
+    import_data(hits, ctl, post_load, attempted, attempted_ctl, attempted_post_load) | set { done }
 }

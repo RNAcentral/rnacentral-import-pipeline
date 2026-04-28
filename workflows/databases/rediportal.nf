@@ -56,7 +56,7 @@ process load_rediportal {
   memory 6.GB
 
   input:
-    tuple path("raw*.${params.writer_format}"), path(ctl), path(pre_load), path(post_load)
+    tuple path("raw*.${params.writer_format}"), path(ctl), path(post_load)
 
   output:
     val('rediportal done')
@@ -64,7 +64,6 @@ process load_rediportal {
   script:
   if (params.writer_format == 'parquet') {
     """
-    psql -v ON_ERROR_STOP=1 -f $pre_load "\$PGDATABASE"
     load-parquet load_rediportal_features 'raw*.parquet' \\
       --truncate \\
       --post-load $post_load
@@ -84,7 +83,6 @@ workflow rediportal {
     if( params.databases.rediportal.run ) {
       Channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
       Channel.fromPath("files/rediportal/load.ctl") | set { load_query }
-      Channel.fromPath("files/rediportal/pre-load.sql") | set { pre_load }
       Channel.fromPath("files/rediportal/post-load.sql") | set { post_load }
       Channel
         .fromList(params.databases.rediportal.inputs)
@@ -110,7 +108,6 @@ workflow rediportal {
         }
         | intersect_rnc_rediportal
         | combine(load_query)
-        | combine(pre_load)
         | combine(post_load)
         | load_rediportal
         | set { done }
