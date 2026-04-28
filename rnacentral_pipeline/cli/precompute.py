@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 from pathlib import Path
 
 import click
@@ -48,7 +49,12 @@ def precompute_from_file(context, json_file, output):
     process the results into a CSV that can be loaded into the database.
     """
     updates = pre.parse(Path(context), Path(json_file))
-    with writers.build(pre.Writer, Path(output)) as writer:
+    out_path = Path(output)
+    if os.environ.get("RNAC_OUTPUT_FORMAT", "csv").lower() == "parquet":
+        opener = pre.parquet_writer(out_path)
+    else:
+        opener = writers.build(pre.Writer, out_path)
+    with opener as writer:
         writer.write(updates)
 
 
