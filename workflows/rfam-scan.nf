@@ -92,7 +92,7 @@ process import_data {
   path(ctl)
   path(post_load)
   path("attempted*.${params.writer_format}")
-  path('attempted.ctl')
+  path(attempted_ctl)
   path(attempted_post_load)
 
   output:
@@ -111,7 +111,7 @@ process import_data {
   } else {
     """
     split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} rfam
-    split-and-load attempted.ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam
+    split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam
     """
   }
 }
