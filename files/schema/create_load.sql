@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS load_rnc_accessions;
-CREATE TABLE load_rnc_accessions (
+CREATE UNLOGGED TABLE load_rnc_accessions (
     accession character varying(200) NOT NULL,
     parent_ac character varying(200) NULL,
     seq_version bigint NULL,
@@ -44,7 +44,7 @@ CREATE TABLE load_rnc_accessions (
 );
 
 DROP TABLE IF EXISTS load_rnc_references;
-CREATE TABLE load_rnc_references (
+CREATE UNLOGGED TABLE load_rnc_references (
     md5 character varying(64) NOT NULL,
     accession character varying(200) NULL,
     authors text NULL,
@@ -126,7 +126,7 @@ CREATE TABLE
   );
 
 DROP TABLE IF EXISTS load_rnacentral_all;
-CREATE TABLE
+CREATE UNLOGGED TABLE
   load_rnacentral_all (
     crc64 character varying(16) NULL,
     len integer NULL,
