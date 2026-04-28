@@ -29,6 +29,7 @@ from rnacentral_pipeline.databases.ensembl.metadata import (
     karyotypes,
     proteins,
 )
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral.notify import slack
 from rnacentral_pipeline.writers import entry_writer
 
@@ -74,6 +75,7 @@ def vert_url(division, ftp, output, kind=None):
         file_okay=False,
     ),
 )
+@format_option
 def parse_data(division, embl_file, gff_file, output, family_file=None):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
@@ -137,6 +139,7 @@ def ensembl_coordinates(connections, query, output):
 @cli.command("karyotypes")
 @click.argument("output", default="karyotypes.csv")
 @click.argument("species", nargs=-1)
+@format_option
 def ensembl_write_karyotypes(output, species):
     """
     Fetch all the karyotype information from all Ensembl species. This will use
@@ -164,6 +167,7 @@ def ensembl_proteins_cmd(connections, query, output):
 @cli.command("compara")
 @click.argument("fasta", default="-", type=click.File("rb"))
 @click.argument("output", default="compara.csv")
+@format_option
 def ensembl_compara(fasta, output):
     """
     Parse the FASTA file of Ensembl compara data. This will produce a CSV file

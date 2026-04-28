@@ -18,7 +18,8 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases.generic import parser as generic
-from rnacentral_pipeline.writers import entry_writer, parquet_entry_writer
+from rnacentral_pipeline.output_format import format_option
+from rnacentral_pipeline.writers import entry_writer
 
 
 @click.group("pombase")
@@ -35,20 +36,11 @@ def cli():
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-@click.option(
-    "--format",
-    "output_format",
-    type=click.Choice(["csv", "parquet"]),
-    default="csv",
-    help="Interchange format emitted for the pgloader/DuckDB load step.",
-)
-def process_json_schema(json_file, output, output_format):
+@format_option
+def process_json_schema(json_file, output):
     """
     This parses our JSON schema files to produce the importable interchange files.
     """
     entries = generic.parse(json_file)
-    writer_factory = (
-        parquet_entry_writer if output_format == "parquet" else entry_writer
-    )
-    with writer_factory(Path(output)) as writer:
+    with entry_writer(Path(output)) as writer:
         writer.write(entries)

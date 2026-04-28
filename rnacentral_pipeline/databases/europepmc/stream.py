@@ -21,6 +21,7 @@ from pathlib import Path
 from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.europepmc import fetch
 from rnacentral_pipeline.databases.helpers.publications import reference
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import parquet_writer
 
 from . import xml
@@ -87,13 +88,13 @@ def write_lookup(
     """
     Stream looked-up references to ``output``. ``output`` may be either a
     writable file handle (CSV path, legacy behaviour) or a filesystem path.
-    Paths ending in ``.parquet`` are streamed through the shared Parquet
-    writer using the canonical ``schemas.REFERENCES`` schema; everything else
-    is written as CSV.
+    The CSV vs Parquet choice is governed by the shared
+    ``RNAC_OUTPUT_FORMAT`` switch (see
+    :mod:`rnacentral_pipeline.output_format`).
     """
     if isinstance(output, (str, Path)):
         path = Path(output)
-        if path.suffix == ".parquet":
+        if is_parquet():
             with parquet_writer(path, schemas.REFERENCES) as writer:
                 _stream_rows(
                     writer, ids, directory, column, allow_fallback, ignore_missing

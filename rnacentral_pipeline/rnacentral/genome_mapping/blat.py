@@ -30,6 +30,7 @@ from rnacentral_pipeline.databases.data.regions import (
     Exon,
     SequenceRegion,
 )
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import parquet_writer
 
 LOGGER = logging.getLogger(__name__)
@@ -162,16 +163,16 @@ def select_hits(hits: ty.Iterable[BlatHit], sort=False) -> ty.Iterable[BlatHit]:
 
 def write_importable(handle, output: ty.Union[str, Path]):
     """
-    Stream selected BLAT hits to ``output``. ``output`` is a path; a
-    ``.parquet`` suffix dispatches to the streaming Parquet helper using the
-    canonical :data:`schemas.GENOME_MAPPING_HITS` schema, otherwise CSV is
-    produced for the legacy pgloader path.
+    Stream selected BLAT hits to ``output``. The CSV vs Parquet choice is
+    governed by the shared ``RNAC_OUTPUT_FORMAT`` switch (see
+    :mod:`rnacentral_pipeline.output_format`); the legacy pgloader path
+    consumes CSV.
     """
     hits = utils.unpickle_stream(handle)
     writeable = map(op.methodcaller("writeable"), hits)
     writeable = it.chain.from_iterable(writeable)
     path = Path(output)
-    if path.suffix == ".parquet":
+    if is_parquet():
         with parquet_writer(path, schemas.GENOME_MAPPING_HITS) as writer:
             writer.writerows(writeable)
     else:

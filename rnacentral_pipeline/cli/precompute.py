@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 from pathlib import Path
 
 import click
 
 from rnacentral_pipeline import writers
+from rnacentral_pipeline.output_format import format_option, is_parquet
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 from rnacentral_pipeline.rnacentral.precompute import ranges as pre_ranges
 
@@ -43,6 +43,7 @@ def cli():
         file_okay=False,
     ),
 )
+@format_option
 def precompute_from_file(context, json_file, output):
     """
     This command will take the output produced by the precompute query and
@@ -50,7 +51,7 @@ def precompute_from_file(context, json_file, output):
     """
     updates = pre.parse(Path(context), Path(json_file))
     out_path = Path(output)
-    if os.environ.get("RNAC_OUTPUT_FORMAT", "csv").lower() == "parquet":
+    if is_parquet():
         opener = pre.parquet_writer(out_path)
     else:
         opener = writers.build(pre.Writer, out_path)

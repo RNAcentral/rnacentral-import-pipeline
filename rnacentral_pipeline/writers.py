@@ -17,7 +17,6 @@ limitations under the License.
 
 import csv
 import logging
-import os
 import typing as ty
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
@@ -27,6 +26,7 @@ import pyarrow.parquet as pq
 
 from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import (
     DEFAULT_BATCH_SIZE as PARQUET_ROW_GROUP_SIZE,
 )
@@ -168,12 +168,11 @@ def build_parquet(
 
 def entry_writer(path: Path):
     """
-    Open the standard entry writer at ``path``. Honours the
-    ``RNAC_OUTPUT_FORMAT`` environment variable: set to ``parquet`` to emit
-    streaming Parquet files (see :func:`parquet_entry_writer`). Defaults to
-    the historical CSV path.
+    Open the standard entry writer at ``path``. The CSV vs Parquet choice is
+    driven by the shared ``RNAC_OUTPUT_FORMAT`` switch (see
+    :mod:`rnacentral_pipeline.cli._format`); CSV remains the default.
     """
-    if os.environ.get("RNAC_OUTPUT_FORMAT", "csv").lower() == "parquet":
+    if is_parquet():
         return parquet_entry_writer(path)
     return build(EntryWriter, path)
 

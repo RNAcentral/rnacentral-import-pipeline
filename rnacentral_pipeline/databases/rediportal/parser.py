@@ -11,6 +11,7 @@ import pandas as pd
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import parquet_writer
 
 REDI_BASE_URL = "https://rediportal.cloud.ba.infn.it/cgi/atlas/getpage_dev.py"
@@ -220,7 +221,7 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output, genome_build: str):
 
     if isinstance(output, (str, Path)):
         path = Path(output)
-        if path.suffix == ".parquet":
+        if is_parquet():
             with parquet_writer(path, schemas.REDIPORTAL_FEATURES) as writer:
                 for row in _rows():
                     writer.writerow(row)

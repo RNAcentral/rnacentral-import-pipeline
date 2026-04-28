@@ -16,6 +16,7 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
 from rnacentral_pipeline.rnacentral.genome_mapping import blat, igv, urls
 
@@ -53,12 +54,12 @@ def hits_json(assembly_id, hits, output):
 @hits.command("as-importable")
 @click.argument("hits", default="-", type=click.File("rb"))
 @click.argument("output", type=click.Path())
+@format_option
 def as_importable(hits, output):
     """
     Convert a json-line file into a CSV/Parquet file that can be loaded into
-    Postgres. The output suffix selects the format (``.parquet`` for the
-    streaming Parquet path; anything else is treated as CSV for legacy
-    pgloader). Lossy: only keeps the columns the loader needs.
+    Postgres. Format is governed by ``--format``/``RNAC_OUTPUT_FORMAT``
+    (CSV by default). Lossy: only keeps the columns the loader needs.
     """
     blat.write_importable(hits, output)
 

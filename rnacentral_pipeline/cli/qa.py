@@ -16,6 +16,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.databases import dfam, rfam
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
 
 
@@ -30,11 +31,12 @@ def cli():
 @cli.command("rfam")
 @click.argument("tblout", default="-", type=click.File("r"))
 @click.argument("output", default="-", type=click.Path(allow_dash=True))
+@format_option
 def process_tblout(tblout, output):
     """
     Process a tblout file and write rows for importing into our database.
-    ``output`` is a filesystem path; a ``.parquet`` suffix triggers Parquet
-    output, ``-`` writes CSV to stdout, anything else writes a CSV file.
+    Format is governed by ``--format``/``RNAC_OUTPUT_FORMAT``; ``-`` writes
+    CSV to stdout regardless.
     """
     rfam.infernal_results.as_csv(tblout, output)
 

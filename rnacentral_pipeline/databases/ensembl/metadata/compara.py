@@ -21,6 +21,7 @@ from Bio import AlignIO
 from six.moves import cStringIO as StringIO
 
 from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import parquet_writer
 
 
@@ -72,7 +73,7 @@ def write(fasta, output):
 
     if isinstance(output, (str, Path)):
         path = Path(output)
-        if path.suffix == ".parquet":
+        if is_parquet():
             with parquet_writer(path, schemas.COMPARA) as writer:
                 for row in _rows(fasta):
                     writer.writerow(row)

@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import pickle
 from pathlib import Path
 
@@ -22,6 +21,7 @@ import click
 from rnacentral_pipeline.cpat import data as cpat_data
 from rnacentral_pipeline.cpat import parser
 from rnacentral_pipeline.cpat.data import CpatWriter
+from rnacentral_pipeline.output_format import format_option, is_parquet
 from rnacentral_pipeline.writers import build
 
 
@@ -38,11 +38,12 @@ def cli():
 @click.argument("model_name")
 @click.argument("results", type=click.Path())
 @click.argument("output", type=click.Path())
+@format_option
 def parse(cutoffs, model_name, results, output):
     cutoffs = pickle.load(cutoffs)
     data = parser.parse(cutoffs, model_name, Path(results))
     out_path = Path(output)
-    if os.environ.get("RNAC_OUTPUT_FORMAT", "csv").lower() == "parquet":
+    if is_parquet():
         opener = cpat_data.parquet_writer(out_path)
     else:
         opener = build(CpatWriter, out_path)

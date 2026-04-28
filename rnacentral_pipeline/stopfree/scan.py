@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import argparse
 import csv
-import os
 import re
 import typing as ty
 from pathlib import Path
 
 from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import typed_parquet_writer
 from rnacentral_pipeline.stopfree.data import StopfreeResult
 
@@ -87,7 +87,7 @@ def calculate_results(
 
 
 def write_results(results: ty.Iterable[StopfreeResult], output: Path) -> None:
-    if os.environ.get("RNAC_OUTPUT_FORMAT", "csv").lower() == "parquet":
+    if is_parquet():
         with typed_parquet_writer(
             output / "results.parquet", schemas.STOPFREE_RESULTS
         ) as writer:

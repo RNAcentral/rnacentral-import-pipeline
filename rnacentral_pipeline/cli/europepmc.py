@@ -16,6 +16,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.databases.europepmc import fetch, stream, xml
+from rnacentral_pipeline.output_format import format_option
 
 
 @click.group("europepmc")
@@ -84,12 +85,13 @@ def lookup(db, ids, output, column=0, allow_fallback=False, ignore_missing=True)
 @click.argument("directory", default="out", type=click.Path())
 @click.argument("ids", default="ref_ids.csv", type=click.File("r"))
 @click.argument("output", default="references.csv", type=click.Path())
+@format_option
 def stream_lookup(
     directory, ids, output, column=0, allow_fallback=False, ignore_missing=True
 ):
     """
-    Load all ids to write in. ``output`` is a filesystem path; a ``.parquet``
-    suffix triggers Parquet output, anything else writes CSV.
+    Load all ids to write in. Format is governed by
+    ``--format``/``RNAC_OUTPUT_FORMAT`` (CSV by default).
     """
     stream.write_lookup(
         ids,

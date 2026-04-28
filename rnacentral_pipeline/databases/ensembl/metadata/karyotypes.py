@@ -25,6 +25,7 @@ from retry import retry
 from throttler import throttle
 
 from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import parquet_writer
 from rnacentral_pipeline.utils import cacheable
 
@@ -114,7 +115,7 @@ def _rows(species=None):
 def write(output, species=None):
     if isinstance(output, (str, Path)):
         path = Path(output)
-        if path.suffix == ".parquet":
+        if is_parquet():
             with parquet_writer(path, schemas.KARYOTYPES) as writer:
                 for row in _rows(species=species):
                     writer.writerow(row)

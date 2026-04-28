@@ -20,6 +20,7 @@ import click
 from rnacentral_pipeline.databases.ncbi import taxonomy
 from rnacentral_pipeline.databases.ncbi.gene import fetch as gene_fetch
 from rnacentral_pipeline.databases.ncbi.gene import parser as gene_parser
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -42,6 +43,7 @@ def cli():
     ),
 )
 @click.argument("output", default="taxonomy.csv")
+@format_option
 def parse_taxonomy(ncbi, output):
     taxonomy.write(ncbi, output)
 
@@ -70,6 +72,7 @@ def fetch_genes(output):
         file_okay=False,
     ),
 )
+@format_option
 def process_ncbi_gene(data_file, output):
     entries = gene_parser.parse(data_file)
     with entry_writer(Path(output)) as writer:

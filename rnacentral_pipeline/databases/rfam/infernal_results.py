@@ -21,6 +21,7 @@ from pathlib import Path
 import attr
 
 from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import parquet_writer
 
 CSV_COLUMNS = [
@@ -251,7 +252,7 @@ def as_csv(tblout, output):
             _write_csv(tblout, sys.stdout)
             return
         path = Path(output)
-        if path.suffix == ".parquet":
+        if is_parquet():
             _write_parquet(tblout, path)
             return
         with path.open("w") as handle:

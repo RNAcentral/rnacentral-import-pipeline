@@ -29,6 +29,7 @@ from attr.validators import optional
 from sqlitedict import SqliteDict
 
 from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import parquet_writer
 
 NAME_ALIASES = {
@@ -119,7 +120,7 @@ def parse_directory(directory: Path) -> ty.Iterable[TaxonomyEntry]:
 def write(directory: Path, output):
     if isinstance(output, (str, Path)):
         path = Path(output)
-        if path.suffix == ".parquet":
+        if is_parquet():
             with parquet_writer(path, schemas.TAXONOMY) as writer:
                 for entry in parse_directory(directory):
                     for row in entry.writeable():

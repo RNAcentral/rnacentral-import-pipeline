@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 from pathlib import Path
 
 import click
 
 from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import format_option, is_parquet
 from rnacentral_pipeline.parquet_writers import typed_parquet_writer
 from rnacentral_pipeline.tcode import parser
 from rnacentral_pipeline.tcode.data import TcodeWriter
@@ -36,10 +36,11 @@ def cli():
 @cli.command("parse")
 @click.argument("tcode_output", type=click.Path())
 @click.argument("output", type=click.Path())
+@format_option
 def parse(tcode_output, output):
     data = parser.parse(Path(tcode_output))
     out_path = Path(output)
-    if os.environ.get("RNAC_OUTPUT_FORMAT", "csv").lower() == "parquet":
+    if is_parquet():
         out_path.mkdir(parents=True, exist_ok=True)
         with typed_parquet_writer(
             out_path / "results.parquet", schemas.TCODE_RESULTS

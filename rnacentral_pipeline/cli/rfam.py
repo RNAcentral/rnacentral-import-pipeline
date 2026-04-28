@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases import rfam
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -38,6 +39,7 @@ def cli():
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
+@format_option
 def process_rfam(mapping_file, sequence_info, sequence_fasta, output):
     """
     Process Rfam's JSON format into the files to import.
@@ -68,5 +70,6 @@ def rfam_group_clans(filename, output):
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
+@format_option
 def ontologies_rfam_terms(filename, output):
     rfam.cross_references.from_file(filename, Path(output))

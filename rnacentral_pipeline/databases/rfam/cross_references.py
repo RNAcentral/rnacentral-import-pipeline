@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import csv
-import os
 import typing as ty
 from pathlib import Path
 
@@ -23,6 +22,7 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 
 from rnacentral_pipeline import schemas, writers
+from rnacentral_pipeline.output_format import is_parquet
 
 EXCLUDED_TERMS = {
     "GO:0008049",
@@ -178,7 +178,7 @@ _PARQUET_SCHEMAS = {
 
 
 def from_file(handle: ty.IO, output: Path):
-    if os.environ.get("RNAC_OUTPUT_FORMAT", "csv").lower() == "parquet":
+    if is_parquet():
         with writers.build_parquet(Writer, output, _PARQUET_SCHEMAS) as writer:
             writer.write(ontology_references(handle))
         return
