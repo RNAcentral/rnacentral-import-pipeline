@@ -447,7 +447,7 @@ def as_entry(record, context):
     Generate an Entry to import based off the database, exons and raw record.
     """
     oid = optional_id(record, context)
-    if oid is not None and len(oid) > 200:
+    if oid is not None and len(oid) > 100:
         return None
     return data.Entry(
         primary_id=external_id(record),
