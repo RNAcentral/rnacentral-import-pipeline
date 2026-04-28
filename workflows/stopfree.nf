@@ -43,7 +43,7 @@ process stopfree_scan {
   path(sequences)
 
   output:
-  path("results.csv")
+  path("results.${params.writer_format}")
 
   """
   PYTHONPATH="${workflow.launchDir}" python "${workflow.launchDir}/rnacentral_pipeline/stopfree/scan.py" "$sequences" . --max-probability ${params.stopfree.max_probability}
@@ -55,12 +55,21 @@ process store_results {
   memory 9.GB
 
   input:
-  path('results*.csv')
+  path("results*.${params.writer_format}")
   path(result_ctl)
+  path(post_load)
 
-  """
-  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} stopfree-results
-  """
+  script:
+  if (params.writer_format == 'parquet')
+    """
+    load-parquet load_stopfree 'results*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    """
+  else
+    """
+    split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} stopfree-results
+    """
 }
 
 workflow stopfree {
@@ -71,6 +80,7 @@ workflow stopfree {
 
     def query = file(params.stopfree.query)
     def load_ctl = file('files/stopfree/stopfree.ctl')
+    def post_load = file('files/stopfree/post-load.sql')
 
     def fasta_ch = Channel.of('ready') \
       | build_ranges \
@@ -84,7 +94,7 @@ workflow stopfree {
 
     stopfree_scan.out | collect | set { data }
 
-    store_results(data, load_ctl)
+    store_results(data, load_ctl, post_load)
 }
 
 workflow {

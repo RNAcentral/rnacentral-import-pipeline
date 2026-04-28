@@ -57,8 +57,8 @@ process parse_results {
   tuple val(model_name), path('scan-results.tsv'), path(cutoff_info)
 
   output:
-  path('results.csv'), emit: results
-  path('orfs.csv'), emit: orfs
+  path("results.${params.writer_format}"), emit: results
+  path("orfs.${params.writer_format}"), emit: orfs
 
   """
   rnac cpat parse $cutoff_info $model_name scan-results.tsv .
@@ -68,15 +68,28 @@ process parse_results {
 process store_results {
   memory 6.GB
   input:
-  path('results*.csv')
-  path('orfs.*.csv')
+  path("results*.${params.writer_format}")
+  path("orfs*.${params.writer_format}")
   path(result_ctl)
   path(orf_ctl)
+  path(result_post_load)
+  path(orf_post_load)
 
-  """
-  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} cpat-results
-  split-and-load $orf_ctl 'orfs*.csv' ${params.import_data.chunk_size} cpat-orfs
-  """
+  script:
+  if (params.writer_format == 'parquet')
+    """
+    load-parquet load_cpat 'results*.parquet' \\
+      --truncate \\
+      --post-load $result_post_load
+    load-parquet load_cpat_orfs 'orfs*.parquet' \\
+      --truncate \\
+      --post-load $orf_post_load
+    """
+  else
+    """
+    split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} cpat-results
+    split-and-load $orf_ctl 'orfs*.csv' ${params.import_data.chunk_size} cpat-orfs
+    """
 }
 
 workflow cpat {
@@ -84,6 +97,8 @@ workflow cpat {
   main:
     Channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
     Channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
+    Channel.fromPath('files/cpat/results-post-load.sql') | set { result_post_load }
+    Channel.fromPath('files/cpat/orfs-post-load.sql') | set { orf_post_load }
     Channel.fromPath('files/cpat/query.sql') | set { query }
 
     flag | find_models
@@ -112,7 +127,7 @@ workflow cpat {
     parse_results.out.results | collect | set { data }
     parse_results.out.orfs | collect | set { orfs }
 
-    store_results(data, orfs, load_ctl, orf_ctl)
+    store_results(data, orfs, load_ctl, orf_ctl, result_post_load, orf_post_load)
 }
 
 workflow {
