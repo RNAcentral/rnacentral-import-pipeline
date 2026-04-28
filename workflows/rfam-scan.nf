@@ -56,10 +56,11 @@ process scan {
 
   output:
   path "hits.${params.writer_format}", emit: hits
-  path 'attempted.csv', emit: attempted
+  path "attempted.${params.writer_format}", emit: attempted
 
   script:
   def hits_out = "hits.${params.writer_format}"
+  def attempted_out = "attempted.${params.writer_format}"
   """
   cmscan \
     -o output.inf \
@@ -77,7 +78,7 @@ process scan {
     sequences.fasta
 
   rnac qa rfam results.tblout $hits_out
-  rnac qa create-attempted sequences.fasta rfam $version attempted.csv
+  rnac qa create-attempted sequences.fasta rfam $version $attempted_out
   """
 }
 
@@ -85,14 +86,15 @@ process import_data {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory 6.GB
   input:
-  // Hits land as either CSV (legacy pgloader path) or Parquet, depending on
-  // params.writer_format. The attempted side is always CSV for now.
+  // Both hits and attempted land as either CSV (legacy pgloader path) or
+  // Parquet, depending on params.writer_format.
   path("raw*.${params.writer_format}")
   path(ctl)
   path(pre_load)
   path(post_load)
-  path('attempted*.csv')
+  path("attempted*.${params.writer_format}")
   path('attempted.ctl')
+  path(attempted_post_load)
 
   output:
   val('rfam done')
@@ -104,7 +106,9 @@ process import_data {
     load-parquet load_rfam_model_hits 'raw*.parquet' \\
       --truncate \\
       --post-load $post_load
-    split-and-load attempted.ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam
+    load-parquet load_qa_rfam_attempted 'attempted*.parquet' \\
+      --truncate \\
+      --post-load $attempted_post_load
     """
   } else {
     """
@@ -125,6 +129,7 @@ workflow rfam_scan {
     Channel.fromPath("files/rfam-scan/pre-load.sql").set { pre_load }
     Channel.fromPath("files/rfam-scan/post-load.sql").set { post_load }
     Channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
+    Channel.fromPath("files/rfam-scan/attempted-post-load.sql").set { attempted_post_load }
 
     generate_files(ready)
 
@@ -143,5 +148,5 @@ workflow rfam_scan {
     scan.out.hits | collect | set { hits }
     scan.out.attempted | collect | set { attempted }
 
-    import_data(hits, ctl, pre_load, post_load, attempted, attempted_ctl) | set { done }
+    import_data(hits, ctl, pre_load, post_load, attempted, attempted_ctl, attempted_post_load) | set { done }
 }

@@ -55,6 +55,6 @@ def process_dfam(data, output):
 @click.argument("filename", type=click.File("r"))
 @click.argument("name")
 @click.argument("version_file", type=click.File("r"))
-@click.argument("output", type=click.File("w"))
+@click.argument("output", type=click.Path())
 def track_attempted(filename, name, version_file, output):
     attempted.qa(filename, name, version_file, output)

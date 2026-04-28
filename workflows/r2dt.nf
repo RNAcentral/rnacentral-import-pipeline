@@ -170,11 +170,13 @@ process parse_layout {
 
   output:
   path "data.csv", emit: data
-  path 'attempted.csv', emit: attempted
+  path "attempted.${params.writer_format}", emit: attempted
 
+  script:
+  def attempted_out = "attempted.${params.writer_format}"
   """
   rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
-  rnac r2dt create-attempted $sequences $version attempted.csv
+  rnac r2dt create-attempted $sequences $version $attempted_out
   """
 }
 
@@ -184,8 +186,9 @@ process store_secondary_structures {
   input:
   path('data*.csv')
   path(ctl)
-  path('attempted*.csv')
+  path("attempted*.${params.writer_format}")
   path(attempted_ctl)
+  path(attempted_post_load)
   path(urs_sql)
   path(model)
   path(should_show_ctl)
@@ -194,9 +197,19 @@ process store_secondary_structures {
   output:
   val('r2dt done')
 
+  script:
+  // Hits side (data*.csv) and should-show stay on the legacy pgloader path
+  // for now; only the attempted side has been migrated to parquet.
+  def attempted_cmd = (params.writer_format == 'parquet') ?
+    """
+    load-parquet load_traveler_attempted 'attempted*.parquet' \\
+      --truncate \\
+      --post-load $attempted_post_load
+    """ :
+    "split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted"
   """
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
-  split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted
+  $attempted_cmd
 
   psql -f "$urs_sql" "$PGDATABASE" > urs.txt
   rnac r2dt should-show compute $model urs.txt should-show.csv
@@ -245,6 +258,7 @@ workflow r2dt {
     Channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
     Channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
     Channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+    Channel.fromPath('files/r2dt/attempted-post-load.sql') | set { attempted_post_load }
 
     fetch_tracked(ready, tracked_sql) | set { tracked }
 
@@ -276,7 +290,7 @@ workflow r2dt {
 
     publish_layout.out.flag | collect | map { _ -> 'ready' } | set { uploaded }
 
-    store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+    store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, uploaded) | set { done }
 }
 
 workflow {
