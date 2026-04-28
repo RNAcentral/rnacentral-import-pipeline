@@ -486,3 +486,15 @@ CREATE TABLE load_tcode (
     std_score float,
     is_protein_coding bool
 );
+
+DROP TABLE IF EXISTS load_rediportal_features;
+CREATE TABLE load_rediportal_features (
+    upi text,
+    taxid int,
+    accession text,
+    start int,
+    stop int,
+    feature_name text,
+    metadata jsonb,
+    feature_provider text
+);
