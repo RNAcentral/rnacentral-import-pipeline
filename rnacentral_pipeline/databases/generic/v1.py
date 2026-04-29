@@ -447,10 +447,13 @@ def as_entry(record, context):
     Generate an Entry to import based off the database, exons and raw record.
     """
     oid = optional_id(record, context)
+    pid = external_id(record)
+    if len(pid) > 100:
+        return None
     if oid is not None and len(oid) > 100:
         return None
     return data.Entry(
-        primary_id=external_id(record),
+        primary_id=pid,
         accession=record["primaryId"],
         ncbi_tax_id=taxid(record),
         database=context.database,
@@ -504,9 +507,7 @@ def parse(raw):
                 if entry is not None:
                     entries.append(entry)
                 else:
-                    LOGGER.warning(
-                        "Overlong optional_id filtered for %s", r["primaryId"]
-                    )
+                    LOGGER.warning("Overlong ID filtered for %s", r["primaryId"])
             except phy.UnknownTaxonId as e:
                 print("Unknown taxid for %s" % r["primaryId"])
                 print(f"UnknownTaxonId: {e}")
