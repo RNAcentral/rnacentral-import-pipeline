@@ -18,7 +18,8 @@ pub struct Orf {
     pub id: usize,
     pub urs_id: usize,
     urs_taxid: String,
-    source: String,
+    source: Option<String>,
+    is_protein_coding: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -39,7 +40,9 @@ impl FromIterator<Orf> for Option<OrfInfo> {
         let mut info = OrfInfo::default();
 
         for orf in orfs {
-            info.sources.insert(orf.source);
+            if let Some(source) = orf.source {
+                info.sources.insert(source);
+            }
         }
 
         match info.sources.is_empty() {
@@ -47,6 +50,10 @@ impl FromIterator<Orf> for Option<OrfInfo> {
             false => Some(info),
         }
     }
+}
+
+pub fn possible_orf(orfs: &[Orf]) -> Option<bool> {
+    orfs.iter().find_map(|orf| orf.is_protein_coding)
 }
 
 impl grouper::HasIndex for Orf {

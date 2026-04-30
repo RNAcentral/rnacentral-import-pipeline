@@ -21,10 +21,13 @@ NAME = "possible_orf"
 
 
 def validate(sequence: Sequence) -> QaResult:
-    if not sequence.orf_info:
+    if not sequence.possible_orf:
         return QaResult.ok(NAME)
 
-    sources = sequence.orf_info.all_sources()
+    sources = ["CPAT"]
+    if sequence.orf_info:
+        sources = sequence.orf_info.all_sources()
+
     count = len(sources)
     sources = ", ".join(sources)
     message = f"This sequence contains a possible ORF, as annotated by {sources}"

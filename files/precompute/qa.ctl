@@ -39,6 +39,10 @@ WITH
 AFTER LOAD DO
 $$
 ALTER TABLE qa_status
+  ADD COLUMN IF NOT EXISTS possible_orf bool;
+$$,
+$$
+ALTER TABLE qa_status
   ADD COLUMN IF NOT EXISTS possible_orf_stopfree bool;
 $$,
 $$

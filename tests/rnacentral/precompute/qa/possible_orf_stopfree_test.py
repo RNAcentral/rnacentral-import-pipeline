@@ -18,6 +18,7 @@ def build_sequence(possible_orf_stopfree_flag):
         last_release=1,
         r2dt_hits=[],
         orf_info=None,
+        possible_orf=False,
         possible_orf_stopfree=possible_orf_stopfree_flag,
         possible_orf_tcode=False,
     )
@@ -34,4 +35,7 @@ def test_not_ok_when_sequence_has_stopfree_orf():
     result = possible_orf_stopfree.validate(build_sequence(True))
 
     assert result.has_issue is True
-    assert result.message == "This sequence contains a possible ORF, as annotated by stopfree"
+    assert (
+        result.message
+        == "This sequence contains a possible ORF, as annotated by stopfree"
+    )
