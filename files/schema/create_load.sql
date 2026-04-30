@@ -202,28 +202,6 @@ CREATE UNLOGGED TABLE load_assemblies (
   subdomain varchar(100) NOT NULL
 );
 
-DROP TABLE IF EXISTS load_rfam_model_hits;
-CREATE UNLOGGED TABLE load_rfam_model_hits (
-  sequence_start integer NOT NULL,
-  sequence_stop integer NOT NULL,
-  sequence_completeness double precision,
-  model_start integer NOT NULL,
-  model_stop integer NOT NULL,
-  model_completeness double precision,
-  overlap character varying(30) COLLATE pg_catalog."default" NOT NULL,
-  e_value double precision NOT NULL,
-  score double precision NOT NULL,
-  rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-  upi character varying(13) COLLATE pg_catalog."default" NOT NULL
-);
-
-DROP TABLE IF EXISTS load_rfam_model_hits;
-CREATE UNLOGGED TABLE load_rfam_model_hits (
-  urs text PRIMARY KEY REFERENCES rna(upi),
-  qa_analysis text NOT NULL,
-  last_run timestamp NOT NULL
-);
-
 DROP TABLE IF EXISTS load_rnc_sequence_features;
 CREATE UNLOGGED TABLE load_rnc_sequence_features (
     accession varchar(100) NOT NULL,
