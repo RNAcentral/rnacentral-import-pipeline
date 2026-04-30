@@ -15,4 +15,15 @@ create table load_ensembl_analysis_status (
     task_name text
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_ensembl_analysis_status SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_ensembl_analysis_status;
+$$
 ;

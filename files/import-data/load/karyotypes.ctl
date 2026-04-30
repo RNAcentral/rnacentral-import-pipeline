@@ -24,4 +24,15 @@ CREATE TABLE load_karyotypes (
     karyotype text
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_karyotypes SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_karyotypes;
+$$
 ;

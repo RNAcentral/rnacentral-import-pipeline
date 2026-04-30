@@ -57,4 +57,14 @@ CREATE TABLE load_assemblies (
 	subdomain varchar(100) NOT NULL
 );
 $$
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_assemblies SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_assemblies;
+$$
 ;

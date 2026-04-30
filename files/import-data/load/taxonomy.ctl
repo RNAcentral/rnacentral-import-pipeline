@@ -32,4 +32,15 @@ create table load_taxonomy (
     replaced_by int
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_taxonomy SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_taxonomy;
+$$
 ;

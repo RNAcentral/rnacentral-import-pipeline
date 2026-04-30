@@ -38,4 +38,17 @@ TARGET COLUMNS
 WITH
     fields escaped by double-quote,
     fields terminated by ','
+
+
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_rfam_models SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_rfam_models;
+$$
 ;

@@ -42,5 +42,14 @@ AFTER LOAD DO
 $$
 update load_go_term_publication_map
 set pubmed_id = trim(leading 'pmid:' from pubmed_id)
+$$,
+$$
+ALTER TABLE rnacen.load_go_term_publication_map SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_go_term_publication_map;
 $$
 ;

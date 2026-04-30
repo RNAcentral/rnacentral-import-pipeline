@@ -35,4 +35,15 @@ create table load_interactions (
   taxid int NOT NULL
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_interactions SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_interactions;
+$$
 ;

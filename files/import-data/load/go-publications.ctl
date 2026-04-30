@@ -35,4 +35,15 @@ create table load_ref_pubmed (
     doi text
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_ref_pubmed SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_ref_pubmed;
+$$
 ;

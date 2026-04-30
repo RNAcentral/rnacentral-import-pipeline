@@ -32,8 +32,16 @@ create table load_rnc_related_sequences (
   relationship_type text NOT NULL,
   methods text[]
 );
+$$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_rnc_related_sequences SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create index ix_load_rnc_related_sequences__relationship_type on load_rnc_related_sequences(relationship_type);
+ANALYZE rnacen.load_rnc_related_sequences;
 $$
 ;

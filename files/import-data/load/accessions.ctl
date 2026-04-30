@@ -89,5 +89,8 @@ ALTER TABLE rnacen.load_rnc_accessions SET (
     autovacuum_enabled = true,
     toast.autovacuum_enabled = true
 );
+$$,
+$$
+ANALYZE rnacen.load_rnc_accessions;
 $$
 ;

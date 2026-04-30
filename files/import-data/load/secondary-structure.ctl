@@ -27,4 +27,9 @@ create table load_rnc_secondary_structure (
     md5 varchar(32)
 );
 $$
+
+AFTER LOAD DO
+$$
+ANALYZE rnacen.load_rnc_secondary_structure;
+$$
 ;

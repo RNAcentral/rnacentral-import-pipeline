@@ -38,4 +38,9 @@ WITH
 SET
     work_mem to '256 MB',
     maintenance_work_mem to '1 GB'
+
+AFTER LOAD DO
+$$
+ANALYZE rnacen.load_rnacentral_all;
+$$
 ;

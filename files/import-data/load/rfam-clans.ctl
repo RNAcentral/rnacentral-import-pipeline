@@ -32,4 +32,16 @@ create table if not exists load_rfam_clans (
     family_count integer NOT NULL
 );
 $$
+
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_rfam_clans SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_rfam_clans;
+$$
 ;

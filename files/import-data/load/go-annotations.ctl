@@ -38,4 +38,15 @@ create table load_go_term_annotations (
     extensions jsonb
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_go_term_annotations SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_go_term_annotations;
+$$
 ;

@@ -27,4 +27,15 @@ create table load_rfam_go_terms (
     rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_rfam_go_terms SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_rfam_go_terms;
+$$
 ;

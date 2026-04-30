@@ -37,4 +37,15 @@ create table load_rnc_sequence_features (
     metadata jsonb
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_rnc_sequence_features SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_rnc_sequence_features;
+$$
 ;

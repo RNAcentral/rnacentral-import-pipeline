@@ -33,4 +33,15 @@ create table load_ontology_terms (
   definition text
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_ontology_terms SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_ontology_terms;
+$$
 ;

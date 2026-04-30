@@ -32,4 +32,15 @@ CREATE TABLE load_coordinate_info (
   karyotype_rank int
 );
 $$
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_coordinate_info SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_coordinate_info;
+$$
 ;

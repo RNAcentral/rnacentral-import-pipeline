@@ -24,4 +24,16 @@ CREATE TABLE load_compara (
   ensembl_transcript text not null
 );
 $$
+
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_compara SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_compara;
+$$
 ;
