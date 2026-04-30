@@ -185,23 +185,6 @@ CREATE UNLOGGED TABLE load_genome_mapping_attempted (
   last_run timestamp not null default CURRENT_TIMESTAMP
 );
 
-DROP TABLE IF EXISTS load_assemblies;
-CREATE UNLOGGED TABLE load_assemblies (
-  assembly_id varchar(255) NOT NULL,
-  assembly_full_name varchar(255) NOT NULL,
-  gca_accession varchar(20) NULL,
-  assembly_ucsc varchar(100) NULL,
-  common_name varchar(255),
-  taxid int4 NOT NULL,
-  ensembl_url varchar(100) NULL,
-  division varchar(20) NULL,
-  blat_mapping int4 NULL,
-  example_chromosome varchar(20) NULL,
-  example_end int4 NULL,
-  example_start int4 NULL,
-  subdomain varchar(100) NOT NULL
-);
-
 DROP TABLE IF EXISTS load_rnc_sequence_features;
 CREATE UNLOGGED TABLE load_rnc_sequence_features (
     accession varchar(100) NOT NULL,
@@ -307,8 +290,8 @@ CREATE UNLOGGED TABLE load_rnc_related_sequences (
 DROP TABLE IF EXISTS load_rfam_clans;
 CREATE UNLOGGED TABLE load_rfam_clans (
     rfam_clan_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-    name character varying(40) COLLATE pg_catalog."default" NOT NULL,
-    description character varying(1000) COLLATE pg_catalog."default" NOT NULL,
+    name text COLLATE pg_catalog."default" NOT NULL,
+    description text COLLATE pg_catalog."default" NOT NULL,
     family_count integer NOT NULL
 );
 
@@ -415,11 +398,12 @@ DROP TABLE IF EXISTS load_secondary_layout_models;
 CREATE UNLOGGED TABLE load_secondary_layout_models (
     model_name text NOT NULL,
     taxid int NOT NULL,
+    cellular_location text,
     rna_type text NOT NULL,
-    so_term text NOT NULL,
-    cell_location text NOT NULL,
+    so_term_id text NOT NULL,
     model_source text not null,
-    model_length int not null
+    model_length int,
+    model_basepair_count int
 );
 
 DROP TABLE IF EXISTS load_secondary_layout;
@@ -447,4 +431,116 @@ create UNLOGGED table load_ensembl_pseudogenes (
     exon_stop int4 not null,
     assembly_id varchar(255) not null,
     exon_count int not null
+);
+
+DROP TABLE IF EXISTS load_stopfree;
+CREATE UNLOGGED TABLE load_stopfree (
+  urs_taxid TEXT not null,
+  stop_free_run_length integer,
+  gc_content float,
+  run_probability float,
+  is_protein_coding bool
+);
+
+DROP TABLE IF EXISTS load_cpat_orfs;
+CREATE UNLOGGED TABLE load_cpat_orfs (
+  urs TEXT NOT NULL,
+  taxid int not null,
+  start_index int not null,
+  stop_index int not null,
+  metadata jsonb not null
+);
+
+DROP TABLE IF EXISTS load_cpat;
+CREATE UNLOGGED TABLE load_cpat (
+  urs_taxid TEXT not null,
+  fickett_score float not null,
+  hexamer_score float not null,
+  coding_probability float not null,
+  is_protein_coding bool not null
+);
+
+DROP TABLE IF EXISTS load_secondary;
+CREATE UNLOGGED TABLE load_secondary (
+  urs text primary key,
+  model_id int,
+  secondary_structure text,
+  overlap_count int,
+  basepair_count int,
+  model_start int,
+  model_stop int,
+  sequence_start int,
+  sequence_stop int,
+  sequence_coverage float,
+  inferred_should_show bool
+);
+
+DROP TABLE IF EXISTS load_traveler_attempted;
+CREATE UNLOGGED TABLE load_traveler_attempted (
+  urs text primary key,
+  r2dt_version text
+);
+
+DROP TABLE IF EXISTS load_dfam_model_hits;
+CREATE UNLOGGED TABLE load_dfam_model_hits (
+  upi text,
+  sequence_start int,
+  sequence_stop int,
+  model_start int,
+  model_stop int,
+  e_value int,
+  bits int,
+  dfam_model_id text
+);
+
+DROP TABLE IF EXISTS load_genome_mapping;
+CREATE UNLOGGED TABLE load_genome_mapping (
+  urs_taxid text not null,
+  region_name text not null,
+  chromosome text,
+  strand int4,
+  exon_start int4,
+  exon_stop int4,
+  assembly_id varchar(255),
+  exon_count int,
+  identity float,
+  providing_database text
+);
+
+DROP TABLE IF EXISTS load_crs_features;
+CREATE UNLOGGED TABLE load_crs_features (
+  upi text,
+  taxid int,
+  accession text,
+  start int,
+  stop int,
+  feature_name text,
+  metadata jsonb
+);
+
+DROP TABLE IF EXISTS load_rediportal_features;
+CREATE UNLOGGED TABLE load_rediportal_features (
+  upi text,
+  taxid int,
+  accession text,
+  start int,
+  stop int,
+  feature_name text,
+  metadata jsonb,
+  feature_provider text
+);
+
+DROP TABLE IF EXISTS load_tcode;
+CREATE UNLOGGED TABLE load_tcode (
+  urs_taxid TEXT not null,
+  length integer,
+  mean_score float,
+  std_score float,
+  is_protein_coding bool
+);
+
+DROP TABLE IF EXISTS load_secondary_should_show;
+CREATE UNLOGGED TABLE load_secondary_should_show (
+  urs text NOT NULL,
+  should_show bool NOT NULL
 );

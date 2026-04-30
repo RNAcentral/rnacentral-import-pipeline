@@ -14,18 +14,6 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_compara;
-$$,
-$$
-CREATE TABLE load_compara (
-  homology_group text not null,
-  ensembl_transcript text not null
-);
-$$
-
-
 AFTER LOAD DO
 $$
 ALTER TABLE rnacen.load_compara SET (

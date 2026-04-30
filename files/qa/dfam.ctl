@@ -28,23 +28,6 @@ TARGET COLUMNS
 WITH fields escaped by double-quote,
   fields terminated by ','
 
-BEFORE LOAD DO
-$$
-DROP TABLE IF EXISTS load_dfam_model_hits;
-$$,
-$$
-CREATE TABLE load_dfam_model_hits (
-    upi text,
-    sequence_start int,
-    sequence_stop int,
-    model_start int,
-    model_stop int,
-    e_value int,
-    bits int,
-    dfam_model_id
-);
-$$
-
 AFTER LOAD DO
 $$
 INSERT INTO dfam_model_hits (

@@ -33,26 +33,6 @@ WITH
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
 
-BEFORE LOAD DO
-$$
-DROP TABLE if exists load_secondary;
-$$,
-$$
-create table load_secondary (
-    urs text primary key,
-    model_id int,
-    secondary_structure text,
-    overlap_count int,
-    basepair_count int,
-    model_start int,
-    model_stop int,
-    sequence_start int,
-    sequence_stop int,
-    sequence_coverage float,
-    inferred_should_show bool
-);
-$$
-
 AFTER LOAD DO
 $$
 INSERT INTO r2dt_results (

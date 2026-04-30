@@ -23,21 +23,6 @@ WITH truncate,
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_rnc_sequence_features;
-$$,
-$$
-create table load_rnc_sequence_features (
-    accession varchar(100) NOT NULL,
-    taxid int not null,
-    start int not null,
-    stop int not null,
-    feature_name varchar(50),
-    metadata jsonb
-);
-$$
-
 AFTER LOAD DO
 $$
 ALTER TABLE rnacen.load_rnc_sequence_features SET (

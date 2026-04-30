@@ -24,20 +24,6 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_go_term_publication_map;
-$$,
-$$
-create table if not exists load_go_term_publication_map (
-    rna_id varchar(50),
-    qualifier text,
-    assigned_by varchar(50),
-    ontology_term_id varchar(15),
-    evidence_code varchar(15),
-    pubmed_id text
-);
-$$
 AFTER LOAD DO
 $$
 update load_go_term_publication_map

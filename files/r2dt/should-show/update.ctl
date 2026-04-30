@@ -13,17 +13,6 @@ WITH
   FIELDS ESCAPED BY double-quote,
   FIELDS TERMINATED BY ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_secondary_should_show;
-$$,
-$$
-CREATE TABLE load_secondary_should_show (
-  urs text NOT NULL,
-  should_show bool NOT NULL
-);
-$$
-
 AFTER LOAD DO
 $$
 UPDATE load_secondary_should_show load

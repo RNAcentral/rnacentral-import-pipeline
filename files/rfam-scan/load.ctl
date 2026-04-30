@@ -31,24 +31,6 @@ WITH fields escaped by double-quote,
 BEFORE LOAD DO
 $$
 set work_mem='512MB';
-$$,
-$$
-drop table if exists load_rfam_model_hits;
-$$,
-$$
-create table load_rfam_model_hits (
-  sequence_start integer NOT NULL,
-  sequence_stop integer NOT NULL,
-  sequence_completeness double precision,
-  model_start integer NOT NULL,
-  model_stop integer NOT NULL,
-  model_completeness double precision,
-  overlap character varying(30) COLLATE pg_catalog."default" NOT NULL,
-  e_value double precision NOT NULL,
-  score double precision NOT NULL,
-  rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-  upi character varying(13) COLLATE pg_catalog."default" NOT NULL
-);
 $$
 
 AFTER LOAD DO
@@ -58,14 +40,14 @@ $$,
 $$
 create index ix__load_rfam_model_hits__rfam_model_id on load_rfam_model_hits (rfam_model_id);
 $$,
-$$ 
+$$
 DELETE FROM rfam_model_hits hits
 USING load_rfam_model_hits load
 WHERE
   hits.upi = load.upi
 ;
 $$,
-$$ 
+$$
 insert into rfam_model_hits (
   sequence_start,
   sequence_stop,

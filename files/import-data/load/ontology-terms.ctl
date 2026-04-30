@@ -21,19 +21,6 @@ WITH
   fields escaped by double-quote,
   fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_ontology_terms;
-$$,
-$$
-create table load_ontology_terms (
-  ontology_term_id varchar(15),
-  ontology varchar(5),
-  name text,
-  definition text
-);
-$$
-
 AFTER LOAD DO
 $$
 ALTER TABLE rnacen.load_ontology_terms SET (

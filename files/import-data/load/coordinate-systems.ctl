@@ -19,20 +19,6 @@ WITH
   skip header = 0,
   fields terminated by ','
 
-BEFORE LOAD DO
-$$
-DROP TABLE IF EXISTS load_coordinate_info;
-$$,
-$$
-CREATE TABLE load_coordinate_info (
-  chromosome text NOT NULL,
-  coordinate_system text NOT NULL,
-  assembly_id text,
-  is_reference bool,
-  karyotype_rank int
-);
-$$
-
 AFTER LOAD DO
 $$
 ALTER TABLE rnacen.load_coordinate_info SET (

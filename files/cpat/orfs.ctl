@@ -16,20 +16,6 @@ TARGET COLUMNS (
   metadata
 )
 
-BEFORE LOAD DO
-$$
-DROP TABLE IF EXISTS load_cpat_orfs;
-$$,
-$$
-CREATE TABLE load_cpat_orfs (
-  urs TEXT NOT NULL,
-  taxid int not null,
-  start_index int not null,
-  stop_index int not null,
-  metadata jsonb not null
-);
-$$
-
 AFTER LOAD DO
 $$
 DELETE FROM rnc_sequence_features features

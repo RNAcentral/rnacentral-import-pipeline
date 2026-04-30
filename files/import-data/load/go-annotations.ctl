@@ -24,21 +24,6 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-DROP TABLE if exists load_go_term_annotations;
-$$,
-$$
-create table load_go_term_annotations (
-    rna_id varchar(50),
-    qualifier text,
-    ontology_term_id varchar(15),
-    evidence_code varchar(15),
-    assigned_by varchar(50),
-    extensions jsonb
-);
-$$
-
 AFTER LOAD DO
 $$
 ALTER TABLE rnacen.load_go_term_annotations SET (

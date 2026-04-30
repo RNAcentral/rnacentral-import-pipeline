@@ -20,20 +20,6 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_rfam_clans;
-$$,
-$$
-create table if not exists load_rfam_clans (
-    rfam_clan_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-    name text COLLATE pg_catalog."default" NOT NULL,
-    description text COLLATE pg_catalog."default" NOT NULL,
-    family_count integer NOT NULL
-);
-$$
-
-
 AFTER LOAD DO
 $$
 ALTER TABLE rnacen.load_rfam_clans SET (

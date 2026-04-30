@@ -14,17 +14,6 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_karyotypes;
-$$,
-$$
-CREATE TABLE load_karyotypes (
-	assembly_id varchar(255) NOT NULL,
-    karyotype text
-);
-$$
-
 AFTER LOAD DO
 $$
 ALTER TABLE rnacen.load_karyotypes SET (

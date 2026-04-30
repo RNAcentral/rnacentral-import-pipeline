@@ -25,23 +25,6 @@ WITH
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_secondary_layout_models;
-$$,
-$$
-create table load_secondary_layout_models (
-    model_name text NOT NULL,
-    taxid int NOT NULL,
-    cellular_location text,
-    rna_type text NOT NULL,
-    so_term_id text NOT NULL,
-    model_source text not null,
-    model_length int,
-    model_basepair_count int
-);
-$$
-
 AFTER LOAD DO
 $$
 INSERT INTO r2dt_models (
