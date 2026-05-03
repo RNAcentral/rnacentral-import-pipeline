@@ -20,7 +20,7 @@ DROP INDEX IF EXISTS rnacen.rnc_related_sequences_target_urs_taxid_idx;
 -- Update the load table to contain the source URS
 UPDATE load_rnc_related_sequences load
 SET
-  source_urs_taxid = xref.upi || '_' || xref.taxid
+  source_urs_taxid = xref.urs_taxid
 from xref
 where
   xref.ac = load.source_accession
@@ -83,7 +83,7 @@ BEGIN
     select distinct
       load.source_urs_taxid,
       load.source_accession,
-      target.upi || '_' || target.taxid,
+      target.urs_taxid,
       load.target_accession,
       load.relationship_type::related_sequence_relationship,
       load.methods
@@ -113,7 +113,7 @@ WHERE
 -- Build a table representing the related Ensembl genes
 create temp table gene_upi_mapping as
 select
-  xref.upi || '_' || xref.taxid "urs_taxid",
+  xref.urs_taxid,
   'ENSEMBL:' || split_part(acc.optional_id, '.', 1) "versionless_gene"
 from xref
 join rnc_accessions acc
