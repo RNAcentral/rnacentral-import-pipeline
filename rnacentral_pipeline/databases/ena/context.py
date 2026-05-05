@@ -14,20 +14,19 @@ limitations under the License.
 """
 
 import csv
+import typing as ty
 from collections import Counter
 from pathlib import Path
-import typing as ty
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
-
+from attr.validators import optional
 from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.ena import dr
-from rnacentral_pipeline.databases.ena import ribovore as ribo
 from rnacentral_pipeline.databases.ena import mapping as tpa
+from rnacentral_pipeline.databases.ena import ribovore as ribo
 
 
 @attr.s()
@@ -35,6 +34,7 @@ class Context:
     ribovore: ty.Optional[ribo.Results] = attr.ib(validator=optional(is_a(dict)))
     tpa = attr.ib(validator=is_a(tpa.TpaMappings))
     dr = attr.ib(validator=is_a(SqliteDict))
+    dr_ids = attr.ib(validator=is_a(ty.Set))
     counts = attr.ib(validator=is_a(Counter), factory=Counter)
 
     def expand_tpa(self, entries: ty.Iterable[Entry]) -> ty.Iterable[Entry]:
@@ -68,6 +68,7 @@ class ContextBuilder:
     lengths_path = attr.ib(validator=optional(is_a(Path)), default=None)
     tpa_path = attr.ib(validator=optional(is_a(Path)), default=None)
     dr_path = attr.ib(validator=optional(is_a(Path)), default=None)
+    dr_ids = attr.ib(validator=optional(is_a(ty.Set)), default=None)
     cache_filename = attr.ib(validator=optional(is_a(Path)), default=None)
 
     def with_ribovore(self, ribovore_path: Path, lengths_path: Path):
@@ -92,9 +93,11 @@ class ContextBuilder:
             tpa_mapping.validate()
 
         dr_map = SqliteDict(filename=self.cache_filename)
+        dr_ids = set()
         if self.dr_path:
             with self.dr_path.open("r") as raw:
                 for (record_id, dbrefs) in dr.mappings(raw):
+                    dr_ids.add(record_id)
                     dr_map[record_id] = dbrefs
                 dr_map.commit()
 
@@ -106,4 +109,5 @@ class ContextBuilder:
             ribovore=ribovore,
             tpa=tpa_mapping,
             dr=dr_map,
+            dr_ids=dr_ids,
         )
