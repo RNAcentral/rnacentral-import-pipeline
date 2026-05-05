@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import logging
+import os
 import tempfile
 import typing as ty
 from pathlib import Path
@@ -93,7 +94,9 @@ class SpillDict:
 
     def _spill(self):
         if self._spill_path is None:
-            self._spill_path = Path(tempfile.mkstemp(prefix="ena-dr-")[1])
+            fd, name = tempfile.mkstemp(prefix="ena-dr-")
+            os.close(fd)
+            self._spill_path = Path(name)
         LOGGER.info(
             "SpillDict crossing threshold (%d entries, ~%d payload bytes); "
             "spilling to %s",
