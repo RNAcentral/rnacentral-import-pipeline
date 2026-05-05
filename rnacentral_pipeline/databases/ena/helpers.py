@@ -360,7 +360,10 @@ def as_entry(ctx, record, feature) -> Entry:
     if gene:
         gene = gene[0:200]
 
-    record_refs = ctx.dr[record.id]
+    if record.id in ctx.dr_ids:
+        record_refs = ctx.dr[record.id]
+    else:
+        record_refs = []
     return Entry(
         primary_id=primary_id(feature),
         accession=accession(record),
