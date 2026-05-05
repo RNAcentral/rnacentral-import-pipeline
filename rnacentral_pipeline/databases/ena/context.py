@@ -21,19 +21,21 @@ from pathlib import Path
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
-from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.ena import dr
 from rnacentral_pipeline.databases.ena import mapping as tpa
 from rnacentral_pipeline.databases.ena import ribovore as ribo
+from rnacentral_pipeline.databases.ena.spill_dict import SpillDict
+
+DEFAULT_DR_THRESHOLD_BYTES = 1024 * 1024 * 1024  # 1 GiB of payload string data
 
 
 @attr.s()
 class Context:
     ribovore: ty.Optional[ribo.Results] = attr.ib(validator=optional(is_a(dict)))
     tpa = attr.ib(validator=is_a(tpa.TpaMappings))
-    dr = attr.ib(validator=is_a(SqliteDict))
+    dr = attr.ib(validator=is_a(SpillDict))
     dr_ids = attr.ib(validator=is_a(ty.Set))
     counts = attr.ib(validator=is_a(Counter), factory=Counter)
 
@@ -70,6 +72,9 @@ class ContextBuilder:
     dr_path = attr.ib(validator=optional(is_a(Path)), default=None)
     dr_ids = attr.ib(validator=optional(is_a(ty.Set)), default=None)
     cache_filename = attr.ib(validator=optional(is_a(Path)), default=None)
+    dr_threshold_bytes: int = attr.ib(
+        validator=is_a(int), default=DEFAULT_DR_THRESHOLD_BYTES
+    )
 
     def with_ribovore(self, ribovore_path: Path, lengths_path: Path):
         self.ribovore_path = ribovore_path
@@ -85,6 +90,10 @@ class ContextBuilder:
         self.cache_filename = cache_filename
         return self
 
+    def with_dr_threshold(self, threshold_bytes: int):
+        self.dr_threshold_bytes = threshold_bytes
+        return self
+
     def context(self) -> Context:
         tpa_mapping = tpa.TpaMappings()
         if self.tpa_path:
@@ -92,7 +101,10 @@ class ContextBuilder:
                 tpa_mapping = tpa.load(raw)
             tpa_mapping.validate()
 
-        dr_map = SqliteDict(filename=self.cache_filename)
+        dr_map = SpillDict(
+            threshold_bytes=self.dr_threshold_bytes,
+            spill_path=self.cache_filename,
+        )
         dr_ids = set()
         if self.dr_path:
             with self.dr_path.open("r") as raw:
