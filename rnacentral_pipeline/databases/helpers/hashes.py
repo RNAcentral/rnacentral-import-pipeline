@@ -23,35 +23,40 @@ def md5(data):
     return hashlib.md5(data).hexdigest()
 
 
+_POLY64REVh = 0xD8000000
+
+
+def _build_crc64_tables():
+    table_h = [0] * 256
+    table_l = [0] * 256
+    for i in range(256):
+        partl = i
+        parth = 0
+        for _ in range(8):
+            rflag = partl & 1
+            partl >>= 1
+            if parth & 1:
+                partl |= 1 << 31
+            parth >>= 1
+            if rflag:
+                parth ^= _POLY64REVh
+        table_h[i] = parth
+        table_l[i] = partl
+    return table_h, table_l
+
+
+_CRC64_TABLE_H, _CRC64_TABLE_L = _build_crc64_tables()
+
+
 def crc64(input_string):
     """
     Python re-implementation of SWISS::CRC64
     Adapted from:
     http://code.activestate.com/recipes/259177-crc64-calculate-the-cyclic-redundancy-check/
+    The generator polynomial is x64 + x4 + x3 + x + 1.
     """
-
-    POLY64REVh = 0xD8000000
-    CRCTableh = [0] * 256
-    CRCTablel = [0] * 256
-    isInitialized = False
     crcl = 0
     crch = 0
-    if isInitialized is not True:
-        isInitialized = True
-        for i in range(256):
-            partl = i
-            parth = 0
-            for _ in range(8):
-                rflag = partl & 1
-                partl >>= 1
-                if parth & 1:
-                    partl |= 1 << 31
-                parth >>= 1
-                if rflag:
-                    parth ^= POLY64REVh
-            CRCTableh[i] = parth
-            CRCTablel[i] = partl
-
     for item in input_string:
         shr = 0
         shr = (crch & 0xFF) << 24
@@ -59,6 +64,6 @@ def crc64(input_string):
         temp1l = (crcl >> 8) | shr
         tableindex = (crcl ^ ord(item)) & 0xFF
 
-        crch = temp1h ^ CRCTableh[tableindex]
-        crcl = temp1l ^ CRCTablel[tableindex]
+        crch = temp1h ^ _CRC64_TABLE_H[tableindex]
+        crcl = temp1l ^ _CRC64_TABLE_L[tableindex]
     return "%08X%08X" % (crch, crcl)
