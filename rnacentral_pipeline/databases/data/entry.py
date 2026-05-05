@@ -114,6 +114,9 @@ class Entry:
     interactions: ty.List[Interaction] = utils.possibly_empty(list)
     go_annotations: ty.List[GoTermAnnotation] = utils.possibly_empty(list)
 
+    ## Track and cache validity for speed when writing
+    _valid: ty.Optional[bool] = attr.ib(default=None, init=False)
+
     @property
     def database_name(self) -> str:
         """
@@ -213,6 +216,13 @@ class Entry:
         return str(md5(self.sequence.encode("utf-8")))
 
     def is_valid(self) -> bool:
+        if self._valid is not None:
+            return self._valid
+        res = self._compute_is_valid()
+        object.__setattr__(self, "_valid", res)
+        return res
+
+    def _compute_is_valid(self) -> bool:
         """
         Detect if this entry is valid. This means it is neither too short (< 10
         nt) not too long (> 1000000 nts) and has less than 10% N's.
