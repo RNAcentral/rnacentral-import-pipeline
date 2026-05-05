@@ -17,11 +17,27 @@ import logging
 import os
 import tempfile
 import typing as ty
+import weakref
 from pathlib import Path
 
 from sqlitedict import SqliteDict
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _iter_string_attrs(item: ty.Any) -> ty.Iterator[str]:
+    cls_slots = getattr(type(item), "__slots__", None)
+    if cls_slots is not None:
+        for name in cls_slots:
+            v = getattr(item, name, None)
+            if isinstance(v, str):
+                yield v
+        return
+    instance_dict = getattr(item, "__dict__", None)
+    if instance_dict is not None:
+        for v in instance_dict.values():
+            if isinstance(v, str):
+                yield v
 
 
 def _estimate_size(key: str, value: ty.Any) -> int:
@@ -34,13 +50,8 @@ def _estimate_size(key: str, value: ty.Any) -> int:
     total = len(key)
     if isinstance(value, list):
         for item in value:
-            slots = getattr(item, "__dict__", None)
-            if slots is None:
-                total += len(str(item))
-                continue
-            for v in slots.values():
-                if isinstance(v, str):
-                    total += len(v)
+            for s in _iter_string_attrs(item):
+                total += len(s)
     return total
 
 
@@ -59,6 +70,8 @@ class SpillDict:
         self._size = 0
         self._threshold = threshold_bytes
         self._spill_path = spill_path
+        self._owns_spill_file = spill_path is None
+        self._finalizer: ty.Optional[weakref.finalize] = None
 
     def __setitem__(self, key, value):
         if self._disk is not None:
@@ -92,6 +105,32 @@ class SpillDict:
     def spilled(self) -> bool:
         return self._disk is not None
 
+    def close(self):
+        if self._finalizer is not None and self._finalizer.alive:
+            self._finalizer()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
+    @staticmethod
+    def _cleanup(disk: ty.Optional[SqliteDict], path: ty.Optional[Path], owns: bool):
+        if disk is not None:
+            try:
+                disk.close()
+            except Exception:
+                LOGGER.exception("Error closing SqliteDict at %s", path)
+        if owns and path is not None:
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
+            except OSError:
+                LOGGER.exception("Error removing SpillDict temp file %s", path)
+
     def _spill(self):
         if self._spill_path is None:
             fd, name = tempfile.mkstemp(prefix="ena-dr-")
@@ -109,3 +148,6 @@ class SpillDict:
             self._disk[k] = v
         self._disk.commit()
         self._mem.clear()
+        self._finalizer = weakref.finalize(
+            self, self._cleanup, self._disk, self._spill_path, self._owns_spill_file
+        )
