@@ -15,7 +15,10 @@ limitations under the License.
 
 import hashlib
 
-import crcmod
+try:
+    import crcmod
+except ImportError:
+    crcmod = None
 
 
 def md5(data):
@@ -76,10 +79,17 @@ def crc64_python(input_string):
     return "%08X%08X" % (crch, crcl)
 
 
-_crc64_swiss = crcmod.mkCrcFun(0x1000000000000001B, initCrc=0, rev=True, xorOut=0)
+if crcmod is not None:
+    _crc64_swiss = crcmod.mkCrcFun(0x1000000000000001B, initCrc=0, rev=True, xorOut=0)
+else:
+    _crc64_swiss = None
 
 
 def crc64(input_string):
+    if _crc64_swiss is None:
+        if isinstance(input_string, bytes):
+            input_string = input_string.decode("ascii")
+        return crc64_python(input_string)
     if isinstance(input_string, str):
         input_string = input_string.encode("ascii")
     return "%016X" % _crc64_swiss(input_string)
