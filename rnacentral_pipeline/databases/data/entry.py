@@ -49,7 +49,7 @@ FEATURE_TYPE_RNAS = set(
 )
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class Entry:
     """
     This represents an RNAcentral entry that will be imported into the
@@ -60,20 +60,19 @@ class Entry:
     """
 
     # Also known as external_id
-    primary_id: str = attr.ib(validator=is_a(str), converter=str)
-    accession: str = attr.ib(validator=is_a(str), converter=str)
+    primary_id: str = attr.ib(validator=is_a(str))
+    accession: str = attr.ib(validator=is_a(str))
     ncbi_tax_id: int = attr.ib(validator=is_a(int))
     database: str = attr.ib(
         validator=is_a(str),
-        converter=lambda s: str(s.upper()),
     )
-    sequence: str = attr.ib(validator=is_a(str), converter=str)
+    sequence: str = attr.ib(validator=is_a(str))
     regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
     rna_type: str = attr.ib(
         validator=utils.matches_pattern(utils.SO_PATTERN),
         converter=utils.as_so_term,
     )
-    url: str = attr.ib(validator=is_a(str), converter=str)
+    url: str = attr.ib(validator=is_a(str))
     seq_version: str = attr.ib(
         validator=and_(is_a(str), utils.matches_pattern(r"^\d+$")),
         converter=lambda r: str(int(float(r))),
