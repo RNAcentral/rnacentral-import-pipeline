@@ -57,6 +57,16 @@ class Context:
     def add_parsed(self):
         self.counts["parsed"] += 1
 
+    def close(self):
+        self.dr.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
     def dump_counts(self, path: Path):
         with path.open("w") as out:
             writer = csv.DictWriter(out, fieldnames=self.counts.keys())
