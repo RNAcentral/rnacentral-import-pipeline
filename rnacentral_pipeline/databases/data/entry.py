@@ -238,12 +238,10 @@ class Entry:
             LOGGER.warn("%s is too long (%s)", self.accession, length)
             return False
 
-        counts = Counter(self.sequence)
-        fraction = float(counts.get("N", 0)) / float(len(self.sequence))
+        counts = self.sequence.count("N")
+        fraction = float(counts) / float(length)
         if fraction > 0.1:
-            LOGGER.warn(
-                "%s has too many (%i/%i) N's", self.accession, counts["N"], length
-            )
+            LOGGER.warn("%s has too many (%i/%i) N's", self.accession, counts, length)
             return False
 
         if self.rna_type == "SO:0000234":
