@@ -48,7 +48,7 @@ class UnknownPublicationType(Exception):
     pass
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class Reference(object):
     """
     This stores the data for a reference that will be written to out to csv
