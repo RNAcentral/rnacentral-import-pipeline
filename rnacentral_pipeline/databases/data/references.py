@@ -48,16 +48,16 @@ class UnknownPublicationType(Exception):
     pass
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class Reference(object):
     """
     This stores the data for a reference that will be written to out to csv
     files.
     """
 
-    authors: str = attr.ib(validator=is_a(str), converter=str)
-    location: str = attr.ib(validator=is_a(str), converter=str)
-    title: ty.Optional[str] = attr.ib(validator=optional(is_a(str)), converter=str)
+    authors: str = attr.ib(validator=is_a(str))
+    location: str = attr.ib(validator=is_a(str))
+    title: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
     pmid: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
     doi: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
     pmcid: ty.Optional[str] = attr.ib(validator=optional(is_a(str)), default=None)

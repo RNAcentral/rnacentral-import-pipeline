@@ -288,19 +288,28 @@ def description(record) -> str:
     return re.sub(r"^TPA:\s*", "", raw)
 
 
+_XREF_LINE = re.compile(
+    r"^\s*(" + "|".join(KNOWN_DBS) + r")\s*;\s*(.+?)\s*\.?$",
+    re.IGNORECASE,
+)
+_XREF_SPLIT = re.compile(r"\s*;\s*")
+
+
 def comment_xrefs(comments):
     xrefs = coll.defaultdict(list)
     for line in comments:
-        match = re.match(r"^\s*(.+?)\s*;\s*(.+?)\s*\.?$", line)
-        if match:
-            db_name = match.group(1).lower()
-            if db_name not in KNOWN_DBS:
-                continue
-            rest = match.group(2)
-            if ";" in rest:
-                xrefs[db_name].extend(re.split(r"\s*;\s*", rest))
-            else:
-                xrefs[db_name].append(rest)
+        if ";" not in line:
+            continue
+        match = _XREF_LINE.match(line)
+        if not match:
+            continue
+
+        db_name = match.group(1).lower()
+        rest = match.group(2)
+        if ";" in rest:
+            xrefs[db_name].extend(_XREF_SPLIT.split(rest))
+        else:
+            xrefs[db_name].append(rest)
     return xrefs
 
 
@@ -351,7 +360,10 @@ def as_entry(ctx, record, feature) -> Entry:
     if gene:
         gene = gene[0:200]
 
-    record_refs = ctx.dr[record.id]
+    if record.id in ctx.dr_ids:
+        record_refs = ctx.dr[record.id]
+    else:
+        record_refs = []
     return Entry(
         primary_id=primary_id(feature),
         accession=accession(record),
