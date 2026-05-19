@@ -16,7 +16,7 @@ RUN curl -OL http://eddylab.org/infernal/infernal-${INFERNAL_VERSION}.tar.gz && 
     tar -xvzf infernal-${INFERNAL_VERSION}.tar.gz && \
     rm infernal-${INFERNAL_VERSION}.tar.gz && \
     cd infernal-${INFERNAL_VERSION} && \
-    ./configure --prefix=$RNA/infernal-${INFERNAL_VERSION} && \
+    ./configure --prefix=$RNA/infernal-${INFERNAL_VERSION}  --enable-mpi && \
     make && \
     make install && \
     cd easel && \
