@@ -53,35 +53,27 @@ def generate_paths(
         name = info["name"]
         release_id = release_suffix(entry)
 
-        # So sometimes Ensembl users lower case names for the assemblies but
-        # not always, so we try both and generate a name for the existing one.
-        assemblies = [
-            entry["assembly"]["assembly_default"],
-            entry["assembly"]["assembly_default"].lower(),
-        ]
-        for assembly in assemblies:
-            organism_name = f"{info['url_name']}.{assembly}.{release_id}"
+        assembly = entry["assembly"]["assembly_default"]
+        organism_name = f"{name[0].upper() + name[1:]}.{assembly}.{release_id}"
 
-            # This detects, and skips things that are part of a collection. I'm not
-            # sure what that means right now and those seem to be things that have
-            # other genomes that aren't nested in a collection.
-            if not any(db["dbname"].startswith(name) for db in entry["databases"]):
-                continue
+        # This detects, and skips things that are part of a collection. I'm not
+        # sure what that means right now and those seem to be things that have
+        # other genomes that aren't nested in a collection.
+        if not any(db["dbname"].startswith(name) for db in entry["databases"]):
+            LOGGER.warning("Skipping collection species %s", name)
+            continue
 
-            gff_path = f"{base}/{release}/{division.name}/gff3/{name}/{organism_name}.gff3.gz"
-            data_files = (
-                f"{base}/{release}/{division.name}/embl/{name}/{organism_name}.*.dat.gz"
-            )
+        gff_path = f"{base}/{release}/{division.name}/gff3/{name}/{organism_name}.gff3.gz"
+        data_files = (
+            f"{base}/{release}/{division.name}/embl/{name}/{organism_name}.*.dat.gz"
+        )
 
-            yield FtpInfo(
-                division=division,
-                species=name,
-                data_files=data_files,
-                gff_file=gff_path,
-            )
-            break
-        else:
-            LOGGER.warn("No files found for %s", info)
+        yield FtpInfo(
+            division=division,
+            species=name,
+            data_files=data_files,
+            gff_file=gff_path,
+        )
 
 
 def release_suffix(entry: dict[str, ty.Any]) -> str:
