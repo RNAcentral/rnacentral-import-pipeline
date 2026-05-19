@@ -24,6 +24,7 @@ RUN curl -OL http://eddylab.org/infernal/infernal-${INFERNAL_VERSION}.tar.gz && 
 
 # Stage 2: Final - minimal runtime image
 FROM debian:trixie-slim
+RUN apt update && apt install -y libopenmpi-dev && rm -rf /var/lib/apt/lists/*
 ARG INFERNAL_VERSION
 ENV RNA=/rna
 WORKDIR $RNA
