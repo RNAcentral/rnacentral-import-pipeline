@@ -60,7 +60,7 @@ process fetch_tracked {
   when { params.r2dt.run }
 
   input:
-  tuple val(_flag)
+  val(_flag)
   path(query)
 
   output:

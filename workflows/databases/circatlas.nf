@@ -13,6 +13,7 @@ process fetch {
 
 process parse {
   when { params.databases.circatlas.run }
+  memory { params.databases.circatlas.process.directives.memory }
 
   input:
   path(data)
