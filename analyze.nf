@@ -27,7 +27,8 @@ workflow {
 
 
 workflow.onComplete {
-  slack_closure("Analyze workflow completed")
+  def msg = workflow.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
+  slack_closure(msg)
 
 }
 
