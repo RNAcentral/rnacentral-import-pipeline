@@ -12,6 +12,7 @@ process setup {
   output:
   path('species.csv')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > species.csv
   """
@@ -28,6 +29,7 @@ process fetch_unmapped_sequences {
   output:
   tuple val(species), path('parts/*.fasta')
 
+  script:
   """
   set -euo pipefail
 
@@ -75,6 +77,7 @@ process get_browser_coordinates {
   output:
   path("${species}.${assembly}.ensembl.gff3.gz")
 
+  script:
   """
   set -o pipefail
 
@@ -98,6 +101,7 @@ process index_gff3 {
 
   output:
   path("${gff.baseName}.gz.{tbi,csi}"), optional: true
+  script:
   """
   tabix -p gff $gff || tabix -C -p gff $gff
   """
@@ -114,6 +118,7 @@ process download_genome {
   output:
   tuple val(species), val(assembly), path("${species}.${assembly}.fa")
 
+  script:
   """
   set -o pipefail
 
@@ -137,6 +142,7 @@ process blat_index {
   output:
   tuple val(species), val(assembly), path("${species}_${assembly}.{2bit,ooc}")
 
+  script:
   """
   faToTwoBit -noMask ${species}_${assembly}.fa ${species}_${assembly}.2bit
   blat \
@@ -157,6 +163,7 @@ process index_genome_for_browser {
   output:
   tuple path("${genome}"), path("${genome.baseName}.fa.fai")
 
+  script:
   """
   samtools faidx $genome
   psql -c "UPDATE ensembl_assembly SET selected_genome=true WHERE assembly_id='${assembly}';" $PGDATABASE
@@ -175,6 +182,7 @@ process blat {
   tuple val(species), path('selected.json'), emit: hits
   path 'attempted.csv', emit: attempted
 
+  script:
   """
   set -o pipefail
 
@@ -206,6 +214,7 @@ process select_mapped_locations {
   output:
   path('locations.csv')
 
+  script:
   """
   set -o pipefail
 
@@ -229,6 +238,7 @@ process load_mapping {
   output:
   val('done')
 
+  script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
   split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted

@@ -4,6 +4,7 @@ process intact {
   output:
   path('*.csv')
 
+  script:
   """
   mkdir fetched
   pushd fetched

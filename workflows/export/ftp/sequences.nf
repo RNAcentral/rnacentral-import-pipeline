@@ -10,6 +10,7 @@ process active {
   path('example.txt'), emit: 'example'
   path('readme.txt'), emit: 'readme'
 
+  script:
   """
   set -euo pipefail
 
@@ -30,6 +31,7 @@ process inactive {
   output:
   path('rnacentral_inactive.fasta.gz')
 
+  script:
   """
   set -euo pipefail
 
@@ -45,6 +47,7 @@ process species_specific {
   output:
   path('rnacentral_species_specific_ids.fasta')
 
+  script:
   """
   set -euo pipefail
 
@@ -64,6 +67,7 @@ process create_ssi {
   output:
   path('rnacentral_species_specific_ids.fasta.ssi')
 
+  script:
   """
   esl-sfetch --index rnacentral_species_specific_ids.fasta
   """
@@ -78,6 +82,7 @@ process compress_species_fasta {
   output:
   path('rnacentral_species_specific_ids.fasta.gz')
 
+  script:
   """
   gzip < rnacentral_species_specific_ids.fasta > rnacentral_species_specific_ids.fasta.gz
   """
@@ -91,6 +96,7 @@ process find_dbs {
   output:
   path('dbs.txt')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > dbs.txt
   """

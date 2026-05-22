@@ -9,6 +9,7 @@ process create_load_tables {
   output:
   val('done')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $create "$PGDATABASE"
   """
@@ -28,6 +29,7 @@ process merge_and_import {
   output:
   val(name)
 
+  script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
   """

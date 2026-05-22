@@ -6,6 +6,7 @@ process fetch {
   output:
   path('circatlas.json')
 
+  script:
   """
   cp ${params.databases.circatlas.remote} circatlas.json
   """
@@ -21,6 +22,7 @@ process parse {
   output:
   path('*.csv')
 
+  script:
   """
   rnac circatlas parse $data .
   """

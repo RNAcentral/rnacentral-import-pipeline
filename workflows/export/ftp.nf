@@ -19,6 +19,7 @@ process release_note {
   output:
   path('release_notes.txt')
 
+  script:
   """
   rnac ftp-export release-note ${template_file} ${params.release} release_notes.txt
   mkdir -p ${params.export.ftp.publish}/help-requests
@@ -38,6 +39,7 @@ process md5 {
   path("md5.tsv.gz")
   path("readme.txt")
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > md5.tsv
   head -10 md5.tsv > example.txt
@@ -58,6 +60,7 @@ process rfam_annotations {
   path("example.txt")
   path("readme.txt")
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > rfam_annotations.tsv
   head rfam_annotations.tsv > example.txt
@@ -76,6 +79,7 @@ process rfam_go_matches {
   output:
   path("rnacentral_rfam_annotations.tsv.gz")
 
+  script:
   """
   psql -f "$query" "$PGDATABASE" > raw_go.json
   rnac ftp-export rfam-go-annotations raw_go.json rnacentral_rfam_annotations.tsv
@@ -90,6 +94,7 @@ process gpi {
   output:
   path("rnacentral.gpi*")
 
+  script:
   """
   rnac ftp-export gpi rnacentral.gpi
   gzip -k rnacentral.gpi

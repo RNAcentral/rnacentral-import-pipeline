@@ -49,6 +49,7 @@ process build_context {
   output:
   path('context.db')
 
+  script:
   """
   wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
   tar xvf new_taxdump.tar.gz

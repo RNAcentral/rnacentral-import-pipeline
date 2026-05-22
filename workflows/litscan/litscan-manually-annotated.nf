@@ -50,6 +50,7 @@ process import_manually_annotated_articles {
     output:
     val('done')
 
+    script:
     """
     pgloader --on-error-stop $ctl
     """

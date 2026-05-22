@@ -7,6 +7,7 @@ process fetch_crs_bed {
   output:
   file('*.bed') into raw_crs mode flatten
 
+  script:
   """
   cp $remote/data/*.bed.gz .
   gzip -d *.bed.gz
@@ -39,6 +40,7 @@ process fetch_rfam_locations {
   output:
   set val(crs_assembly), file("rfam-${assembly}.bed") into rfam_coordinates
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -v "assembly_id=$crs_assembly" -f $query "$PGDATABASE" > result.json
   rnac ftp-export coordinates as-bed result.json result.bed
@@ -59,6 +61,7 @@ process fetch_rnacentral_bed {
   output:
   set val(crs_assembly), file("rnacentral-${assembly}.bed") into rnacentral_locations
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
   rnac ftp-export coordinates as-bed result.json > result.bed
@@ -91,6 +94,7 @@ process import_crs {
   file('complete_features*.csv') from processed_crs.collect()
   file(ctl) from Channel.fromPath('files/crs/load.ctl')
 
+  script:
   """
   cp $ctl crs.ctl
   pgloader --on-error-stop crs.ctl

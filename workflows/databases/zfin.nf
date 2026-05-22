@@ -6,6 +6,7 @@ process zfin {
   output:
   path('*.csv')
 
+  script:
   """
   rnac zfin fetch $params.databases.zfin.remote zfin.json
   rnac zfin parse zfin.json .

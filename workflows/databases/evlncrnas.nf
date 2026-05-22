@@ -4,6 +4,7 @@ process fetch {
   output:
   path('EVLncRNAs3_alldata')
 
+  script:
   """
   wget --no-check-certificate --read-timeout=30 -t 1 \
     https://request.sdklab-biophysics-dzu.net/uploads/files/EVLncRNAs3_alldata.zip
@@ -22,6 +23,7 @@ process rnc_dump {
   output:
   path('*.csv')
 
+  script:
   """
   psql -f $query $PGDATABASE > ev_lookup.csv
   """
@@ -37,6 +39,7 @@ process parse {
   output:
   path('*.csv')
 
+  script:
   """
   rnac evlncrnas parse $ev_data $rnc_data .
   """

@@ -10,6 +10,7 @@ process fetch_model_stats {
   path('info.csv'), emit: info
   path '*.tsv', emit: metadata
 
+  script:
   """
   find /rna/r2dt/data -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", \$3, \$6, \$8); }' | sort -u > info.csv
   cp /rna/r2dt/data/rnasep/metadata.tsv rnasep.tsv
@@ -25,6 +26,7 @@ process create_model_info {
   output:
   path('models.csv')
 
+  script:
   """
   rnac r2dt model-info $model_source $info $metadata models.csv
   """
@@ -38,6 +40,7 @@ process store_model_info {
   output:
     val('model info stored')
 
+  script:
   """
   pgloader --on-error-stop $load
   """

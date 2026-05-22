@@ -5,6 +5,7 @@ process find_urls {
   output:
   path("urls.txt")
 
+  script:
   """
   rnac pirbase urls-for $params.databases.pirbase.remote urls.txt
   """
@@ -19,6 +20,7 @@ process find_known {
   output:
   path(known)
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > known
   """
@@ -35,6 +37,7 @@ process parse_data {
   output:
   path("*.csv")
 
+  script:
   """
   wget -O data.json.gz $url
   gzip -d data.json.gz

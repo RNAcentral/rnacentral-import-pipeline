@@ -12,6 +12,7 @@ process check_db_md5 {
     path("*.csv")
 
 
+    script:
     """
     wget -O target_file $remote
     echo -n "$db_name," >> latest_md5s.csv && md5sum target_file | awk 'BEGIN {fs="[ ]"}; {print \$1}' >> latest_md5s.csv
@@ -29,6 +30,7 @@ process make_selection {
     path ("*.config")
     path ("$latest_md5s")
 
+  script:
   """
   rnac scan-imports select-for-import $latest_md5s
   """
@@ -40,6 +42,7 @@ process update_tracker_table {
   input:
     path latest_md5s
 
+  script:
   """
   rnac scan-imports update-tracker $latest_md5s
   """

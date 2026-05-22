@@ -7,6 +7,7 @@ process find_genomes_with_repeats {
   output:
   path("info.csv")
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > assemblies.csv
   rnac repeats find-databases $connections assemblies.csv info.csv

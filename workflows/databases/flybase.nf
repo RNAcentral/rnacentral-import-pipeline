@@ -4,6 +4,7 @@ process flybase {
   output:
   path('*.csv')
 
+  script:
   """
   resolve_remote() {
     local remote="${params.databases.flybase.remote}"

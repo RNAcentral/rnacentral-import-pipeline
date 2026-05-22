@@ -25,6 +25,7 @@ process build_precompute_context {
   output:
   path('context')
 
+  script:
   """
   mkdir repeat-tree
   mv species-repeats* repeat-tree
@@ -50,6 +51,7 @@ process build_metadata {
   output:
   path("metadata.json")
 
+  script:
   """
   precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev $orf $stopfree $tcode metadata.json
   """
@@ -78,6 +80,7 @@ process find_upi_taxid_ranges {
   output:
   path('urs_taxid.csv')
 
+  script:
   """
   rnac precompute upi-taxid-ranges $ranges urs_taxid.csv
   """
@@ -94,6 +97,7 @@ process query_accession_range {
   output:
   tuple val(min), val(max), path('accessions.json')
 
+  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
@@ -117,6 +121,7 @@ process process_range {
   path 'precompute.csv', emit: data
   path 'qa.csv', emit: qa
 
+  script:
   """
   mkdir context
   precompute normalize $accessions $metadata merged.json

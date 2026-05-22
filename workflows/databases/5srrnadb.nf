@@ -4,6 +4,7 @@ process five_s_rrnadb {
   output:
   path('*.csv')
 
+  script:
   """
   scp ${params.databases["5srrnadb"].remote} 5s.json
   rnac 5srrnadb parse 5s.json .

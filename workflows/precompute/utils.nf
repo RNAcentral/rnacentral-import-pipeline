@@ -9,6 +9,7 @@ process query {
   output:
   path("${query.baseName}.json")
 
+  script:
   """
   psql \
     --variable ON_ERROR_STOP=1 \

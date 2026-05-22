@@ -6,6 +6,7 @@ process pdbe {
   output:
   path('*.csv')
 
+  script:
   """
   wget  http://ftp.ebi.ac.uk/pub/databases/Rfam/.preview/pdb_full_region.txt.gz
   gzip -d pdb_full_region.txt.gz

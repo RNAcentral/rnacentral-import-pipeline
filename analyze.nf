@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 
 include { cpat } from './workflows/cpat'
 include { genome_mapping } from './workflows/genome-mapping'
-include { r2dt } from './workflows/r2dt'
+include { r2dt } from './workflows/r2dt.nf'
 include { rfam_scan } from './workflows/rfam-scan'
 include { rediportal } from './workflows/databases/rediportal'
 include { stopfree } from './workflows/stopfree'

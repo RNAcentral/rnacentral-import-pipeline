@@ -7,6 +7,7 @@ process lncipedia {
   output:
   path('*.csv')
 
+  script:
   """
   wget -O lncipedia.json ${params.databases.lncipedia.remote}
   rnac lncipedia parse lncipedia.json .

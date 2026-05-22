@@ -5,6 +5,7 @@ process merge_and_split_all_publications {
   output:
   path('split-refs/*.csv')
 
+  script:
   """
   set -o pipefail
 
@@ -23,6 +24,7 @@ process fetch_publications {
   output:
   path('out')
 
+  script:
   """
   cp /nfs/ftp/public/databases/pmc/PMCLiteMetadata/PMCLiteMetadata.tgz .
   tar xvf PMCLiteMetadata.tgz

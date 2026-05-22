@@ -6,6 +6,7 @@ process fetch_data {
   output:
   path('*.json')
 
+  script:
   """
   cp $params.databases.gtrnadb.remote/*.json .
   """
@@ -21,6 +22,7 @@ process process_data {
   output:
   path('*.csv')
 
+  script:
   """
   rnac gtrnadb parse $tax_info $raw .
   """

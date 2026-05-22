@@ -4,6 +4,7 @@ process rgd {
   output:
   path('*.csv')
 
+  script:
   """
   wget -O sequences.fasta.gz $params.databases.rgd.sequences
   wget -O genes.txt $params.databases.rgd.genes

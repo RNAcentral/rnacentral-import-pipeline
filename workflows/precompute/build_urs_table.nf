@@ -8,6 +8,7 @@ process create_schema {
   output:
   val('done')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $sql $PGDATABASE
   """
@@ -22,6 +23,7 @@ process fetch_all_urs_taxid {
   output:
   path('data.csv')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
   """
@@ -39,6 +41,7 @@ process select_outdated {
   output:
   path('urs.csv')
 
+  script:
   """
   precompute select xref.csv precompute.csv urs.csv
   """
@@ -55,6 +58,7 @@ process run_query {
   output:
   path('ids.csv')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > ids.csv
   """
@@ -70,6 +74,7 @@ process build_table {
   output:
   path('counts.txt')
 
+  script:
   """
   sort -u computed*.csv > to-load-urs.csv
   expand-urs text active.txt to-load-urs.csv to-load-urs-taxid.csv
@@ -91,6 +96,7 @@ process sort_ids {
   output:
   path('finalized')
 
+  script:
   """
   sort -u raw* > finalized
   """
@@ -104,6 +110,7 @@ process xref_releases {
   output:
   path('data.csv')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
   """
@@ -117,6 +124,7 @@ process precompute_releases {
   output:
   path('data.csv')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
   """

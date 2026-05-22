@@ -13,6 +13,7 @@ process find_models {
   path('CPAT-3.0.4/dat/*_Hexamer.tsv'), emit: hexamers
   path('cutoffs.csv'), emit: cutoffs
 
+  script:
   """
   wget -O cpat.tar.gz 'https://files.pythonhosted.org/packages/c1/3d/de83074cb1b88214db4b48cd894a3ab395d6c5cd1c2c94f14d1950408f6d/CPAT-3.0.4.tar.gz'
   tar xf cpat.tar.gz
@@ -29,6 +30,7 @@ process find_sequences {
   output:
   tuple val(model_name), path(rdata), path(hexamer), path('sequences/*.fasta')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
@@ -47,6 +49,7 @@ process cpat_scan {
   output:
   tuple val(model_name), path('output.ORF_prob.best.tsv')
 
+  script:
   """
   cpat -g "$sequences" -d "$data" -x "$hexamer" -o output
   """
@@ -60,6 +63,7 @@ process parse_results {
   path('results.csv'), emit: results
   path('orfs.csv'), emit: orfs
 
+  script:
   """
   rnac cpat parse $cutoff_info $model_name scan-results.tsv .
   """
@@ -73,6 +77,7 @@ process store_results {
   path(result_ctl)
   path(orf_ctl)
 
+  script:
   """
   split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} cpat-results
   split-and-load $orf_ctl 'orfs*.csv' ${params.import_data.chunk_size} cpat-orfs

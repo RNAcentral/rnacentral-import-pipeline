@@ -6,6 +6,7 @@ process fetch_data {
   output:
   path("data")
 
+  script:
   """
   rnac plncdb fetch-data $params.databases.plncdb.urls data
   """
@@ -26,6 +27,7 @@ process parse_data {
   output:
   path('*.csv')
 
+  script:
   """
   # rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data
   rnac plncdb parse $params.databases.plncdb.data_path$data

@@ -12,6 +12,7 @@ process fetch_model_mapping {
   output:
   path('mapping.json')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > mapping.json
   """
@@ -134,6 +135,7 @@ process layout_sequences {
   output:
   tuple path("$sequences"), path('output'), path('version')
 
+  script:
   """
   esl-sfetch --index $sequences
   r2dt.py draw $sequences output/
@@ -154,6 +156,7 @@ process publish_layout {
   output:
   val 'done', emit: flag
 
+  script:
   """
   rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
   rnac r2dt prepare-s3 --allow-missing $mapping $output for-upload file-list
@@ -172,6 +175,7 @@ process parse_layout {
   path "data.csv", emit: data
   path 'attempted.csv', emit: attempted
 
+  script:
   """
   rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
   rnac r2dt create-attempted $sequences $version attempted.csv
@@ -194,6 +198,7 @@ process store_secondary_structures {
   output:
   val('r2dt done')
 
+  script:
   """
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
   split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted

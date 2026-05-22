@@ -14,6 +14,7 @@ process merge_and_split {
   output:
   path('by-assembly/*.json')
 
+  script:
   """
   search-export genes select-and-split $locus $sequence by-assembly
   if [[ ! -e by-assembly/*.json ]]; then

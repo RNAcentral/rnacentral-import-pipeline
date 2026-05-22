@@ -4,6 +4,7 @@ process mgnify_fetch {
   output:
     path('*.json')
 
+  script:
   """
   cp /nfs/ftp/public/databases/metagenomics/rnacentral/mgnify_genomes/* .
   """
@@ -17,6 +18,7 @@ process mgnify_parse {
   output:
     path('*.csv')
 
+  script:
   """
   rnac mgnify parse $json .
   """

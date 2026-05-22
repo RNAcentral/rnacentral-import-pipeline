@@ -12,6 +12,7 @@ process setup {
   output:
   path('species.csv')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > species.csv
   """
@@ -27,6 +28,7 @@ process create_json {
   output:
   path("${species}.${assembly}.json")
 
+  script:
   """
   set -o pipefail
   rnac genome-mapping igv $species $assembly ${species}.${assembly}.json
@@ -42,6 +44,7 @@ process merge_json {
   output:
   path('igv_files.json')
 
+  script:
   """
   jq -s 'flatten' $json > igv_files.json
   """

@@ -9,6 +9,7 @@ process find_partitions {
   output:
   path('partitions.csv')
 
+  script:
   """
   psql \
     -c 'COPY (SELECT id, descr from rnc_database) TO STDOUT (FORMAT CSV)' \
@@ -29,6 +30,7 @@ process accession_from_xref_only {
   output:
   val('done')
 
+  script:
   """
   psql \
   -v ON_ERROR_STOP=1 \
@@ -48,6 +50,7 @@ process build_accession_table {
   output:
   val('done')
 
+  script:
   """
   psql \
   -v ON_ERROR_STOP=1 \
@@ -67,6 +70,7 @@ process finalize_accession_table {
   output:
   val('done')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $sql $PGDATABASE
   """

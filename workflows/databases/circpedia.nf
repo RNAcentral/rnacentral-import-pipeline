@@ -10,6 +10,7 @@ process fetch_annotation {
   output:
   tuple val(species), path("${species.annotation}.txt")
 
+  script:
   """
   wget \
     "${params.databases.circpedia.annotation_base_url}${species.annotation}.txt.zip" \
@@ -30,6 +31,7 @@ process fetch_fasta {
   output:
   tuple val(species), path(annotation_file), path("${species.fasta}.fa")
 
+  script:
   """
   wget --no-check-certificate \
     "${params.databases.circpedia.fasta_base_url}${species.fasta}.fa.zip" \
@@ -48,6 +50,7 @@ process parse_data {
   output:
   path('*.csv')
 
+  script:
   """
   rnac circpedia parse \
     --assembly ${species.assembly} \

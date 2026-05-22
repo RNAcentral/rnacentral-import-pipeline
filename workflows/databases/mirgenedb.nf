@@ -7,6 +7,7 @@ process mirgenedb {
   output:
   path('*.csv')
 
+  script:
   """
   scp $params.databases.mirgenedb.remote mirgenedb.json
   psql \

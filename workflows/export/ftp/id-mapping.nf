@@ -10,6 +10,7 @@ process build_id_mapping {
   path("example.txt"), emit: 'example'
   path("readme.txt"), emit: 'readme'
 
+  script:
   """
   set -euo pipefail
 
@@ -31,6 +32,7 @@ process database_mapping {
   output:
   path('*.tsv')
 
+  script:
   """
   set -euo pipefail
 

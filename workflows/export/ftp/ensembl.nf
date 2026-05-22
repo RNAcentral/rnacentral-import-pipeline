@@ -4,6 +4,7 @@ process find_chunks {
   output:
   path('chunks')
 
+  script:
   """
   rnac upi-ranges ${params.export.ftp.ensembl.chunk_size} > chunks
   """
@@ -18,6 +19,7 @@ process query_chunk {
   output:
   tuple val(min), val(max), path('raw_xrefs.json')
 
+  script:
   """
   psql -f $query --variable min=$min --variable max=$max "$PGDATABASE" > raw_xrefs.json
   """
@@ -32,6 +34,7 @@ process process_chunk {
   output:
   path("ensembl-xref-$min-${max}.json")
 
+  script:
   """
   rnac ftp-export ensembl --schema=$schema $raw ensembl-xref-$min-${max}.json
   """

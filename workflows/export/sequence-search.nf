@@ -13,6 +13,7 @@ process find_db_to_export {
   output:
   path('dbs.txt')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > dbs.txt
   """
@@ -28,6 +29,7 @@ process query_database {
   output:
   tuple val(name), path('raw.json')
 
+  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \

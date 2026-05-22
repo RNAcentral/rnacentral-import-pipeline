@@ -24,6 +24,7 @@ process save_organisms {
     output:
     val('done')
 
+    script:
     """
     pgloader --on-error-stop $ctl
     """

@@ -4,6 +4,7 @@ process slack_message {
   input:
   val(message)
 
+  script:
   """
   rnac notify step "Import Workflow" "$message"
   """
@@ -17,6 +18,7 @@ process slack_file {
   input:
   path(message)
 
+  script:
   """
   rnac notify file "$message"
   """

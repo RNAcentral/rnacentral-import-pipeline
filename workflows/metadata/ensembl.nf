@@ -10,6 +10,7 @@ process assemblies {
   output:
   path('*.csv')
 
+  script:
   """
   rnac ensembl assemblies $connections $query $examples $known
   """
@@ -23,6 +24,7 @@ process fetch_compara {
   output:
   path('*.nt.fasta.gz')
 
+  script:
   """
   wget '$params.databases.ensembl.compara.remote'
   """
@@ -38,6 +40,7 @@ process process_compara {
   output:
   path('compara.csv')
 
+  script:
   """
   zcat $gz | rnac ensembl compara - compara.csv
   """
@@ -53,6 +56,7 @@ process proteins {
   output:
   path('proteins.csv')
 
+  script:
   """
   rnac ensembl proteins $connections $query proteins.csv
   """
@@ -70,6 +74,7 @@ process coordinate_systems {
   output:
   path('coordinate_systems.csv')
 
+  script:
   """
   rnac ensembl coordinate-systems $connections $query coordinate_systems.csv
   """
@@ -83,6 +88,7 @@ process karyotypes {
   output:
   path('karyotypes.csv')
 
+  script:
   """
   rnac ensembl karyotypes karyotypes.csv
   """

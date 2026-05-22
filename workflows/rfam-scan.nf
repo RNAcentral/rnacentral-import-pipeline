@@ -34,6 +34,7 @@ process sequences {
   output:
   tuple path(version), path('parts/*.fasta')
 
+  script:
   """
   export TMPDIR="$baseDir/work/tmp"
   psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "$PGDATABASE" | uniq | sort -u > active-urs
@@ -58,6 +59,7 @@ process scan {
   path 'hits.csv', emit: hits
   path 'attempted.csv', emit: attempted
 
+  script:
   """
   cmscan \
     -o output.inf \
@@ -91,6 +93,7 @@ process import_data {
   output:
   val('rfam done')
 
+  script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} rfam
   split-and-load attempted.ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam

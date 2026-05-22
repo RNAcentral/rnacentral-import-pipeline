@@ -12,6 +12,7 @@ process fetch_taxids {
   output:
     path('taxids.csv')
 
+  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
@@ -29,6 +30,7 @@ process fetch_rf_model {
   output:
     path("genes_model.pkl")
 
+  script:
   """
   wget -O genes_model.pkl ${params.genes.rf_model_url}
   """
@@ -43,6 +45,7 @@ process fetch_so_model{
   output:
     path("so_embedding_model.emb")
 
+  script:
   """
   wget -O so_embedding_model.emb ${params.genes.so_model_url}
   """
@@ -61,6 +64,7 @@ process fetch_transcripts {
     tuple val(taxid), path("transcripts.pq")
 
 
+  script:
   """
   rnac genes fetch --taxid ${taxid} --output transcripts.pq
   """
@@ -77,6 +81,7 @@ process preprocess_transcripts {
   output:
     tuple val(taxid), path('features.pq'), path(transcripts)
 
+  script:
   """
   rnac genes preprocess --transcripts_file ${transcripts} --output features.pq --so_model_path ${so_model}
   """
@@ -93,6 +98,7 @@ process classify_transcripts {
   output:
     tuple val(taxid), path("*.json")
 
+  script:
   """
   rnac genes classify --features_file ${features} --transcripts_file ${transcripts} --model_path ${model} --taxid ${taxid} --output_dir .
   """

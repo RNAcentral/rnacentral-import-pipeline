@@ -7,6 +7,7 @@ process build_rnc_bedfile {
   output:
     tuple val(assembly_id), path("rnc_regions.bed")
 
+  script:
   """
   set -euo pipefail
   psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly_id" -f $query "$PGDATABASE" > result.json
@@ -26,6 +27,7 @@ process fetch_rediportal_inputs {
   output:
     tuple val(assembly_id), val(genome_build), path("rediportal.txt"), path("rediportal.bed")
 
+  script:
   """
   set -euo pipefail
   curl -L "$remote" | gzip -d > rediportal.txt
@@ -44,6 +46,7 @@ process intersect_rnc_rediportal {
   output:
     path("features.csv")
 
+  script:
   """
   rnac rediportal parse-bed --genome-build "$genome_build" $redi_bed $redi_meta $rnc_bed features.csv
   """
@@ -59,6 +62,7 @@ process load_rediportal {
   output:
     val('rediportal done')
 
+  script:
   """
   split-and-load $ctl *.csv ${params.databases.rediportal.chunk_size} rediportal-data
   """

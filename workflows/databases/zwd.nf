@@ -7,6 +7,7 @@ process zwd {
   output:
   path('*.csv')
 
+  script:
   """
   wget -O zwd.json $params.databases.zwd.remote
   rnac zwd parse $context zwd.json .

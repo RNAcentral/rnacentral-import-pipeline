@@ -7,6 +7,7 @@ process fetch_families {
   output:
   path('families.tsv')
 
+  script:
   """
   mysql \
     --host $params.connections.rfam.host \
@@ -26,6 +27,7 @@ process fetch_families_info {
   output:
   path("info.tsv")
 
+  script:
   """
   mysql \
     --host $params.connections.rfam.host \
@@ -49,6 +51,7 @@ process fetch_sequence_info {
   output:
   tuple val(family), path('sequences.tsv')
 
+  script:
   """
   mysql \
     --host $params.connections.rfam.host \
@@ -93,6 +96,7 @@ process parse {
   output:
   path('*.csv')
 
+  script:
   """
   cp '/hps/nobackup/agb/rfam/test-fasta-export/release/results/ftp/fasta_files/${family}.fa.gz' sequences.fa.gz
   gzip -d sequences.fa.gz

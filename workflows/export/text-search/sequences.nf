@@ -28,6 +28,7 @@ process setup {
   output:
   path('counts.txt')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$sql" "$PGDATABASE"
   psql -v ON_ERROR_STOP=1 -f "$counts" "$PGDATABASE" > counts.txt
@@ -43,6 +44,7 @@ process fetch_so_tree {
   output:
   path('so-term-tree.json')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   rnac search-export so-term-tree raw.json so-term-tree.json
@@ -71,6 +73,7 @@ process build_metadata {
   output:
   path("merged.json")
 
+  script:
   """
   search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm $editing_events $go_flow_annotations merged.json
   """
@@ -103,6 +106,7 @@ process fetch_accession {
   output:
   tuple val(min), val(max), path("raw.json")
 
+  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
@@ -122,6 +126,7 @@ process text_mining_query {
   output:
   path("publication-count.json")
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$script" "$PGDATABASE" > raw.json
   search-export group publication-count raw.json ${max_count} publication-count.json
@@ -136,6 +141,7 @@ process litsumm_summaries {
   output:
   path("litsumm-summaries.json")
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   search-export group litsumm-summaries raw.json ${max_count} litsumm-summaries.json
@@ -151,6 +157,7 @@ process go_flow_annotations {
   output:
   path("go-flow-llm-annotations.json")
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   search-export group go-flow-annotation raw.json ${max_count} go-flow-llm-annotations.json
@@ -165,6 +172,7 @@ process editing_events {
   output:
   path("editing-events.json")
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   search-export group editing-events raw.json ${max_count} editing-events.json

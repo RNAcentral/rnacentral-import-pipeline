@@ -6,6 +6,7 @@ process fetch {
   output:
   path('all.tsv')
 
+  script:
   """
   cp ${params.databases.mirtrondb.remote} all.tsv
   """
@@ -20,6 +21,7 @@ process parse {
   output:
   path('*.csv')
 
+  script:
   """
   rnac mirtrondb parse $data .
   """

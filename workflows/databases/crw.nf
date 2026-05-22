@@ -7,6 +7,7 @@ process fetch_and_process {
   output:
   path('*.csv')
 
+  script:
   """
   psql -f "$metadata_query" "$PGDATABASE" > metadata.json
   git clone "$params.databases.crw.r2dt_repo" r2dt

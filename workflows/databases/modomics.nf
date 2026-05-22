@@ -6,6 +6,7 @@ process fetch {
   output:
   path('modomics.json')
 
+  script:
   """
   cp ${params.databases.modomics.remote} modomics.json
   """
@@ -20,6 +21,7 @@ process parse {
   output:
   path('*.csv')
 
+  script:
   """
   rnac modomics parse $data .
   """

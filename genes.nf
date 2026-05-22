@@ -9,6 +9,7 @@ process get_species {
   output:
   path('species.csv')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -f $setup $PGDATABASE
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > species.csv
@@ -26,6 +27,7 @@ process extract_data {
   output:
   tuple val(assembly_id), path('sequences.json'), path('counts.json'), path("pseudo.json"), path('repetitive.bed')
 
+  script:
   """
   psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $query $PGDATABASE > sequences.json
   psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $counts_query $PGDATABASE > counts.json
@@ -46,6 +48,7 @@ process build {
   path 'locus.csv', emit: locus
   path 'rejected.csv', emit: rejected
 
+  script:
   """
   rnac genes build $data_file $counts $genes $repetative .
   """
@@ -62,6 +65,7 @@ process load_data {
   path(load_status)
   path(post_load)
 
+  script:
   """
   split-and-load $load_locus 'locus*.csv' ${params.import_data.chunk_size} locus-data
   STATUS='rejected' split-and-load $load_status 'rejected*.csv' ${params.import_data.chunk_size} rejected-data

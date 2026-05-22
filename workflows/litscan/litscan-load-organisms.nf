@@ -37,6 +37,7 @@ process import_organisms {
     output:
     val('done')
 
+    script:
     """
     pgloader --on-error-stop $ctl
     """

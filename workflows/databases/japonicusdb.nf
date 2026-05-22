@@ -4,6 +4,7 @@ process japonicusdb {
   output:
   path('*.csv')
 
+  script:
   """
   wget -O japonicusdb.json ${params.databases.japonicusdb.remote}
   rnac japonicusdb parse japonicusdb.json .

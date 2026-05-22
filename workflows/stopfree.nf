@@ -28,6 +28,7 @@ process find_sequences {
   output:
   path('sequences/*.fasta'), optional: true
 
+  script:
   """
   PGOPTIONS='-c max_parallel_workers_per_gather=0' psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
@@ -45,6 +46,7 @@ process stopfree_scan {
   output:
   path("results.csv")
 
+  script:
   """
   PYTHONPATH="${workflow.launchDir}" python "${workflow.launchDir}/rnacentral_pipeline/stopfree/scan.py" "$sequences" . --max-probability ${params.stopfree.max_probability}
   """
@@ -58,6 +60,7 @@ process store_results {
   path('results*.csv')
   path(result_ctl)
 
+  script:
   """
   split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} stopfree-results
   """
