@@ -44,10 +44,18 @@ workflow {
   import_data(Channel.of('ready'))
 
   workflow.onError {
-    slack_closure("Import pipeline encountered an error and failed")
+    try {
+      slack_closure("Import pipeline encountered an error and failed")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e.message}"
+    }
   }
 
   workflow.onComplete {
-    slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+    try {
+      slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e.message}"
+    }
   }
 }

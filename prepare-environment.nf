@@ -42,6 +42,10 @@ workflow {
   prepare_environment()
 
   workflow.onComplete {
-    slack_closure("Environment preparation completed")
+    try {
+      slack_closure("Environment preparation completed")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e.message}"
+    }
   }
 }
