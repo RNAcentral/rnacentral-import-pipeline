@@ -10,7 +10,7 @@ process create_schema {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $sql $PGDATABASE
+  psql -v ON_ERROR_STOP=1 -f $sql \$PGDATABASE
   """
 }
 
@@ -25,7 +25,7 @@ process fetch_all_urs_taxid {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
   """
 }
 
@@ -60,7 +60,7 @@ process run_query {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > ids.csv
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > ids.csv
   """
 }
 
@@ -80,8 +80,8 @@ process build_table {
   expand-urs text active.txt to-load-urs.csv to-load-urs-taxid.csv
   psql \
     -v ON_ERROR_STOP=1 \
-    -f "$load" "$PGDATABASE"
-  psql -f counts.sql -v ON_ERROR_STOP=1 "$PGDATABASE" > counts.txt
+    -f "$load" "\$PGDATABASE"
+  psql -f counts.sql -v ON_ERROR_STOP=1 "\$PGDATABASE" > counts.txt
 
   """
 }
@@ -112,7 +112,7 @@ process xref_releases {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
   """
 }
 
@@ -126,7 +126,7 @@ process precompute_releases {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
   """
 }
 

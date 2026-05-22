@@ -4,8 +4,6 @@ nextflow.enable.dsl=2
 
 process fetch_taxids {
 
-  when { params.genes.run }
-
   input:
     path(taxa_query)
 
@@ -17,13 +15,11 @@ process fetch_taxids {
   psql \
     -v ON_ERROR_STOP=1 \
     -f "$taxa_query" \
-    "$PGDATABASE" > taxids.csv
+    "\$PGDATABASE" > taxids.csv
   """
 }
 
 process fetch_rf_model {
-  when { params.genes.run }
-
   input:
     val(_flag)
 
@@ -37,8 +33,6 @@ process fetch_rf_model {
 }
 
 process fetch_so_model{
-  when { params.genes.run }
-
   input:
     val(_flag)
 

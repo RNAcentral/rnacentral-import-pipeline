@@ -66,7 +66,7 @@ process fetch_lookup {
 
     script:
     """
-    psql -f $query $PGDATABASE > lookup_dump.csv
+    psql -f $query \$PGDATABASE > lookup_dump.csv
     """
 }
 

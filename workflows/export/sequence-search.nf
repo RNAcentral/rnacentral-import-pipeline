@@ -5,8 +5,6 @@ nextflow.enable.dsl=2
 create_memory = params.export.sequence_search.create_fasta.memory_table
 
 process find_db_to_export {
-  when { params.export.sequence_search.run }
-
   input:
   path(query)
 
@@ -15,7 +13,7 @@ process find_db_to_export {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > dbs.txt
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > dbs.txt
   """
 }
 
@@ -35,7 +33,7 @@ process query_database {
     -v ON_ERROR_STOP=1 \
     $partition \
     -f "$query" \
-    "$PGDATABASE" > raw.json
+    "\$PGDATABASE" > raw.json
   """
 }
 

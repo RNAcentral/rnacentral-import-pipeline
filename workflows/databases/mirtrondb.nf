@@ -1,5 +1,4 @@
 process fetch {
-  when { params.databases.mirtrondb.run }
   queue 'datamover'
   container ''
 
@@ -13,8 +12,6 @@ process fetch {
 }
 
 process parse {
-  when { params.databases.mirtrondb.run }
-
   input:
   path(data)
 

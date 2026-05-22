@@ -11,7 +11,7 @@ process fetch {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f $query "\$PGDATABASE" > raw.json
   """
 }
 

@@ -1,6 +1,5 @@
 process fetch_annotation {
   tag { species.annotation }
-  when { params.databases.circpedia.run }
   memory '2GB'
   errorStrategy 'terminate'
 
@@ -21,7 +20,6 @@ process fetch_annotation {
 
 process fetch_fasta {
   tag { species.fasta }
-  when { params.databases.circpedia.run }
   memory '2GB'
   errorStrategy 'terminate'
 

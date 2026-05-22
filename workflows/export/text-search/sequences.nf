@@ -30,8 +30,8 @@ process setup {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$sql" "$PGDATABASE"
-  psql -v ON_ERROR_STOP=1 -f "$counts" "$PGDATABASE" > counts.txt
+  psql -v ON_ERROR_STOP=1 -f "$sql" "\$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$counts" "\$PGDATABASE" > counts.txt
   """
 }
 
@@ -46,7 +46,7 @@ process fetch_so_tree {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   rnac search-export so-term-tree raw.json so-term-tree.json
   """
 }
@@ -113,7 +113,7 @@ process fetch_accession {
     -v min=$min \
     -v max=$max \
     -f "$sql" \
-    "$PGDATABASE" > raw.json
+    "\$PGDATABASE" > raw.json
   """
 }
 
@@ -128,7 +128,7 @@ process text_mining_query {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$script" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$script" "\$PGDATABASE" > raw.json
   search-export group publication-count raw.json ${max_count} publication-count.json
   """
 }
@@ -143,7 +143,7 @@ process litsumm_summaries {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   search-export group litsumm-summaries raw.json ${max_count} litsumm-summaries.json
   """
 }
@@ -159,7 +159,7 @@ process go_flow_annotations {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   search-export group go-flow-annotation raw.json ${max_count} go-flow-llm-annotations.json
   """
 }
@@ -174,7 +174,7 @@ process editing_events {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   search-export group editing-events raw.json ${max_count} editing-events.json
   """
 }

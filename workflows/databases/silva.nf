@@ -1,6 +1,4 @@
 process fetch {
-  when { params.databases.silva.run }
-
   output:
   path('*.rnac')
 

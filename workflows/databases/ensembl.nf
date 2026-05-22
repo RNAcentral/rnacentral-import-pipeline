@@ -1,6 +1,4 @@
 process fetch_metadata {
-  when { params.databases.ensembl._any.run }
-
   input:
   path(query)
 
@@ -18,8 +16,6 @@ process fetch_metadata {
 }
 
 process find_urls {
-  when { params.databases.ensembl[division].run }
-
   memory '20GB'
 
   input:

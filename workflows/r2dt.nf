@@ -1,8 +1,6 @@
 nextflow.enable.dsl=2
 
 process fetch_model_mapping {
-  when { params.r2dt.run }
-
   memory '16 MB'
 
   input:
@@ -14,13 +12,11 @@ process fetch_model_mapping {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > mapping.json
+  psql -v ON_ERROR_STOP=1 -f $query "\$PGDATABASE" > mapping.json
   """
 }
 
 process get_partitions {
-  when { params.r2dt.run }
-
   input:
   val(_flag)
   path(query)
@@ -32,15 +28,13 @@ process get_partitions {
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -f $query "$PGDATABASE" \
+    -f $query "\$PGDATABASE" \
     > databases.csv
   """
 }
 
 
 process fetch_xrefs {
-  when { params.r2dt.run }
-
   input:
   tuple val(partition), path(query)
 
@@ -52,14 +46,12 @@ process fetch_xrefs {
   psql \
     -v ON_ERROR_STOP=1 \
     -v tablename=xref_p${partition}_not_deleted \
-    -f $query "$PGDATABASE" \
+    -f $query "\$PGDATABASE" \
     > urs_xref.csv
   """
 }
 
 process fetch_tracked {
-  when { params.r2dt.run }
-
   input:
   val(_flag)
   path(query)
@@ -71,15 +63,13 @@ process fetch_tracked {
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -f $query "$PGDATABASE" \
+    -f $query "\$PGDATABASE" \
     > urs_tracked.csv
   """
 }
 
 
 process extract_sequences {
-  when { params.r2dt.run }
-
   memory '12GB'
 
   input:
@@ -99,7 +89,7 @@ process extract_sequences {
       -v max_len=10000 \
       -v 'sequence_count=${params.r2dt.sequence_count}' \
       -q \
-      -f $query $PGDATABASE > raw.json
+      -f $query \$PGDATABASE > raw.json
   """
 }
 
@@ -203,7 +193,7 @@ process store_secondary_structures {
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
   split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted
 
-  psql -f "$urs_sql" "$PGDATABASE" > urs.txt
+  psql -f "$urs_sql" "\$PGDATABASE" > urs.txt
   rnac r2dt should-show compute $model urs.txt should-show.csv
   split-and-load $should_show_ctl 'should-show*.csv' ${params.r2dt.data_chunk_size} r2dt-should-show
   """
@@ -218,69 +208,53 @@ workflow common {
   emit: mapping
 }
 
-workflow for_database {
-  take: sequences
-  main:
-    common | set { model_mapping }
-
-    sequences \
-    | flatten \
-    | filter_done_md5 \
-    | flatten \
-    | layout_sequences \
-    | combine(model_mapping) \
-    | set { layouts }
-
-    layouts | parse_layout | set { parsed }
-  emit:
-    parsed
-    layouts
-}
-
 workflow r2dt {
   take: ready
   main:
-    Channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
-    Channel.fromPath("files/r2dt/fetch-partition-xref.sql") | set { xref_sql }
-    Channel.fromPath("files/r2dt/fetch-tracked.sql") | set { tracked_sql }
-    Channel.fromPath("files/r2dt/fetch-partitions.sql") | set { partitions_sql }
-    Channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
-    Channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
-    Channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
-    Channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
-    Channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+    if (params.r2dt.run) {
+      Channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
+      Channel.fromPath("files/r2dt/fetch-partition-xref.sql") | set { xref_sql }
+      Channel.fromPath("files/r2dt/fetch-tracked.sql") | set { tracked_sql }
+      Channel.fromPath("files/r2dt/fetch-partitions.sql") | set { partitions_sql }
+      Channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
+      Channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
+      Channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
+      Channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
+      Channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
 
-    fetch_tracked(ready, tracked_sql) | set { tracked }
+      fetch_tracked(ready, tracked_sql) | set { tracked }
 
+      get_partitions(ready, partitions_sql) \
+      | splitCsv \
+      | combine(xref_sql) \
+      | fetch_xrefs \
+      | collectFile \
+      | set { partitions }
 
-    get_partitions(ready, partitions_sql) \
-    | splitCsv \
-    | combine(xref_sql) \
-    | fetch_xrefs \
-    | collectFile \
-    | set { partitions }
+      ready | common | set { model_mapping }
 
-    ready | common | set { model_mapping }
+      extract_sequences(partitions, tracked, sequences_sql) \
+      | flatten \
+      | filter { f -> !f.empty() } \
+      | split_sequences \
+      | flatten \
+      | filter { f -> !f.empty() } \
+      | layout_sequences \
+      | combine(model_mapping) \
+      | set { data }
 
-  extract_sequences(partitions, tracked, sequences_sql) \
-    | flatten \
-    | filter { f -> !f.empty() } \
-    | split_sequences \
-    | flatten \
-    | filter { f -> !f.empty() } \
-    | layout_sequences \
-    | combine(model_mapping) \
-    | set { data }
+      data | publish_layout
+      data | parse_layout
 
-    data | publish_layout
-    data | parse_layout
+      parse_layout.out.data | collect | set { data }
+      parse_layout.out.attempted | collect | set { attempted }
 
-    parse_layout.out.data | collect | set { data }
-    parse_layout.out.attempted | collect | set { attempted }
+      publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
 
-    publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
-
-    store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+    } else {
+      Channel.of('r2dt skipped') | set { done }
+    }
   emit: done
 }
 

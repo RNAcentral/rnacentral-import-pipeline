@@ -1,5 +1,4 @@
 process fetch {
-  when { params.databases.circatlas.run }
   queue 'datamover'
   container ''
 
@@ -13,7 +12,6 @@ process fetch {
 }
 
 process parse {
-  when { params.databases.circatlas.run }
   memory { params.databases.circatlas.process.directives.memory }
 
   input:

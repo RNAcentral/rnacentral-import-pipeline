@@ -3,8 +3,6 @@
 nextflow.enable.dsl = 2
 
 process setup {
-  when { params.genome_mapping.run }
-
   input:
   val(_flag)
   path(query)
@@ -14,7 +12,7 @@ process setup {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > species.csv
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > species.csv
   """
 }
 

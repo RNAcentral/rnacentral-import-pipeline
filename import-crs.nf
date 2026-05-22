@@ -42,7 +42,7 @@ process fetch_rfam_locations {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=$crs_assembly" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$crs_assembly" -f $query "\$PGDATABASE" > result.json
   rnac ftp-export coordinates as-bed result.json result.bed
   bedtools sort -i result.bed > rfam-${assembly}.bed
   """
@@ -63,7 +63,7 @@ process fetch_rnacentral_bed {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "\$PGDATABASE" > result.json
   rnac ftp-export coordinates as-bed result.json > result.bed
   bedtools sort -i result.bed > rnacentral-${assembly}.bed
   """

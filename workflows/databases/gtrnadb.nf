@@ -1,5 +1,4 @@
 process fetch_data {
-  when { params.databases.gtrnadb.run }
   queue 'datamover'
   container ''
 

@@ -11,8 +11,8 @@ process get_species {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $setup $PGDATABASE
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > species.csv
+  psql -v ON_ERROR_STOP=1 -f $setup \$PGDATABASE
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > species.csv
   """
 }
 
@@ -29,9 +29,9 @@ process extract_data {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $query $PGDATABASE > sequences.json
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $counts_query $PGDATABASE > counts.json
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $genes_query "$PGDATABASE" > pseudo.json
+  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $query \$PGDATABASE > sequences.json
+  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $counts_query \$PGDATABASE > counts.json
+  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $genes_query "\$PGDATABASE" > pseudo.json
   touch repetitive.bed
   """
 }
@@ -69,7 +69,7 @@ process load_data {
   """
   split-and-load $load_locus 'locus*.csv' ${params.import_data.chunk_size} locus-data
   STATUS='rejected' split-and-load $load_status 'rejected*.csv' ${params.import_data.chunk_size} rejected-data
-  psql -v ON_ERROR_STOP=1 -f $post_load $PGDATABASE
+  psql -v ON_ERROR_STOP=1 -f $post_load \$PGDATABASE
   """
 }
 

@@ -13,7 +13,7 @@ process find_partitions {
   """
   psql \
     -c 'COPY (SELECT id, descr from rnc_database) TO STDOUT (FORMAT CSV)' \
-  "$PGDATABASE" | \
+  "\$PGDATABASE" | \
   awk -F, '{
     print "xref_p"\$1"_not_deleted,"\$2
   }' > partitions.csv
@@ -38,7 +38,7 @@ process build_accession_table {
   -v "db_name=$db" \
   -v "partition=$partition" \
   -f $sql \
-  "$PGDATABASE"
+  "\$PGDATABASE"
   """
 }
 
@@ -53,7 +53,7 @@ process finalize_accession_table {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $sql $PGDATABASE
+  psql -v ON_ERROR_STOP=1 -f $sql \$PGDATABASE
   """
 }
 

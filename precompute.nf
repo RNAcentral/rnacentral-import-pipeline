@@ -104,7 +104,7 @@ process query_accession_range {
     -v min=$min \
     -v max=$max \
     -f $query \
-    "$PGDATABASE" > raw.json
+    "\$PGDATABASE" > raw.json
   precompute group-accessions raw.json $upi_start $upi_stop accessions.json
   """
 }
@@ -143,7 +143,7 @@ process load_data {
   """
   split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
   split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
-  psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f $post "\$PGDATABASE"
   """
 }
 

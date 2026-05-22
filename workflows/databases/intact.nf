@@ -1,6 +1,4 @@
 process intact {
-  when { params.databases.intact.run }
-
   output:
   path('*.csv')
 

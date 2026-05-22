@@ -1,5 +1,4 @@
 process generate_files {
-  when { params.rfam.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -37,10 +36,10 @@ process sequences {
   script:
   """
   export TMPDIR="$baseDir/work/tmp"
-  psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "$PGDATABASE" | uniq | sort -u > active-urs
-  psql -v ON_ERROR_STOP=1 -v 'name=rfam' -f "$computed" "$PGDATABASE" | sort > computed
+  psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "\$PGDATABASE" | uniq | sort -u > active-urs
+  psql -v ON_ERROR_STOP=1 -v 'name=rfam' -f "$computed" "\$PGDATABASE" | sort > computed
   comm -23 active-urs computed > urs-to-compute
-  psql -q -v ON_ERROR_STOP=1 -v 'max_sequences=${params.rfam.max_sequences}' -f "$compute_missing" "$PGDATABASE" > raw.json
+  psql -q -v ON_ERROR_STOP=1 -v 'max_sequences=${params.rfam.max_sequences}' -f "$compute_missing" "\$PGDATABASE" > raw.json
   mkdir parts
   split --filter 'json2fasta --only-valid-easel - - >> \$FILE.fasta' --lines ${params.rfam.chunk_size} raw.json parts/
   """
@@ -103,29 +102,33 @@ process import_data {
 workflow rfam_scan {
   take: ready
   main:
-    Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
-    Channel.fromPath("files/qa/computed.sql").set { computed_sql }
-    Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
-    Channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
-    Channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
+    if (params.rfam.run) {
+      Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
+      Channel.fromPath("files/qa/computed.sql").set { computed_sql }
+      Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
+      Channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
+      Channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
 
-    generate_files(ready)
+      generate_files(ready)
 
-    generate_files.out.version_info \
-    | combine(active_xref_sql) \
-    | combine(computed_sql) \
-    | combine(compute_required_sql) \
-    | sequences \
-    | flatMap { version, files ->
-      (files instanceof ArrayList) ? files.collect { [version, it] } : [[version, files]]
-    } \
-    | filter { v, f -> !f.isEmpty() } \
-    | combine(generate_files.out.cm_files) \
-    | scan
+      generate_files.out.version_info \
+      | combine(active_xref_sql) \
+      | combine(computed_sql) \
+      | combine(compute_required_sql) \
+      | sequences \
+      | flatMap { version, files ->
+        (files instanceof ArrayList) ? files.collect { [version, it] } : [[version, files]]
+      } \
+      | filter { v, f -> !f.isEmpty() } \
+      | combine(generate_files.out.cm_files) \
+      | scan
 
-    scan.out.hits | collect | set { hits }
-    scan.out.attempted | collect | set { attempted }
+      scan.out.hits | collect | set { hits }
+      scan.out.attempted | collect | set { attempted }
 
-    import_data(hits, ctl, attempted, attempted_ctl) | set { done }
+      import_data(hits, ctl, attempted, attempted_ctl) | set { done }
+    } else {
+      Channel.of('rfam skipped') | set { done }
+    }
   emit: done
 }

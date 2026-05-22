@@ -1,6 +1,5 @@
 process fetch_directory {
   tag { "$name" }
-  when { params.databases.ena.run }
   queue 'datamover'
   containerOptions "${params.common_container} --bind /nfs:/nfs"
   time '2d'
@@ -36,8 +35,6 @@ process fetch_directory {
 }
 
 process fetch_metadata {
-  when { params.databases.ena.run }
-
   input:
   path(urls)
 

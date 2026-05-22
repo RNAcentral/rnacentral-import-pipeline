@@ -21,7 +21,7 @@ process query_chunk {
 
   script:
   """
-  psql -f $query --variable min=$min --variable max=$max "$PGDATABASE" > raw_xrefs.json
+  psql -f $query --variable min=$min --variable max=$max "\$PGDATABASE" > raw_xrefs.json
   """
 }
 

@@ -14,7 +14,6 @@ process extract_gtrnadb_metadata {
 
 
   shell:
-  script:
   '''
   cmstat !{model_path} | awk ' /^[^#]/ { sep=","; printf "%s%s%s\\n", $2,sep,$8 }' | sed 's/euk/E/;s/arch/A/;s/bact/B/'  > basepairs.csv
   '''
@@ -29,7 +28,6 @@ process parse_gtrnadb_model {
     path("model_data.csv")
 
   shell:
-    script:
     '''
     sort -k 1 !{basepairs} > basepairs_sorted.csv
     rnac r2dt model-info gtrnadb !{model_path} model_data_nbp.csv
@@ -45,7 +43,6 @@ process extract_ribovision_metadata {
       path('length_basepair.csv')
 
     shell:
-    script:
     '''
       cmstat /rna/r2dt/data/ribovision-lsu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\\n",$2,sep,$6,sep,$8}' > basepair_length_lsu
       cmstat /rna/r2dt/data/ribovision-ssu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\\n",$2,sep,$6,sep,$8}' > basepair_length_ssu
@@ -65,7 +62,6 @@ process parse_ribovision_models {
     path("model_data.csv")
 
   shell:
-  script:
   '''
   wget !{ribovision_metadata_url}
   rnac r2dt model-info ribovision metadata.tsv model_data_us.csv
@@ -83,7 +79,6 @@ process extract_rnasep_metadata {
     path('length_basepair.csv')
 
   shell:
-  script:
   '''
   cmstat /rna/r2dt/data/rnasep/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\\n",$2,sep,$6,sep,$8}' > length_basepair.csv
   '''
@@ -99,7 +94,6 @@ process parse_rnasep_models {
     path("model_data.csv")
 
   shell:
-  script:
   '''
   wget !{rnasep_metadata_url}
   sed -i 's/\\tNRC-1\\t/\\t/g' metadata.tsv
@@ -121,7 +115,6 @@ process extract_rfam_metadata {
     path('basepairs.csv')
 
   shell:
-  script:
   '''
   cmstat !{all_models} | awk '/^[^#]/ {sep=","; printf "%s%s%s\\n",$3,sep,$8}' > basepairs.csv
   '''
@@ -136,7 +129,6 @@ process parse_rfam_models {
     path("model_data.csv")
 
   shell:
-  script:
   '''
   rnac r2dt model-info rfam !{all_models} $PGDATABASE model_data_nbp.csv
   join -t","  model_data_nbp.csv !{basepairs} -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,2.2 > model_data.csv
@@ -154,7 +146,6 @@ process extract_crw_metadata {
     path("basepairs.csv")
 
   shell:
-  script:
   '''
     cmstat !{all_models} | awk '/^[^#]/ {sep=","; printf "%s%s%s\\n",$2,sep,$8}' > basepairs.csv
   '''

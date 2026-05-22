@@ -1,8 +1,6 @@
 nextflow.enable.dsl = 2
 
 process fetch_data {
-  when { !params.databases.plncdb.prefetch and params.databases.plncdb.run }
-
   output:
   path("data")
 
@@ -13,8 +11,6 @@ process fetch_data {
 }
 
 process parse_data {
-  when { params.databases.plncdb.run }
-
   queue 'short'
   memory { 8.GB * task.attempt }
 

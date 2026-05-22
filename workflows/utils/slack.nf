@@ -1,28 +1,22 @@
 process slack_message {
-  when { params.notify }
-
   input:
   val(message)
 
   script:
-  """
+  params.notify ? """
   rnac notify step "Import Workflow" "$message"
-  """
-
+  """ : "true"
 }
 
 
 process slack_file {
-  when { params.notify }
-
   input:
   path(message)
 
   script:
-  """
+  params.notify ? """
   rnac notify file "$message"
-  """
-
+  """ : "true"
 }
 
 

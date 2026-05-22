@@ -3,8 +3,6 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
-  when { params.tcode.run }
-
   input:
   val(_flag)
 
@@ -19,8 +17,6 @@ process build_ranges {
 }
 
 process find_sequences {
-  when { params.tcode.run }
-
   input:
   tuple val(min), val(max), path(query)
 
@@ -29,7 +25,7 @@ process find_sequences {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -v "min_len=${params.tcode.min_len}" -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -v "min_len=${params.tcode.min_len}" -f "$query" "\$PGDATABASE" > raw.json
   mkdir sequences
   split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
   """
@@ -65,7 +61,6 @@ process parse_results {
 }
 
 process store_results {
-  when { params.tcode.load }
   memory 9.GB
 
   input:

@@ -11,7 +11,7 @@ process create_load_tables {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $create "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f $create "\$PGDATABASE"
   """
 }
 
@@ -38,7 +38,6 @@ process merge_and_import {
 process release {
   time '5d'
   maxForks 1
-  when { params.should_release }
   cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory  4.GB
@@ -64,7 +63,7 @@ process release {
       while IFS='' read -r "script" || [[ -n "\$script" ]]; do
         if [[ ! -z "\$script" ]]; then
           echo "Running: \$fn/\$script"
-          psql -v ON_ERROR_STOP=1 -f \$script "$PGDATABASE"
+          psql -v ON_ERROR_STOP=1 -f \$script "\$PGDATABASE"
         fi
       done < "\$fn"
     fi

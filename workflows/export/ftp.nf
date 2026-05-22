@@ -41,7 +41,7 @@ process md5 {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > md5.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > md5.tsv
   head -10 md5.tsv > example.txt
   gzip md5.tsv
   cat template.txt > readme.txt
@@ -62,7 +62,7 @@ process rfam_annotations {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > rfam_annotations.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > rfam_annotations.tsv
   head rfam_annotations.tsv > example.txt
   gzip rfam_annotations.tsv
   cat template.txt > readme.txt
@@ -81,7 +81,7 @@ process rfam_go_matches {
 
   script:
   """
-  psql -f "$query" "$PGDATABASE" > raw_go.json
+  psql -f "$query" "\$PGDATABASE" > raw_go.json
   rnac ftp-export rfam-go-annotations raw_go.json rnacentral_rfam_annotations.tsv
   gzip rnacentral_rfam_annotations.tsv
   """

@@ -15,7 +15,7 @@ process active {
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
   cp template.txt readme.txt
@@ -36,7 +36,7 @@ process inactive {
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
   """
 }
 
@@ -52,7 +52,7 @@ process species_specific {
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -q -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral_species_specific_ids.fasta
   """
 }
@@ -98,7 +98,7 @@ process find_dbs {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > dbs.txt
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > dbs.txt
   """
 }
 
@@ -116,7 +116,7 @@ process database_specific {
   script:
   """
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "\$PGDATABASE" > raw.json
   json2fasta.py raw.json ${db.toLowerCase().replaceAll(' ', '_').replace('/', '_')}.fasta
   """
 }

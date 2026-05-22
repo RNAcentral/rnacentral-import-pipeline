@@ -1,6 +1,4 @@
 process mirbase {
-  when { params.databases.mirbase.run }
-
   output:
   path('*.csv')
 

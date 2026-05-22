@@ -1,6 +1,4 @@
 process fetch {
-  when { params.databases.evlncrnas.run }
-
   output:
   path('EVLncRNAs3_alldata')
 
@@ -15,8 +13,6 @@ process fetch {
 }
 
 process rnc_dump {
-  when { params.databases.evlncrnas.run }
-
   input:
   path(query)
 
@@ -25,7 +21,7 @@ process rnc_dump {
 
   script:
   """
-  psql -f $query $PGDATABASE > ev_lookup.csv
+  psql -f $query \$PGDATABASE > ev_lookup.csv
   """
 }
 

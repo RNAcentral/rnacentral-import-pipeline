@@ -1,6 +1,4 @@
 process rgd {
-  when { params.databases.rgd.run }
-
   output:
   path('*.csv')
 

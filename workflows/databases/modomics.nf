@@ -1,5 +1,4 @@
 process fetch {
-  when { params.databases.modomics.run }
   queue 'datamover'
   container ''
 
@@ -13,8 +12,6 @@ process fetch {
 }
 
 process parse {
-  when { params.databases.modomics.run }
-
   input:
   path(data)
 

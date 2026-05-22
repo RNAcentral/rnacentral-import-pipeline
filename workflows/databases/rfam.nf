@@ -1,6 +1,4 @@
 process fetch_families {
-  when { params.databases.rfam.run }
-
   input:
   path(query)
 
@@ -19,8 +17,6 @@ process fetch_families {
 }
 
 process fetch_families_info {
-  when { params.databases.rfam.run }
-
   input:
   path(query)
 

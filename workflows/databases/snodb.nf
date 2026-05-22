@@ -1,6 +1,4 @@
 process snodb {
-  when { params.databases.snodb.run }
-
   output:
   path('*.csv')
 

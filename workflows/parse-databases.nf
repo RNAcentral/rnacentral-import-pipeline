@@ -42,7 +42,6 @@ include {ribocentre } from './databases/ribocentre'
 
 process build_context {
   memory '6GB'
-  when { params.needs_taxonomy }
   errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
   maxRetries 5
 

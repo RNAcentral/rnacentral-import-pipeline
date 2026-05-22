@@ -1,5 +1,4 @@
 process find_urls {
-  when { params.databases.pirbase.run }
   executor 'local'
 
   output:
@@ -12,8 +11,6 @@ process find_urls {
 }
 
 process find_known {
-  when { params.databases.pirbase.run }
-
   input:
   path(query)
 
@@ -22,7 +19,7 @@ process find_known {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > known
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > known
   """
 }
 

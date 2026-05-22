@@ -11,7 +11,7 @@ process simple_query {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > result
+  psql -v ON_ERROR_STOP=1 -f $query "\$PGDATABASE" > result
   """
 }
 
@@ -26,6 +26,6 @@ process with_params {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" $parameters "$PGDATABASE" > raw
+  psql -v ON_ERROR_STOP=1 -f "$query" $parameters "\$PGDATABASE" > raw
   """
 }

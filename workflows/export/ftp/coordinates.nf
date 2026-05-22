@@ -27,7 +27,7 @@ process find_jobs {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > coordinates.txt
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > coordinates.txt
   """
 }
 
@@ -45,7 +45,7 @@ process fetch {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "\$PGDATABASE" > result.json
   """
 }
 

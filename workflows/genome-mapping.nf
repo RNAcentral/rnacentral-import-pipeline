@@ -3,8 +3,6 @@
 nextflow.enable.dsl = 2
 
 process setup {
-  when { params.genome_mapping.run }
-
   input:
   val(_flag)
   path(query)
@@ -14,7 +12,7 @@ process setup {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > species.csv
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > species.csv
   """
 }
 
@@ -39,19 +37,19 @@ process fetch_unmapped_sequences {
     -v min_length=${params.genome_mapping.min_length} \
     -v max_length=${params.genome_mapping.max_length} \
     -f "$possible_query" \
-    "$PGDATABASE" | sort > possible
+    "\$PGDATABASE" | sort > possible
 
   psql \
     -v ON_ERROR_STOP=1 \
     -v assembly_id=$assembly_id \
     -f "$mapped_query" \
-    "$PGDATABASE" | sort -u > mapped
+    "\$PGDATABASE" | sort -u > mapped
 
   mkdir parts
 
   comm -23 possible mapped | awk 'BEGIN { FS="_"; OFS="," } { print \$1, \$0 }' > urs-to-compute
   if [[ -s urs-to-compute ]]; then
-    psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+    psql -q -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
     json2fasta raw.json rnacentral.fasta
     seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
 
@@ -122,7 +120,7 @@ process download_genome {
   """
   set -o pipefail
 
-  psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" $PGDATABASE
+  psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" \$PGDATABASE
 
   rnac genome-mapping url-for --host=$division $species $assembly - |\
     xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
@@ -166,7 +164,7 @@ process index_genome_for_browser {
   script:
   """
   samtools faidx $genome
-  psql -c "UPDATE ensembl_assembly SET selected_genome=true WHERE assembly_id='${assembly}';" $PGDATABASE
+  psql -c "UPDATE ensembl_assembly SET selected_genome=true WHERE assembly_id='${assembly}';" \$PGDATABASE
   """
 }
 
@@ -255,43 +253,47 @@ workflow genome_mapping {
     Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
     Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
 
-    setup(ready, find_species) \
-    | splitCsv \
-    | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
-    | set { genome_info }
+    if (params.genome_mapping.run) {
+      setup(ready, find_species) \
+      | splitCsv \
+      | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+      | set { genome_info }
 
-    genome_info \
-    | combine(possible_sql) \
-    | combine(mapped_sql) \
-    | combine(unmapped_sql) \
-    | fetch_unmapped_sequences \
-    | set { split_sequences }
+      genome_info \
+      | combine(possible_sql) \
+      | combine(mapped_sql) \
+      | combine(unmapped_sql) \
+      | fetch_unmapped_sequences \
+      | set { split_sequences }
 
-    genome_info \
-    | download_genome \
-    | set { genomes }
+      genome_info \
+      | download_genome \
+      | set { genomes }
 
-    genome_info | get_browser_coordinates | index_gff3
+      genome_info | get_browser_coordinates | index_gff3
 
-    genomes \
-    | map { _s, _a, genome -> [_a, genome] } \
-    | index_genome_for_browser
+      genomes \
+      | map { _s, _a, genome -> [_a, genome] } \
+      | index_genome_for_browser
 
-    genomes
-    | blat_index \
-    | join(split_sequences) \
-    | flatMap { species, assembly, genome_chunks, chunks ->
-      [genome_chunks.collate(2), chunks]
-        .combinations()
-        .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
-    } \
-    | filter { s, a, g, o, chunk -> !chunk.isEmpty() } \
-    | blat
+      genomes
+      | blat_index \
+      | join(split_sequences) \
+      | flatMap { species, assembly, genome_chunks, chunks ->
+        [genome_chunks.collate(2), chunks]
+          .combinations()
+          .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
+      } \
+      | filter { s, a, g, o, chunk -> !chunk.isEmpty() } \
+      | blat
 
-    blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
-    blat.out.attempted | collect | set { attempted }
+      blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
+      blat.out.attempted | collect | set { attempted }
 
-    load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
+      load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
+    } else {
+      Channel.of('genome-mapping skipped') | set { done }
+    }
   emit: done
 }
 
