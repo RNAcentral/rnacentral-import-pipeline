@@ -24,8 +24,6 @@ process slack_file {
 }
 
 
-import groovy.json.JsonSlurper
-
 // A groovy function for use in closures - uses groovy's own URL class to make the request
 def slack_closure(msg) {
   if (!params.notify) {
@@ -33,7 +31,7 @@ def slack_closure(msg) {
   }
 
   def configFile = new File("secrets.json");
-  def config = new JsonSlurper().parseFile(configFile, 'UTF-8');
+  def config = new groovy.json.JsonSlurper().parseFile(configFile, 'UTF-8');
 
   def post = new URL(config.SLACK_WEBHOOK).openConnection();
   post.setRequestMethod("POST")

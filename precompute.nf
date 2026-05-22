@@ -206,14 +206,12 @@ workflow precompute {
 
 workflow {
   precompute(Channel.of(true))
-}
 
-workflow.onComplete {
+  workflow.onComplete {
+    slack_closure("Precompute workflow completed. Data import complete")
+  }
 
-  slack_closure("Precompute workflow completed. Data import complete")
-}
-
-workflow.onError {
-
-  slack_closure("Precompute workflow encountered an error and crashed")
+  workflow.onError {
+    slack_closure("Precompute workflow encountered an error and crashed")
+  }
 }

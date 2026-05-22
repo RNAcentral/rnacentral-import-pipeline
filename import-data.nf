@@ -42,12 +42,12 @@ workflow import_data {
 
 workflow {
   import_data(Channel.of('ready'))
-}
 
-workflow.onError {
-  slack_closure("Import pipeline encountered an error and failed")
-}
+  workflow.onError {
+    slack_closure("Import pipeline encountered an error and failed")
+  }
 
-workflow.onComplete {
-  slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+  workflow.onComplete {
+    slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+  }
 }

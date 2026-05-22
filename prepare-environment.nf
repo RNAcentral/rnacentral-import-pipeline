@@ -40,8 +40,8 @@ workflow prepare_environment {
 workflow {
   Channel.of("Starting...") | slack_message
   prepare_environment()
-}
 
-workflow.onComplete {
-  slack_closure("Environment preparation completed")
+  workflow.onComplete {
+    slack_closure("Environment preparation completed")
+  }
 }

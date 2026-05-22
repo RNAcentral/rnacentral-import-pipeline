@@ -23,17 +23,13 @@ workflow analyze {
 
 workflow {
   analyze(Channel.of('ready'))
-}
 
+  workflow.onComplete {
+    def msg = workflow.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
+    slack_closure(msg)
+  }
 
-workflow.onComplete {
-  def msg = workflow.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
-  slack_closure(msg)
-
-}
-
-workflow.onError {
-
-  slack_closure("Analyze workflow hit an error and crashed")
-
+  workflow.onError {
+    slack_closure("Analyze workflow hit an error and crashed")
+  }
 }
