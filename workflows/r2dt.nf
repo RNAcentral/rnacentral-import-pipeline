@@ -278,7 +278,7 @@ workflow r2dt {
     parse_layout.out.data | collect | set { data }
     parse_layout.out.attempted | collect | set { attempted }
 
-    publish_layout.out.flag | collect | map { _ -> 'ready' } | set { uploaded }
+    publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
 
     store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
   emit: done

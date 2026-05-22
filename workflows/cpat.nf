@@ -110,7 +110,7 @@ workflow cpat {
     | find_sequences \
     | flatMap { model_name, rdata, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { [model_name, rdata, hexamer, it] } : [[model_name, rdata, hexamer, seqs]] } \
     | cpat_scan \
-    | filter { _, f -> f.exists() } \
+    | filter { _model, f -> f.exists() } \
     | combine(find_models.out.cutoffs) \
     | parse_results
 

@@ -24,7 +24,7 @@ raw_crs
   .into { crs_bed_with_assemblies; pre_fetch }
 
 pre_fetch
-  .map { assembly, _ -> [assembly, params.crs.assembly_rnacentral_mapping[assembly]] }
+  .map { assembly, _ver -> [assembly, params.crs.assembly_rnacentral_mapping[assembly]] }
   .into { for_rfam_fetch; for_rnacentral_fetch }
 
 for_rfam_fetch

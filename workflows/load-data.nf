@@ -101,7 +101,7 @@ workflow load_data {
     | groupTuple \
     | map { [it[0][0], it[0][1], it[1]] } \
     | combine(create_load_tables(schema)) \
-    | map { n, ctl, fs, _ -> [n, ctl, fs] } \
+    | map { n, ctl, fs, _ready -> [n, ctl, fs] } \
     | merge_and_import \
     | set { imported_names }
 
