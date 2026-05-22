@@ -57,7 +57,6 @@ process finalize_accession_table {
 
 workflow build_search_accessions {
   take: ready
-  emit: built
   main:
     Channel.fromPath('files/search-export/build-accessions/insert.sql') | set { chunk_sql }
     Channel.fromPath('files/search-export/build-accessions/post-insert.sql') | set { post_sql }
@@ -74,4 +73,5 @@ workflow build_search_accessions {
     | map { it[-1] } \
     | finalize_accession_table \
     | set { built }
+  emit: built
 }

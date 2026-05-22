@@ -51,9 +51,6 @@ workflow genes {
     max_count
     sequence_json
     so_tree
-  emit:
-    xml
-    counts
   main:
     Channel.fromPath('files/search-export/genes/region-info.sql') | set { locus_sql }
 
@@ -71,4 +68,7 @@ workflow genes {
 
     as_xml.out.xml | set { xml }
     as_xml.out.counts | set { counts }
+  emit:
+    xml
+    counts
 }

@@ -15,10 +15,10 @@ include { slack_message } from './workflows/utils/slack'
 
 workflow analyze {
   take: ready
-  emit: done
   main:
     Channel.of("Starting analyze pipeline") | slack_message
     ready | (genome_mapping & rfam_scan & r2dt & cpat & tcode & stopfree ) | mix | collect | rediportal | set { done }
+  emit: done
 }
 
 workflow {

@@ -26,11 +26,11 @@ process parse {
 
 workflow silva {
   take: tax_info
-  emit: data
   main:
     fetch \
     | flatten \
     | combine(tax_info) \
     | parse \
     | set { data }
+  emit: data
 }

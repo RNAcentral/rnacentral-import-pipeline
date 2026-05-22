@@ -95,7 +95,6 @@ process atomic_publish {
 
 workflow sequence_search {
   take: _flag
-  emit: done
   main:
     Channel.fromPath('files/ftp-export/sequences/databases.sql') | set { db_query }
     Channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
@@ -120,6 +119,7 @@ workflow sequence_search {
     create_fasta.out.stats | collect | set { stats }
 
     atomic_publish(sequences, hashes, stats) | set { done }
+  emit: done
 }
 
 workflow {

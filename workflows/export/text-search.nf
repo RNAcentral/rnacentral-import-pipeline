@@ -54,7 +54,6 @@ process atomic_publish {
 
 workflow text_search {
   take: _flag
-  emit: done
   main:
     Channel.fromPath('files/search-export/post-publish.sql') | set { post }
 
@@ -74,6 +73,7 @@ workflow text_search {
     | set { xml }
 
     atomic_publish(note, xml, post) | set { done }
+  emit: done
 }
 
 workflow {

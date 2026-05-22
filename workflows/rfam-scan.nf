@@ -99,7 +99,6 @@ process import_data {
 
 workflow rfam_scan {
   take: ready
-  emit: done
   main:
     Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
     Channel.fromPath("files/qa/computed.sql").set { computed_sql }
@@ -125,4 +124,5 @@ workflow rfam_scan {
     scan.out.attempted | collect | set { attempted }
 
     import_data(hits, ctl, attempted, attempted_ctl) | set { done }
+  emit: done
 }

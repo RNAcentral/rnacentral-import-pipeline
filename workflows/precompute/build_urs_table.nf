@@ -124,7 +124,6 @@ process precompute_releases {
 
 workflow using_release {
     take: flag
-    emit: selected
     main:
       Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_sql }
       Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { pre_sql }
@@ -133,31 +132,31 @@ workflow using_release {
       xref_releases(flag, xref_sql) | set { xref_info }
 
       select_outdated(xref_info, precompute_info) | set { selected }
+    emit: selected
 }
 
 workflow using_query {
   take: flag
-  emit: selected
   main:
     flag \
     | map { _flag -> file(params.precompute.select.query) } \
     | set { to_select }
 
     run_query(flag, to_select) | set { selected }
+  emit: selected
 }
 
 workflow using_all {
   take: flag
-  emit: selected
   main:
     Channel.fromPath("files/precompute/methods/all.sql") | set { to_select }
 
     run_query(flag, to_select) | set { selected }
+  emit: selected
 }
 
 workflow using_ids {
   take: flag
-  emit: selected
   main:
 
     flag \
@@ -165,11 +164,11 @@ workflow using_ids {
     | set { id_files }
 
     sort_ids(flag, id_files) | set { selected }
+  emit: selected
 }
 
 workflow build_urs_table {
     take: method
-    emit: finished
     main:
       Channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
       Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
@@ -205,4 +204,5 @@ workflow build_urs_table {
       | first \
       | map { row -> row[0].toInteger() + 1 } \
       | set { finished }
+    emit: finished
 }

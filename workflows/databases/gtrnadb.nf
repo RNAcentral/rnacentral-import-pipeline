@@ -28,11 +28,11 @@ process process_data {
 
 workflow gtrnadb {
   take: tax_info
-  emit: data
   main:
     fetch_data \
     | flatten \
     | combine(tax_info) \
     | process_data \
     | set { data }
+  emit: data
 }

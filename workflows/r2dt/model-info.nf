@@ -45,7 +45,6 @@ process store_model_info {
 
 workflow model_info {
   take: ready
-  emit: done
   main:
     Channel.fromPath('files/r2dt/load-models.ctl') | set { load }
 
@@ -59,6 +58,7 @@ workflow model_info {
     | set { model_info }
 
     store_model_info(model_info, load) | set { done }
+  emit: done
 }
 
 workflow {

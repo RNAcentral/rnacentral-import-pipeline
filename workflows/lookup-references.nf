@@ -47,7 +47,6 @@ process lookup_publications {
 
 workflow lookup_ref_ids {
   take: ref_ids
-  emit: publications
 
   main:
     ref_ids \
@@ -57,4 +56,5 @@ workflow lookup_ref_ids {
     | combine(fetch_publications()) \
     | lookup_publications \
     | set { publications }
+  emit: publications
 }

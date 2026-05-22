@@ -237,7 +237,6 @@ process load_mapping {
 
 workflow genome_mapping {
   take: ready
-  emit: done
   main:
     Channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
     Channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
@@ -283,6 +282,7 @@ workflow genome_mapping {
     blat.out.attempted | collect | set { attempted }
 
     load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
+  emit: done
 }
 
 workflow {

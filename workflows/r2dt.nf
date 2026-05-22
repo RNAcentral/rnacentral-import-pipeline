@@ -206,18 +206,15 @@ process store_secondary_structures {
 
 workflow common {
   take: ready
-  emit: mapping
   main:
     Channel.fromPath('files/r2dt/model_mapping.sql') | set { query }
 
     fetch_model_mapping(ready, query) | set { mapping }
+  emit: mapping
 }
 
 workflow for_database {
   take: sequences
-  emit:
-    parsed
-    layouts
   main:
     common | set { model_mapping }
 
@@ -230,11 +227,13 @@ workflow for_database {
     | set { layouts }
 
     layouts | parse_layout | set { parsed }
+  emit:
+    parsed
+    layouts
 }
 
 workflow r2dt {
   take: ready
-  emit: done
   main:
     Channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
     Channel.fromPath("files/r2dt/fetch-partition-xref.sql") | set { xref_sql }
@@ -277,6 +276,7 @@ workflow r2dt {
     publish_layout.out.flag | collect | map { _ -> 'ready' } | set { uploaded }
 
     store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+  emit: done
 }
 
 workflow {

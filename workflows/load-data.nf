@@ -78,7 +78,6 @@ process release {
 
 workflow load_data {
   take: parsed
-  emit: released
   main:
     Channel.fromPath('files/import-data/limits.json') | set { limits }
     Channel.fromPath('files/schema/create_load.sql') | set { schema }
@@ -125,4 +124,5 @@ workflow load_data {
     release(pre_scripts, post_scripts, limits) \
     | ifEmpty('no release') \
     | set { released }
+  emit: released
 }

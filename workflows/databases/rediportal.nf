@@ -67,7 +67,6 @@ process load_rediportal {
 
 workflow rediportal {
   take: ready
-  emit: done
   main:
     if( params.databases.rediportal.run ) {
       Channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
@@ -104,6 +103,7 @@ workflow rediportal {
       Channel.of('rediportal not run') | set { done }
     }
 
+  emit: done
 }
 
 

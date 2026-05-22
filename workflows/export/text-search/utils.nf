@@ -34,7 +34,7 @@ workflow query {
   take:
     max_count
     query
-  emit: data
   main:
     fetch(max_count, query) | group | set { data }
+  emit: data
 }

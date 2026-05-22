@@ -75,7 +75,6 @@ process finalize_accession_table {
 
 workflow build_precompute_accessions {
   take: ready
-  emit: built
   main:
     Channel.fromPath('files/precompute/get-accessions/insert-chunk.sql') | set { chunk_sql }
     Channel.fromPath('files/precompute/get-accessions/post-insert.sql') | set { post_sql }
@@ -100,4 +99,5 @@ workflow build_precompute_accessions {
     | map { it[-1] } \
     | finalize_accession_table \
     | set { built }
+  emit: built
 }
