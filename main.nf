@@ -2,9 +2,13 @@
 
 nextflow.enable.dsl = 2
 
+// Parse the external database connections file. Previously done inline in
+// main.config, but Nextflow 26+ forbids variable declarations in config files.
+params.connections = new groovy.json.JsonSlurper().parse(new File(params.connection_file))
+
 // Infer needs_publications, should_release, and needs_taxonomy from which
-// databases are configured to run. This was previously a for loop in
-// nextflow.config, which Nextflow 26+ no longer supports in config files.
+// databases are configured to run. Previously a for loop in nextflow.config,
+// which Nextflow 26+ no longer supports in config files.
 for (item in params.databases) {
   def db = item.value;
   def will_run = db.get('run', false);
