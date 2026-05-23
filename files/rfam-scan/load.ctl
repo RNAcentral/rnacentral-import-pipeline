@@ -30,6 +30,24 @@ WITH fields escaped by double-quote,
 
 BEFORE LOAD DO
 $$
+DROP TABLE IF EXISTS load_rfam_model_hits;
+$$,
+$$
+CREATE UNLOGGED TABLE load_rfam_model_hits (
+  sequence_start integer NOT NULL,
+  sequence_stop integer NOT NULL,
+  sequence_completeness double precision,
+  model_start integer NOT NULL,
+  model_stop integer NOT NULL,
+  model_completeness double precision,
+  overlap character varying(30) NOT NULL,
+  e_value double precision NOT NULL,
+  score double precision NOT NULL,
+  rfam_model_id character varying(20) NOT NULL,
+  upi character varying(13) NOT NULL
+);
+$$,
+$$
 set work_mem='512MB';
 $$
 

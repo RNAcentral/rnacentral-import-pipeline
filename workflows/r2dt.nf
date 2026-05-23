@@ -117,7 +117,7 @@ process layout_sequences {
   memory params.r2dt.layout.memory
   container params.r2dt.container
   containerOptions "${params.common_container} --bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms"
-  errorStrategy { task.exitStatus = 130 ? 'ignore' : 'finish' }
+  errorStrategy { task.exitStatus == 130 ? 'ignore' : 'finish' }
 
   input:
   path(sequences)
