@@ -95,7 +95,7 @@ process extract_sequences {
 
 process split_sequences {
 
-  memory { 8.MB * task.attempt }
+  memory { 8.GB * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
   input:
