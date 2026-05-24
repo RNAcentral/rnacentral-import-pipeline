@@ -139,7 +139,7 @@ process publish_layout {
   errorStrategy { task.attempt < 5 ? "retry" : "ignore" }
   maxRetries 5
   queue 'datamover'
-  memory '256 MB'
+  memory { 512.MB * task.attempt }
 
   input:
   tuple path(sequences), path(output), path(_version), path(mapping)
