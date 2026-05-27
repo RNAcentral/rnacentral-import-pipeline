@@ -12,7 +12,7 @@ process fetch_model_stats {
   script:
   """
   find /rna/r2dt/data -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", \$3, \$6, \$8); }' | sort -u > info.csv
-  cp /rna/r2dt/data/rnasep/metadata.tsv rnasep.tsv
+  cp /rna/r2dt/data/rnasep/metadata.tsv rnase-p.tsv
   cp /rna/r2dt/data/crw-metadata.tsv crw.tsv
   cat /rna/r2dt/data/ribovision*/metadata.tsv > ribovision.tsv
   """
