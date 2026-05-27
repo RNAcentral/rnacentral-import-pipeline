@@ -34,7 +34,7 @@ process create_model_info {
 
 process store_model_info {
   input:
-  path('models*.csv')
+  path('data*.csv')
   path(load)
 
   output:

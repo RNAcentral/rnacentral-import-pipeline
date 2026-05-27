@@ -21,6 +21,23 @@ TARGET COLUMNS (
     model_basepair_count
 )
 
+BEFORE LOAD DO
+$$
+DROP TABLE IF EXISTS load_secondary_layout_models;
+$$,
+$$
+CREATE UNLOGGED TABLE load_secondary_layout_models (
+    model_name text NOT NULL,
+    taxid int NOT NULL,
+    cellular_location text,
+    rna_type text NOT NULL,
+    so_term_id text NOT NULL,
+    model_source text not null,
+    model_length int,
+    model_basepair_count int
+);
+$$
+
 WITH
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
