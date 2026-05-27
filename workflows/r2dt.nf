@@ -1,5 +1,7 @@
 nextflow.enable.dsl=2
 
+include { model_info } from './r2dt/model-info.nf'
+
 process fetch_model_mapping {
   memory '16 MB'
 
@@ -223,16 +225,18 @@ workflow r2dt {
       Channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
       Channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
 
-      fetch_tracked(ready, tracked_sql) | set { tracked }
+      model_info(ready) | set { models_ready }
 
-      get_partitions(ready, partitions_sql) \
+      fetch_tracked(models_ready, tracked_sql) | set { tracked }
+
+      get_partitions(models_ready, partitions_sql) \
       | splitCsv \
       | combine(xref_sql) \
       | fetch_xrefs \
       | collectFile \
       | set { partitions }
 
-      ready | common | set { model_mapping }
+      models_ready | common | set { model_mapping }
 
       extract_sequences(partitions, tracked, sequences_sql) \
       | flatten \
