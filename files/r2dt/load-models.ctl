@@ -60,6 +60,7 @@ SELECT
     model_length,
     model_basepair_count
 FROM load_secondary_layout_models load
+WHERE model_length IS NOT NULL
 ) ON CONFLICT (model_name) DO UPDATE
 SET
     rna_type = EXCLUDED.rna_type,
