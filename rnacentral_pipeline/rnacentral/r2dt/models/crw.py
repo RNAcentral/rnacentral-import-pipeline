@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import re
 
 from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
@@ -64,7 +65,9 @@ def as_taxid(raw):
 
 def parse(handle, extra=None):
     stats = load_stats(extra)
-    for row in csv.DictReader(handle, delimiter="\t"):
+    # Header uses spaces between some fields rather than tabs; normalize it
+    fieldnames = re.split(r'\s+', next(handle).strip())
+    for row in csv.DictReader(handle, fieldnames=fieldnames, delimiter="\t"):
         model_name = row["model_name"]
         so_type_name = row["rna_type"]
         if so_type_name == "mt_rRNA":
