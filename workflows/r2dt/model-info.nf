@@ -42,7 +42,7 @@ process store_model_info {
 
   script:
   """
-  pgloader --on-error-stop $load
+  split-and-load $load 'data*.csv' 1073741824 r2dt-models
   """
 }
 
