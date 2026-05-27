@@ -11,7 +11,7 @@ process fetch_model_stats {
 
   script:
   """
-  find /rna/r2dt/data -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", \$2, \$6, \$8); }' | sort -u > info.csv
+  find /rna/r2dt/data -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\\n", \$2, \$6, \$8); }' | sort -u > info.csv
   cp /rna/r2dt/data/rnasep/metadata.tsv rnase-p.tsv
   cp /rna/r2dt/data/crw-metadata.tsv crw.tsv
   awk 'FNR==1 && NR>1{next}1' /rna/r2dt/data/ribovision*/metadata.tsv > ribovision.tsv
