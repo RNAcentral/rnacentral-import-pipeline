@@ -1,6 +1,6 @@
 process fetch_model_stats {
   container params.r2dt.container
-  containerOptions "${params.common_container} --bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms"
+  containerOptions "${params.common_container}"
 
   input:
   val(_flag)
