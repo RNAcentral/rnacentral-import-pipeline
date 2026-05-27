@@ -27,6 +27,26 @@ TARGET COLUMNS (
     inferred_should_show
 )
 
+BEFORE LOAD DO
+$$
+DROP TABLE IF EXISTS load_secondary;
+$$,
+$$
+CREATE UNLOGGED TABLE load_secondary (
+  urs text primary key,
+  model_id int,
+  secondary_structure text,
+  overlap_count int,
+  basepair_count int,
+  model_start int,
+  model_stop int,
+  sequence_start int,
+  sequence_stop int,
+  sequence_coverage float,
+  inferred_should_show bool
+);
+$$
+
 WITH
     batch rows = 300,
     batch concurrency = 3,
