@@ -53,6 +53,7 @@ workflow model_info {
     fetch_model_stats(ready)
 
     fetch_model_stats.out.metadata \
+    | flatten \
     | map { fn -> [fn.baseName, fn] } \
     | combine(fetch_model_stats.out.info) \
     | create_model_info \
