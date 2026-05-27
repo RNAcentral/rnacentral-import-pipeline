@@ -42,7 +42,7 @@ process store_model_info {
 
   script:
   """
-  split-and-load $load 'data*.csv' 1073741824 r2dt-models
+  split-and-load $load 'data*.csv' 1073741824 data
   """
 }
 
