@@ -26,9 +26,8 @@ process create_model_info {
   path('models.csv')
 
   script:
-  def args = model_source == "crw" ? "$info $metadata" : "$metadata"
   """
-  rnac r2dt model-info $model_source $args models.csv
+  rnac r2dt model-info $model_source $info $metadata models.csv
   """
 }
 
