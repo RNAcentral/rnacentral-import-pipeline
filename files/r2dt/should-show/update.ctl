@@ -9,6 +9,17 @@ TARGET COLUMNS (
   should_show
 )
 
+BEFORE LOAD DO
+$$
+DROP TABLE IF EXISTS load_secondary_should_show;
+$$,
+$$
+CREATE UNLOGGED TABLE load_secondary_should_show (
+  urs text NOT NULL,
+  should_show bool NOT NULL
+);
+$$
+
 WITH
   FIELDS ESCAPED BY double-quote,
   FIELDS TERMINATED BY ','
