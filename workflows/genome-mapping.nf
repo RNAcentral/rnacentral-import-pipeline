@@ -85,7 +85,7 @@ process get_browser_coordinates {
   gzip -d "${species}.${assembly}.gff3.gz"
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
-    sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
+    sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n) |\
     bgzip > "${species}.${assembly}".ensembl.gff3.gz
 
   rm "${species}.${assembly}.gff3"
