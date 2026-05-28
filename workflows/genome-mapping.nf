@@ -12,6 +12,7 @@ process setup {
 
   script:
   """
+  rnac genome-mapping update-assemblies
   psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > species.csv
   """
 }
@@ -37,13 +38,13 @@ process fetch_unmapped_sequences {
     -v min_length=${params.genome_mapping.min_length} \
     -v max_length=${params.genome_mapping.max_length} \
     -f "$possible_query" \
-    "\$PGDATABASE" | sort > possible
+    "\$PGDATABASE" | sort -T . > possible
 
   psql \
     -v ON_ERROR_STOP=1 \
     -v assembly_id=$assembly_id \
     -f "$mapped_query" \
-    "\$PGDATABASE" | sort -u > mapped
+    "\$PGDATABASE" | sort -T . -u > mapped
 
   mkdir parts
 
