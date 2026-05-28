@@ -121,10 +121,24 @@ def update(db_url: str) -> None:
             with conn.cursor() as cur:
                 for new_url, new_assembly_id, old_url in updates:
                     cur.execute(
-                        "UPDATE ensembl_assembly SET ensembl_url = %s, assembly_id = %s"
-                        " WHERE ensembl_url = %s",
-                        (new_url, new_assembly_id, old_url),
+                        "SELECT 1 FROM ensembl_assembly WHERE assembly_id = %s",
+                        (new_assembly_id,),
                     )
+                    if cur.fetchone():
+                        LOGGER.info(
+                            "New assembly %s already in DB, removing stale %s",
+                            new_assembly_id, old_url,
+                        )
+                        cur.execute(
+                            "DELETE FROM ensembl_assembly WHERE ensembl_url = %s",
+                            (old_url,),
+                        )
+                    else:
+                        cur.execute(
+                            "UPDATE ensembl_assembly SET ensembl_url = %s, assembly_id = %s"
+                            " WHERE ensembl_url = %s",
+                            (new_url, new_assembly_id, old_url),
+                        )
             conn.commit()
             LOGGER.info("Updated %d assemblies", len(updates))
         else:
