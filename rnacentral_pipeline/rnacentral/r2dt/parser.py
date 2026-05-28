@@ -96,8 +96,13 @@ def parse(
     model_info = load_model_info(info_path)
     result_base = base / "results"
     metadata_path = result_base / "tsv" / "metadata.tsv"
+
+    if not metadata_path.exists():
+        LOGGER.warning("No R2DT output at %s, skipping", metadata_path)
+        return
+
     seen = set()
-    seen_urs = set()
+    best_by_urs: ty.Dict[str, data.R2DTResultInfo] = {}
     with metadata_path.open("r") as raw:
         reader = csv.reader(raw, delimiter="\t")
         for row in reader:
@@ -115,25 +120,37 @@ def parse(
             minfo = model_info[model_name]
             info = data.R2DTResultInfo(urs, minfo, source, result_base)
             if info in seen:
-                LOGGER.warn("Dupcliate line in metadata for, %s", info)
+                LOGGER.warning("Duplicate line in metadata for %s", info)
                 continue
             seen.add(info)
 
-            if info.urs in seen_urs:
-                raise ValueError(f"Impossible state of >1 hit per URS for {info}")
-            seen_urs.add(info.urs)
-
-            try:
-                info.validate()
-            except (AssertionError, ValueError) as e:
-                if allow_missing:
-                    LOGGER.warn("Did not find all required files for %s", urs)
-                    LOGGER.exception(e)
-                    continue
+            if info.urs in best_by_urs:
+                existing = best_by_urs[info.urs]
+                if info.source is not data.Source.rfam and existing.source is data.Source.rfam:
+                    LOGGER.warning(
+                        "Replacing Rfam hit with %s for %s", info.source, urs,
+                    )
+                    best_by_urs[info.urs] = info
                 else:
-                    raise e
+                    LOGGER.warning(
+                        "Skipping %s hit (keeping %s) for %s",
+                        info.source, existing.source, urs,
+                    )
+            else:
+                best_by_urs[info.urs] = info
 
-            hit = None
-            if info.has_hit_info():
-                hit = hit_info.get(urs, None)
-            yield data.R2DTResult.from_info(info, hit_info=hit)
+    for urs, info in best_by_urs.items():
+        try:
+            info.validate()
+        except (AssertionError, ValueError) as e:
+            if allow_missing:
+                LOGGER.warning("Did not find all required files for %s", urs)
+                LOGGER.exception(e)
+                continue
+            else:
+                raise e
+
+        hit = None
+        if info.has_hit_info():
+            hit = hit_info.get(urs, None)
+        yield data.R2DTResult.from_info(info, hit_info=hit)
