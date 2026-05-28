@@ -126,12 +126,8 @@ def update(db_url: str) -> None:
                     )
                     if cur.fetchone():
                         LOGGER.info(
-                            "New assembly %s already in DB, removing stale %s",
+                            "New assembly %s already in DB, skipping stale %s",
                             new_assembly_id, old_url,
-                        )
-                        cur.execute(
-                            "DELETE FROM ensembl_assembly WHERE ensembl_url = %s",
-                            (old_url,),
                         )
                     else:
                         cur.execute(
