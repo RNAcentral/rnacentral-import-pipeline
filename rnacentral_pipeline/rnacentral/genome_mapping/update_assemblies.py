@@ -104,7 +104,7 @@ def update(db_url: str) -> None:
                         "Updating %s -> %s (assembly %s -> %s)",
                         ensembl_url, new_url, assembly_id, new_assembly_id,
                     )
-                    updates.append((new_url, new_assembly_id, ensembl_url))
+                    updates.append((new_url, new_assembly_id, ensembl_url, assembly_id))
                 else:
                     LOGGER.warning(
                         "Found updated URL %s for %s but could not determine assembly_id",
@@ -119,15 +119,24 @@ def update(db_url: str) -> None:
 
         if updates:
             with conn.cursor() as cur:
-                for new_url, new_assembly_id, old_url in updates:
+                for new_url, new_assembly_id, old_url, old_assembly_id in updates:
                     cur.execute(
                         "SELECT 1 FROM ensembl_assembly WHERE assembly_id = %s",
                         (new_assembly_id,),
                     )
-                    if cur.fetchone():
+                    new_exists = cur.fetchone()
+
+                    cur.execute(
+                        "SELECT 1 FROM rnc_sequence_regions WHERE assembly_id = %s LIMIT 1",
+                        (old_assembly_id,),
+                    )
+                    has_mappings = cur.fetchone()
+
+                    if new_exists or has_mappings:
                         LOGGER.info(
-                            "New assembly %s already in DB, skipping stale %s",
-                            new_assembly_id, old_url,
+                            "Skipping %s — %s",
+                            old_url,
+                            "new assembly already in DB" if new_exists else "has existing mappings",
                         )
                     else:
                         cur.execute(
