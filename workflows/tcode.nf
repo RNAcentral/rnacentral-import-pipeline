@@ -76,8 +76,9 @@ process store_results {
 workflow tcode {
   take: flag
   main:
-    if( !params.tcode.run )
-      return
+    if( !params.tcode.run ) {
+      Channel.of('tcode skipped') | set { done }
+    } else {
 
     def query = file(params.tcode.query)
     def load_ctl = file('files/tcode/tcode.ctl')
@@ -95,7 +96,9 @@ workflow tcode {
 
     parse_results.out | collect | set { data }
 
-    store_results(data, load_ctl)
+    store_results(data, load_ctl) | set { done }
+    }
+  emit: done
 }
 
 workflow {

@@ -85,7 +85,9 @@ process store_results {
 workflow cpat {
   take: flag
   main:
-    if (!params.cpat.run) return
+    if (!params.cpat.run) {
+      Channel.of('cpat skipped') | set { done }
+    } else {
 
     Channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
     Channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
@@ -117,7 +119,9 @@ workflow cpat {
     parse_results.out.results | collect | set { data }
     parse_results.out.orfs | collect | set { orfs }
 
-    store_results(data, orfs, load_ctl, orf_ctl)
+    store_results(data, orfs, load_ctl, orf_ctl) | set { done }
+    }
+  emit: done
 }
 
 workflow {

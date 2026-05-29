@@ -14,7 +14,7 @@ AND NOT EXISTS (
   SELECT 1 FROM xref x
   JOIN rnc_accessions acc ON acc.accession = x.ac
   WHERE x.upi = rna.upi
-  AND (acc.rna_type = 'SO:0002291' OR acc.database = 'CIRCATLAS')
+  AND acc.rna_type = 'SO:0002291' -- circular RNA
 )
 LIMIT :sequence_count
 ) TO STDOUT;

@@ -65,8 +65,9 @@ process store_results {
 workflow stopfree {
   take: flag
   main:
-    if( !params.stopfree.run )
-      return
+    if( !params.stopfree.run ) {
+      Channel.of('stopfree skipped') | set { done }
+    } else {
 
     def query = file(params.stopfree.query)
     def load_ctl = file('files/stopfree/stopfree.ctl')
@@ -83,7 +84,9 @@ workflow stopfree {
 
     stopfree_scan.out | collect | set { data }
 
-    store_results(data, load_ctl)
+    store_results(data, load_ctl) | set { done }
+    }
+  emit: done
 }
 
 workflow {
