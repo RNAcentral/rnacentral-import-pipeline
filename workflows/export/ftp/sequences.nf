@@ -121,6 +121,39 @@ process database_specific {
   """
 }
 
+process find_species {
+  input:
+  path(query)
+
+  output:
+  path('species.csv')
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > species.csv
+  """
+}
+
+process by_species {
+  tag { species_name }
+  maxForks params.export.ftp.sequences.by_species.max_forks
+  publishDir "${params.export.ftp.publish}/sequences/by-species", mode: 'copy'
+
+  input:
+  tuple val(taxid), val(species_name), path(query)
+
+  output:
+  path('*.fasta.gz')
+
+  script:
+  def filename = species_name.toLowerCase().replaceAll(/[^a-z0-9]+/, '_').replaceAll(/^_|_$/, '')
+  """
+  export PYTHONIOENCODING=utf8
+  psql -v ON_ERROR_STOP=1 -f "$query" -v taxid=${taxid} "\$PGDATABASE" > raw.json
+  json2fasta.py raw.json - | gzip > ${filename}.fasta.gz
+  """
+}
+
 workflow fasta_export {
   Channel.fromPath('files/ftp-export/sequences/active.sql') | set { active_sql }
   Channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
@@ -136,4 +169,10 @@ workflow fasta_export {
   | splitCsv \
   | combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql')) \
   | database_specific
+
+  Channel.fromPath('files/ftp-export/sequences/species.sql') \
+  | find_species \
+  | splitCsv \
+  | combine(Channel.fromPath('files/ftp-export/sequences/by-species.sql')) \
+  | by_species
 }
