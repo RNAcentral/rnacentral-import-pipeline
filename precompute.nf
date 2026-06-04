@@ -213,12 +213,12 @@ workflow {
   precompute(Channel.of(true))
 
   workflow.onComplete {
-    if (workflow.success) {
-      try {
+    try {
+      if (workflow.success) {
         slack_closure("Precompute workflow completed. Data import complete")
-      } catch (Exception e) {
-        log.warn "Could not send Slack notification: ${e.message}"
       }
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e.message}"
     }
   }
 
