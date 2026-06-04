@@ -25,12 +25,12 @@ def build_sequence(possible_orf_flag, orf_info=None):
     )
 
 
-def test_ok_when_cpat_has_no_result():
+def test_null_when_cpat_has_no_result():
     result = possible_orf.validate(build_sequence(None))
 
-    assert result.has_issue is False
+    assert result.has_issue is None
     assert result.message is None
-    assert result.str_issue() == "0"
+    assert result.str_issue() == ""
 
 
 def test_ok_when_cpat_checked_and_found_no_orf():

@@ -21,6 +21,8 @@ NAME = "possible_orf"
 
 
 def validate(sequence: Sequence) -> QaResult:
+    if sequence.possible_orf is None:
+        return QaResult.null(NAME)
     if not sequence.possible_orf:
         return QaResult.ok(NAME)
 

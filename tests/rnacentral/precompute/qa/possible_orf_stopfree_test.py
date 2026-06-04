@@ -24,6 +24,14 @@ def build_sequence(possible_orf_stopfree_flag):
     )
 
 
+def test_null_when_stopfree_has_no_result():
+    result = possible_orf_stopfree.validate(build_sequence(None))
+
+    assert result.has_issue is None
+    assert result.message is None
+    assert result.str_issue() == ""
+
+
 def test_ok_when_sequence_has_no_stopfree_orf():
     result = possible_orf_stopfree.validate(build_sequence(False))
 
