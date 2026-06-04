@@ -197,7 +197,7 @@ workflow precompute {
     | splitCsv \
     | combine(accessions_ready) \
     | combine(accession_query) \
-    | map { _tablename, min, max, _flag, sql -> [min, max, sql] } \
+    | map { _tablename, min, max, _accessions_flag, sql -> [min, max, sql] } \
     | join(upi_taxid_ranges) \
     | query_accession_range \
     | combine(metadata) \

@@ -187,7 +187,7 @@ workflow build_urs_table {
 
       create_schema(schema_sql) \
       | combine(method) \
-      | map { _flag, method -> method } \
+      | map { _flag, method_val -> method_val } \
       | branch {
         release: it == 'release'
         query: it == 'query'
