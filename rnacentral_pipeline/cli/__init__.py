@@ -58,6 +58,7 @@ from rnacentral_pipeline.cli import (
     qa,
     quickgo,
     r2dt,
+    rediportal,
     refseq,
     release,
     rgd,
@@ -144,7 +145,7 @@ cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
 cli.add_command(quickgo.cli)
 cli.add_command(r2dt.cli)
-# cli.add_command(rediportal.cli)
+cli.add_command(rediportal.cli)
 cli.add_command(refseq.cli)
 cli.add_command(release.cli)
 cli.add_command(rgd.cli)
