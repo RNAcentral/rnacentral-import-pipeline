@@ -104,7 +104,7 @@ process sort_ids {
 
 process xref_releases {
   input:
-  tuple val(_flag)
+  val(_flag)
   file(query)
 
   output:
