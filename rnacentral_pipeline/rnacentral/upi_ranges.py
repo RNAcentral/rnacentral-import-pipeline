@@ -39,7 +39,7 @@ def upi_ranges(dbconf, table_name, max_size):
     """
 
     with cursor(dbconf) as cur:
-        cur.execute("select MAX(id) FROM {}".format(sql.Identifier(table_name)))
+        cur.execute(sql.SQL("select MAX(id) FROM {}").format(sql.Identifier(table_name)))
         stop = cur.fetchone()[0]
 
     return ranges_between(1, stop, max_size)
