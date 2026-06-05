@@ -24,6 +24,7 @@ from rnacentral_pipeline.rnacentral.huggingface_export.metadata import (
 from rnacentral_pipeline.rnacentral.huggingface_export.upload import (
     create_dataset,
     create_or_find_collection,
+    publish,
     upload_dataset,
 )
 
