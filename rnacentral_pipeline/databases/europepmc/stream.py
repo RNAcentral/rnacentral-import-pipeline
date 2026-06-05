@@ -22,7 +22,7 @@ from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.europepmc import fetch
 from rnacentral_pipeline.databases.helpers.publications import reference
 from rnacentral_pipeline.output_format import is_parquet
-from rnacentral_pipeline.parquet_writers import parquet_writer
+from rnacentral_pipeline.parquet_writers import typed_parquet_writer
 
 from . import xml
 
