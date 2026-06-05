@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 process fetch_taxids {
 
   input:
-    val(_flag)
+    path(taxa_query)
 
   output:
     path('taxids.csv')
@@ -14,7 +14,7 @@ process fetch_taxids {
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -f "${params.genes.taxa_query}" \
+    -f "${taxa_query}" \
     "\$PGDATABASE" > taxids.csv
   """
 }
@@ -239,7 +239,7 @@ workflow genes {
   main:
   Channel.of(true) | fetch_so_model | set { so_model }
   Channel.of(true) | fetch_rf_model | set { rf_model }
-  Channel.of(true) | fetch_taxids | set { taxa }
+  Channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
 
   taxa \
   | splitCsv \
