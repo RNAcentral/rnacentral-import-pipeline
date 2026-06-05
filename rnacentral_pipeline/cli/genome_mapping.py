@@ -135,7 +135,7 @@ def compare_gff(ftp_path, output, db_url):
 @click.argument("ftp_path", type=click.Path(exists=True))
 @click.argument("output", type=str)
 @click.option("--db-url", envvar="PGDATABASE")
-def compare_gff(ftp_path, output, db_url):
+def compare_bed(ftp_path, output, db_url):
 
     missing_ids = compare.compare_bed(ftp_path, db_url)
     missing_ids.write_csv(output)
