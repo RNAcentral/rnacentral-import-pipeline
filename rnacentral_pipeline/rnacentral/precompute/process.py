@@ -60,12 +60,12 @@ def _to_int_or_none(value: str) -> ty.Optional[int]:
     return int(value) if value not in ("", None) else None
 
 
-def _to_bool_01(value: str) -> bool:
+def _to_bool_01(value: ty.Any) -> bool:
     # as_writeables stringifies ``int(bool_value)`` so we only ever see "0"
     # or "1" here. Defensive against pgloader-style "t"/"f" just in case.
-    if value in ("1", "t", "true", "True"):
+    if value is True or value in ("1", "t", "true", "True"):
         return True
-    if value in ("0", "f", "false", "False"):
+    if value is False or value in ("0", "f", "false", "False"):
         return False
     raise ValueError(f"Cannot interpret {value!r} as bool")
 
