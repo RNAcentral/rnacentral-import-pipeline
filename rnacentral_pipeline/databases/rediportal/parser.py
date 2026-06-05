@@ -222,7 +222,7 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output, genome_build: str):
     if isinstance(output, (str, Path)):
         path = Path(output)
         if is_parquet():
-            with parquet_writer(path, schemas.REDIPORTAL_FEATURES) as writer:
+            with typed_parquet_writer(path, schemas.REDIPORTAL_FEATURES) as writer:
                 for row in _rows():
                     writer.writerow(row)
             return
