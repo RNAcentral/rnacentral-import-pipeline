@@ -83,6 +83,10 @@ ORDERING = [
     Database.zwd,
     Database.noncode,
     Database.evlncrnas,
+    Database.mirtrondb,
+    Database.japonicusdb,
+    Database.circatlas,
+    Database.circpedia,
     Database.mgnify,
 ]
 """
