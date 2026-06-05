@@ -95,7 +95,7 @@ def write_lookup(
     if isinstance(output, (str, Path)):
         path = Path(output)
         if is_parquet():
-            with parquet_writer(path, schemas.REFERENCES) as writer:
+            with typed_parquet_writer(path, schemas.REFERENCES) as writer:
                 _stream_rows(
                     writer, ids, directory, column, allow_fallback, ignore_missing
                 )
