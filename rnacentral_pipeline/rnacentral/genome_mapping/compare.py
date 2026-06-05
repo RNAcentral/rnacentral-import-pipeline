@@ -49,12 +49,10 @@ def get_all_written_ids_bed(ftp_path: Path) -> pl.DataFrame:
     all_written_ids = set()
     for gff_path in ftp_path.glob("*.bed.gz"):
         print(gff_path)
-        with gzip.open(gff_path, "r") as handle:
+        with gzip.open(gff_path, "rt", encoding="utf-8") as handle:
             written_ids = set()
             this_org_count = 0
-            content = handle.read().decode("utf-8")
-            lines = content.splitlines()
-            for line in lines:
+            for line in handle:
                 if line.startswith("#"):
                     continue
                 match = urs_regex.search(line)
