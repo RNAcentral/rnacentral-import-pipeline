@@ -34,7 +34,7 @@ SELECT distinct lineage, taxid
 from xref, rnc_taxonomy
 WHERE
     xref.taxid = rnc_taxonomy.id
-    and xref.dbid = {db_id}
+    and xref.dbid = %s
     and xref.deleted = 'N'
 """
 
