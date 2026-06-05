@@ -153,4 +153,5 @@ def publish__hf_release(release):
     Gets the release collection slug and uses it to find all the datasets in it and make them public
     then makes the collection public.
     """
-    collection_slug = create_collection(release)
+    collection_slug = create_or_find_collection(release)
+    publish(collection_slug)
