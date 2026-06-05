@@ -1,8 +1,3 @@
-DROP TABLE IF EXISTS mapped_assemblies;
-CREATE TABLE mapped_assemblies AS
-  SELECT DISTINCT assembly_id FROM load_genome_mapping;
-CREATE INDEX ix_mapped_assemblies ON mapped_assemblies (assembly_id);
-
 INSERT INTO rnc_sequence_regions (
     urs_taxid,
     region_name,
@@ -46,5 +41,3 @@ FROM load_genome_mapping load
 JOIN rnc_sequence_regions regions ON regions.region_name = load.region_name
 JOIN ensembl_assembly ensembl ON ensembl.assembly_id = load.assembly_id
 ) ON CONFLICT (region_id, exon_start, exon_stop) DO NOTHING;
-
-DROP TABLE mapped_assemblies;
