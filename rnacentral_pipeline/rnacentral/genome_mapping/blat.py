@@ -31,7 +31,7 @@ from rnacentral_pipeline.databases.data.regions import (
     SequenceRegion,
 )
 from rnacentral_pipeline.output_format import is_parquet
-from rnacentral_pipeline.parquet_writers import parquet_writer
+from rnacentral_pipeline.parquet_writers import typed_parquet_writer
 
 LOGGER = logging.getLogger(__name__)
 
@@ -173,7 +173,7 @@ def write_importable(handle, output: ty.Union[str, Path]):
     writeable = it.chain.from_iterable(writeable)
     path = Path(output)
     if is_parquet():
-        with parquet_writer(path, schemas.GENOME_MAPPING_HITS) as writer:
+        with typed_parquet_writer(path, schemas.GENOME_MAPPING_HITS) as writer:
             writer.writerows(writeable)
     else:
         with path.open("w") as out:

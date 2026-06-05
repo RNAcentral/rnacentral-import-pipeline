@@ -121,7 +121,7 @@ def write(directory: Path, output):
     if isinstance(output, (str, Path)):
         path = Path(output)
         if is_parquet():
-            with parquet_writer(path, schemas.TAXONOMY) as writer:
+            with typed_parquet_writer(path, schemas.TAXONOMY) as writer:
                 for entry in parse_directory(directory):
                     for row in entry.writeable():
                         writer.writerow(row)
