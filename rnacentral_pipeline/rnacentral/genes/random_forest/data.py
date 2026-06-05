@@ -627,22 +627,18 @@ def store_genes(final_genes, taxid, db_str):
         for row in rnc_genes_for_membertable.iter_rows(named=True)
     ]
     batch_gene_ids = sorted({pair[0] for pair in desired_pairs})
+    ## batch_gene_ids is derived from desired_pairs, so it is non-empty only when
+    ## desired_pairs is non-empty; no separate empty-desired_pairs branch is needed.
     if batch_gene_ids:
-        if desired_pairs:
-            desired_values = ",".join(
-                cur.mogrify("(%s,%s)", pair).decode("utf-8") for pair in desired_pairs
-            )
-            delete_query = (
-                "DELETE FROM rnc_gene_members "
-                "WHERE rnc_gene_id = ANY(%s) "
-                f"AND (rnc_gene_id, locus_id) NOT IN ({desired_values})"
-            )
-            cur.execute(delete_query, (batch_gene_ids,))
-        else:
-            cur.execute(
-                "DELETE FROM rnc_gene_members WHERE rnc_gene_id = ANY(%s)",
-                (batch_gene_ids,),
-            )
+        desired_values = ",".join(
+            cur.mogrify("(%s,%s)", pair).decode("utf-8") for pair in desired_pairs
+        )
+        delete_query = (
+            "DELETE FROM rnc_gene_members "
+            "WHERE rnc_gene_id = ANY(%s) "
+            f"AND (rnc_gene_id, locus_id) NOT IN ({desired_values})"
+        )
+        cur.execute(delete_query, (batch_gene_ids,))
         conn.commit()
 
     ## Now insert the current members. Still an upsert so re-running is idempotent;
@@ -737,13 +733,16 @@ def deactivate_discarded(merged_genes, taxid, db_str):
     db_str = db_str.replace("postgres", "postgresql")
 
     merged = pl.read_json(merged_genes)
-    kept_internal_names = merged.get_column("internal_name").to_list()
 
-    ## Guard against an empty merged file: `internal_name != ANY('{}')` is true for
-    ## every row, which would deactivate the entire taxon. An empty merge is never
-    ## expected for an existing taxon, so treat it as a no-op rather than a wipe.
-    if not kept_internal_names:
+    ## Guard against an empty merged file. pl.read_json on `[]` returns a DataFrame
+    ## with no columns, so get_column would raise ColumnNotFoundError. Beyond that,
+    ## an empty merge would make `internal_name != ANY('{}')` true for every row and
+    ## deactivate the entire taxon. An empty merge is never expected for an existing
+    ## taxon, so treat it as a no-op rather than a wipe.
+    if merged.is_empty() or "internal_name" not in merged.columns:
         return
+
+    kept_internal_names = merged.get_column("internal_name").to_list()
 
     conn = pg.connect(db_str)
     try:
