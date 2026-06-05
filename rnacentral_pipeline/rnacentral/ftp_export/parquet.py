@@ -18,15 +18,10 @@ from pathlib import Path
 import polars as pl
 
 
-def query_2_dataframe(query_path: Path, conn) -> pl.DataFrame | None:
+def query_2_dataframe(query_path: str | Path, conn) -> pl.DataFrame:
     """
     Use polars to read a query direct from the database to a dataframe
     expects a psycopg2 connection object
     """
-    data = None
-
-    if Path(query_path).exists():
-        query_str = Path(query_path).read_text()
-        data = pl.read_database(query_str, conn)
-
-    return data
+    query_str = Path(query_path).read_text()
+    return pl.read_database(query_str, conn)
