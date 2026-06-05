@@ -342,8 +342,13 @@ def merge_genes(
         pl.max_horizontal("last_release", "last_release_new").alias("last_release")
     )
     ##If the membership changes, we need to increment the version of the gene.
+    ## Sort both member lists before comparing: list equality is order-sensitive,
+    ## and the two sides come from different sources (DB dump vs fresh classify
+    ## output), so an ordering difference must not be read as a membership change.
     common = common.with_columns(
-        version=pl.when(pl.col("members") == pl.col("members_new"))
+        version=pl.when(
+            pl.col("members").list.sort() == pl.col("members_new").list.sort()
+        )
         .then(pl.col("version"))
         .otherwise(pl.col("version") + 1)
     )
@@ -544,15 +549,18 @@ def store_genes(final_genes, taxid, db_str):
         pl.col("last_release"),
         pl.col("members").list.len().alias("member_count"),
         pl.col("taxid"),
+        ## Anything we are storing is, by definition, active in this release.
+        ## Genes dropped by the merge are deactivated separately (deactivate_discarded).
+        pl.lit(True).alias("is_active"),
     )
 
     insert_query = """
-    INSERT INTO rnc_genes (internal_name, public_name, assembly_id, chromosome, start, stop, strand, version, first_release, last_update, member_count, taxid) VALUES """
+    INSERT INTO rnc_genes (internal_name, public_name, assembly_id, chromosome, start, stop, strand, version, first_release, last_update, member_count, taxid, is_active) VALUES """
     args_str = ""
     for row in rnc_genes.iter_rows():
-        args_str += cur.mogrify("(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s),", row).decode(
-            "utf-8"
-        )
+        args_str += cur.mogrify(
+            "(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s),", row
+        ).decode("utf-8")
 
     args_str = args_str.rstrip(",")
 
@@ -572,7 +580,8 @@ def store_genes(final_genes, taxid, db_str):
         first_release = EXCLUDED.first_release,
         last_update = EXCLUDED.last_update,
         member_count = EXCLUDED.member_count,
-        taxid = EXCLUDED.taxid
+        taxid = EXCLUDED.taxid,
+        is_active = EXCLUDED.is_active
     """
     )
     cur.execute(upsert_query)
@@ -608,9 +617,36 @@ def store_genes(final_genes, taxid, db_str):
         how="inner",
     ).rename({"id": "locus_id"})
 
-    ## Now we can insert the members. This is going to be an upsert, but we leave the old ones
-    ## linked, because we should only ever be adding to the membership of a gene.
-    ## This assumption needs to be checked though.
+    ## Reconcile membership before inserting: a gene can lose members between
+    ## releases, and rnc_gene_members is never otherwise pruned. We delete any
+    ## (rnc_gene_id, locus_id) pair for the genes in this batch that is not in the
+    ## current desired set, so the table always reflects current membership. This
+    ## lets fetch_stored_genes trust rnc_gene_members directly (with a stable sort).
+    desired_pairs = [
+        (row["rnc_gene_id"], row["locus_id"])
+        for row in rnc_genes_for_membertable.iter_rows(named=True)
+    ]
+    batch_gene_ids = sorted({pair[0] for pair in desired_pairs})
+    if batch_gene_ids:
+        if desired_pairs:
+            desired_values = ",".join(
+                cur.mogrify("(%s,%s)", pair).decode("utf-8") for pair in desired_pairs
+            )
+            delete_query = (
+                "DELETE FROM rnc_gene_members "
+                "WHERE rnc_gene_id = ANY(%s) "
+                f"AND (rnc_gene_id, locus_id) NOT IN ({desired_values})"
+            )
+            cur.execute(delete_query, (batch_gene_ids,))
+        else:
+            cur.execute(
+                "DELETE FROM rnc_gene_members WHERE rnc_gene_id = ANY(%s)",
+                (batch_gene_ids,),
+            )
+        conn.commit()
+
+    ## Now insert the current members. Still an upsert so re-running is idempotent;
+    ## the reconcile above has already removed any members no longer present.
     member_insert_query = "INSERT INTO rnc_gene_members (rnc_gene_id, locus_id) VALUES "
     member_args_str = ""
     for row in rnc_genes_for_membertable.iter_rows(named=True):
@@ -628,6 +664,102 @@ def store_genes(final_genes, taxid, db_str):
     )
     cur.execute(member_upsert_query)
     conn.commit()
+
+
+def fetch_stored_genes(taxid, db_str):
+    """
+    Reconstruct the merge-format gene JSON for a taxon from the database.
+
+    This is the inverse of store_genes: it pulls the currently-active genes for
+    a taxon back out of rnc_genes / rnc_gene_members so they can be used as the
+    ``previous_genes`` input to merge_genes.
+
+    Returns a tuple of (genes DataFrame, prev_release_number). The DataFrame is
+    empty when no active genes exist for the taxon (a new taxon), in which case
+    prev_release_number is None and the caller should use init_genes instead of
+    merging.
+
+    The ``members`` list is aggregated with a stable ORDER BY so that the
+    list-equality check in merge_genes (which decides version bumps) is not
+    tripped by ordering differences. This relies on store_genes reconciling
+    membership (it deletes members no longer present), so rnc_gene_members holds
+    only each gene's current members.
+    """
+    db_str = db_str.replace("postgres", "postgresql")
+
+    conn = pg.connect(db_str)
+    try:
+        query = """
+        SELECT
+            g.public_name AS name,
+            g.internal_name,
+            g.assembly_id,
+            g.chromosome,
+            g.start,
+            g.stop,
+            g.strand,
+            g.version,
+            g.first_release,
+            g.last_update AS last_release,
+            array_agg(sr.region_name ORDER BY sr.region_name) AS members
+        FROM rnc_genes g
+        JOIN rnc_gene_members gm ON gm.rnc_gene_id = g.id
+        JOIN rnc_sequence_regions sr ON sr.id = gm.locus_id
+        WHERE g.taxid = %(taxid)s
+          AND g.is_active = true
+        GROUP BY
+            g.public_name, g.internal_name, g.assembly_id, g.chromosome,
+            g.start, g.stop, g.strand, g.version, g.first_release, g.last_update
+        """
+        genes = pl.read_database(
+            conn.cursor().mogrify(query, {"taxid": taxid}).decode("utf-8"),
+            conn,
+        )
+    finally:
+        conn.close()
+
+    prev_release_number = None
+    if genes.height > 0:
+        prev_release_number = int(genes.get_column("last_release").max())
+
+    return genes, prev_release_number
+
+
+def deactivate_discarded(merged_genes, taxid, db_str):
+    """
+    Mark genes dropped by the merge as inactive.
+
+    A gene present in the previous release but absent from the merged output is
+    not deleted (its version history is preserved); instead its is_active flag is
+    set false. Genes still present were re-activated by store_genes' upsert, so
+    here we only need to flip the ones missing from the merged file.
+    """
+    db_str = db_str.replace("postgres", "postgresql")
+
+    merged = pl.read_json(merged_genes)
+    kept_internal_names = merged.get_column("internal_name").to_list()
+
+    ## Guard against an empty merged file: `internal_name != ANY('{}')` is true for
+    ## every row, which would deactivate the entire taxon. An empty merge is never
+    ## expected for an existing taxon, so treat it as a no-op rather than a wipe.
+    if not kept_internal_names:
+        return
+
+    conn = pg.connect(db_str)
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE rnc_genes
+            SET is_active = false
+            WHERE taxid = %s
+              AND NOT (internal_name = ANY(%s))
+            """,
+            (taxid, kept_internal_names),
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def get_accessions(urs_taxids, db_str):
