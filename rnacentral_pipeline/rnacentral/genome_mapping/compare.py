@@ -73,12 +73,12 @@ def get_all_mapped_ids(db: str) -> pl.DataFrame:
 
     """
     query = "SELECT id as urs_taxid FROM rnc_rna_precomputed WHERE (is_active AND has_coordinates)"
-    conn = pg.connect(db, cursor_factory=RealDictCursor)
+    conn = pg.connect(db)
     with conn.cursor() as cur:
         cur.execute(query)
         all_db_ids = cur.fetchall()
     conn.close()
-    all_db_ids = pl.DataFrame(all_db_ids).unique()
+    all_db_ids = pl.DataFrame(all_db_ids, schema=["urs_taxid"]).unique()
 
     return all_db_ids
 
