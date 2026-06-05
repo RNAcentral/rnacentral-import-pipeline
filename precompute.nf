@@ -214,7 +214,7 @@ workflow {
 
   workflow.onComplete {
     try {
-      if (workflow.success) {
+      if (workflow?.success) {
         slack_closure("Precompute workflow completed. Data import complete")
       }
     } catch (Exception e) {

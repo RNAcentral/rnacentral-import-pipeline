@@ -53,7 +53,7 @@ workflow {
 
   workflow.onComplete {
     try {
-      slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+      slack_closure("Workflow completed ${workflow?.success ? 'Ok' : 'with errors'}")
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e.message}"
     }
