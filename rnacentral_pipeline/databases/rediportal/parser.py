@@ -12,7 +12,7 @@ from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline import schemas
 from rnacentral_pipeline.output_format import is_parquet
-from rnacentral_pipeline.parquet_writers import parquet_writer
+from rnacentral_pipeline.parquet_writers import typed_parquet_writer
 
 REDI_BASE_URL = "https://rediportal.cloud.ba.infn.it/cgi/atlas/getpage_dev.py"
 
