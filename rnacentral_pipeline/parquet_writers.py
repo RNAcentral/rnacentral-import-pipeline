@@ -45,6 +45,10 @@ class ParquetTable:
         self._buffer: ty.List[ty.Sequence] = []
 
     def writerow(self, row: ty.Sequence) -> None:
+        if len(row) != len(self._schema):
+            raise ValueError(
+                f"Row length ({len(row)}) does not match schema length ({len(self._schema)})"
+            )
         self._buffer.append(tuple(row))
         if len(self._buffer) >= self._batch_size:
             self._flush()
@@ -52,7 +56,12 @@ class ParquetTable:
     def writerows(self, rows: ty.Iterable[ty.Sequence]) -> None:
         buf = self._buffer
         batch_size = self._batch_size
+        schema_len = len(self._schema)
         for row in rows:
+            if len(row) != schema_len:
+                raise ValueError(
+                    f"Row length ({len(row)}) does not match schema length ({len(self._schema)})"
+                )
             buf.append(tuple(row))
             if len(buf) >= batch_size:
                 self._flush()
