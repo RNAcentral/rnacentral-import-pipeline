@@ -775,11 +775,9 @@ def get_accessions(urs_taxids, db_str):
             0.0 as cm_overlap
             FROM
             rnc_accession_active a
-            JOIN genes_urs_taxid t
-                ON t.urs_taxid = a.urs_taxid
             JOIN rnc_accessions ac
                 ON ac.accession = a.accession
-                WHERE t.urs_taxid = ANY(%s)""",
+                WHERE a.urs_taxid = ANY(%s)""",
                 (urs_taxids,),
             )
 
@@ -799,12 +797,20 @@ def get_accessions(urs_taxids, db_str):
 
 
 def get_cm_hits(urs_taxids, db_str):
+    # urs is the accession prefix before the taxid, e.g. URS123_9606 -> URS123.
+    # Derive it here so we no longer need a shared lookup table to map
+    # urs_taxid -> urs.
+    urs_list = [u.split("_")[0] for u in urs_taxids]
+
     def get_rfam():
         conn = pg.connect(db_str)
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
 
             cur.execute(
                 """
+                    WITH g(urs_taxid, urs) AS (
+                        SELECT * FROM unnest(%s::text[], %s::text[])
+                    )
                     SELECT
                     g.urs_taxid,
                     'RFAM' as database,
@@ -812,14 +818,13 @@ def get_cm_hits(urs_taxids, db_str):
                     rfm.so_rna_type as rna_type,
                     rf.sequence_completeness as cm_overlap
 
-                    FROM genes_urs_taxid g
+                    FROM g
                     LEFT JOIN rfam_model_hits_old rf
                             ON rf.upi = g.urs
                     JOIN rfam_models rfm
                             ON rfm.rfam_model_id = rf.rfam_model_id
-                    WHERE g.urs_taxid = ANY(%s)
             """,
-                (urs_taxids,),
+                (urs_taxids, urs_list),
             )
             res = cur.fetchall()
             cur.close()
@@ -860,6 +865,9 @@ def get_cm_hits(urs_taxids, db_str):
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
+                    WITH g(urs_taxid, urs) AS (
+                        SELECT * FROM unnest(%s::text[], %s::text[])
+                    )
                     SELECT
                     g.urs_taxid,
                     'R2DT' as database,
@@ -868,15 +876,14 @@ def get_cm_hits(urs_taxids, db_str):
                     r2.sequence_coverage as cm_overlap
 
 
-                    FROM genes_urs_taxid g
+                    FROM g
                     LEFT JOIN r2dt_results r2
                             ON r2.urs = g.urs
                     JOIN r2dt_models r2m
                             ON r2m.id = r2.model_id
-                    WHERE g.urs_taxid = ANY(%s)
 
                 """,
-                (urs_taxids,),
+                (urs_taxids, urs_list),
             )
 
             res = cur.fetchall()
@@ -1064,26 +1071,6 @@ def get_metadata(final_genes, db_str):
         pl.col("members").str.split("@").list.first().alias("urs_taxid")
     )
 
-    buffer = io.StringIO()
-    for name in final_genes.get_column("urs_taxid").unique().to_list():
-        buffer.write(f"{name}\t{name.split('_')[0]}\n")
-    buffer.seek(0)
-
-    ## Create a temp table from the region names
-    conn = pg.connect(db_str)
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("DROP TABLE IF EXISTS genes_urs_taxid")
-    cur.execute("CREATE TABLE genes_urs_taxid (urs_taxid TEXT, urs TEXT)")
-    cur.copy_from(
-        buffer,
-        "genes_urs_taxid",
-        columns=(
-            "urs_taxid",
-            "urs",
-        ),
-    )
-    conn.commit()
-    conn.close()
     # Main parallelization code
     grouped = final_genes.group_by("name", maintain_order=True)
     group_items = list(grouped)  # Convert to list for multiprocessing
