@@ -115,6 +115,7 @@ def main() -> int:
 
     # Allow the user to pass schema.table directly; otherwise prepend --schema.
     qualified = target if "." in target else f"{args.schema}.{target}"
+    quoted_qualified = ".".join(f'"{p}"' for p in qualified.split("."))
 
     con = _connect(args.pg_url)
 
@@ -129,8 +130,8 @@ def main() -> int:
     sys.stderr.write(f"matched {matched} parquet file(s)\n")
 
     if args.truncate:
-        sys.stderr.write(f"truncating pg.{qualified}\n")
-        con.execute(f"TRUNCATE pg.{qualified}")
+        sys.stderr.write(f"truncating pg.{quoted_qualified}\n")
+        con.execute(f"TRUNCATE pg.{quoted_qualified}")
 
     # Read column names from the parquet schema so we insert only the columns
     # the parser actually produces, leaving other columns in the staging table
