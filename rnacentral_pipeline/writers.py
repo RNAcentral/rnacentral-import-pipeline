@@ -155,15 +155,27 @@ def build_parquet(
     path.mkdir(parents=True, exist_ok=True)
 
     tables: ty.Dict[str, _ParquetTable] = {}
-    with ExitStack() as stack:
+    writers_list = []
+    try:
         for field in attr.fields(cls):
             schema = field_schemas[field.name]
             out = path / f"{field.name}.parquet"
             pq_writer = pq.ParquetWriter(out, schema, compression=compression)
             table = _ParquetTable(pq_writer, schema, batch_size)
-            stack.callback(table.close)
             tables[field.name] = table
+            writers_list.append((table, pq_writer))
+
         yield cls(**tables)
+
+        for table, _ in writers_list:
+            table.close()
+    except Exception:
+        for _, pq_writer in writers_list:
+            try:
+                pq_writer.close()
+            except Exception:
+                pass
+        raise
 
 
 def entry_writer(path: Path):
@@ -258,11 +270,23 @@ def parquet_entry_writer(
     path.mkdir(parents=True, exist_ok=True)
 
     tables: ty.Dict[str, _ParquetTable] = {}
-    with ExitStack() as stack:
+    writers_list = []
+    try:
         for name, schema in schemas.ENTRY_WRITER_SCHEMAS.items():
             out = path / f"{name}.parquet"
             pq_writer = pq.ParquetWriter(out, schema, compression=compression)
             table = _ParquetTable(pq_writer, schema, batch_size)
-            stack.callback(table.close)
             tables[name] = table
+            writers_list.append((table, pq_writer))
+
         yield ParquetEntryWriter(**tables)
+
+        for table, _ in writers_list:
+            table.close()
+    except Exception:
+        for _, pq_writer in writers_list:
+            try:
+                pq_writer.close()
+            except Exception:
+                pass
+        raise
