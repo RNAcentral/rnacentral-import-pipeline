@@ -135,7 +135,7 @@ def preprocess(
     if not Path(so_model_path).exists():
         raise click.ClickException(f"Transcripts file not found: {so_model_path}")
 
-    if not Path(regions_data).exists():
+    if regions_data and not Path(regions_data).exists():
         raise click.ClickException(f"Regions data file not found: {regions_data}")
 
     click.echo(f"Loading transcripts from {transcripts_file}...")
@@ -386,6 +386,54 @@ def store_metadata(metadata_file, db_str):
 
     data.store_metadata(metadata_file, db_str)
     click.echo(f"Stored metadata from {metadata_file} into the database.")
+
+
+@utils_cli.command("fetch-stored")
+@click.option("--taxid", type=int, required=True, help="Taxonomy ID to fetch genes for")
+@click.option("--output", required=True, help="Output JSON path for the stored genes")
+@click.option(
+    "--release_output",
+    default="prev_release.txt",
+    help="Path to write the previous release number (empty for a new taxon)",
+)
+@click.option("--db_str", envvar="PGDATABASE")
+def fetch_stored(taxid, output, release_output, db_str):
+    """
+    Reconstruct the stored genes for a taxon from the database.
+
+    Writes the genes as merge-format JSON (the inverse of store-genes) so they
+    can be used as the previous_genes input to a forward merge. Also writes the
+    previous release number to a file. An empty JSON array means no genes are
+    stored yet for this taxon (a new taxon) and the caller should use init.
+    """
+    genes, prev_release_number = data.fetch_stored_genes(taxid, db_str)
+    genes.write_json(Path(output))
+    with open(release_output, "w") as handle:
+        handle.write("" if prev_release_number is None else str(prev_release_number))
+    click.echo(
+        f"Fetched {genes.height} stored genes for taxid {taxid} "
+        f"(previous release: {prev_release_number}) -> {output}"
+    )
+
+
+@utils_cli.command("deactivate-discarded")
+@click.option("--merged", required=True, help="Path to the merged genes file")
+@click.option("--taxid", type=int, required=True, help="Taxonomy ID being processed")
+@click.option("--db_str", envvar="PGDATABASE")
+def deactivate_discarded(merged, taxid, db_str):
+    """
+    Mark genes dropped by the merge as inactive in the database.
+
+    Genes present for this taxon in the database but absent from the merged file
+    have is_active set to false (their version history is preserved). Run this
+    after store-genes, which re-activates the genes that are still present.
+    """
+    merged_path = Path(merged)
+    if not merged_path.exists():
+        raise click.ClickException(f"Merged genes file not found: {merged_path}")
+
+    data.deactivate_discarded(merged_path, taxid, db_str)
+    click.echo(f"Deactivated discarded genes for taxid {taxid}.")
 
 
 @train_cli.command("convert-csv")
