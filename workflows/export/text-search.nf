@@ -40,7 +40,7 @@ process atomic_publish {
     ssh "$publish.host" 'mkdir -p $publish.path' || true
     ssh "$publish.host" 'rm -r $publish.path/*' || true
     scp ${xml} 'release_note.txt' $publish.host:$publish.path
-    psql -v ON_ERROR_STOP=1 -f "$post" "$PGDATABASE"
+    psql -v ON_ERROR_STOP=1 -f "$post" "\$PGDATABASE"
     """
   else
     """
@@ -48,13 +48,12 @@ process atomic_publish {
     rm $publish.path/genes* || true
     rm $publish.path/xml4dbdumps* || true
     cp ${xml} 'release_note.txt' $publish.path
-    psql -v ON_ERROR_STOP=1 -f "$post" "$PGDATABASE"
+    psql -v ON_ERROR_STOP=1 -f "$post" "\$PGDATABASE"
     """
 }
 
 workflow text_search {
   take: _flag
-  emit: done
   main:
     Channel.fromPath('files/search-export/post-publish.sql') | set { post }
 
@@ -74,6 +73,7 @@ workflow text_search {
     | set { xml }
 
     atomic_publish(note, xml, post) | set { done }
+  emit: done
 }
 
 workflow {

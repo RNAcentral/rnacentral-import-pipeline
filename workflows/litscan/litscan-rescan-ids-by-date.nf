@@ -15,9 +15,9 @@ process change_status_to_pending {
 
 workflow rescan_ids_by_date {
     take: ready
-    emit: done
     main:
       change_status_to_pending(ready) | set{ done }
+    emit: done
 }
 
 workflow {

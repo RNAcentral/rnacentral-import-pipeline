@@ -9,6 +9,7 @@ process readme {
   output:
   path('readme.txt')
 
+  script:
   """
   cp $raw readme.txt
   """
@@ -24,8 +25,9 @@ process find_jobs {
   output:
   path('coordinates.txt')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > coordinates.txt
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > coordinates.txt
   """
 }
 
@@ -41,8 +43,9 @@ process fetch {
   output:
   tuple val(assembly), val(species), path('result.json')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "\$PGDATABASE" > result.json
   """
 }
 
@@ -59,6 +62,7 @@ process generate_bed {
   output:
   tuple val(assembly), path("${species}.${assembly}.bed.gz")
 
+  script:
   """
   set -euo pipefail
 
@@ -81,6 +85,7 @@ process generate_gff3 {
   output:
   path("${species}.${assembly}.gff3.gz")
 
+  script:
   """
   set -euo pipefail
 
@@ -103,6 +108,7 @@ process generate_gff3_for_igv {
   output:
   path("${species}.${assembly}.rnacentral.gff3.gz")
 
+  script:
   """
   set -euo pipefail
 
@@ -122,6 +128,7 @@ process index_gff3 {
 
   output:
   path("${gff.baseName}.gz.{tbi,csi}"), optional: true
+  script:
   """
   tabix -p gff $gff || tabix -C -p gff $gff
   """

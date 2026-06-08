@@ -1,30 +1,24 @@
 process slack_message {
-  when { params.notify }
-
   input:
   val(message)
 
-  """
+  script:
+  params.notify ? """
   rnac notify step "Import Workflow" "$message"
-  """
-
+  """ : "true"
 }
 
 
 process slack_file {
-  when { params.notify }
-
   input:
   path(message)
 
-  """
+  script:
+  params.notify ? """
   rnac notify file "$message"
-  """
-
+  """ : "true"
 }
 
-
-import groovy.json.JsonSlurper
 
 // A groovy function for use in closures - uses groovy's own URL class to make the request
 def slack_closure(msg) {
@@ -33,7 +27,7 @@ def slack_closure(msg) {
   }
 
   def configFile = new File("secrets.json");
-  def config = new JsonSlurper().parseFile(configFile, 'UTF-8');
+  def config = new groovy.json.JsonSlurper().parseFile(configFile, 'UTF-8');
 
   def post = new URL(config.SLACK_WEBHOOK).openConnection();
   post.setRequestMethod("POST")

@@ -5,6 +5,7 @@ process quickgo_get {
   output:
   path('data.gpa')
 
+  script:
   """
   scp $params.databases.quickgo.remote data.gpa.gz
   gzip -d data.gpa.gz
@@ -22,6 +23,7 @@ process quickgo_parse {
   output:
   path('*.{csv,parquet}')
 
+  script:
   """
   rnac quickgo parse $data .
   """

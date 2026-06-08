@@ -5,6 +5,7 @@ process taxonomy {
   output:
   path('taxonomy.${params.writer_format}')
 
+  script:
   """
   wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
   wget https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5

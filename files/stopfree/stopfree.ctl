@@ -25,18 +25,6 @@ CREATE TABLE IF NOT EXISTS stopfree_results (
   run_probability float,
   is_protein_coding bool
 );
-$$,
-$$
-DROP TABLE IF EXISTS load_stopfree;
-$$,
-$$
-CREATE TABLE load_stopfree (
-  urs_taxid TEXT not null,
-  stop_free_run_length integer,
-  gc_content float,
-  run_probability float,
-  is_protein_coding bool
-);
 $$
 
 AFTER LOAD DO

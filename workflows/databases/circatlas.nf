@@ -1,18 +1,18 @@
 process fetch {
-  when { params.databases.circatlas.run }
   queue 'datamover'
   container ''
 
   output:
   path('circatlas.json')
 
+  script:
   """
   cp ${params.databases.circatlas.remote} circatlas.json
   """
 }
 
 process parse {
-  when { params.databases.circatlas.run }
+  memory { params.databases.circatlas.process.directives.memory }
 
   input:
   path(data)
@@ -20,6 +20,7 @@ process parse {
   output:
   path('*.{csv,parquet}')
 
+  script:
   """
   rnac circatlas parse $data .
   """

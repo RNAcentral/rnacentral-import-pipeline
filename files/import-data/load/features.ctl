@@ -23,18 +23,14 @@ WITH truncate,
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_rnc_sequence_features;
+ALTER TABLE rnacen.load_rnc_sequence_features SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_rnc_sequence_features (
-    accession varchar(100) NOT NULL,
-    taxid int not null,
-    start int not null,
-    stop int not null,
-    feature_name varchar(50),
-    metadata jsonb
-);
+ANALYZE rnacen.load_rnc_sequence_features;
 $$
 ;

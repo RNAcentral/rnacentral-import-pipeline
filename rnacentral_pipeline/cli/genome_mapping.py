@@ -18,7 +18,7 @@ import click
 
 from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
-from rnacentral_pipeline.rnacentral.genome_mapping import blat, igv, urls
+from rnacentral_pipeline.rnacentral.genome_mapping import blat, urls, igv, update_assemblies
 
 
 @click.group("genome-mapping")
@@ -111,6 +111,15 @@ def find_remote_urls(filename, output):
 @click.argument("output", type=click.Path())
 def parse_attempted_sequences(filename, assembly_id, output):
     attempted.genome_mapping(filename, assembly_id, output)
+
+
+@cli.command("update-assemblies")
+@click.option("--db-url", envvar="PGDATABASE")
+def sync_assemblies(db_url):
+    """
+    Check ensembl_assembly entries against Ensembl FTP and update outdated URLs/assembly IDs.
+    """
+    update_assemblies.update(db_url)
 
 
 @cli.command("igv")

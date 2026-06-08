@@ -20,6 +20,8 @@ NAME = "possible_orf_tcode"
 
 
 def validate(sequence: Sequence) -> QaResult:
+    if sequence.possible_orf_tcode is None:
+        return QaResult.null(NAME)
     if not sequence.possible_orf_tcode:
         return QaResult.ok(NAME)
     message = "This sequence contains a possible ORF, as annotated by tcode"

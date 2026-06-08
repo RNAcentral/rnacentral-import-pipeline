@@ -25,6 +25,7 @@ process build_precompute_context {
   output:
   path('context')
 
+  script:
   """
   mkdir repeat-tree
   mv species-repeats* repeat-tree
@@ -50,6 +51,7 @@ process build_metadata {
   output:
   path("metadata.json")
 
+  script:
   """
   precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev $orf $stopfree $tcode metadata.json
   """
@@ -78,6 +80,7 @@ process find_upi_taxid_ranges {
   output:
   path('urs_taxid.csv')
 
+  script:
   """
   rnac precompute upi-taxid-ranges $ranges urs_taxid.csv
   """
@@ -94,13 +97,14 @@ process query_accession_range {
   output:
   tuple val(min), val(max), path('accessions.json')
 
+  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
     -v min=$min \
     -v max=$max \
     -f $query \
-    "$PGDATABASE" > raw.json
+    "\$PGDATABASE" > raw.json
   precompute group-accessions raw.json $upi_start $upi_stop accessions.json
   """
 }
@@ -117,6 +121,7 @@ process process_range {
   path "precompute.${params.writer_format}", emit: data
   path "qa.${params.writer_format}", emit: qa
 
+  script:
   """
   mkdir context
   precompute normalize $accessions $metadata merged.json
@@ -207,7 +212,7 @@ workflow precompute {
     | splitCsv \
     | combine(accessions_ready) \
     | combine(accession_query) \
-    | map { _tablename, min, max, _flag, sql -> [min, max, sql] } \
+    | map { _tablename, min, max, _accessions_flag, sql -> [min, max, sql] } \
     | join(upi_taxid_ranges) \
     | query_accession_range \
     | combine(metadata) \
@@ -221,14 +226,22 @@ workflow precompute {
 
 workflow {
   precompute(Channel.of(true))
-}
 
-workflow.onComplete {
+  workflow.onComplete {
+    try {
+      if (workflow?.success) {
+        slack_closure("Precompute workflow completed. Data import complete")
+      }
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e.message}"
+    }
+  }
 
-  slack_closure("Precompute workflow completed. Data import complete")
-}
-
-workflow.onError {
-
-  slack_closure("Precompute workflow encountered an error and crashed")
+  workflow.onError {
+    try {
+      slack_closure("Precompute workflow encountered an error and crashed")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e.message}"
+    }
+  }
 }

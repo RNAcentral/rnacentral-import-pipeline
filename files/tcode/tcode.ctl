@@ -25,18 +25,6 @@ CREATE TABLE IF NOT EXISTS tcode_results (
   std_score float,
   is_protein_coding bool
 );
-$$,
-$$
-DROP TABLE IF EXISTS load_tcode;
-$$,
-$$
-CREATE TABLE load_tcode (
-  urs_taxid TEXT not null,
-  length integer,
-  mean_score float,
-  std_score float,
-  is_protein_coding bool
-);
 $$
 
 AFTER LOAD DO

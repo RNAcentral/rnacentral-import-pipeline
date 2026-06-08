@@ -22,17 +22,14 @@ WITH truncate,
   fields escaped by double-quote,
   fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_interactions;
+ALTER TABLE rnacen.load_interactions SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_interactions (
-  intact_id text NOT NULL,
-  urs_taxid text NOT NULL,
-  interacting_id text NOT NULL,
-  names JSONB NOT NULL,
-  taxid int NOT NULL
-);
+ANALYZE rnacen.load_interactions;
 $$
 ;

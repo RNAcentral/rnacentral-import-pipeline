@@ -4,6 +4,7 @@ process lncbook {
   output:
   path('*.{csv,parquet}')
 
+  script:
   """
   wget -O lncbook.json.gz ${params.databases.lncbook.remote}
   gzip -d lncbook.json.gz

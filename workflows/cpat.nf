@@ -3,8 +3,6 @@
 nextflow.enable.dsl=2
 
 process find_models {
-  when { params.cpat.run }
-
   input:
   val(_flag)
 
@@ -13,6 +11,7 @@ process find_models {
   path('CPAT-3.0.4/dat/*_Hexamer.tsv'), emit: hexamers
   path('cutoffs.csv'), emit: cutoffs
 
+  script:
   """
   wget -O cpat.tar.gz 'https://files.pythonhosted.org/packages/c1/3d/de83074cb1b88214db4b48cd894a3ab395d6c5cd1c2c94f14d1950408f6d/CPAT-3.0.4.tar.gz'
   tar xf cpat.tar.gz
@@ -29,8 +28,9 @@ process find_sequences {
   output:
   tuple val(model_name), path(rdata), path(hexamer), path('sequences/*.fasta')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -f "$query" "\$PGDATABASE" > raw.json
   mkdir sequences
   split --lines=${params.cpat.chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json sequences/$model_name-
   """
@@ -47,6 +47,7 @@ process cpat_scan {
   output:
   tuple val(model_name), path('output.ORF_prob.best.tsv')
 
+  script:
   """
   cpat -g "$sequences" -d "$data" -x "$hexamer" -o output
   """
@@ -60,6 +61,7 @@ process parse_results {
   path("results.${params.writer_format}"), emit: results
   path("orfs.${params.writer_format}"), emit: orfs
 
+  script:
   """
   rnac cpat parse $cutoff_info $model_name scan-results.tsv .
   """
@@ -95,6 +97,10 @@ process store_results {
 workflow cpat {
   take: flag
   main:
+    if (!params.cpat.run) {
+      Channel.of('cpat skipped') | set { done }
+    } else {
+
     Channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
     Channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
     Channel.fromPath('files/cpat/results-post-load.sql') | set { result_post_load }
@@ -106,21 +112,21 @@ workflow cpat {
     find_models.out.rdata \
     | flatten \
     | map { it -> [it.getSimpleName().split("_")[0].toLowerCase(), it] } \
-    | set { rdata }
+    | set { rdata_ch }
 
     find_models.out.hexamers \
     | flatten \
     | map { it -> [it.getSimpleName().split("_")[0].toLowerCase(), it] } \
     | set { hexamers }
 
-    rdata \
+    rdata_ch \
     | join(hexamers) \
-    | map { model_name, rdata, hexamer -> [model_name, rdata, hexamer, params.cpat.taxid_mapping[model_name]] } \
+    | map { model_name, rd, hexamer -> [model_name, rd, hexamer, params.cpat.taxid_mapping[model_name]] } \
     | combine(query) \
     | find_sequences \
-    | flatMap { model_name, rdata, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { [model_name, rdata, hexamer, it] } : [[model_name, rdata, hexamer, seqs]] } \
+    | flatMap { model_name, rd, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { [model_name, rd, hexamer, it] } : [[model_name, rd, hexamer, seqs]] } \
     | cpat_scan \
-    | filter { _, f -> f.exists() } \
+    | filter { _model, f -> f.exists() } \
     | combine(find_models.out.cutoffs) \
     | parse_results
 

@@ -1,9 +1,8 @@
 process fetch {
-  when { params.databases.silva.run }
-
   output:
   path('*.rnac')
 
+  script:
   """
   wget -e robots=off -nH -r --cut-dirs 3 --no-parent -A "SILVA_*Parc.rnac.gz" $params.databases.silva.remote
   gzip -d *.gz
@@ -19,6 +18,7 @@ process parse {
   output:
   path('*.{csv,parquet}')
 
+  script:
   """
   rnac silva parse $raw $taxonomy .
   """
@@ -26,11 +26,11 @@ process parse {
 
 workflow silva {
   take: tax_info
-  emit: data
   main:
     fetch \
     | flatten \
     | combine(tax_info) \
     | parse \
     | set { data }
+  emit: data
 }

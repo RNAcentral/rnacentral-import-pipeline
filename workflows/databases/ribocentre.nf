@@ -6,6 +6,7 @@ process fetch_ribocentre {
   output:
   path("ribocentre.json")
 
+  script:
   """
   wget -O ribocentre.json ${params.databases.ribocentre.remote}
   """
@@ -21,6 +22,7 @@ process parse_ribocentre {
   output:
   path("*.csv")
 
+  script:
   """
   rnac ribocentre parse $ribocentre_json
   """

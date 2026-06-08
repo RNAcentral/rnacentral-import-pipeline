@@ -3,8 +3,6 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
-  when { params.stopfree.run }
-
   input:
   val(_flag)
 
@@ -19,7 +17,6 @@ process build_ranges {
 }
 
 process find_sequences {
-  when { params.stopfree.run }
   maxForks params.stopfree.query_max_forks
 
   input:
@@ -28,8 +25,9 @@ process find_sequences {
   output:
   path('sequences/*.fasta'), optional: true
 
+  script:
   """
-  PGOPTIONS='-c max_parallel_workers_per_gather=0' psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -f "$query" "$PGDATABASE" > raw.json
+  PGOPTIONS='-c max_parallel_workers_per_gather=0' psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -f "$query" "\$PGDATABASE" > raw.json
   mkdir sequences
   split --lines=${params.stopfree.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
   """
@@ -45,13 +43,13 @@ process stopfree_scan {
   output:
   path("results.${params.writer_format}")
 
+  script:
   """
   PYTHONPATH="${workflow.launchDir}" python "${workflow.launchDir}/rnacentral_pipeline/stopfree/scan.py" "$sequences" . --max-probability ${params.stopfree.max_probability}
   """
 }
 
 process store_results {
-  when { params.stopfree.load }
   memory 9.GB
 
   input:
@@ -75,8 +73,9 @@ process store_results {
 workflow stopfree {
   take: flag
   main:
-    if( !params.stopfree.run )
-      return
+    if( !params.stopfree.run ) {
+      Channel.of('stopfree skipped') | set { done }
+    } else {
 
     def query = file(params.stopfree.query)
     def load_ctl = file('files/stopfree/stopfree.ctl')
@@ -94,7 +93,9 @@ workflow stopfree {
 
     stopfree_scan.out | collect | set { data }
 
-    store_results(data, load_ctl, post_load)
+    store_results(data, load_ctl, post_load) | set { done }
+    }
+  emit: done
 }
 
 workflow {

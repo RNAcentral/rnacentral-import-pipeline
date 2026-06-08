@@ -24,18 +24,14 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-DROP TABLE if exists load_go_term_annotations;
+ALTER TABLE rnacen.load_go_term_annotations SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_go_term_annotations (
-    rna_id varchar(50),
-    qualifier text,
-    ontology_term_id varchar(15),
-    evidence_code varchar(15),
-    assigned_by varchar(50),
-    extensions jsonb
-);
+ANALYZE rnacen.load_go_term_annotations;
 $$
 ;
