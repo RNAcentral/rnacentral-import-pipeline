@@ -195,8 +195,8 @@ def _run_post_load(
     sys.stderr.write(f"running post-load {sql_path} ({len(sql)} bytes)\n")
 
     conn = psycopg2.connect(pg_url)
-    conn.set_session(autocommit=False)
     try:
+        conn.set_session(autocommit=False)
         with conn.cursor() as cur:
             cur.execute(sql)
         conn.commit()
