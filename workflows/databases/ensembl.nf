@@ -1,12 +1,11 @@
 process fetch_metadata {
-  when { params.databases.ensembl._any.run }
-
   input:
   path(query)
 
   output:
   path('families.tsv')
 
+  script:
   """
   mysql \
     --host ${params.connections.rfam.host} \
@@ -17,8 +16,6 @@ process fetch_metadata {
 }
 
 process find_urls {
-  when { params.databases.ensembl[division].run }
-
   memory '20GB'
 
   input:
@@ -45,6 +42,7 @@ process fetch_species_data {
   output:
   tuple val(division), path("*.dat"), path("${species}.gff")
 
+  script:
   """
   lowercase_assembly_url() {
     PYTHONPATH="${workflow.launchDir}" python -c "from rnacentral_pipeline.databases.ensembl.url_helpers import lowercase_assembly_in_url; print(lowercase_assembly_in_url('\$1'))"
@@ -76,6 +74,7 @@ process parse_data {
   output:
   path('*.{csv,parquet}')
 
+  script:
   """
   rnac ensembl parse $division --family-file $rfam $embl $gff .
 #  rnac ensembl pseudogenes $division $embl ensembl-pseudogenes.csv

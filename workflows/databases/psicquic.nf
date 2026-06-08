@@ -4,6 +4,7 @@ process psicquic {
   output:
   path("*.csv")
 
+  script:
   """
   cp $params.databases.psicquic.remote raw.tsv
   rnac psicquic parse raw.tsv .

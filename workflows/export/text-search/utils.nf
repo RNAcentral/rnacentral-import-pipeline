@@ -9,8 +9,9 @@ process fetch {
   output:
   tuple val(query.baseName), path("raw.json"), val(max_count)
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f $query "\$PGDATABASE" > raw.json
   """
 }
 
@@ -25,6 +26,7 @@ process group {
   output:
   path("${name}.json")
 
+  script:
   """
   search-export group ${name} raw.json ${max_count} ${name}.json
   """
@@ -34,7 +36,7 @@ workflow query {
   take:
     max_count
     query
-  emit: data
   main:
     fetch(max_count, query) | group | set { data }
+  emit: data
 }

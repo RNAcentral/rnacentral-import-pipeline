@@ -27,7 +27,7 @@ TARGET COLUMNS (
 WITH
     drop indexes,
     batch rows = 50000,
-    batch size =  512MB,
+    batch size =  128MB,
     prefetch rows = 100000,
     workers = 4,
     concurrency = 2,
@@ -38,4 +38,9 @@ WITH
 SET
     work_mem to '512 MB',
     maintenance_work_mem to '1 GB'
+
+AFTER LOAD DO
+$$
+ANALYZE rnacen.load_rnacentral_all;
+$$
 ;

@@ -42,13 +42,13 @@ include {ribocentre } from './databases/ribocentre'
 
 process build_context {
   memory '6GB'
-  when { params.needs_taxonomy }
   errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
   maxRetries 5
 
   output:
   path('context.db')
 
+  script:
   """
   wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
   tar xvf new_taxdump.tar.gz

@@ -4,6 +4,7 @@ process pombase {
   output:
   path('*.{csv,parquet}')
 
+  script:
   """
   wget -O pombase.json ${params.databases.pombase.remote}
   rnac pombase parse pombase.json .

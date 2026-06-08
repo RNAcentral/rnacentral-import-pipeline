@@ -27,23 +27,6 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_rediportal_features;
-$$,
-$$
-CREATE TABLE load_rediportal_features (
-    upi text,
-    taxid int,
-    accession text,
-    start int,
-    stop int,
-    feature_name text,
-    metadata jsonb,
-    feature_provider text
-);
-$$
-
 AFTER LOAD DO
 $$
 delete from rnc_sequence_features where feature_name = 'rna_editing_event';

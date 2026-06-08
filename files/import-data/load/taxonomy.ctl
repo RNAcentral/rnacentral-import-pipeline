@@ -19,17 +19,14 @@ WITH skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_taxonomy;
+ALTER TABLE rnacen.load_taxonomy SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_taxonomy (
-    taxid int,
-    name text,
-    lineage text,
-    aliases json,
-    replaced_by int
-);
+ANALYZE rnacen.load_taxonomy;
 $$
 ;

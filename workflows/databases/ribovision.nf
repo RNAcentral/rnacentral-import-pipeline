@@ -4,6 +4,7 @@ process ribovision {
   output:
   path("*.csv")
 
+  script:
   """
   curl ${params.databases.ribovision.remote} > raw.html
   rnac ribovision parse raw.html

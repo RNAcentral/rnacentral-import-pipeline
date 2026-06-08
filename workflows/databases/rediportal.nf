@@ -7,9 +7,10 @@ process build_rnc_bedfile {
   output:
     tuple val(assembly_id), path("rnc_regions.bed")
 
+  script:
   """
   set -euo pipefail
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly_id" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly_id" -f $query "\$PGDATABASE" > result.json
 
   rnac ftp-export coordinates as-bed result.json |\
   sort -k1,1 -k2,2n > rnc_regions_gene.bed
@@ -26,6 +27,7 @@ process fetch_rediportal_inputs {
   output:
     tuple val(assembly_id), val(genome_build), path("rediportal.txt"), path("rediportal.bed")
 
+  script:
   """
   set -euo pipefail
   curl -L "$remote" | gzip -d > rediportal.txt
@@ -78,7 +80,6 @@ process load_rediportal {
 
 workflow rediportal {
   take: ready
-  emit: done
   main:
     if( params.databases.rediportal.run ) {
       Channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
@@ -117,6 +118,7 @@ workflow rediportal {
       Channel.of('rediportal not run') | set { done }
     }
 
+  emit: done
 }
 
 

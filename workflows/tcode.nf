@@ -3,8 +3,6 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
-  when { params.tcode.run }
-
   input:
   val(_flag)
 
@@ -19,16 +17,15 @@ process build_ranges {
 }
 
 process find_sequences {
-  when { params.tcode.run }
-
   input:
   tuple val(min), val(max), path(query)
 
   output:
   path('sequences/*.fasta'), optional: true
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -v "min_len=${params.tcode.min_len}" -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -v "min_len=${params.tcode.min_len}" -f "$query" "\$PGDATABASE" > raw.json
   mkdir sequences
   split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
   """
@@ -44,6 +41,7 @@ process tcode_scan {
   output:
   path("${sequences.simpleName}.tcode.out")
 
+  script:
   """
   tcode -sequence ${sequences} -outfile ${sequences.simpleName}.tcode.out -window ${params.tcode.window}
   """
@@ -56,13 +54,13 @@ process parse_results {
   output:
   path("results.${params.writer_format}")
 
+  script:
   """
   rnac tcode parse $tcode_out .
   """
 }
 
 process store_results {
-  when { params.tcode.load }
   memory 9.GB
 
   input:
@@ -86,8 +84,9 @@ process store_results {
 workflow tcode {
   take: flag
   main:
-    if( !params.tcode.run )
-      return
+    if( !params.tcode.run ) {
+      Channel.of('tcode skipped') | set { done }
+    } else {
 
     def query = file(params.tcode.query)
     def load_ctl = file('files/tcode/tcode.ctl')
@@ -106,7 +105,9 @@ workflow tcode {
 
     parse_results.out | collect | set { data }
 
-    store_results(data, load_ctl, post_load)
+    store_results(data, load_ctl, post_load) | set { done }
+    }
+  emit: done
 }
 
 workflow {

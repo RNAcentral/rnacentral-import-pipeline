@@ -137,25 +137,26 @@ def model_info():
 
 
 @model_info.command("crw")
+@click.argument("info", type=click.File("r"))
 @click.argument("filename", type=click.File("r"))
-@click.argument("metadata_url", type=str)
 @click.argument("output", default="-", type=click.File("w"))
-def crw_model_info(filename, metadata_url, output):
+def crw_model_info(info, filename, output):
     """
     Parse the CRW metadata file and produce
     """
-    r2dt.write_crw(filename, metadata_url, output)
+    r2dt.write_crw(filename, output, extra=info)
 
 
 @model_info.command("ribovision")
+@click.argument("info", type=click.File("r"))
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
-def ribovision_model_info(filename, output):
+def ribovision_model_info(info, filename, output):
     """
     Parse the metadata.tsv file from R2DT for Ribovision models to
     produce something we can put in our database.
     """
-    r2dt.write_ribovision(filename, output)
+    r2dt.write_ribovision(filename, output, extra=info)
 
 
 @model_info.command("gtrnadb")
@@ -170,14 +171,15 @@ def gtrnadb_model_info(filename, output):
 
 
 @model_info.command("rnase-p")
+@click.argument("info", type=click.File("r"))
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
-def rnase_p_model_info(filename, output):
+def rnase_p_model_info(info, filename, output):
     """
-    Parse the metadata.tsv file from R2DT for Ribovision models to
+    Parse the metadata.tsv file from R2DT for RNase P models to
     produce something we can put in our database.
     """
-    r2dt.write_rnase_p(filename, output)
+    r2dt.write_rnase_p(filename, output, extra=info)
 
 
 @model_info.command("rfam")
