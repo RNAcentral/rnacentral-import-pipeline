@@ -91,6 +91,10 @@ class _TypedParquetWrapper:
     converters: ty.List[ty.Callable[[str], ty.Any]] = attr.ib()
 
     def writerow(self, row):
+        if len(row) != len(self.converters):
+            raise ValueError(
+                f"Row length ({len(row)}) does not match schema length ({len(self.converters)})"
+            )
         self.table.writerow(tuple(c(v) for c, v in zip(self.converters, row)))
 
     def writerows(self, rows):
