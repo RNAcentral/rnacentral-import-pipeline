@@ -67,7 +67,9 @@ def create_hf_dataset(release: str):
         This means the huggingface hub found a repo with the name already in existence.
         So we need to give up and try again/delete the existing dataset
         """
-        return 1
+        raise click.ClickException(
+            f"Dataset for release {release} already exists or could not be created"
+        )
 
     with open("dataset_url", "w") as dataset_fh:
         dataset_fh.write(repo_url)
