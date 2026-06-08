@@ -91,5 +91,7 @@ def publish(collection_slug):
     collection = api.get_collection(collection_slug)
     for item in collection.items:
         repo_id = item.item_id
-        api.update_repo_settings(repo_id=repo_id, private=False)
+        api.update_repo_settings(
+            repo_id=repo_id, repo_type=item.item_type, private=False
+        )
     api.update_collection_metadata(collection_slug=collection_slug, private=False)
