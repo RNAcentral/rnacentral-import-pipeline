@@ -143,7 +143,7 @@ def main() -> int:
             [args.parquet_glob],
         ).fetchall()
     ]
-    col_list = ", ".join(columns)
+    col_list = ", ".join(f'"{col}"' for col in columns)
     sys.stderr.write(
         f"copying {len(columns)} column(s) into pg.{qualified}: {col_list}\n"
     )
