@@ -69,7 +69,7 @@ def export_sequences():
 
 @export_sequences.command("parquet")
 @click.argument("query", type=str)
-@click.argument("output", default="-", type=click.File("w"))
+@click.argument("output", type=click.Path(writable=True))
 @click.option("--db-url", envvar="PGDATABASE")
 def sequences_parquet(query, output, db_url):
     with connection(db_url) as conn:
