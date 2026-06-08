@@ -156,14 +156,14 @@ def main() -> int:
     ).fetchone()[0]
 
     con.execute(
-        f"INSERT INTO pg.{qualified} ({col_list}) "
+        f"INSERT INTO pg.{quoted_qualified} ({col_list}) "
         f"SELECT {col_list} FROM read_parquet(?, union_by_name = true)",
         [args.parquet_glob],
     )
 
-    total = con.execute(f"SELECT count(*) FROM pg.{qualified}").fetchone()[0]
+    total = con.execute(f"SELECT count(*) FROM pg.{quoted_qualified}").fetchone()[0]
     sys.stderr.write(
-        f"loaded {inserted} row(s); pg.{qualified} now has {total} row(s)\n"
+        f"loaded {inserted} row(s); pg.{quoted_qualified} now has {total} row(s)\n"
     )
 
     if args.post_load is not None:
