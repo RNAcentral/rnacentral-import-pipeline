@@ -135,7 +135,7 @@ def preprocess(
     if not Path(so_model_path).exists():
         raise click.ClickException(f"Transcripts file not found: {so_model_path}")
 
-    if not Path(regions_data).exists():
+    if regions_data and not Path(regions_data).exists():
         raise click.ClickException(f"Regions data file not found: {regions_data}")
 
     click.echo(f"Loading transcripts from {transcripts_file}...")

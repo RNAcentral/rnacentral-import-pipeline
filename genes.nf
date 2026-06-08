@@ -60,7 +60,7 @@ process fetch_transcripts {
 
   script:
   """
-  rnac genes fetch --taxid ${taxid} --output transcripts.pq
+  rnac genes infer fetch --taxid ${taxid} --output transcripts.pq
   """
 }
 
@@ -77,7 +77,7 @@ process preprocess_transcripts {
 
   script:
   """
-  rnac genes preprocess --transcripts_file ${transcripts} --output features.pq --so_model_path ${so_model}
+  rnac genes infer preprocess --transcripts_file ${transcripts} --output features.pq --so_model_path ${so_model}
   """
 }
 
@@ -94,7 +94,7 @@ process classify_transcripts {
 
   script:
   """
-  rnac genes classify --features_file ${features} --transcripts_file ${transcripts} --model_path ${model} --taxid ${taxid} --output_dir .
+  rnac genes infer classify --features_file ${features} --transcripts_file ${transcripts} --model_path ${model} --taxid ${taxid} --output_dir .
   """
 
 }
