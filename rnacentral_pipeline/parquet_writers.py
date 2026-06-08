@@ -138,6 +138,10 @@ class TypedParquetWrapper:
         self._converters = [converter_for(f) for f in schema]
 
     def writerow(self, row: ty.Sequence) -> None:
+        if len(row) != len(self._converters):
+            raise ValueError(
+                f"Row length ({len(row)}) does not match schema length ({len(self._converters)})"
+            )
         self._table.writerow(tuple(c(v) for c, v in zip(self._converters, row)))
 
     def writerows(self, rows: ty.Iterable[ty.Sequence]) -> None:
