@@ -69,7 +69,7 @@ def _emit(rows, writer, version):
     seen = False
     for row in rows:
         if version:
-            row.append(version)
+            row = list(row) + [version]
         writer.writerow(row)
         seen = True
     return seen
