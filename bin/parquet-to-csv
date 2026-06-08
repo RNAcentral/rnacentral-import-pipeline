@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import csv
+import io
 import sys
 
 import pyarrow.parquet as pq
@@ -25,12 +26,14 @@ def main(argv: list[str]) -> int:
         print("usage: parquet-to-csv <file.parquet> ...", file=sys.stderr)
         return 2
 
-    writer = csv.writer(sys.stdout)
+    out = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", newline="")
+    writer = csv.writer(out)
     for path in argv[1:]:
         pf = pq.ParquetFile(path)
         for batch in pf.iter_batches():
             for row in zip(*(col.to_pylist() for col in batch.columns)):
                 writer.writerow(row)
+    out.flush()
     return 0
 
 
