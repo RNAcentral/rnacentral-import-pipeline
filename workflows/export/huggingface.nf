@@ -37,8 +37,8 @@ process upload_active_sequences {
     val ready_signal
 
   """
-  rnac huggingface create-dataset $release
-  rnac huggingface upload-data $release $parquet_file
+  rnac huggingface create-dataset $release_num
+  rnac huggingface upload-data $release_num $parquet_file
   """
 }
 
@@ -49,8 +49,8 @@ process upload_readme {
     val ready_signal
 
   """
-  rnac huggingface create-readme $release $update_specs
-  rnac huggingface upload-data $release README.md
+  rnac huggingface create-readme $release_num $update_specs
+  rnac huggingface upload-data $release_num README.md
   """
 }
 
