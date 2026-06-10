@@ -1,6 +1,5 @@
 process fetch_directory {
   tag { "$name" }
-  when { params.databases.ena.run }
   queue 'datamover'
   containerOptions "${params.common_container} --bind /nfs:/nfs"
   time '2d'
@@ -11,6 +10,7 @@ process fetch_directory {
   output:
   path("${name}-chunks/*.ncr")
 
+  script:
   """
   rsync \
     -avPL \
@@ -35,14 +35,13 @@ process fetch_directory {
 }
 
 process fetch_metadata {
-  when { params.databases.ena.run }
-
   input:
   path(urls)
 
   output:
   tuple path('tpa.tsv'), path('model-lengths.csv')
 
+  script:
   """
   cat $urls | xargs -I {} wget -O - {} >> tpa.tsv
   cmstat \$RIBODIR/models/ribo.0p20.extra.cm | grep -v '^#' | awk '{ printf("%s,%d\\n", \$2, \$6); }' > model-lengths.csv
@@ -59,6 +58,7 @@ process process_file {
   output:
   path('*.csv')
 
+  script:
   """
   ena2fasta.py $raw sequences.fasta
   if [[ -e sequences.fasta ]]; then

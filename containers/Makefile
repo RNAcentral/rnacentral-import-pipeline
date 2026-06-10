@@ -131,21 +131,21 @@ test: cpat emboss infernal samtools rust-utils
 	@echo "✓ Rust utilities tests passed"
 
 # Validate VERSION files
-validate-versions:
-	@echo "Validating VERSION files..."
-	@for tool in infernal samtools rust-utils cpat emboss; do \
-		if [ ! -f $$tool/VERSION ]; then \
-			echo "ERROR: Missing VERSION file: $$tool/VERSION"; \
+	validate-versions:
+		@echo "Validating VERSION files..."
+		@for tool in infernal samtools rust-utils cpat emboss; do \
+			if [ ! -f $$tool/VERSION ]; then \
+				echo "ERROR: Missing VERSION file: $$tool/VERSION"; \
 			exit 1; \
 		fi; \
 		echo "✓ $$tool/VERSION: $$(cat $$tool/VERSION)"; \
 	done
 
 # Clean up local tool container images
-clean:
-	@echo "Removing tool container images..."
-	docker rmi $(CPAT_IMAGE) $(CPAT_LATEST) || true
-	docker rmi $(EMBOSS_IMAGE) $(EMBOSS_LATEST) || true
-	docker rmi $(INFERNAL_IMAGE) $(INFERNAL_LATEST) || true
-	docker rmi $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST) || true
-	docker rmi $(RUST_UTILS_IMAGE) $(RUST_UTILS_LATEST) || true
+	clean:
+		@echo "Removing tool container images..."
+		docker rmi $(CPAT_IMAGE) $(CPAT_LATEST) || true
+		docker rmi $(EMBOSS_IMAGE) $(EMBOSS_LATEST) || true
+		docker rmi $(INFERNAL_IMAGE) $(INFERNAL_LATEST) || true
+		docker rmi $(SAMTOOLS_IMAGE) $(SAMTOOLS_LATEST) || true
+		docker rmi $(RUST_UTILS_IMAGE) $(RUST_UTILS_LATEST) || true

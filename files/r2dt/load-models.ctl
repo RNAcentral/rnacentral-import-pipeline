@@ -21,16 +21,12 @@ TARGET COLUMNS (
     model_basepair_count
 )
 
-WITH
-    FIELDS ESCAPED BY double-quote,
-    FIELDS TERMINATED BY ','
-
 BEFORE LOAD DO
 $$
-drop table if exists load_secondary_layout_models;
+DROP TABLE IF EXISTS load_secondary_layout_models;
 $$,
 $$
-create table load_secondary_layout_models (
+CREATE UNLOGGED TABLE load_secondary_layout_models (
     model_name text NOT NULL,
     taxid int NOT NULL,
     cellular_location text,
@@ -42,12 +38,14 @@ create table load_secondary_layout_models (
 );
 $$
 
+WITH
+    FIELDS ESCAPED BY double-quote,
+    FIELDS TERMINATED BY ','
+
 AFTER LOAD DO
 $$
 INSERT INTO r2dt_models (
     model_name,
-    taxid,
-    cellular_location,
     rna_type,
     so_term_id,
     model_source,
@@ -56,18 +54,15 @@ INSERT INTO r2dt_models (
 ) (
 SELECT
     model_name,
-    taxid,
-    cellular_location,
     rna_type,
     so_term_id,
     model_source,
     model_length,
     model_basepair_count
 FROM load_secondary_layout_models load
+WHERE model_length IS NOT NULL
 ) ON CONFLICT (model_name) DO UPDATE
 SET
-    taxid = EXCLUDED.taxid,
-    cellular_location = EXCLUDED.cellular_location,
     rna_type = EXCLUDED.rna_type,
     so_term_id = EXCLUDED.so_term_id,
     model_source = EXCLUDED.model_source,

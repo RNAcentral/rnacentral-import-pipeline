@@ -15,9 +15,7 @@ limitations under the License.
 
 import csv
 import re
-import typing as ty
 
-from rnacentral_pipeline.databases.helpers.phylogeny import FailedTaxonId, taxid
 from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
 SO_TERM_MAPPING = {
@@ -35,18 +33,14 @@ SO_TERM_MAPPING = {
 }
 
 
-def load_metadata(handle: str):
-    metadata = {}
-    for row in csv.DictReader(open(handle), delimiter="\t"):
-        metadata[row["model_name"]] = {**row}
-    return metadata
-
-
-def load_metadata(handle: str):
-    metadata = {}
-    for row in csv.DictReader(open(handle), delimiter="\t"):
-        metadata[row["model_name"]] = {**row}
-    return metadata
+def load_stats(handle) -> dict:
+    stats = {}
+    if handle is None:
+        return stats
+    for row in csv.reader(handle):
+        if row:
+            stats[row[0]] = {"length": int(row[1]), "basepairs": int(row[2])}
+    return stats
 
 
 def as_so_term(raw):
@@ -69,50 +63,26 @@ def as_taxid(raw):
     return int(raw)
 
 
-def parse_model(handle, metadata) -> ModelInfo:
-    length: ty.Optional[str] = None
-    model_name: ty.Optional[str] = None
-    for line in handle:
-        line = line.strip()
-        if line == "CM":
-            break
-        key, value = re.split("\s+", line, maxsplit=1)
-
-        if key == "NAME":
-            model_name = value
-        if key == "CLEN":
-            length = value
-
-    if not model_name:
-        raise ValueError("Invalid name")
-
-    if not length:
-        raise ValueError("Invalid length for: %s" % model_name)
-
-    taxonomy_id = int(metadata[model_name]["taxid"])
-    so_type_name = metadata[model_name]["rna_type"]
-    if so_type_name == "mt_rRNA":
-        if ".16." in model_name:
-            so_type_name = "mt_SSU_rRNA"
-        else:
-            so_type_name = "mt_LSU_rRNA"
-
-    return ModelInfo(
-        model_name=model_name,
-        so_rna_type=as_so_term(so_type_name),
-        taxid=taxonomy_id,
-        source=Source.crw,
-        length=int(length),
-        basepairs=None,
-        cell_location=None,
-    )
-
-
 def parse(handle, extra=None):
-    metadata = load_metadata(extra)
-    for line in handle:
-        if line.startswith("INFERNAL"):
-            try:
-                yield parse_model(handle, metadata)
-            except KeyError as e:
-                continue
+    stats = load_stats(extra)
+    # Header uses spaces between some fields rather than tabs; normalize it
+    fieldnames = re.split(r'\s+', next(handle).strip())
+    for row in csv.DictReader(handle, fieldnames=fieldnames, delimiter="\t"):
+        model_name = row["model_name"]
+        so_type_name = row["rna_type"]
+        if so_type_name == "mt_rRNA":
+            so_type_name = "mt_SSU_rRNA" if ".16." in model_name else "mt_LSU_rRNA"
+        try:
+            so_term_val = as_so_term(so_type_name)
+        except ValueError:
+            continue
+        model_stats = stats.get(model_name, {})
+        yield ModelInfo(
+            model_name=model_name,
+            so_rna_type=so_term_val,
+            taxid=as_taxid(row["taxid"]),
+            source=Source.crw,
+            length=model_stats.get("length"),
+            basepairs=model_stats.get("basepairs"),
+            cell_location=None,
+        )

@@ -14,6 +14,7 @@ process merge_and_split {
   output:
   path('by-assembly/*.json')
 
+  script:
   """
   search-export genes select-and-split $locus $sequence by-assembly
   if [[ ! -e by-assembly/*.json ]]; then
@@ -51,9 +52,6 @@ workflow genes {
     max_count
     sequence_json
     so_tree
-  emit:
-    xml
-    counts
   main:
     Channel.fromPath('files/search-export/genes/region-info.sql') | set { locus_sql }
 
@@ -71,4 +69,7 @@ workflow genes {
 
     as_xml.out.xml | set { xml }
     as_xml.out.counts | set { counts }
+  emit:
+    xml
+    counts
 }

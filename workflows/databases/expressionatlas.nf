@@ -8,6 +8,7 @@ process fetch_taxids {
   output:
     path('taxids_to_fetch')
 
+  script:
   """
   rnac expressionatlas get-taxids ${experiments_path} taxids_to_fetch
   """
@@ -22,6 +23,7 @@ process find_experiments {
   output:
     path('experiment_list')
 
+  script:
   """
   find `readlink ${experiments_path}`/ -maxdepth 1 -name 'E*' -type d ! -empty > experiment_list
   """
@@ -62,8 +64,9 @@ process fetch_lookup {
   output:
     path("lookup_dump.csv")
 
+    script:
     """
-    psql -f $query $PGDATABASE > lookup_dump.csv
+    psql -f $query \$PGDATABASE > lookup_dump.csv
     """
 }
 
@@ -80,6 +83,7 @@ process parse_tsvs {
   output:
   path('genes_hit.ndjson')
 
+  script:
   """
   rnac expressionatlas parse-dir ${tsvs} ${lookup} genes_hit.ndjson
   """
@@ -97,6 +101,7 @@ process group_and_convert {
   output:
     path('*.csv')
 
+  script:
   """
   rnac expressionatlas parse ${genes} ${lookup} .
 

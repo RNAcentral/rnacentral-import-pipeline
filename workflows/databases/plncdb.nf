@@ -1,19 +1,16 @@
 nextflow.enable.dsl = 2
 
 process fetch_data {
-  when { !params.databases.plncdb.prefetch and params.databases.plncdb.run }
-
   output:
   path("data")
 
+  script:
   """
   rnac plncdb fetch-data $params.databases.plncdb.urls data
   """
 }
 
 process parse_data {
-  when { params.databases.plncdb.run }
-
   queue 'short'
   memory { 8.GB * task.attempt }
 
@@ -26,6 +23,7 @@ process parse_data {
   output:
   path('*.csv')
 
+  script:
   """
   # rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data
   rnac plncdb parse $params.databases.plncdb.data_path$data

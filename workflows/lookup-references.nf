@@ -5,6 +5,7 @@ process merge_and_split_all_publications {
   output:
   path('split-refs/*.csv')
 
+  script:
   """
   set -o pipefail
 
@@ -15,7 +16,6 @@ process merge_and_split_all_publications {
 }
 
 process fetch_publications {
-  when { params.needs_publications }
   queue 'datamover'
   memory 8.GB
   container ''
@@ -23,6 +23,7 @@ process fetch_publications {
   output:
   path('out')
 
+  script:
   """
   cp /nfs/ftp/public/databases/pmc/PMCLiteMetadata/PMCLiteMetadata.tgz .
   tar xvf PMCLiteMetadata.tgz
@@ -47,7 +48,6 @@ process lookup_publications {
 
 workflow lookup_ref_ids {
   take: ref_ids
-  emit: publications
 
   main:
     ref_ids \
@@ -57,4 +57,5 @@ workflow lookup_ref_ids {
     | combine(fetch_publications()) \
     | lookup_publications \
     | set { publications }
+  emit: publications
 }

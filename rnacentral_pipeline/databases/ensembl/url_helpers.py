@@ -32,6 +32,10 @@ def resolve_ftp_urls(url: str) -> list[str]:
         if matches:
             return matches
 
+        fallback = _resolve_all_dat_files(candidate)
+        if fallback:
+            return fallback
+
     return []
 
 
@@ -51,3 +55,20 @@ def _resolve_ftp_glob(url: str) -> list[str]:
         for name in names
         if fnmatch(basename(name), pattern)
     ]
+def _resolve_all_dat_files(url: str) -> list[str]:
+    parsed = urlparse(url)
+    if parsed.scheme != "ftp":
+        return []
+
+    remote_dir = dirname(parsed.path)
+    with FTP(parsed.hostname) as ftp:
+        ftp.login()
+        names = ftp.nlst(remote_dir)
+
+    matches = sorted(
+        f"ftp://{parsed.hostname}{remote_dir}/{basename(name)}"
+        for name in names
+        if basename(name).endswith(".dat.gz")
+    )
+
+    return matches

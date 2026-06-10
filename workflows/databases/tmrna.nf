@@ -4,6 +4,7 @@ process tmrna {
   output:
   path('*.csv')
 
+  script:
   """
   cp $params.databases.tmrna.data tmrna.tsv
   rnac tmrna parse tmrna.tsv .

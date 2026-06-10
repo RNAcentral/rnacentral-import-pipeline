@@ -17,6 +17,7 @@ process fetch {
   output:
   path('*.tsv')
 
+  script:
   """
   wget -O tarbase.tsv.gz ${remote}
   gzip -d tarbase.tsv.gz
@@ -35,6 +36,7 @@ process parse {
   output:
   path('*.csv')
 
+  script:
   """
   rnac tarbase parse ${tsv_file} .
   """

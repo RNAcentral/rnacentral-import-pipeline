@@ -1,11 +1,11 @@
 process pdbe {
-  when { params.databases.pdb.run }
   errorStrategy 'retry'
   maxRetries 5
 
   output:
   path('*.csv')
 
+  script:
   """
   wget  http://ftp.ebi.ac.uk/pub/databases/Rfam/.preview/pdb_full_region.txt.gz
   gzip -d pdb_full_region.txt.gz

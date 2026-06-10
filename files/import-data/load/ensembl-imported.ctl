@@ -5,14 +5,14 @@ INTO {{PGDATABASE}}?load_ensembl_analysis_status
 TARGET COLUMNS (task_name, database_name)
 WITH fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_ensembl_analysis_status;
+ALTER TABLE rnacen.load_ensembl_analysis_status SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_ensembl_analysis_status (
-    database_name text,
-    task_name text
-);
+ANALYZE rnacen.load_ensembl_analysis_status;
 $$
 ;
