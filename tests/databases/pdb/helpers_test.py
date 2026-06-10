@@ -83,6 +83,7 @@ def test_can_compute_correct_rna_types(product: str, expected):
         ("7mlw", "F", True),
     ],
 )
+@pytest.mark.network
 def test_can_detect_if_is_ncrna(pdb, chain, expected):
     info = load(pdb, chain)
     assert helpers.is_ncrna(info) == expected

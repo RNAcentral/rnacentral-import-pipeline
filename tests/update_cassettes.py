@@ -49,8 +49,12 @@ PHYLOGENY_DIR = ROOT / "tests" / "data" / "phylogeny"
 # Test targets that talk to external services. Anything not listed still records
 # correctly if you point the script at it explicitly, but these are the paths
 # whose cassettes we maintain.
+# NOTE: the PDB tests (tests/databases/pdb, tests/cli/pdb_test.py) are
+# deliberately excluded. Their PDBe responses are huge (~187 MB) and back
+# integration tests that drift with the live data, so they are marked
+# @pytest.mark.network and not cassetted. Don't add them here unless you also
+# arrange to store those recordings outside the repo.
 DEFAULT_TARGETS = [
-    "tests/databases/pdb",
     "tests/databases/ncbi/gene",
     "tests/databases/gtrnadb/urls_test.py",
     "tests/databases/pirbase/fetch_test.py",
@@ -64,7 +68,6 @@ DEFAULT_TARGETS = [
     "tests/databases/data/rna_type_test.py",
     "tests/cli/ols_test.py",
     "tests/cli/europepmc_test.py",
-    "tests/cli/pdb_test.py",
 ]
 
 # Cassettes that cannot be recorded live because their upstream is gone, but for

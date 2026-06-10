@@ -1,0 +1,19 @@
+{
+  "content_b64": "eyJ2ZXJzaW9uIjoiNi45IiwiaGl0Q291bnQiOjEsInJlcXVlc3QiOnsicXVlcnlTdHJpbmciOiJET0k6XCIxMC4xMDA3L3MxMTUyNC0wMDctOTIzNC15XCIiLCJyZXN1bHRUeXBlIjoibGl0ZSIsImN1cnNvck1hcmsiOiIqIiwicGFnZVNpemUiOjEwMDAsInNvcnQiOiIiLCJzeW5vbnltIjpmYWxzZX0sInJlc3VsdExpc3QiOnsicmVzdWx0IjpbeyJpZCI6IlBNQzIyMzIwNDAiLCJzb3VyY2UiOiJQTUMiLCJwbWNpZCI6IlBNQzIyMzIwNDAiLCJmdWxsVGV4dElkTGlzdCI6eyJmdWxsVGV4dElkIjpbIlBNQzIyMzIwNDAiXX0sInRpdGxlIjoiU2VjdGlvbiBJOiBPcmFsIFNlc3Npb25zIiwiam91cm5hbFRpdGxlIjoiSiBVcmJhbiBIZWFsdGgiLCJpc3N1ZSI6IjYiLCJqb3VybmFsVm9sdW1lIjoiODQiLCJwdWJZZWFyIjoiMjAwNyIsImpvdXJuYWxJc3NuIjoiMTA5OS0zNDYwOyAxNDY4LTI4Njk7ICIsInB1YlR5cGUiOiJuZXdzIiwiaXNPcGVuQWNjZXNzIjoiWSIsImluRVBNQyI6IlkiLCJpblBNQyI6IlkiLCJoYXNQREYiOiJZIiwiaGFzQm9vayI6Ik4iLCJoYXNTdXBwbCI6Ik4iLCJjaXRlZEJ5Q291bnQiOjAsImhhc1JlZmVyZW5jZXMiOiJOIiwiaGFzVGV4dE1pbmVkVGVybXMiOiJZIiwiaGFzRGJDcm9zc1JlZmVyZW5jZXMiOiJOIiwiaGFzTGFic0xpbmtzIjoiTiIsImhhc1RNQWNjZXNzaW9uTnVtYmVycyI6Ik4iLCJmaXJzdEluZGV4RGF0ZSI6IjIwMTAtMDItMjIiLCJmaXJzdFB1YmxpY2F0aW9uRGF0ZSI6IjIwMDctMTEtMDEifV19fQ==",
+  "encoding": "UTF-8",
+  "headers": {
+    "Access-Control-Allow-Headers": "Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Max-Age": "3600",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 10 Jun 2026 13:45:05 GMT",
+    "Set-Cookie": "JSESSIONID=02A65677F01CCBE61625286F87611493; Path=/europepmc/webservices/; HttpOnly",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked"
+  },
+  "reason": "OK",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1000&query=DOI%3A%2210.1007%2Fs11524-007-9234-y%22"
+}

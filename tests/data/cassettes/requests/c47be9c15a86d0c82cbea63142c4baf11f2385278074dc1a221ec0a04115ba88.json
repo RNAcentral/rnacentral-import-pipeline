@@ -1,0 +1,21 @@
+{
+  "content_b64": "PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9JRVRGLy9EVEQgSFRNTCAyLjAvL0VOIj4KPGh0bWw+PGhlYWQ+Cjx0aXRsZT4zMDEgTW92ZWQgUGVybWFuZW50bHk8L3RpdGxlPgo8L2hlYWQ+PGJvZHk+CjxoMT5Nb3ZlZCBQZXJtYW5lbnRseTwvaDE+CjxwPlRoZSBkb2N1bWVudCBoYXMgbW92ZWQgPGEgaHJlZj0iaHR0cHM6Ly90cm5hLnVjc2MuZWR1L2Rvd25sb2FkL1JOQWNlbnRyYWwvZXhwb3J0MjAxOS8iPmhlcmU8L2E+LjwvcD4KPC9ib2R5PjwvaHRtbD4K",
+  "encoding": "iso-8859-1",
+  "headers": {
+    "Connection": "Keep-Alive",
+    "Content-Length": "261",
+    "Content-Type": "text/html; charset=iso-8859-1",
+    "Date": "Wed, 10 Jun 2026 13:43:44 GMT",
+    "Keep-Alive": "timeout=5, max=100",
+    "Location": "https://trna.ucsc.edu/download/RNAcentral/export2019/",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Server": "Apache",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-XSS-Protection": "1; mode=block"
+  },
+  "reason": "Moved Permanently",
+  "status_code": 301,
+  "url": "http://trna.ucsc.edu/download/RNAcentral/export2019/"
+}

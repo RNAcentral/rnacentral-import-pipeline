@@ -122,6 +122,7 @@ def test_can_build_correct_entry_for_srp_rna(mock_pdbe_api):
         ("1a1t", [32630]),
     ],
 )
+@pytest.mark.network
 def test_can_get_given_taxid(pdb_id, expected):
     chains = fetch.rna_chains(pdb_ids=[pdb_id])
     taxids = [entry.ncbi_tax_id for entry in parser.parse(chains, {}, set())]
@@ -135,6 +136,7 @@ def test_can_get_given_taxid(pdb_id, expected):
         (("5wnp", "A"), ("5WNP", "U")),
     ],
 )
+@pytest.mark.network
 def test_will_not_fetch_mislabeled_chains(requested, missing):
     chains = fetch.chains({requested})
     entries = {(e.primary_id, e.optional_id) for e in parser.parse(chains, {}, set())}
@@ -159,6 +161,7 @@ def test_will_not_fetch_mislabeled_chains(requested, missing):
         ({("7mib", "H")}, ("7MIB", "H")),
     ],
 )
+@pytest.mark.network
 def test_will_respect_the_override_list(overrides, expected):
     chains = fetch.chains(overrides)
     entries = {
@@ -209,6 +212,7 @@ def test_will_respect_the_override_list(overrides, expected):
         ("4K4Y", {"B", "F", "N", "J", "D", "H", "L", "P", "C", "G", "O", "K"}),
     ],
 )
+@pytest.mark.network
 def test_extracts_expected_chains(pdb_id, chains):
     fetched = fetch.all_chains_in_pdbs([pdb_id])
     entries = parser.parse(list(fetched), {}, set())
@@ -267,5 +271,6 @@ def test_extracts_expected_chains(pdb_id, chains):
         ("6FF7", "5", "SO:0000274"),
     ],
 )
+@pytest.mark.network
 def test_gets_correct_rna_types(pdb_id, chain_id, rna_type):
     assert load(pdb_id, chain_id).rna_type == rna_type

@@ -1,0 +1,19 @@
+{
+  "content_b64": "eyJ2ZXJzaW9uIjoiNi45IiwiaGl0Q291bnQiOjEsInJlcXVlc3QiOnsicXVlcnlTdHJpbmciOiJET0k6XCIxMC4xMDE2L1MxNjcyLTAyMjkoMDQpMDIwMjEtMlwiIiwicmVzdWx0VHlwZSI6ImxpdGUiLCJjdXJzb3JNYXJrIjoiKiIsInBhZ2VTaXplIjoxMDAwLCJzb3J0IjoiIiwic3lub255bSI6ZmFsc2V9LCJyZXN1bHRMaXN0Ijp7InJlc3VsdCI6W3siaWQiOiIxNTg2MjExNiIsInNvdXJjZSI6Ik1FRCIsInBtaWQiOiIxNTg2MjExNiIsInBtY2lkIjoiUE1DNTE3MjQ2OSIsImZ1bGxUZXh0SWRMaXN0Ijp7ImZ1bGxUZXh0SWQiOlsiUE1DNTE3MjQ2OSJdfSwiZG9pIjoiMTAuMTAxNi9zMTY3Mi0wMjI5KDA0KTAyMDIxLTIiLCJ0aXRsZSI6IkFwcGxpY2F0aW9uIG9mIHByb3Rlb21pY3MgaW4gdGhlIHN0dWR5IG9mIHR1bW9yIG1ldGFzdGFzaXMuIiwiYXV0aG9yU3RyaW5nIjoiQ2FpIFosIENoaXUgSkYsIEhlIFFZLiIsImpvdXJuYWxUaXRsZSI6Ikdlbm9taWNzIFByb3Rlb21pY3MgQmlvaW5mb3JtYXRpY3MiLCJpc3N1ZSI6IjMiLCJqb3VybmFsVm9sdW1lIjoiMiIsInB1YlllYXIiOiIyMDA0Iiwiam91cm5hbElzc24iOiIxNjcyLTAyMjk7IDIyMTAtMzI0NDsgIiwicGFnZUluZm8iOiIxNTItMTY2IiwicHViVHlwZSI6InJlc2VhcmNoIHN1cHBvcnQsIG5vbi11LnMuIGdvdid0OyByZXZpZXctYXJ0aWNsZTsgcmV2aWV3OyBqb3VybmFsIGFydGljbGUiLCJpc09wZW5BY2Nlc3MiOiJZIiwiaW5FUE1DIjoiWSIsImluUE1DIjoiWSIsImhhc1BERiI6IlkiLCJoYXNCb29rIjoiTiIsImhhc1N1cHBsIjoiTiIsImNpdGVkQnlDb3VudCI6MTcsImhhc1JlZmVyZW5jZXMiOiJZIiwiaGFzVGV4dE1pbmVkVGVybXMiOiJZIiwiaGFzRGJDcm9zc1JlZmVyZW5jZXMiOiJOIiwiaGFzTGFic0xpbmtzIjoiTiIsImhhc1RNQWNjZXNzaW9uTnVtYmVycyI6Ik4iLCJmaXJzdEluZGV4RGF0ZSI6IjIwMDgtMDEtMjkiLCJmaXJzdFB1YmxpY2F0aW9uRGF0ZSI6IjIwMDQtMDgtMDEifV19fQ==",
+  "encoding": "UTF-8",
+  "headers": {
+    "Access-Control-Allow-Headers": "Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Max-Age": "3600",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 10 Jun 2026 13:45:05 GMT",
+    "Set-Cookie": "JSESSIONID=98395136CCC5C121EED8D3E0BF6146D7; Path=/europepmc/webservices/; HttpOnly",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked"
+  },
+  "reason": "OK",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1000&query=DOI%3A%2210.1016%2FS1672-0229%2804%2902021-2%22"
+}

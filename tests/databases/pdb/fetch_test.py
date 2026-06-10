@@ -87,6 +87,7 @@ def test_produces_correct_data(mock_pdbe_api):
         ("7mlw", {"F"}),
     ],
 )
+@pytest.mark.network
 def test_fetches_all_rna_chains_even_mrna(pdb_id, chains):
     entries = fetch.all_chains_in_pdbs([pdb_id])
     assert set(d.chain_id for d in entries) & chains

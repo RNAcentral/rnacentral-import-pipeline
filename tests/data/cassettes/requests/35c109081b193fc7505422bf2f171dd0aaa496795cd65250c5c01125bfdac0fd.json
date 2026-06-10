@@ -1,0 +1,19 @@
+{
+  "content_b64": "eyJ2ZXJzaW9uIjoiNi45IiwiaGl0Q291bnQiOjEsInJlcXVlc3QiOnsicXVlcnlTdHJpbmciOiJET0k6XCIxMC4xMDkzL29maWQvb2Z4MTYzLjg2N1wiIiwicmVzdWx0VHlwZSI6ImxpdGUiLCJjdXJzb3JNYXJrIjoiKiIsInBhZ2VTaXplIjoxMDAwLCJzb3J0IjoiIiwic3lub255bSI6ZmFsc2V9LCJyZXN1bHRMaXN0Ijp7InJlc3VsdCI6W3siaWQiOiJQTUM1NjMxMzAxIiwic291cmNlIjoiUE1DIiwicG1jaWQiOiJQTUM1NjMxMzAxIiwiZnVsbFRleHRJZExpc3QiOnsiZnVsbFRleHRJZCI6WyJQTUM1NjMxMzAxIl19LCJ0aXRsZSI6IlRoZSBFeHByZXNzaW9uIG9mIGhzcC1taVJOQS0yMDBiLTNwIGFuZCAtMjAwYy0zcCBpbiBIdW1hbiBDeXRvbWVnYWxvdmlydXMtaW5mZWN0ZWQgRm9ybWFsaW4tRml4ZWQsIFBhcmFmZmluLUVtYmVkZGVkIFRpc3N1ZXMiLCJhdXRob3JTdHJpbmciOiJMZWUgSywgTWluIFMsIFlvbyBTLCBMaW0gQiwgSm8gSiwgSGFuIFMsIFNvbmcgWS4iLCJqb3VybmFsVGl0bGUiOiJPcGVuIEZvcnVtIEluZmVjdCBEaXMiLCJpc3N1ZSI6InN1cHBsIDEiLCJqb3VybmFsVm9sdW1lIjoiNCIsInB1YlllYXIiOiIyMDE3Iiwiam91cm5hbElzc24iOiIyMzI4LTg5NTciLCJwYWdlSW5mbyI6IlMzNTgtUzM1OCIsInB1YlR5cGUiOiJhYnN0cmFjdCIsImlzT3BlbkFjY2VzcyI6IlkiLCJpbkVQTUMiOiJZIiwiaW5QTUMiOiJZIiwiaGFzUERGIjoiWSIsImhhc0Jvb2siOiJOIiwiaGFzU3VwcGwiOiJOIiwiY2l0ZWRCeUNvdW50IjowLCJoYXNSZWZlcmVuY2VzIjoiTiIsImhhc1RleHRNaW5lZFRlcm1zIjoiWSIsImhhc0RiQ3Jvc3NSZWZlcmVuY2VzIjoiTiIsImhhc0xhYnNMaW5rcyI6Ik4iLCJoYXNUTUFjY2Vzc2lvbk51bWJlcnMiOiJOIiwiZmlyc3RJbmRleERhdGUiOiIyMDE3LTExLTA5IiwiZmlyc3RQdWJsaWNhdGlvbkRhdGUiOiIyMDE3LTAxLTAxIn1dfX0=",
+  "encoding": "UTF-8",
+  "headers": {
+    "Access-Control-Allow-Headers": "Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Max-Age": "3600",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 10 Jun 2026 13:45:06 GMT",
+    "Set-Cookie": "JSESSIONID=6CCD476DCAE014AA8DD3B57ED9254327; Path=/europepmc/webservices/; HttpOnly",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked"
+  },
+  "reason": "OK",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1000&query=DOI%3A%2210.1093%2Fofid%2Fofx163.867%22"
+}
