@@ -134,7 +134,7 @@ process forward_merge {
     --next_genes ${this_release} \
     --output merged_${taxid}.json \
     --prev_release_number ${prev_release} \
-    --next_release_number ${params.genes.release}
+    --next_release_number ${params.release}
   """
 }
 
@@ -154,7 +154,7 @@ process init_genes {
   rnac genes utils init \
     --genes ${this_release} \
     --output merged_${taxid}.json \
-    --release_number ${params.genes.release}
+    --release_number ${params.release}
   """
 }
 
