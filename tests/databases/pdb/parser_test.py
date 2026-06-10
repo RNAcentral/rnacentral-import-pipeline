@@ -114,7 +114,6 @@ def test_can_build_correct_entry_for_srp_rna(mock_pdbe_api):
     )
 
 
-@pytest.mark.network
 @pytest.mark.skip("Needs to be reworked")
 @pytest.mark.parametrize(
     "pdb_id,expected",
@@ -129,7 +128,6 @@ def test_can_get_given_taxid(pdb_id, expected):
     assert taxids == expected
 
 
-@pytest.mark.network
 @pytest.mark.parametrize(
     "requested,missing",
     [
@@ -143,7 +141,6 @@ def test_will_not_fetch_mislabeled_chains(requested, missing):
     assert missing not in entries
 
 
-@pytest.mark.network
 @pytest.mark.parametrize(
     "overrides,expected",
     [
@@ -170,7 +167,6 @@ def test_will_respect_the_override_list(overrides, expected):
     assert expected in entries
 
 
-@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chains",
     [
@@ -219,7 +215,6 @@ def test_extracts_expected_chains(pdb_id, chains):
     assert set(d.optional_id for d in entries) == chains
 
 
-@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chain_id,rna_type",
     [

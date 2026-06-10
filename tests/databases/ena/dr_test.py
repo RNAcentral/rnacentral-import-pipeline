@@ -15,6 +15,8 @@ limitations under the License.
 
 from io import open
 
+import pytest
+
 from rnacentral_pipeline.databases.ena import dr
 
 

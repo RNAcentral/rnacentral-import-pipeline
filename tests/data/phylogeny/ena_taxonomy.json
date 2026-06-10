@@ -1,0 +1,616 @@
+{
+  "10090": {
+    "authority": "Linnaeus, 1758",
+    "binomial": "true",
+    "commonName": "house mouse",
+    "division": "MUS",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; Muridae; Murinae; Mus; Mus; ",
+    "merged": "[85055]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Mus musculus Linnaeus, 1758:authority",
+      "LK3 transgenic mice:includes",
+      "Balb/c mouse:includes",
+      "Mus sp. 129SV:includes",
+      "transgenic mice:includes",
+      "nude mice:includes",
+      "house mouse:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Mus musculus",
+    "submittable": "true",
+    "taxId": "10090"
+  },
+  "10116": {
+    "binomial": "true",
+    "commonName": "Norway rat",
+    "division": "ROD",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; Muridae; Murinae; Rattus; ",
+    "merged": "[36465]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Mus norvegicus Berkenhout, 1769:authority",
+      "laboratory rat:includes",
+      "Rattus PC12 clone IS:includes",
+      "Buffalo rat:includes",
+      "Rattus sp. strain Wistar:includes",
+      "zitter rats:includes",
+      "Wistar rats:includes",
+      "Sprague-Dawley rat:includes",
+      "Mus norvegicus:synonym",
+      "Norway rat:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Rattus norvegicus",
+    "submittable": "true",
+    "taxId": "10116"
+  },
+  "1305785": {
+    "binomial": "true",
+    "division": "PRO",
+    "formalName": "false",
+    "geneticCode": "11",
+    "lineage": "Bacteria; Pseudomonadati; Pseudomonadota; Betaproteobacteria; Neisseriales; Neisseriaceae; Kingella; ",
+    "metagenome": "false",
+    "otherNames": [],
+    "rank": "strain",
+    "scientificName": "Kingella kingae Vir5453",
+    "submittable": "true",
+    "taxId": "1305785"
+  },
+  "1507437": {
+    "authority": "Song et al. 2017",
+    "binomial": "true",
+    "division": "PRO",
+    "formalName": "true",
+    "geneticCode": "11",
+    "lineage": "Bacteria; Bacillati; Bacillota; Bacilli; Caryophanales; Paenibacillaceae; Brevibacillus; ",
+    "merged": "[1720600]",
+    "metagenome": "false",
+    "otherNames": [
+      "Brevibacillus halotolerans Song et al. 2017:authority",
+      "Brevibacillus sp. LAM0313:includes",
+      "Brevibacillus sp. LAM0312:includes"
+    ],
+    "rank": "species",
+    "scientificName": "Brevibacillus halotolerans",
+    "submittable": "true",
+    "taxId": "1507437"
+  },
+  "15368": {
+    "authority": "(L.) P.Beauv., 1812",
+    "binomial": "true",
+    "commonName": "stiff brome",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; BOP clade; Pooideae; Stipodae; Brachypodieae; Brachypodium; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Bromus distachyos L., 1756:authority",
+      "Brachypodium distachyon (L.) P.Beauv., 1812:authority",
+      "Bromus distachyos:synonym",
+      "stiff brome:genbank common name"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Brachypodium distachyon",
+    "submittable": "true",
+    "taxId": "15368"
+  },
+  "164674": {
+    "authority": "(Audubon, 1828)",
+    "binomial": "true",
+    "commonName": "willow flycatcher",
+    "division": "VRT",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Archelosauria; Archosauria; Dinosauria; Saurischia; Theropoda; Coelurosauria; Aves; Neognathae; Neoaves; Telluraves; Australaves; Passeriformes; Tyrannidae; Empidonax; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Muscicapa traillii Audubon, 1828:authority",
+      "Empidonax traillii (Audubon, 1828):authority",
+      "Muscicapa traillii:synonym",
+      "willow flycatcher:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Empidonax traillii",
+    "submittable": "true",
+    "taxId": "164674"
+  },
+  "173247": {
+    "binomial": "true",
+    "commonName": "live sharksucker",
+    "division": "VRT",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Actinopterygii; Neopterygii; Teleostei; Neoteleostei; Acanthomorphata; Carangaria; Carangiformes; Echeneidae; Echeneis; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Echeneis naucrates Linnaeus, 1758:authority",
+      "live sharksucker:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Echeneis naucrates",
+    "submittable": "true",
+    "taxId": "173247"
+  },
+  "176868": {
+    "authority": "Balf.f. & W.W.Sm., 1914",
+    "binomial": "true",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; eudicotyledons; Gunneridae; Pentapetalae; rosids; fabids; Fagales; Betulaceae; Ostryopsis; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Ostryopsis nobilis Balf.f. & W.W.Sm., 1914:authority"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Ostryopsis nobilis",
+    "submittable": "true",
+    "taxId": "176868"
+  },
+  "185431": {
+    "binomial": "true",
+    "division": "INV",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; Trypanosomatida; Trypanosomatidae; Trypanosoma; ",
+    "merged": "[999953]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Trypanosoma brucei TREU927:synonym",
+      "Trypanosoma brucei strain TREU927:synonym",
+      "Trypanosoma brucei brucei strain 927/4 GUTat10.1:synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "strain",
+    "scientificName": "Trypanosoma brucei brucei TREU927",
+    "submittable": "true",
+    "taxId": "185431"
+  },
+  "201611": {
+    "authority": "Hagen, 1858",
+    "binomial": "true",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Altocrustacea; Allotriocarida; Hexapoda; Insecta; Pterygota; Neoptera; Polyneoptera; Dictyoptera; Blattodea; Blattoidea; Termitoidae; Termitidae; Macrotermitinae; Pseudacanthotermes; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "5",
+    "otherNames": [
+      "Pseudacanthotermes militaris Hagen, 1858:authority",
+      "Pseudacanthotermes militaris (Hagen, 1858):authority",
+      "Pseudacanthotermes minor:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Pseudacanthotermes militaris",
+    "submittable": "true",
+    "taxId": "201611"
+  },
+  "2238": {
+    "lineage": "Archaea; Euryarchaeota; Stenosarchaea group; Halobacteria; Halobacteriales; Halobacteriaceae; Haloarcula; ",
+    "scientificName": "Haloarcula marismortui"
+  },
+  "274": {
+    "lineage": "Bacteria; Deinococcota; Deinococci; Thermales; Thermaceae; Thermus; ",
+    "scientificName": "Thermus thermophilus"
+  },
+  "32630": {
+    "lineage": "Viruses; Riboviria; Orthornavirae; Kitrinoviricota; Flasuviricetes; Amarillovirales; Flaviviridae; Hepacivirus; ",
+    "scientificName": "Hepatitis C virus genotype 1"
+  },
+  "3469": {
+    "authority": "L., 1753",
+    "binomial": "true",
+    "commonName": "opium poppy",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; Ranunculales; Papaveraceae; Papaveroideae; Papaver; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Papaver somniferum L., 1753:authority",
+      "Papaver somniferum convar. nigrum (Hayne) Alef.:includes",
+      "opium poppy:genbank common name"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Papaver somniferum",
+    "submittable": "true",
+    "taxId": "3469"
+  },
+  "347515": {
+    "binomial": "true",
+    "division": "INV",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; Trypanosomatida; Trypanosomatidae; Leishmaniinae; Leishmania; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Leishmania major MHOM/IL/81/Friedlin:synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "strain",
+    "scientificName": "Leishmania major strain Friedlin",
+    "submittable": "true",
+    "taxId": "347515"
+  },
+  "36329": {
+    "binomial": "true",
+    "division": "INV",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Sar; Alveolata; Apicomplexa; Aconoidasida; Haemosporida; Plasmodiidae; Plasmodium; Laverania; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Plasmodium falciparum (isolate 3D7):synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "isolate",
+    "scientificName": "Plasmodium falciparum 3D7",
+    "submittable": "true",
+    "taxId": "36329"
+  },
+  "3702": {
+    "authority": "(L.) Heynh., 1842",
+    "binomial": "true",
+    "commonName": "thale cress",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; Brassicales; Brassicaceae; Camelineae; Arabidopsis; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Arabidopsis thaliana (L.) Heynh., 1842:authority",
+      "Arabis thaliana L., 1753:authority",
+      "Arabis thaliana:synonym",
+      "thale cress:genbank common name"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Arabidopsis thaliana",
+    "submittable": "true",
+    "taxId": "3702"
+  },
+  "3711": {
+    "authority": "L., 1753",
+    "binomial": "true",
+    "commonName": "field mustard",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; Brassicales; Brassicaceae; Brassiceae; Brassica; ",
+    "merged": "[3706]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Brassica rapa L., 1753:authority",
+      "field mustard:genbank common name"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Brassica rapa",
+    "submittable": "true",
+    "taxId": "3711"
+  },
+  "3818": {
+    "authority": "L., 1753",
+    "binomial": "true",
+    "commonName": "peanut",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; eudicotyledons; Gunneridae; Pentapetalae; rosids; fabids; Fabales; Fabaceae; Papilionoideae; 50 kb inversion clade; dalbergioids sensu lato; Dalbergieae; Pterocarpus clade; Arachis; ",
+    "merged": "[226207]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Arachis hypogaea L., 1753:authority",
+      "Arachis hypogaea var. aequatoriana Krapov. & W.C.Greg., 1994:authority",
+      "Arachis hypogaea subsp. fastigiata var. aequatoriana:synonym",
+      "Arachis hypogaea var. aequatoriana:synonym",
+      "peanut:genbank common name"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Arachis hypogaea",
+    "submittable": "true",
+    "taxId": "3818"
+  },
+  "4533": {
+    "authority": "A.Chev. & Roehr., 1914",
+    "binomial": "true",
+    "commonName": "malo sina",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; Oryzeae; Oryzinae; Oryza; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Oryza brachyantha A.Chev. & Roehr., 1914:authority",
+      "malo sina:genbank common name"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Oryza brachyantha",
+    "submittable": "true",
+    "taxId": "4533"
+  },
+  "4896": {
+    "authority": "Lindner, 1893",
+    "binomial": "true",
+    "commonName": "fission yeast",
+    "division": "FUN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Fungi; Dikarya; Ascomycota; Taphrinomycotina; Schizosaccharomycetes; Schizosaccharomycetales; Schizosaccharomycetaceae; Schizosaccharomyces; ",
+    "merged": "[45042]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Schizosaccharomyces pombe Lindner, 1893:authority",
+      "Schizosaccharomyces malidevorans:synonym",
+      "fission yeast:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Schizosaccharomyces pombe",
+    "submittable": "true",
+    "taxId": "4896"
+  },
+  "562": {
+    "lineage": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; ",
+    "scientificName": "Escherichia coli"
+  },
+  "5762": {
+    "binomial": "true",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Discoba; Heterolobosea; Tetramitia; Eutetramitea; Acrasida; Naegleriidae; Naegleria; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Naegleria gruberi",
+    "submittable": "true",
+    "taxId": "5762"
+  },
+  "6239": {
+    "authority": "(Maupas, 1900)",
+    "binomial": "true",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Ecdysozoa; Nematoda; Chromadorea; Rhabditida; Rhabditina; Rhabditomorpha; Rhabditoidea; Rhabditidae; Peloderinae; Caenorhabditis; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "5",
+    "otherNames": [
+      "Caenorhabditis elegans (Maupas, 1900):authority",
+      "Rhabditis elegans Maupas, 1899:authority",
+      "Rhabditis elegans:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Caenorhabditis elegans",
+    "submittable": "true",
+    "taxId": "6239"
+  },
+  "6500": {
+    "binomial": "true",
+    "commonName": "California sea hare",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; Gastropoda; Heterobranchia; Euthyneura; Tectipleura; Aplysiida; Aplysioidea; Aplysiidae; Aplysia; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "5",
+    "otherNames": [
+      "Aplysia californica Cooper, 1863:authority",
+      "California sea hare:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Aplysia californica",
+    "submittable": "true",
+    "taxId": "6500"
+  },
+  "7227": {
+    "authority": "Meigen, 1830",
+    "binomial": "true",
+    "commonName": "fruit fly",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Altocrustacea; Allotriocarida; Hexapoda; Insecta; Pterygota; Neoptera; Eumetabola; Endopterygota; Aparaglossata; Panorpida; Diptera; Brachycera; Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora; ",
+    "merged": "[2267365]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "5",
+    "otherNames": [
+      "Drosophila melanogaster Meigen, 1830:authority",
+      "Sophophora melanogaster (Meigen, 1830):authority",
+      "Diptera sp. DNAS-2A9-224646:includes",
+      "Sophophora melanogaster:synonym",
+      "fruit fly:genbank common name",
+      "fruit fly <Drosophila melanogaster>:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Drosophila melanogaster",
+    "submittable": "true",
+    "taxId": "7227"
+  },
+  "7668": {
+    "binomial": "true",
+    "commonName": "purple sea urchin",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Echinodermata; Eleutherozoa; Echinozoa; Echinoidea; Euechinoidea; Echinacea; Camarodonta; Echinidea; Strongylocentrotidae; Strongylocentrotus; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "9",
+    "otherNames": [
+      "Echinus purpuratus Stimpson, 1857:authority",
+      "Strongylocentrotus purpuratus (Stimpson, 1857):authority",
+      "Echinus purpuratus:synonym",
+      "purple sea urchin:genbank common name",
+      "purple sea urchin <Strongylocentrotus purpuratus>:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Strongylocentrotus purpuratus",
+    "submittable": "true",
+    "taxId": "7668"
+  },
+  "7719": {
+    "binomial": "true",
+    "commonName": "vase tunicate",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Tunicata; Ascidiacea; Phlebobranchia; Cionidae; Ciona; ",
+    "merged": "[413600]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "13",
+    "otherNames": [
+      "Ascidia intestinalis Linnaeus, 1767:authority",
+      "Ciona intestinalis (Linnaeus, 1767):authority",
+      "Ciona intestinalis A CG-2006:includes",
+      "Ascidia intestinalis:synonym",
+      "vase tunicate:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Ciona intestinalis",
+    "submittable": "true",
+    "taxId": "7719"
+  },
+  "7739": {
+    "binomial": "true",
+    "commonName": "Florida lancelet",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Cephalochordata; Leptocardii; Amphioxiformes; Branchiostomatidae; Branchiostoma; ",
+    "merged": "[94971]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "5",
+    "otherNames": [
+      "Branchiostoma floridae Hubbs, 1922:authority",
+      "Amphioxus floridae:synonym",
+      "Florida lancelet:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Branchiostoma floridae",
+    "submittable": "true",
+    "taxId": "7739"
+  },
+  "7955": {
+    "binomial": "true",
+    "commonName": "zebrafish",
+    "division": "VRT",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Actinopterygii; Neopterygii; Teleostei; Ostariophysi; Cypriniformes; Danionidae; Danioninae; Danio; ",
+    "merged": "[37966, 27702]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Cyprinus rerio Hamilton, 1822:authority",
+      "Danio rerio (Hamilton, 1822):authority",
+      "Danio frankei:synonym",
+      "Danio rerio frankei:synonym",
+      "Cyprinus rerio:synonym",
+      "Brachydanio rerio frankei:synonym",
+      "Brachydanio rerio:synonym",
+      "zebrafish:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Danio rerio",
+    "submittable": "true",
+    "taxId": "7955"
+  },
+  "9606": {
+    "authority": "Linnaeus, 1758",
+    "binomial": "true",
+    "commonName": "human",
+    "division": "HUM",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae; Homo; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Homo sapiens Linnaeus, 1758:authority",
+      "human:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Homo sapiens",
+    "submittable": "true",
+    "taxId": "9606"
+  },
+  "9615": {
+    "binomial": "true",
+    "commonName": "dog",
+    "division": "MAM",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Laurasiatheria; Carnivora; Caniformia; Canidae; Canis; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Canis familiaris Linnaeus, 1758:authority",
+      "Canis lupus familiaris Linnaeus, 1758:authority",
+      "Canis lupus borealis Smith, 1839:authority",
+      "Canis borealis Smith, 1839:authority",
+      "beagle dogs:includes",
+      "beagle dog:includes",
+      "Canis lupus borealis:synonym",
+      "Canis canis:synonym",
+      "Canis borealis:synonym",
+      "Canis familiaris:synonym",
+      "Canis domesticus:synonym",
+      "dog:genbank common name"
+    ],
+    "rank": "subspecies",
+    "scientificName": "Canis lupus familiaris",
+    "submittable": "true",
+    "taxId": "9615"
+  },
+  "9913": {
+    "binomial": "true",
+    "commonName": "domestic cattle",
+    "division": "MAM",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Laurasiatheria; Artiodactyla; Ruminantia; Pecora; Bovidae; Bovinae; Bos; ",
+    "merged": "[272461]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Bos taurus Linnaeus, 1758:authority",
+      "Bovidae sp. Adi Nefas:includes",
+      "Bos primigenius taurus:synonym",
+      "Bos bovis:synonym",
+      "domestic cattle:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Bos taurus",
+    "submittable": "true",
+    "taxId": "9913"
+  }
+}

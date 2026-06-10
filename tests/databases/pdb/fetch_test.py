@@ -42,7 +42,6 @@ def test_produces_correct_data(mock_pdbe_api):
     )
 
 
-@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chains",
     [

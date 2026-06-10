@@ -64,7 +64,6 @@ def test_can_compute_correct_rna_types(product: str, expected):
     assert helpers.compound_rna_type(product) == expected
 
 
-@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb,chain,expected",
     [
