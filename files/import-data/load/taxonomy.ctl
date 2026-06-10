@@ -5,7 +5,9 @@ HAVING FIELDS (
     name,
     lineage,
     aliases,
-    replaced_by
+    replaced_by,
+    rank,
+    reference_proteome
 )
 INTO {{PGDATABASE}}?load_taxonomy
 TARGET COLUMNS (
@@ -13,19 +15,31 @@ TARGET COLUMNS (
     name,
     lineage,
     aliases,
-    replaced_by
+    replaced_by,
+    rank,
+    reference_proteome
 )
 WITH skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
 
-AFTER LOAD DO
+BEFORE LOAD DO
 $$
-ALTER TABLE rnacen.load_taxonomy SET (
-    autovacuum_enabled = true,
-    toast.autovacuum_enabled = true
-);
+drop table if exists load_taxonomy;
 $$,
+$$
+create table load_taxonomy (
+    taxid int,
+    name text,
+    lineage text,
+    aliases json,
+    replaced_by int,
+    rank text,
+    reference_proteome boolean
+);
+$$
+
+AFTER LOAD DO
 $$
 ANALYZE rnacen.load_taxonomy;
 $$
