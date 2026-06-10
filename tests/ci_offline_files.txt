@@ -1,0 +1,50 @@
+# Test files that pass with the offline test harness (no network access).
+# The CI workflow (.github/workflows/tests.yaml) runs exactly these files.
+# Add a file here once it passes offline (run the subset, not the whole suite,
+# to catch order-dependent flakiness). Lines starting with # are ignored.
+
+tests/cli/europepmc_test.py
+tests/cli/misc_test.py
+tests/cli/ols_test.py
+tests/cli/qa_test.py
+tests/databases/crs/parser_test.py
+tests/databases/data/databases_test.py
+tests/databases/data/go_annotations_test.py
+tests/databases/data/regions_test.py
+tests/databases/data/secondary_structure_test.py
+tests/databases/dfam/dfam_results_test.py
+tests/databases/ena/parser_test.py
+tests/databases/ena/ribovore_test.py
+tests/databases/ensembl/metadata/compara_test.py
+tests/databases/ensembl/metadata/coordinate_systems_test.py
+tests/databases/ensembl/metadata/databases_test.py
+tests/databases/ensembl/metadata/karyotypes_test.py
+tests/databases/europepmc/fetch_test.py
+tests/databases/europepmc/xml_test.py
+tests/databases/expressionatlas/test_sdrf_parsing.py
+tests/databases/generic/parser_test.py
+tests/databases/gtrnadb/urls_test.py
+tests/databases/helpers/publications_test.py
+tests/databases/ncbi/gene/fetch_test.py
+tests/databases/ncbi/gene/helpers_test.py
+tests/databases/ncbi/gene/parser_test.py
+tests/databases/ols/fetch_test.py
+tests/databases/pdb/helpers_test.py
+tests/databases/quickgo/parser_test.py
+tests/databases/rfam/cross_references_test.py
+tests/databases/rfam/families_test.py
+tests/databases/rfam/infernal_results_test.py
+tests/databases/rfam/utils_test.py
+tests/databases/rgd/helpers_test.py
+tests/databases/rgd/parser_test.py
+tests/databases/sequence_ontology/tree_test.py
+tests/databases/tmrna/parser_test.py
+tests/rnacentral/attempted_test.py
+tests/rnacentral/ftp_export/fasta_test.py
+tests/rnacentral/pgloader_test.py
+tests/rnacentral/precompute/qa/__init___test.py
+tests/rnacentral/precompute/qa/repetitive_regions_test.py
+tests/rnacentral/r2dt/models/crw_test.py
+tests/rnacentral/r2dt/models/ribovision_test.py
+tests/trnascan/parse_test.py
+tests/utils_test.py
