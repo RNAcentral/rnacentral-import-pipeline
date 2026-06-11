@@ -66,7 +66,7 @@ process fetch_transcripts {
 
 
 process preprocess_transcripts {
-
+  memory '64 GB'
   tag { taxid }
 
   input:
@@ -83,7 +83,7 @@ process preprocess_transcripts {
 
 
 process classify_transcripts {
-
+  memory '64 GB'
   tag { taxid }
 
   input:
@@ -118,7 +118,7 @@ process fetch_previous_genes {
 
 
 process forward_merge {
-
+  memory '16 GB'
   tag { taxid }
 
   input:
