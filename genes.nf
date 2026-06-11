@@ -48,7 +48,7 @@ process fetch_so_model{
 
 
 process fetch_transcripts {
-
+  maxForks 15
   tag { taxid }
 
   input:
@@ -101,7 +101,7 @@ process classify_transcripts {
 
 
 process fetch_previous_genes {
-
+  maxForks 15
   tag { taxid }
 
   input:
