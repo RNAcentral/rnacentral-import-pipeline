@@ -535,6 +535,23 @@ def store_genes(final_genes, taxid, db_str):
         taxid=pl.lit(taxid, dtype=pl.Int64),
     )
 
+    ## The merge can emit more than one row per internal_name (e.g. the inner
+    ## coordinate join in merge_genes producing a cartesian product when a row
+    ## matches several rows on the other side). Duplicates here would break the
+    ## upsert below ("ON CONFLICT DO UPDATE cannot affect row a second time")
+    ## and would also double-insert members when this frame is exploded later,
+    ## so collapse to one row per internal_name before storing.
+    before = for_database.height
+    for_database = for_database.unique(
+        subset=["internal_name"], keep="first", maintain_order=True
+    )
+    dropped = before - for_database.height
+    if dropped:
+        print(
+            f"WARNING: dropped {dropped} duplicate internal_name row(s) "
+            f"before storing genes for taxid {taxid}"
+        )
+
     ## This just gets columns in the right order for the insert
     rnc_genes = for_database.select(
         pl.col("internal_name"),
