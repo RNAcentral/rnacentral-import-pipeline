@@ -416,7 +416,14 @@ def merge_genes(
                             {
                                 "name": old_row["name"],
                                 "internal_name": old_row["internal_name"],
-                                "members": new_row["members"],
+                                ## Wrap in an outer list: members is a list of
+                                ## region_names, and pl.DataFrame reads a bare list
+                                ## as values-down-the-rows. With schema=List(Utf8)
+                                ## that coerces each region_name string into a list
+                                ## of its characters and splits one gene into many
+                                ## rows. [[...]] makes it a single row holding the
+                                ## list.
+                                "members": [new_row["members"]],
                                 "start": min(new_row["start"], old_row["start"]),
                                 "stop": max(new_row["stop"], old_row["stop"]),
                                 "strand": strand,
@@ -660,23 +667,34 @@ def store_genes(final_genes, taxid, db_str):
 
     ## Now insert the current members. Still an upsert so re-running is idempotent;
     ## the reconcile above has already removed any members no longer present.
-    member_insert_query = "INSERT INTO rnc_gene_members (rnc_gene_id, locus_id) VALUES "
-    member_args_str = ""
-    for row in rnc_genes_for_membertable.iter_rows(named=True):
-        member_args_str += cur.mogrify(
-            "(%s,%s),", (row["rnc_gene_id"], row["locus_id"])
-        ).decode("utf-8")
-    member_args_str = member_args_str.rstrip(",")
-    member_upsert_query = (
-        member_insert_query
-        + member_args_str
-        + """
-    ON CONFLICT (rnc_gene_id, locus_id)
-    DO NOTHING
-    """
-    )
-    cur.execute(member_upsert_query)
-    conn.commit()
+    ## Skip entirely when there are no members to insert: an empty VALUES list
+    ## produces "syntax error at or near ON". This happens when none of the gene
+    ## members resolved to a locus in rnc_sequence_regions for this assembly.
+    if rnc_genes_for_membertable.height == 0:
+        print(
+            f"WARNING: no gene members resolved to loci for taxid {taxid}; "
+            "skipping rnc_gene_members insert"
+        )
+    else:
+        member_insert_query = (
+            "INSERT INTO rnc_gene_members (rnc_gene_id, locus_id) VALUES "
+        )
+        member_args_str = ""
+        for row in rnc_genes_for_membertable.iter_rows(named=True):
+            member_args_str += cur.mogrify(
+                "(%s,%s),", (row["rnc_gene_id"], row["locus_id"])
+            ).decode("utf-8")
+        member_args_str = member_args_str.rstrip(",")
+        member_upsert_query = (
+            member_insert_query
+            + member_args_str
+            + """
+        ON CONFLICT (rnc_gene_id, locus_id)
+        DO NOTHING
+        """
+        )
+        cur.execute(member_upsert_query)
+        conn.commit()
 
 
 def fetch_stored_genes(taxid, db_str):
