@@ -245,6 +245,7 @@ workflow genes {
   | splitCsv \
   | map { row -> row[0] } \
   | fetch_transcripts \
+  | filter {_taxid, transcripts -> transcripts.size() > 0 } \
   | combine( so_model ) \
   | preprocess_transcripts \
   | combine( rf_model ) \

@@ -91,8 +91,10 @@ def fetch(conn_str, taxid, output):
     # Ensure output directory exists
     output_path = Path(output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    transcripts.write_parquet(output)
+    if transcripts.height > 0:
+        transcripts.write_parquet(output)
+    else:
+        output_path.touch(exist_ok=True)
     click.echo(f"Saved {transcripts.height} transcripts to {output}")
 
 
