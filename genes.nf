@@ -250,6 +250,7 @@ workflow genes {
   | preprocess_transcripts \
   | combine( rf_model ) \
   | classify_transcripts \
+  | filter {_taxid, genes -> genes.size() > 2 } \
   | fetch_previous_genes \
   | branch { row ->
       existing:  row[3].text.trim() != ''
