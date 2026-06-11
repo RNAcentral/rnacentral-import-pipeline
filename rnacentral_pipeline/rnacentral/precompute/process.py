@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import itertools as it
-import operator as op
 import typing as ty
 from pathlib import Path
 
@@ -23,12 +21,9 @@ import attr
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
-from rnacentral_pipeline.rnacentral.precompute.data.update import (
-    GenericUpdate,
-    SequenceUpdate,
-)
+from rnacentral_pipeline.rnacentral.precompute.data.update import SequenceUpdate
 
-AnUpdate = ty.Union[SequenceUpdate, GenericUpdate]
+AnUpdate = SequenceUpdate
 
 
 @attr.s()
@@ -51,12 +46,6 @@ def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:
     context = Context.from_directory(context_path)
     with data_path.open("r") as handle:
         raw = psql.json_handler(handle)
-        grouped = it.groupby(raw, op.itemgetter("upi"))
-        for _, sequences in grouped:
-            updates = []
-            for sequence in sequences:
-                sequence = Sequence.build(context.so_tree, sequence)
-                update = SequenceUpdate.from_sequence(context, sequence)
-                updates.append(update)
-                yield update
-            yield GenericUpdate.from_updates(context, updates)
+        for sequence in raw:
+            sequence = Sequence.build(context.so_tree, sequence)
+            yield SequenceUpdate.from_sequence(context, sequence)
