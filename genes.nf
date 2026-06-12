@@ -48,7 +48,7 @@ process fetch_so_model{
 
 
 process fetch_transcripts {
-  memory '8 GB'
+  memory '32 GB'
   maxForks 15
   tag { taxid }
 
