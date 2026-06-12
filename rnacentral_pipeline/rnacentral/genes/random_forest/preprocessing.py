@@ -24,6 +24,8 @@ import numpy as np
 import polars as pl
 from gensim.models import Word2Vec
 from tqdm import tqdm
+import logging
+LOGGER = logging.getLogger(__name__)
 
 from rnacentral_pipeline.rnacentral.genes.random_forest import data
 
@@ -48,6 +50,10 @@ empty_features = pl.DataFrame(
     },
 )
 
+obsolete_so_terms = {
+    "SO:0001171": "SO:0002345"
+}
+
 _SO_MODEL = None
 
 
@@ -67,6 +73,12 @@ def _load_so_model(path: str) -> dict:
 
 @lru_cache(maxsize=1024)
 def get_type_similarity(type_a: str, type_b: str) -> float:
+    if type_a in obsolete_so_terms:
+        LOGGER.warning(f"Obsolete SO term {type_a} replaced with {obsolete_so_terms[type_a]}")
+        type_a = obsolete_so_terms[type_a]
+    if type_b in obsolete_so_terms:
+        LOGGER.warning(f"Obsolete SO term {type_b} replaced with {obsolete_so_terms[type_b]}")
+        type_b = obsolete_so_terms[type_b]
     if _SO_MODEL is None:
         raise RuntimeError("SO model not initialized - call init_so_model(path) first")
     if type_a > type_b:
