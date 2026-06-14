@@ -654,15 +654,27 @@ def store_genes(final_genes, taxid, db_str):
     ## batch_gene_ids is derived from desired_pairs, so it is non-empty only when
     ## desired_pairs is non-empty; no separate empty-desired_pairs branch is needed.
     if batch_gene_ids:
-        desired_values = ",".join(
-            cur.mogrify("(%s,%s)", pair).decode("utf-8") for pair in desired_pairs
+        ## Pass the desired (rnc_gene_id, locus_id) set as two parallel arrays and
+        ## reconstruct it server-side with unnest. A literal row-constructor
+        ## `NOT IN ((a,b),(c,d),...)` is parsed into a deeply nested OR/AND tree that
+        ## overflows the parser/planner stack ("stack depth limit exceeded") once the
+        ## list is large; arrays + unnest keep the parse tree flat regardless of size.
+        desired_gene_ids = [pair[0] for pair in desired_pairs]
+        desired_locus_ids = [pair[1] for pair in desired_pairs]
+        delete_query = """
+        DELETE FROM rnc_gene_members m
+        WHERE m.rnc_gene_id = ANY(%s)
+        AND NOT EXISTS (
+            SELECT 1
+            FROM unnest(%s::bigint[], %s::bigint[]) AS d(rnc_gene_id, locus_id)
+            WHERE d.rnc_gene_id = m.rnc_gene_id
+              AND d.locus_id = m.locus_id
         )
-        delete_query = (
-            "DELETE FROM rnc_gene_members "
-            "WHERE rnc_gene_id = ANY(%s) "
-            f"AND (rnc_gene_id, locus_id) NOT IN ({desired_values})"
+        """
+        cur.execute(
+            delete_query,
+            (batch_gene_ids, desired_gene_ids, desired_locus_ids),
         )
-        cur.execute(delete_query, (batch_gene_ids,))
         conn.commit()
 
     ## Now insert the current members. Still an upsert so re-running is idempotent;
