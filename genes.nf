@@ -67,7 +67,7 @@ process fetch_transcripts {
 
 
 process preprocess_transcripts {
-  memory '128 GB'
+  memory '256 GB'
   tag { taxid }
 
   input:
