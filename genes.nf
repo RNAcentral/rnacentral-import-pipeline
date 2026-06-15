@@ -197,7 +197,7 @@ process deactivate_discarded {
 
 
 process process_metadata {
-
+  memory '16 GB'
   tag { taxid }
 
   input:
