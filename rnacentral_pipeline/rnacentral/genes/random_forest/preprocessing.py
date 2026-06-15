@@ -361,7 +361,7 @@ def polars_preprocessing(transcripts, nearby_distance=1000, label=None):
     For the production path prefer ``sink_preprocessing``, which streams the
     result straight to disk and never materialises the whole table.
     """
-    with tempfile.TemporaryDirectory(prefix="gene_preproc_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="gene_preproc_", dir=".") as tmp:
         paths = _spill_chromosome_features(transcripts, Path(tmp), nearby_distance)
 
         if not paths:
@@ -390,7 +390,12 @@ def sink_preprocessing(transcripts, output_path, nearby_distance=1000, label=Non
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with tempfile.TemporaryDirectory(prefix="gene_preproc_") as tmp:
+    ## Spill next to the output file rather than in the system temp dir: on the
+    ## cluster /tmp is a small node-local filesystem that fills up, and the
+    ## output directory is on the same (large) filesystem as the final result.
+    with tempfile.TemporaryDirectory(
+        prefix="gene_preproc_", dir=output_path.parent
+    ) as tmp:
         paths = _spill_chromosome_features(transcripts, Path(tmp), nearby_distance)
 
         if not paths:
