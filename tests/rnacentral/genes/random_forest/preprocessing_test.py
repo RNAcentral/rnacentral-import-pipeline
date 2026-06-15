@@ -84,10 +84,15 @@ def reference_features(transcripts, nearby_distance=1000):
     Independent row-by-row reference for the feature table.
 
     Mirrors the join predicates (same chromosome / assembly / strand, within
-    nearby_distance, lower region_start is the 'a' member) and computes each
-    feature with the simple per-pair helpers rather than the vectorised query.
+    nearby_distance) and computes each feature with the simple per-pair helpers
+    rather than the vectorised query.
+
+    Orientation note: the implementation assigns its join index with
+    ``with_row_index`` *before* sorting, so the (a, b) order in the "a vs b"
+    comparison string follows the original row order, not region_start order.
+    The oracle mirrors that by iterating ``recs`` in original order.
     """
-    recs = transcripts.sort("region_start").to_dicts()
+    recs = transcripts.to_dicts()
     out = []
     for i, a in enumerate(recs):
         for j in range(i + 1, len(recs)):
@@ -184,6 +189,42 @@ def test_work_function_output_schema(rich_chromosome):
     produced = P.polars_work_function(rich_chromosome, nearby_distance=1000)
     # Same columns and dtypes as the canonical empty feature frame.
     assert produced.schema == P.empty_features.schema
+
+
+@pytest.mark.parametrize("seed", range(8))
+def test_work_function_matches_reference_fuzz(seed):
+    """
+    Randomised transcripts: the vectorised (native-polars) implementation must
+    match the row-by-row oracle, which uses the Rust gpp helpers. This guards in
+    particular the native exon-overlap count against the Rust count_overlap,
+    including varied exon counts and overlap fractions around the 0.9 threshold.
+    """
+    rng = np.random.default_rng(seed)
+    so_types = list(SO_MODEL.keys())
+    rows = []
+    for i in range(40):
+        n_exons = int(rng.integers(1, 5))
+        starts = np.sort(rng.integers(0, 3000, size=n_exons))
+        exon_start = [int(s) for s in starts]
+        exon_stop = [int(s) + int(rng.integers(1, 200)) for s in starts]
+        rows.append(
+            (
+                f"t{i}",
+                int(starts[0]),
+                int(exon_stop[-1]),
+                "1",
+                "GRCh38",
+                int(rng.choice([1, -1])),
+                str(rng.choice(so_types)),
+                exon_start,
+                exon_stop,
+            )
+        )
+    transcripts = make_transcripts(rows)
+    assert_features_match(
+        P.polars_work_function(transcripts, nearby_distance=1000),
+        reference_features(transcripts, nearby_distance=1000),
+    )
 
 
 def test_opposite_strand_pairs_excluded(rich_chromosome):

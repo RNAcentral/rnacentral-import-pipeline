@@ -319,10 +319,10 @@ def _spill_chromosome_features(transcripts, tmpdir, nearby_distance):
     Run polars_work_function per chromosome, writing each chromosome's feature
     frame to its own parquet file under ``tmpdir``.
 
-    Returns the list of written file paths. Only one chromosome's results are
-    held in memory at a time -- the rest live on disk -- so peak RAM during the
-    compute loop is bounded by the largest single chromosome rather than the
-    whole genome.
+    Returns the list of written file paths. Each chromosome's features are
+    *streamed* straight to its parquet file via the streaming engine, so the
+    full pair table for a chromosome is never held in memory -- peak RAM is
+    bounded by the streaming engine's batch size, not the chromosome size.
     """
     chromosomes = sorted(transcripts["chromosome"].unique().to_list())
     paths = []
@@ -337,14 +337,14 @@ def _spill_chromosome_features(transcripts, tmpdir, nearby_distance):
         if chrom_transcripts.height < 2:
             continue
 
-        features = polars_work_function(chrom_transcripts, nearby_distance)
-        if features is not None and features.height > 0:
-            path = tmpdir / f"chrom_{len(paths):05d}.parquet"
-            features.write_parquet(path)
-            paths.append(path)
-        ## Drop references so the chromosome's frames can be freed before the
-        ## next (potentially large) chromosome is processed.
-        del features, chrom_transcripts
+        path = tmpdir / f"chrom_{len(paths):05d}.parquet"
+        _work_plan(chrom_transcripts, nearby_distance).sink_parquet(
+            path, engine="streaming"
+        )
+        paths.append(path)
+        ## Drop the per-chromosome transcripts before the next (potentially
+        ## large) chromosome is processed.
+        del chrom_transcripts
 
     return paths
 
@@ -353,10 +353,9 @@ def polars_preprocessing(transcripts, nearby_distance=1000, label=None):
     """
     Build the full feature table in memory.
 
-    Each chromosome is processed independently and spilled to a temporary
-    parquet file, then the per-chromosome files are read back and concatenated.
-    This bounds peak memory during the compute loop to roughly the largest
-    single chromosome; only the final concatenated frame is held in full.
+    Each chromosome is streamed to a temporary parquet file (bounded memory),
+    then the per-chromosome files are read back and concatenated. Only the final
+    concatenated frame is held in full.
 
     For the production path prefer ``sink_preprocessing``, which streams the
     result straight to disk and never materialises the whole table.
@@ -378,14 +377,12 @@ def polars_preprocessing(transcripts, nearby_distance=1000, label=None):
 def sink_preprocessing(transcripts, output_path, nearby_distance=1000, label=None):
     """
     Like ``polars_preprocessing`` but stream the result straight to
-    ``output_path`` (a parquet file) instead of returning it, keeping peak
-    memory bounded by a single chromosome. Returns the number of feature rows
-    written.
+    ``output_path`` (a parquet file) instead of returning it. Returns the number
+    of feature rows written.
 
-    The per-chromosome files are combined with a lazy scan + sink, so the full
-    table is never materialised in memory. The combine is a plain vertical
-    concatenation of scalar columns, so unlike the per-chromosome join it does
-    not hit the streaming-engine list-column bug.
+    Each chromosome is itself streamed to a part file (see
+    ``_spill_chromosome_features``); the parts are then combined with a lazy
+    scan + sink, so the full table is never materialised in memory.
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -414,41 +411,57 @@ def sink_preprocessing(transcripts, output_path, nearby_distance=1000, label=Non
     return pl.scan_parquet(output_path).select(pl.len()).collect().item()
 
 
-def polars_work_function(transcripts, nearby_distance=1000):
-    ## A stable index in region_start order. This both defines the (a, b)
-    ## orientation used below (idx < idx_right keeps only one of each pair) and
-    ## gives a cheap key to look exon lists back up by after the join.
-    df = transcripts.with_row_index("idx").sort("region_start")
+def _type_similarity_lookup(transcripts):
+    """
+    Precompute a (so_type, so_type_right) -> type_sim lookup as a LazyFrame.
 
-    ## Precompute the 5' exon coordinates per transcript *before* the join. The
-    ## 5' end is the first exon on the + strand and the last exon on the -
-    ## strand. Doing it here means the join only has to carry these two scalars
-    ## instead of the full exon_start/exon_stop list columns, which would
-    ## otherwise be duplicated onto every candidate pair -- the dominant memory
-    ## cost of this function.
-    df = df.with_columns(
-        [
-            pl.when(pl.col("strand") == 1)
-            .then(pl.col("exon_start").list.first())
-            .otherwise(pl.col("exon_start").list.last())
-            .alias("fivep_start"),
-            pl.when(pl.col("strand") == 1)
-            .then(pl.col("exon_stop").list.first())
-            .otherwise(pl.col("exon_stop").list.last())
-            .alias("fivep_stop"),
-        ]
+    The set of SO types in a chromosome is tiny (tens), so the full cross
+    product is small. Joining this into the plan replaces the per-row Python UDF
+    that used to compute type similarity, which is what forced the whole pair
+    table to be materialised. ``get_type_similarity`` is symmetric, so the value
+    is the same regardless of which side a type appears on.
+    """
+    types = transcripts["so_type"].unique().to_list()
+    return pl.DataFrame(
+        [(a, b, float(get_type_similarity(a, b))) for a in types for b in types],
+        schema={
+            "so_type": pl.Utf8,
+            "so_type_right": pl.Utf8,
+            "type_sim": pl.Float32,
+        },
+        orient="row",
+    ).lazy()
+
+
+def _work_plan(transcripts, nearby_distance=1000):
+    """
+    Build the per-chromosome feature computation as a single lazy plan.
+
+    Every feature is expressed natively in polars (no Python UDFs, no Rust
+    round-trips), so the plan can be run under the streaming engine and sunk
+    straight to disk -- peak memory is bounded by the streaming engine's batch
+    size rather than the full pair table. ``polars_work_function`` collects this
+    plan; ``_spill_chromosome_features`` sinks it.
+
+    The exon-overlap count is computed natively here and has been fuzz-tested
+    against the Rust ``count_overlap_batch`` (including exact-0.9 boundaries) for
+    exact equivalence.
+    """
+    ## A stable index in region_start order defines the (a, b) orientation used
+    ## below: idx < idx_right keeps only one of each pair, with the lower
+    ## region_start as 'a'.
+    df = transcripts.with_row_index("idx").sort("region_start").with_columns(
+        ## 5' exon coordinates: first exon on the + strand, last on the -.
+        fivep_start=pl.when(pl.col("strand") == 1)
+        .then(pl.col("exon_start").list.first())
+        .otherwise(pl.col("exon_start").list.last()),
+        fivep_stop=pl.when(pl.col("strand") == 1)
+        .then(pl.col("exon_stop").list.first())
+        .otherwise(pl.col("exon_stop").list.last()),
     )
 
-    ## The full exon lists are only needed for the exon-overlap count. Build a
-    ## single idx -> [(start, stop), ...] lookup (O(transcripts)) so we can index
-    ## it by the pair indices later, instead of materialising the list columns
-    ## once per pair (O(pairs)).
-    exon_lookup = {
-        row["idx"]: list(zip(row["exon_start"], row["exon_stop"]))
-        for row in df.select(["idx", "exon_start", "exon_stop"]).iter_rows(named=True)
-    }
+    type_lut = _type_similarity_lookup(transcripts)
 
-    ## Slim, all-scalar columns for the join: no list columns cross it.
     join_cols = [
         "idx",
         "region_start",
@@ -459,6 +472,8 @@ def polars_work_function(transcripts, nearby_distance=1000):
         "so_type",
         "fivep_start",
         "fivep_stop",
+        "exon_start",
+        "exon_stop",
     ]
     df_slim = df.select(join_cols).lazy()
 
@@ -482,10 +497,9 @@ def polars_work_function(transcripts, nearby_distance=1000):
             .cast(pl.Int8)
             .alias("strand_sim")
         )
-        ## 5' exon overlap and distance-to-agreement, entirely from the scalar
-        ## 5' coordinates. distance_to_agreement is just the absolute difference
-        ## of the (start, stop) pair, so it is expressed inline rather than
-        ## round-tripping the coordinates out to the Rust helper.
+        ## 5' exon overlap and distance-to-agreement from the scalar 5' coords.
+        ## distance_to_agreement is just the absolute difference of the
+        ## (start, stop) pair.
         .with_columns(
             [
                 pl.min_horizontal("fivep_start", "fivep_stop").alias("_a_start"),
@@ -527,41 +541,68 @@ def polars_work_function(transcripts, nearby_distance=1000):
             )
             .alias("5p_exon_overlap")
         )
-        .select(pl.exclude("^_.*$"))
-        # NB: the in-memory engine, not streaming. Polars' streaming engine
-        # panics on join_where with "assertion failed: chunks.len() == 1" in
-        # series/builder.rs. Work is already chunked per-chromosome by
-        # polars_preprocessing, so peak memory is bounded, and the join output
-        # is now all-scalar (no list columns).
-        .collect(engine="in-memory")
     )
-
-    ## Calculate type similarity
-    pairs = pairs.with_columns(
-        pl.struct(["so_type", "so_type_right"])
-        .map_batches(
-            lambda s: pl.Series(
-                [
-                    get_type_similarity(a, b)
-                    for a, b in zip(
-                        s.struct.field("so_type"), s.struct.field("so_type_right")
-                    )
-                ]
-            ),
-            return_dtype=pl.Float32,
+    pairs = (
+        pairs.with_columns(
+            _n=pl.min_horizontal(
+                pl.col("exon_start").list.len(),
+                pl.col("exon_start_right").list.len(),
+            )
         )
-        .alias("type_sim")
+        .with_columns(
+            _eas=pl.col("exon_start").list.slice(0, pl.col("_n")),
+            _eae=pl.col("exon_stop").list.slice(0, pl.col("_n")),
+            _ebs=pl.col("exon_start_right").list.slice(0, pl.col("_n")),
+            _ebe=pl.col("exon_stop_right").list.slice(0, pl.col("_n")),
+        )
+        .with_columns(
+            ## per-exon overlap start = max(_eas, _ebs), end = min(_eae, _ebe)
+            _ov_start=pl.col("_eas")
+            + (pl.col("_ebs") - pl.col("_eas")).list.eval(
+                pl.element().clip(lower_bound=0)
+            ),
+            _ov_end=pl.col("_eae")
+            - (pl.col("_eae") - pl.col("_ebe")).list.eval(
+                pl.element().clip(lower_bound=0)
+            ),
+            _len_ea=pl.col("_eae") - pl.col("_eas"),
+            _len_eb=pl.col("_ebe") - pl.col("_ebs"),
+        )
+        .with_columns(
+            _ov_len=(pl.col("_ov_end") - pl.col("_ov_start")).list.eval(
+                pl.element().clip(lower_bound=0)
+            ),
+        )
+        .with_columns(
+            ## ratios computed in Float32 to match the Rust implementation.
+            _ratio_a=pl.col("_ov_len").cast(pl.List(pl.Float32))
+            / pl.col("_len_ea").cast(pl.List(pl.Float32)),
+            _ratio_b=pl.col("_ov_len").cast(pl.List(pl.Float32))
+            / pl.col("_len_eb").cast(pl.List(pl.Float32)),
+        )
+        .with_columns(
+            _min_ratio=pl.col("_ratio_a")
+            - (pl.col("_ratio_a") - pl.col("_ratio_b")).list.eval(
+                pl.element().clip(lower_bound=0)
+            )
+        )
+        .with_columns(
+            ## count positions with a real overlap (>0) whose smaller ratio >= 0.9
+            exons_overlapping=(
+                pl.col("_ov_len").list.eval(pl.element() > 0).cast(pl.List(pl.Int8))
+                * pl.col("_min_ratio")
+                .list.eval(pl.element() >= pl.lit(0.9, dtype=pl.Float32))
+                .cast(pl.List(pl.Int8))
+            )
+            .list.sum()
+            .cast(pl.Int64)
+        )
     )
 
-    ## Exon-overlap count (Rust, batched). Look the exon lists up by the pair
-    ## indices so each transcript's exons are materialised once, not once per
-    ## pair it appears in.
-    exons_a = [exon_lookup[i] for i in pairs["idx"].to_list()]
-    exons_b = [exon_lookup[i] for i in pairs["idx_right"].to_list()]
-    exon_counts = gpp.count_overlap_batch(exons_a, exons_b, 0.9)
-    pairs = pairs.with_columns(pl.Series("exons_overlapping", exon_counts))
+    ## type similarity via the precomputed lookup join (replaces a Python UDF).
+    pairs = pairs.join(type_lut, on=["so_type", "so_type_right"], how="left")
 
-    features = pairs.select(
+    return pairs.select(
         [
             "5p_exon_overlap",
             "5p_exon_dta",
@@ -579,4 +620,13 @@ def polars_work_function(transcripts, nearby_distance=1000):
         ]
     )
 
-    return features
+
+def polars_work_function(transcripts, nearby_distance=1000):
+    """
+    Compute the feature table for a single chromosome's transcripts.
+
+    Thin wrapper that collects the lazy plan from ``_work_plan`` under the
+    streaming engine. ``_spill_chromosome_features`` sinks the same plan instead
+    of collecting it.
+    """
+    return _work_plan(transcripts, nearby_distance).collect(engine="streaming")
