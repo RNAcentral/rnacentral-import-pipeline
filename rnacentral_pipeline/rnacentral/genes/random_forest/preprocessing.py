@@ -443,14 +443,24 @@ def _work_plan(transcripts, nearby_distance=1000):
     size rather than the full pair table. ``polars_work_function`` collects this
     plan; ``_spill_chromosome_features`` sinks it.
 
+    Candidate pairs are found with a *bucketed equi-join* rather than an
+    inequality ``join_where``: a pair only matters when the two transcripts are
+    within ``nearby_distance``, so ``region_start // nearby_distance`` buckets
+    every transcript such that any in-range pair lands in the same bucket or in
+    two adjacent buckets. Equi-joins stream cleanly and never build the
+    quadratic cartesian intermediate an IE join does. The (large) exon list
+    columns are deliberately *not* carried through the join -- they are rejoined
+    by ``idx`` onto the already-reduced pair set, so the join payload stays tiny.
+
     The exon-overlap count is computed natively here and has been fuzz-tested
     against the Rust ``count_overlap_batch`` (including exact-0.9 boundaries) for
     exact equivalence.
     """
-    ## A stable index in region_start order defines the (a, b) orientation used
-    ## below: idx < idx_right keeps only one of each pair, with the lower
-    ## region_start as 'a'.
-    df = transcripts.with_row_index("idx").sort("region_start").with_columns(
+    ## ``idx`` is assigned in ORIGINAL row order (before any reordering): it
+    ## defines the (a, b) orientation of the "a vs b" comparison string, where
+    ## 'a' is the lower-idx transcript. All numeric features are symmetric, so
+    ## only the comparison string depends on this orientation.
+    base = transcripts.with_row_index("idx").with_columns(
         ## 5' exon coordinates: first exon on the + strand, last on the -.
         fivep_start=pl.when(pl.col("strand") == 1)
         .then(pl.col("exon_start").list.first())
@@ -462,41 +472,66 @@ def _work_plan(transcripts, nearby_distance=1000):
 
     type_lut = _type_similarity_lookup(transcripts)
 
-    join_cols = [
+    ## Slim key frame for the candidate-pair join: only what the join keys and
+    ## the distance filter need. Floor division buckets region_start; any pair
+    ## within nearby_distance differs by at most one bucket.
+    keys = (
+        base.select("idx", "region_start", "chromosome", "assembly_id", "strand")
+        .with_columns((pl.col("region_start") // nearby_distance).alias("_bucket"))
+        .lazy()
+    )
+    join_keys = ["chromosome", "assembly_id", "strand", "_bucket"]
+
+    ## Same-bucket pairs: the self-join yields both (a, b) and (b, a); idx <
+    ## idx_right keeps exactly one of each.
+    same_bucket = keys.join(keys, on=join_keys, suffix="_right").filter(
+        pl.col("idx") < pl.col("idx_right")
+    )
+    ## Adjacent-bucket pairs: shifting the right side's bucket down by one makes
+    ## the equi-join pair a row in bucket b (left) with a row in bucket b+1
+    ## (right). Each cross-bucket pair appears exactly once here (lower bucket on
+    ## the left), so no idx filter is applied -- orientation is fixed later by
+    ## the comparison string.
+    adj_bucket = keys.join(
+        keys.with_columns((pl.col("_bucket") - 1).alias("_bucket")),
+        on=join_keys,
+        suffix="_right",
+    )
+
+    pair_keys = pl.concat([same_bucket, adj_bucket]).filter(
+        (pl.col("region_start_right") - pl.col("region_start")).abs()
+        <= nearby_distance
+    )
+
+    ## Rejoin the per-transcript attributes (including the exon lists) by idx,
+    ## now that the pair set has been reduced to the genuine neighbours.
+    attrs = base.select(
         "idx",
-        "region_start",
-        "chromosome",
-        "assembly_id",
-        "strand",
-        "region_name",
-        "so_type",
-        "fivep_start",
-        "fivep_stop",
         "exon_start",
         "exon_stop",
-    ]
-    df_slim = df.select(join_cols).lazy()
+        "fivep_start",
+        "fivep_stop",
+        "so_type",
+        "region_name",
+    ).lazy()
+    attrs_right = attrs.rename(
+        {
+            "idx": "idx_right",
+            "exon_start": "exon_start_right",
+            "exon_stop": "exon_stop_right",
+            "fivep_start": "fivep_start_right",
+            "fivep_stop": "fivep_stop_right",
+            "so_type": "so_type_right",
+            "region_name": "region_name_right",
+        }
+    )
 
-    ## Self join with filtering to establish candidate pairs
-    ## TODO: need to tweak to get reverse comparison - probably isn't symmetric
     pairs = (
-        df_slim.join_where(
-            df_slim,
-            pl.col("chromosome") == pl.col("chromosome_right"),
-            pl.col("assembly_id") == pl.col("assembly_id_right"),
-            pl.col("strand") == pl.col("strand_right"),
-            pl.col("idx") < pl.col("idx_right"),  # Dedupe: only keep (a,b) not (b,a)
-            (pl.col("region_start_right") - pl.col("region_start")).abs()
-            <= nearby_distance,
-            suffix="_right",
-        )
-        ## strand_sim is always 1 here (the join requires strand == strand_right)
-        ## but is computed the same way the row-wise reference does, for parity.
-        .with_columns(
-            (pl.col("strand") == pl.col("strand_right"))
-            .cast(pl.Int8)
-            .alias("strand_sim")
-        )
+        pair_keys.join(attrs, on="idx")
+        .join(attrs_right, on="idx_right")
+        ## strand_sim is always 1 (the join requires equal strand); kept as an
+        ## explicit column for parity with the row-wise reference.
+        .with_columns(pl.lit(1, dtype=pl.Int8).alias("strand_sim"))
         ## 5' exon overlap and distance-to-agreement from the scalar 5' coords.
         ## distance_to_agreement is just the absolute difference of the
         ## (start, stop) pair.
@@ -610,13 +645,21 @@ def _work_plan(transcripts, nearby_distance=1000):
             "exons_overlapping",
             pl.col("strand_sim").alias("strand"),
             "type_sim",
-            pl.concat_str(
-                [
-                    pl.col("region_name"),
-                    pl.lit(" vs "),
-                    pl.col("region_name_right"),
-                ]
-            ).alias("comparison"),
+            ## Orient the comparison string by original row order (lower idx is
+            ## 'a'), matching the reference oracle. Same-bucket rows already have
+            ## idx < idx_right; adjacent-bucket rows may be in either order.
+            pl.when(pl.col("idx") < pl.col("idx_right"))
+            .then(
+                pl.concat_str(
+                    [pl.col("region_name"), pl.lit(" vs "), pl.col("region_name_right")]
+                )
+            )
+            .otherwise(
+                pl.concat_str(
+                    [pl.col("region_name_right"), pl.lit(" vs "), pl.col("region_name")]
+                )
+            )
+            .alias("comparison"),
         ]
     )
 

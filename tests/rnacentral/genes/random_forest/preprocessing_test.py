@@ -227,6 +227,46 @@ def test_work_function_matches_reference_fuzz(seed):
     )
 
 
+@pytest.mark.parametrize("seed", range(8))
+@pytest.mark.parametrize("nearby_distance", [50, 250, 1000])
+def test_bucketed_join_matches_reference_fuzz(seed, nearby_distance):
+    """
+    Stress the bucketed equi-join: a wide coordinate range with many transcripts
+    in shuffled (non-coordinate) order so candidate pairs straddle bucket
+    boundaries and original-order orientation differs from coordinate order.
+    Varying nearby_distance moves the bucket boundaries around. The result must
+    still match the row-by-row oracle exactly.
+    """
+    rng = np.random.default_rng(seed)
+    so_types = list(SO_MODEL.keys())
+    rows = []
+    for i in range(60):
+        n_exons = int(rng.integers(1, 5))
+        starts = np.sort(rng.integers(0, 5000, size=n_exons))
+        exon_start = [int(s) for s in starts]
+        exon_stop = [int(s) + int(rng.integers(1, 200)) for s in starts]
+        rows.append(
+            (
+                f"t{i}",
+                int(starts[0]),
+                int(exon_stop[-1]),
+                "1",
+                "GRCh38",
+                int(rng.choice([1, -1])),
+                str(rng.choice(so_types)),
+                exon_start,
+                exon_stop,
+            )
+        )
+    # Shuffle so original row order != region_start order (exercises orientation).
+    rng.shuffle(rows)
+    transcripts = make_transcripts(rows)
+    assert_features_match(
+        P.polars_work_function(transcripts, nearby_distance=nearby_distance),
+        reference_features(transcripts, nearby_distance=nearby_distance),
+    )
+
+
 def test_opposite_strand_pairs_excluded(rich_chromosome):
     produced = P.polars_work_function(rich_chromosome, nearby_distance=1000)
     comparisons = set(produced["comparison"].to_list())
