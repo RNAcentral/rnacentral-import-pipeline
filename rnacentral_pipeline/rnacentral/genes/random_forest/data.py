@@ -828,11 +828,11 @@ def get_accessions(urs_taxids, db_str):
                 (urs_taxids,),
             )
 
-            accessions = pl.DataFrame(cur.fetchall(), schema={"cm_overlap": pl.Float64,
-                                                              "rna_type": pl.String,
-                                                              "description": pl.String,
+            accessions = pl.DataFrame(cur.fetchall(), schema={"urs_taxid": pl.String,
                                                               "database": pl.String,
-                                                              "urs_taxid": pl.String})
+                                                              "description": pl.String,
+                                                              "rna_type": pl.String,
+                                                              "cm_overlap": pl.Float64})
         conn.commit()
         return accessions
     except Exception as e:
