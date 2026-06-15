@@ -142,19 +142,15 @@ def preprocess(
 
     click.echo(f"Loading transcripts from {transcripts_file}...")
 
-    features = preprocessing.run_preprocessing(
+    n_features = preprocessing.run_preprocessing(
         transcripts_file,
         regions_data,
         so_model_path,
         nearby_distance,
+        output_path=str(output),
     )
 
-    # Ensure output directory exists
-    output_path = Path(output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    features.write_parquet(output)
-    click.echo(f"Generated {features.height} feature comparisons, saved to {output}")
+    click.echo(f"Generated {n_features} feature comparisons, saved to {output}")
 
 
 @infer_cli.command("classify")

@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 
@@ -26,8 +27,6 @@ from gensim.models import Word2Vec
 from tqdm import tqdm
 import logging
 LOGGER = logging.getLogger(__name__)
-
-from rnacentral_pipeline.rnacentral.genes.random_forest import data
 
 empty_features = pl.DataFrame(
     {
@@ -44,7 +43,7 @@ empty_features = pl.DataFrame(
         "5p_exon_dta": pl.Int64,
         "5p_exon_3p_dta": pl.Int64,
         "exons_overlapping": pl.Int64,
-        "strand": pl.Int64,
+        "strand": pl.Int8,
         "type_sim": pl.Float32,
         "comparison": pl.Utf8,
     },
@@ -142,28 +141,47 @@ def run_preprocessing(
     regions_data,
     so_model_path,
     nearby_distance,
+    output_path=None,
 ):
+    """
+    Generate pairwise comparison features from a transcripts parquet file.
+
+    When ``output_path`` is given the features are streamed straight to that
+    parquet file (peak memory bounded by a single chromosome) and the number of
+    rows written is returned. Otherwise the full feature DataFrame is returned.
+    """
+    from rnacentral_pipeline.rnacentral.genes.random_forest import data
+
     transcripts = pl.read_parquet(transcripts_file)
     ## Filter out piRNAs
     transcripts = transcripts.filter(pl.col("so_type") != "SO:0001035")
-    if transcripts.height > 0:
-        # Check if region_ids are present, fetch if needed
-        if "region_id" not in transcripts.columns:
-            if not Path(regions_data).exists():
-                raise ValueError(
-                    "Region IDs not found in transcripts file and no database connection provided. "
-                    "Please provide --conn_str to fetch region IDs from database."
-                )
-            transcripts = data.add_assembly_region_ids(
-                transcripts, regions_data
-            ).select(pl.exclude("assembly_id_right"))
 
-        init_so_model(so_model_path)
-        features = polars_preprocessing(transcripts, nearby_distance)
-    else:
+    if transcripts.height == 0:
         features = empty_features.clone()
+        if output_path is not None:
+            output_path = Path(output_path)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            features.write_parquet(output_path)
+            return 0
+        return features
 
-    return features
+    # Check if region_ids are present, fetch if needed
+    if "region_id" not in transcripts.columns:
+        if not Path(regions_data).exists():
+            raise ValueError(
+                "Region IDs not found in transcripts file and no database connection provided. "
+                "Please provide --conn_str to fetch region IDs from database."
+            )
+        transcripts = data.add_assembly_region_ids(transcripts, regions_data).select(
+            pl.exclude("assembly_id_right")
+        )
+
+    init_so_model(so_model_path)
+
+    if output_path is not None:
+        return sink_preprocessing(transcripts, output_path, nearby_distance)
+
+    return polars_preprocessing(transcripts, nearby_distance)
 
 
 def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
@@ -287,8 +305,8 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
                 "5p_exon_dta": pl.Int64,
                 "5p_exon_3p_dta": pl.Int64,
                 "exons_overlapping": pl.Int64,
-                "strand": pl.Int64,
-                "type_sim": pl.Float64,
+                "strand": pl.Int8,
+                "type_sim": pl.Float32,
                 "comparison": pl.Utf8,
             },
         )
@@ -296,36 +314,136 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
     return features
 
 
-def polars_preprocessing(transcripts, nearby_distance=1000, label=None):
+def _spill_chromosome_features(transcripts, tmpdir, nearby_distance):
+    """
+    Run polars_work_function per chromosome, writing each chromosome's feature
+    frame to its own parquet file under ``tmpdir``.
+
+    Returns the list of written file paths. Only one chromosome's results are
+    held in memory at a time -- the rest live on disk -- so peak RAM during the
+    compute loop is bounded by the largest single chromosome rather than the
+    whole genome.
+    """
     chromosomes = sorted(transcripts["chromosome"].unique().to_list())
-    all_features = []
+    paths = []
 
     for chrom in (pbar := tqdm(chromosomes[::-1])):
         chrom_transcripts = transcripts.filter(pl.col("chromosome") == chrom)
         pbar.set_description(
-            f"Processing chromosome {chrom} ({len(chrom_transcripts)} transcripts)"
+            f"Processing chromosome {chrom} ({chrom_transcripts.height} transcripts)"
         )
 
         # Skip if too few transcripts to compare
-        if len(chrom_transcripts) < 2:
+        if chrom_transcripts.height < 2:
             continue
 
         features = polars_work_function(chrom_transcripts, nearby_distance)
-        if features is not None and len(features) > 0:
-            all_features.append(features)
+        if features is not None and features.height > 0:
+            path = tmpdir / f"chrom_{len(paths):05d}.parquet"
+            features.write_parquet(path)
+            paths.append(path)
+        ## Drop references so the chromosome's frames can be freed before the
+        ## next (potentially large) chromosome is processed.
+        del features, chrom_transcripts
 
-    if all_features:
-        all_features_df = pl.concat(all_features).rechunk()
+    return paths
+
+
+def polars_preprocessing(transcripts, nearby_distance=1000, label=None):
+    """
+    Build the full feature table in memory.
+
+    Each chromosome is processed independently and spilled to a temporary
+    parquet file, then the per-chromosome files are read back and concatenated.
+    This bounds peak memory during the compute loop to roughly the largest
+    single chromosome; only the final concatenated frame is held in full.
+
+    For the production path prefer ``sink_preprocessing``, which streams the
+    result straight to disk and never materialises the whole table.
+    """
+    with tempfile.TemporaryDirectory(prefix="gene_preproc_") as tmp:
+        paths = _spill_chromosome_features(transcripts, Path(tmp), nearby_distance)
+
+        if not paths:
+            features = empty_features.clone()
+        else:
+            features = pl.read_parquet([str(p) for p in paths]).rechunk()
+
         if label is not None:
-            all_features_df = all_features_df.with_columns(pl.lit(label).alias("label"))
-        return all_features_df
+            features = features.with_columns(pl.lit(label).alias("label"))
 
-    return empty_features.clone()
+        return features
+
+
+def sink_preprocessing(transcripts, output_path, nearby_distance=1000, label=None):
+    """
+    Like ``polars_preprocessing`` but stream the result straight to
+    ``output_path`` (a parquet file) instead of returning it, keeping peak
+    memory bounded by a single chromosome. Returns the number of feature rows
+    written.
+
+    The per-chromosome files are combined with a lazy scan + sink, so the full
+    table is never materialised in memory. The combine is a plain vertical
+    concatenation of scalar columns, so unlike the per-chromosome join it does
+    not hit the streaming-engine list-column bug.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.TemporaryDirectory(prefix="gene_preproc_") as tmp:
+        paths = _spill_chromosome_features(transcripts, Path(tmp), nearby_distance)
+
+        if not paths:
+            out = empty_features.clone()
+            if label is not None:
+                out = out.with_columns(pl.lit(label).alias("label"))
+            out.write_parquet(output_path)
+            return 0
+
+        lazy = pl.scan_parquet([str(p) for p in paths])
+        if label is not None:
+            lazy = lazy.with_columns(pl.lit(label).alias("label"))
+        lazy.sink_parquet(output_path)
+
+    ## Row count without reading the data back into memory.
+    return pl.scan_parquet(output_path).select(pl.len()).collect().item()
 
 
 def polars_work_function(transcripts, nearby_distance=1000):
+    ## A stable index in region_start order. This both defines the (a, b)
+    ## orientation used below (idx < idx_right keeps only one of each pair) and
+    ## gives a cheap key to look exon lists back up by after the join.
     df = transcripts.with_row_index("idx").sort("region_start")
-    ## Minimize memory use by ignoring unneeded columns
+
+    ## Precompute the 5' exon coordinates per transcript *before* the join. The
+    ## 5' end is the first exon on the + strand and the last exon on the -
+    ## strand. Doing it here means the join only has to carry these two scalars
+    ## instead of the full exon_start/exon_stop list columns, which would
+    ## otherwise be duplicated onto every candidate pair -- the dominant memory
+    ## cost of this function.
+    df = df.with_columns(
+        [
+            pl.when(pl.col("strand") == 1)
+            .then(pl.col("exon_start").list.first())
+            .otherwise(pl.col("exon_start").list.last())
+            .alias("fivep_start"),
+            pl.when(pl.col("strand") == 1)
+            .then(pl.col("exon_stop").list.first())
+            .otherwise(pl.col("exon_stop").list.last())
+            .alias("fivep_stop"),
+        ]
+    )
+
+    ## The full exon lists are only needed for the exon-overlap count. Build a
+    ## single idx -> [(start, stop), ...] lookup (O(transcripts)) so we can index
+    ## it by the pair indices later, instead of materialising the list columns
+    ## once per pair (O(pairs)).
+    exon_lookup = {
+        row["idx"]: list(zip(row["exon_start"], row["exon_stop"]))
+        for row in df.select(["idx", "exon_start", "exon_stop"]).iter_rows(named=True)
+    }
+
+    ## Slim, all-scalar columns for the join: no list columns cross it.
     join_cols = [
         "idx",
         "region_start",
@@ -334,8 +452,8 @@ def polars_work_function(transcripts, nearby_distance=1000):
         "strand",
         "region_name",
         "so_type",
-        "exon_start",
-        "exon_stop",
+        "fivep_start",
+        "fivep_stop",
     ]
     df_slim = df.select(join_cols).lazy()
 
@@ -352,12 +470,65 @@ def polars_work_function(transcripts, nearby_distance=1000):
             <= nearby_distance,
             suffix="_right",
         )
+        ## strand_sim is always 1 here (the join requires strand == strand_right)
+        ## but is computed the same way the row-wise reference does, for parity.
         .with_columns(
             (pl.col("strand") == pl.col("strand_right"))
             .cast(pl.Int8)
             .alias("strand_sim")
         )
-        .collect(streaming=True, engine="in-memory")
+        ## 5' exon overlap and distance-to-agreement, entirely from the scalar
+        ## 5' coordinates. distance_to_agreement is just the absolute difference
+        ## of the (start, stop) pair, so it is expressed inline rather than
+        ## round-tripping the coordinates out to the Rust helper.
+        .with_columns(
+            [
+                pl.min_horizontal("fivep_start", "fivep_stop").alias("_a_start"),
+                pl.max_horizontal("fivep_start", "fivep_stop").alias("_a_end"),
+                pl.min_horizontal("fivep_start_right", "fivep_stop_right").alias(
+                    "_b_start"
+                ),
+                pl.max_horizontal("fivep_start_right", "fivep_stop_right").alias(
+                    "_b_end"
+                ),
+                (pl.col("fivep_start") - pl.col("fivep_start_right"))
+                .abs()
+                .alias("5p_exon_dta"),
+                (pl.col("fivep_stop") - pl.col("fivep_stop_right"))
+                .abs()
+                .alias("5p_exon_3p_dta"),
+            ]
+        )
+        .with_columns(
+            [
+                (pl.col("_a_end") - pl.col("_a_start")).alias("_len_a"),
+                (pl.col("_b_end") - pl.col("_b_start")).alias("_len_b"),
+                (
+                    pl.min_horizontal("_a_end", "_b_end")
+                    - pl.max_horizontal("_a_start", "_b_start")
+                )
+                .clip(lower_bound=0)
+                .alias("_overlap_len"),
+            ]
+        )
+        .with_columns(
+            pl.when((pl.col("_len_a") == 0) | (pl.col("_len_b") == 0))
+            .then(0.0)
+            .otherwise(
+                pl.min_horizontal(
+                    pl.col("_overlap_len") / pl.col("_len_a"),
+                    pl.col("_overlap_len") / pl.col("_len_b"),
+                )
+            )
+            .alias("5p_exon_overlap")
+        )
+        .select(pl.exclude("^_.*$"))
+        # NB: the in-memory engine, not streaming. Polars' streaming engine
+        # panics on join_where with "assertion failed: chunks.len() == 1" in
+        # series/builder.rs. Work is already chunked per-chromosome by
+        # polars_preprocessing, so peak memory is bounded, and the join output
+        # is now all-scalar (no list columns).
+        .collect(engine="in-memory")
     )
 
     ## Calculate type similarity
@@ -377,115 +548,11 @@ def polars_work_function(transcripts, nearby_distance=1000):
         .alias("type_sim")
     )
 
-    ## This replaces the five_prime_overlap = exon_overlap_tup(exon_5p_a, exon_5p_b) call
-    pairs = (
-        pairs.with_columns(
-            [
-                # Extract 5' exon coordinates based on strand
-                pl.when(pl.col("strand") == 1)
-                .then(pl.col("exon_start").list.first())
-                .otherwise(pl.col("exon_start").list.last())
-                .alias("_5p_start_a"),
-                pl.when(pl.col("strand") == 1)
-                .then(pl.col("exon_stop").list.first())
-                .otherwise(pl.col("exon_stop").list.last())
-                .alias("_5p_stop_a"),
-                pl.when(pl.col("strand_right") == 1)
-                .then(pl.col("exon_start_right").list.first())
-                .otherwise(pl.col("exon_start_right").list.last())
-                .alias("_5p_start_b"),
-                pl.when(pl.col("strand_right") == 1)
-                .then(pl.col("exon_stop_right").list.first())
-                .otherwise(pl.col("exon_stop_right").list.last())
-                .alias("_5p_stop_b"),
-            ]
-        )
-        .with_columns(
-            [
-                # Normalize coordinates
-                pl.min_horizontal("_5p_start_a", "_5p_stop_a").alias("_a_start"),
-                pl.max_horizontal("_5p_start_a", "_5p_stop_a").alias("_a_end"),
-                pl.min_horizontal("_5p_start_b", "_5p_stop_b").alias("_b_start"),
-                pl.max_horizontal("_5p_start_b", "_5p_stop_b").alias("_b_end"),
-            ]
-        )
-        .with_columns(
-            [
-                (pl.col("_a_end") - pl.col("_a_start")).alias("_len_a"),
-                (pl.col("_b_end") - pl.col("_b_start")).alias("_len_b"),
-                pl.max_horizontal("_a_start", "_b_start").alias("_overlap_start"),
-                pl.min_horizontal("_a_end", "_b_end").alias("_overlap_end"),
-            ]
-        )
-        .with_columns(
-            [
-                (pl.col("_overlap_end") - pl.col("_overlap_start"))
-                .clip(lower_bound=0)
-                .alias("_overlap_len"),
-            ]
-        )
-        .with_columns(
-            [
-                pl.when((pl.col("_len_a") == 0) | (pl.col("_len_b") == 0))
-                .then(0.0)
-                .otherwise(
-                    pl.min_horizontal(
-                        pl.col("_overlap_len") / pl.col("_len_a"),
-                        pl.col("_overlap_len") / pl.col("_len_b"),
-                    )
-                )
-                .alias("5p_exon_overlap"),
-            ]
-        )
-    ).select(pl.exclude("_*"))
-
-    ## Prepare to calculate other metrics - generate some needed prefeatures
-    pairs = pairs.with_columns(
-        [
-            # Extract 5' exon coordinates based on strand
-            pl.when(pl.col("strand") == 1)
-            .then(pl.col("exon_start").list.first())
-            .otherwise(pl.col("exon_start").list.last())
-            .alias("_5p_start_a"),
-            pl.when(pl.col("strand") == 1)
-            .then(pl.col("exon_stop").list.first())
-            .otherwise(pl.col("exon_stop").list.last())
-            .alias("_5p_stop_a"),
-            pl.when(pl.col("strand_right") == 1)
-            .then(pl.col("exon_start_right").list.first())
-            .otherwise(pl.col("exon_start_right").list.last())
-            .alias("_5p_start_b"),
-            pl.when(pl.col("strand_right") == 1)
-            .then(pl.col("exon_stop_right").list.first())
-            .otherwise(pl.col("exon_stop_right").list.last())
-            .alias("_5p_stop_b"),
-        ]
-    )
-
-    exon_5p_a = list(zip(pairs["_5p_start_a"].to_list(), pairs["_5p_stop_a"].to_list()))
-    exon_5p_b = list(zip(pairs["_5p_start_b"].to_list(), pairs["_5p_stop_b"].to_list()))
-
-    # Step 3: Compute distance to agreement (Rust, batched)
-    dta, dta_3p = gpp.distance_to_agreement_batch(exon_5p_a, exon_5p_b)
-    pairs = pairs.with_columns(
-        [
-            pl.Series("5p_exon_dta", dta),
-            pl.Series("5p_exon_3p_dta", dta_3p),
-        ]
-    )
-
-    exons_a = [
-        list(zip(starts, stops))
-        for starts, stops in zip(
-            pairs["exon_start"].to_list(), pairs["exon_stop"].to_list()
-        )
-    ]
-    exons_b = [
-        list(zip(starts, stops))
-        for starts, stops in zip(
-            pairs["exon_start_right"].to_list(), pairs["exon_stop_right"].to_list()
-        )
-    ]
+    ## Exon-overlap count (Rust, batched). Look the exon lists up by the pair
+    ## indices so each transcript's exons are materialised once, not once per
+    ## pair it appears in.
+    exons_a = [exon_lookup[i] for i in pairs["idx"].to_list()]
+    exons_b = [exon_lookup[i] for i in pairs["idx_right"].to_list()]
     exon_counts = gpp.count_overlap_batch(exons_a, exons_b, 0.9)
     pairs = pairs.with_columns(pl.Series("exons_overlapping", exon_counts))
 
