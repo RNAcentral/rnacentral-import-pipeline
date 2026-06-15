@@ -164,6 +164,7 @@ process store_genes {
 
   tag { taxid }
   maxForks 1
+  memory '8 GB'
 
   input:
     tuple val(taxid), path(merged)
