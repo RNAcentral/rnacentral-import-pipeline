@@ -357,7 +357,7 @@ def polars_work_function(transcripts, nearby_distance=1000):
             .cast(pl.Int8)
             .alias("strand_sim")
         )
-        .collect(streaming=True)
+        .collect(engine="in-memory")
     )
 
     ## Calculate type similarity
