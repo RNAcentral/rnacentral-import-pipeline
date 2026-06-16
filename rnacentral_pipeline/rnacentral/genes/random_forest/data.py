@@ -17,6 +17,7 @@ import io
 import multiprocessing as mp
 import random
 import re
+import traceback
 import uuid
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import lru_cache
@@ -1008,14 +1009,24 @@ def process_group(group_data, db_str, progress_queue=None):
     gene_name = group_key
 
     try:
-        descriptions = get_accessions(
-            group_df.get_column("urs_taxid").unique().to_list(), db_str
-        )
-        cm_hits = get_cm_hits(
-            group_df.get_column("urs_taxid").unique().to_list(), db_str
-        )
+        urs_taxids = group_df.get_column("urs_taxid").unique().to_list()
+        descriptions = get_accessions(urs_taxids, db_str)
+        if descriptions is None:
+            # get_accessions swallows DB errors and returns None; treat that as
+            # a hard failure for this gene rather than blowing up on .vstack.
+            raise RuntimeError(
+                f"get_accessions returned None for {gene_name} "
+                f"(members={urs_taxids}); see 'error getting accessions' above"
+            )
+        cm_hits = get_cm_hits(urs_taxids, db_str)
         cm_hits = cm_hits.with_columns(pl.col("cm_overlap").fill_null(0.0))
         descriptions = descriptions.vstack(cm_hits)
+        if descriptions.is_empty():
+            # No active accessions and no CM hits for any member, so there is
+            # nothing to score. Skip rather than emitting a null rna_type.
+            raise RuntimeError(
+                f"no descriptions or CM hits for {gene_name} (members={urs_taxids})"
+            )
         descriptions_with_scores = descriptions.with_columns(
             desc_score=pl.struct(
                 pl.col("database"), pl.col("description")
@@ -1057,10 +1068,15 @@ def process_group(group_data, db_str, progress_queue=None):
         return result
 
     except Exception as e:
-        print(f"Error processing {gene_name}: {e}")
+        # Surface the real cause: a bare repr (e.g. an empty IndexError) is
+        # useless, so log the full traceback. The sentinel carries an explicit
+        # rna_type=None so get_metadata can filter it out before it ever
+        # reaches the NOT NULL so_rna_type column.
+        print(f"Error processing {gene_name}: {e!r}")
+        print(traceback.format_exc())
         if progress_queue:
             progress_queue.put(1)
-        return {"name": gene_name, "description": "ERROR"}
+        return {"name": gene_name, "description": "ERROR", "rna_type": None}
 
 
 def remove_species_mention(description, species_name=None, common_name=None):
@@ -1148,6 +1164,22 @@ def get_metadata(final_genes, db_str):
                 print(f"Error processing chunk: {e}")
 
     metadata = pl.DataFrame(results)
+
+    # Drop genes whose metadata could not be computed (see process_group). They
+    # carry rna_type=None, which would violate the NOT NULL so_rna_type column.
+    # The full traceback for each was already logged above; here we just report
+    # the count and the affected gene names so they don't crash store_metadata.
+    if "rna_type" not in metadata.columns:
+        metadata = metadata.with_columns(rna_type=pl.lit(None, dtype=pl.Utf8))
+    failed = metadata.filter(pl.col("rna_type").is_null())
+    if not failed.is_empty():
+        failed_names = failed.get_column("name").to_list()
+        print(
+            f"Dropping {failed.height} gene(s) with no computable metadata: "
+            f"{failed_names}"
+        )
+        metadata = metadata.filter(pl.col("rna_type").is_not_null())
+
     metadata = metadata.with_columns(
         short_description=pl.col("description")
         .map_elements(remove_species_mention, return_dtype=pl.Utf8)
