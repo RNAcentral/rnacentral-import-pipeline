@@ -143,6 +143,22 @@ type_scores = {
 
 so_graph = obo.read_obo(SO_ONTOLOGY_URL)
 
+# Generic "ncRNA" SO term. Any SO id we can't find in the loaded ontology
+# (renamed/removed across SO releases, or never present) gets short-circuited
+# to this so we degrade to crappy-but-valid typing instead of erroring out.
+GENERIC_NCRNA = "SO:0000655"
+
+
+def normalize_so_type(so_type):
+    """Map an SO id to itself if it exists in the ontology, else GENERIC_NCRNA.
+
+    None and any id that is not a node in so_graph collapse to the generic
+    ncRNA term, which is guaranteed to be present.
+    """
+    if so_type is not None and so_type in so_graph:
+        return so_type
+    return GENERIC_NCRNA
+
 
 @lru_cache()
 def get_stable_prefix(taxid, conn_str):
@@ -978,11 +994,12 @@ def get_cm_hits(urs_taxids, db_str):
 
 
 def calculate_type_specificity(so_type):
-    if so_type is None:
-        return -1000
+    # Unknown/missing SO ids are short-circuited to the generic ncRNA term
+    # rather than blowing up (NodeNotFound) or being heavily penalised.
+    so_type = normalize_so_type(so_type)
     try:
         return nx.shortest_path_length(so_graph, so_type, "SO:0000673")
-    except nx.NetworkXNoPath:
+    except (nx.NetworkXNoPath, nx.NodeNotFound):
         return -1000
 
 
@@ -1055,6 +1072,10 @@ def process_group(group_data, db_str, progress_queue=None):
             .get_column("rna_type")
             .to_list()[0]
         )
+        # Guarantee the stored so_rna_type is a real ontology term: a missing or
+        # unknown SO id collapses to the generic ncRNA type instead of erroring
+        # downstream (and avoids ever emitting a null into the NOT NULL column).
+        best_type = normalize_so_type(best_type)
 
         result = {
             "name": gene_name,
@@ -1163,7 +1184,19 @@ def get_metadata(final_genes, db_str):
             except Exception as e:
                 print(f"Error processing chunk: {e}")
 
-    metadata = pl.DataFrame(results)
+    # Pin the schema explicitly: every result dict has these three string keys,
+    # but rna_type (and description, via the error sentinel) is frequently None.
+    # With the default infer_schema_length polars can infer rna_type as Null
+    # from an all-None prefix and then fail to append a real SO id like
+    # "SO:0000651". An explicit Utf8 schema makes construction order-independent.
+    metadata = pl.DataFrame(
+        results,
+        schema={
+            "name": pl.Utf8,
+            "description": pl.Utf8,
+            "rna_type": pl.Utf8,
+        },
+    )
 
     # Drop genes whose metadata could not be computed (see process_group). They
     # carry rna_type=None, which would violate the NOT NULL so_rna_type column.
