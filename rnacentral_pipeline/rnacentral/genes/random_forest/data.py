@@ -1227,6 +1227,9 @@ def store_metadata(metadata, db_str):
 
     metadata = pl.read_json(metadata)
 
+    if metadata.schema["name"] == pl.List(pl.Utf8):
+        metadata = metadata.with_columns(pl.col("name").list.first())
+
     buffer = io.StringIO()
     for name in metadata.get_column("name").to_list():
         buffer.write(f"{name}\n")
