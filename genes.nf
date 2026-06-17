@@ -166,7 +166,8 @@ process store_genes {
 
   tag { taxid }
   maxForks 1
-  memory '8 GB'
+  memory { 16.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
   input:
     tuple val(taxid), path(merged)
