@@ -1225,7 +1225,7 @@ def store_metadata(metadata, db_str):
     conn = pg.connect(db_str)
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    metadata = pl.read_json(metadata).with_columns(pl.col("name").list.first())
+    metadata = pl.read_json(metadata)
 
     buffer = io.StringIO()
     for name in metadata.get_column("name").to_list():
