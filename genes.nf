@@ -105,6 +105,7 @@ process classify_transcripts {
 process fetch_previous_genes {
   maxForks 15
   tag { taxid }
+  memory '8 GB'
 
   input:
     tuple val(taxid), path(this_release)
