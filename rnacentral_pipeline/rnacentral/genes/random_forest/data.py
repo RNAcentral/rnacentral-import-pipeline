@@ -1023,7 +1023,7 @@ def process_chunk(chunk, db_str):
 def process_group(group_data, db_str, progress_queue=None):
     """Process a single group - extracted from your original loop"""
     group_key, group_df = group_data
-    gene_name = group_key
+    gene_name = group_key[0] if isinstance(group_key, (tuple, list)) else group_key
 
     try:
         urs_taxids = group_df.get_column("urs_taxid").unique().to_list()
