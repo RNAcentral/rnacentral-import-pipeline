@@ -86,6 +86,7 @@ process preprocess_transcripts {
 process classify_transcripts {
   memory { 64.GB * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 4
   tag { taxid }
 
   input:
