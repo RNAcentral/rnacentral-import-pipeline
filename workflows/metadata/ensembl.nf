@@ -1,5 +1,6 @@
 process assemblies {
-  when: { params.databases.ensembl?.vertebrates?.run }
+  when:
+  params.databases.ensembl?.vertebrates?.run
 
   input:
   path(connections)
