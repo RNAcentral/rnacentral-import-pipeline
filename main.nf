@@ -13,8 +13,8 @@ for (item in params.databases) {
   def db = item.value;
   def will_run = db.get('run', false);
   if (item.key == 'ensembl') {
-    def ensembl_will_run = ['vertebrates', 'plants', 'fungi', 'protsists', 'metazoa'].any {
-      db[it].get('run', false)
+    def ensembl_will_run = ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any {
+      db[it]?.get('run', false)
     }
     will_run = ensembl_will_run
     if (ensembl_will_run) {
@@ -39,7 +39,8 @@ include { analyze } from './analyze'
 include { export } from './export'
 
 workflow {
-  import_data \
+  Channel.of('ready') \
+  | import_data \
   | ifEmpty('no import') \
   | analyze \
   | ifEmpty('no analysis') \
