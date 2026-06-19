@@ -2,7 +2,7 @@ process fetch {
   output:
   path('*.gbff')
 
-  when: { params.databases.refseq.run }
+  when: { params.databases.refseq?.run }
 
   script:
   """

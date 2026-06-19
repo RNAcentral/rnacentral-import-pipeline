@@ -4,7 +4,7 @@ process mgnify_fetch {
   output:
     path('*.json')
 
-  when: { params.databases.mgnify.run }
+  when: { params.databases.mgnify?.run }
 
   script:
   """
@@ -30,7 +30,7 @@ process mgnify_parse {
 workflow mgnify {
   emit: data
   main:
-    if ( params.databases.mgnify.run ) {
+    if ( params.databases.mgnify?.run ) {
       mgnify_fetch | flatten | mgnify_parse | set { data }
     }
     else {

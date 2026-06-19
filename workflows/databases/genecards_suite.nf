@@ -9,7 +9,7 @@ process fetch {
   output:
   tuple val(name), path('data.tsv'), val(column_name)
 
-  when: { params.databases[name].run }
+  when: { params.databases[name]?.run }
 
   script:
   if (data.getExtension() == "gz")
@@ -47,7 +47,7 @@ workflow genecards_suite {
       ['genecards', params.databases.genecards.remote, params.databases.genecards.column],
       ['malacards', params.databases.malacards.remote, params.databases.malacards.column],
     ]) \
-    | filter { name, r, c -> params.databases[name].run } \
+    | filter { name, r, c -> params.databases[name]?.run } \
     | fetch \
     | process \
     | set { data }

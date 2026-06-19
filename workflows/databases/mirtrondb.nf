@@ -5,7 +5,7 @@ process fetch {
   output:
   path('all.tsv')
 
-  when: { params.databases.mirtrondb.run }
+  when: { params.databases.mirtrondb?.run }
 
   script:
   """

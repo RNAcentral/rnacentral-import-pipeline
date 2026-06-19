@@ -5,7 +5,7 @@ process quickgo_get {
   output:
   path('data.gpa')
 
-  when: { params.databases.quickgo.run }
+  when: { params.databases.quickgo?.run }
 
   script:
   """
@@ -38,7 +38,7 @@ workflow quickgo {
   emit: data
 
   main:
-    if ( params.databases.quickgo.run ) {
+    if ( params.databases.quickgo?.run ) {
       quickgo_get | quickgo_parse | set { data }
     }
     else {

@@ -1,5 +1,5 @@
 process pombase {
-  when: { params.databases.pombase.run }
+  when: { params.databases.pombase?.run }
 
   output:
   path('*.csv')

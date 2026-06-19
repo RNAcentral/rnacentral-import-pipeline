@@ -2,7 +2,7 @@ process snodb {
   output:
   path('*.csv')
 
-  when: { params.databases.snodb.run }
+  when: { params.databases.snodb?.run }
 
   script:
   """

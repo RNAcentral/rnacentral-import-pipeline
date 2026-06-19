@@ -4,7 +4,7 @@ process fetch_data {
   output:
   path("data")
 
-  when: { params.databases.plncdb.run }
+  when: { params.databases.plncdb?.run }
 
   script:
   """
@@ -25,7 +25,7 @@ process parse_data {
   output:
   path('*.csv')
 
-  when: { params.databases.plncdb.run }
+  when: { params.databases.plncdb?.run }
 
   script:
   """
@@ -38,7 +38,7 @@ workflow plncdb {
   emit: data_files
 
   main:
-  if( params.databases.plncdb.run ) {
+  if( params.databases.plncdb?.run ) {
     Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
     | parse_data \
     | flatten

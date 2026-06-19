@@ -1,5 +1,5 @@
 process flybase {
-  when: { params.databases.flybase.run }
+  when: { params.databases.flybase?.run }
 
   output:
   path('*.csv')

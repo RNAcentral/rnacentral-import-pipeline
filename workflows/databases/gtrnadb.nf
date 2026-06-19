@@ -5,7 +5,7 @@ process fetch_data {
   output:
   path('*.json')
 
-  when: { params.databases.gtrnadb.run }
+  when: { params.databases.gtrnadb?.run }
 
   script:
   """

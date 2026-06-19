@@ -2,7 +2,7 @@ process intact {
   output:
   path('*.csv')
 
-  when: { params.databases.intact.run }
+  when: { params.databases.intact?.run }
 
   script:
   """

@@ -1,5 +1,5 @@
 process psicquic {
-  when: { params.databases.psicquic.run }
+  when: { params.databases.psicquic?.run }
 
   output:
   path("*.csv")

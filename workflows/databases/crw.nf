@@ -5,7 +5,7 @@ process fetch_and_process {
   output:
   path('*.csv')
 
-  when: { params.databases.crw.run }
+  when: { params.databases.crw?.run }
 
   script:
   """

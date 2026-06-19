@@ -62,7 +62,12 @@ workflow parse_databases {
   emit: data
   main:
 
-    build_context | set { context }
+    if (params.get('needs_taxonomy', false)) {
+      build_context | set { context }
+    }
+    else {
+      Channel.empty() | set { context }
+    }
 
     Channel.empty() \
     | mix(

@@ -2,7 +2,7 @@ process fetch {
   output:
   path('*.rnac')
 
-  when: { params.databases.silva.run }
+  when: { params.databases.silva?.run }
 
   script:
   """

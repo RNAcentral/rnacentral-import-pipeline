@@ -5,7 +5,7 @@ process fetch {
   output:
   path('modomics.json')
 
-  when: { params.databases.modomics.run }
+  when: { params.databases.modomics?.run }
 
   script:
   """

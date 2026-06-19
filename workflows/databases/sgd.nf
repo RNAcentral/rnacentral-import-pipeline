@@ -1,5 +1,5 @@
 process sgd {
-  when: { params.databases.sgd.run }
+  when: { params.databases.sgd?.run }
 
   output:
   path('*.csv')

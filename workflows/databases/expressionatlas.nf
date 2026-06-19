@@ -39,7 +39,7 @@ process synchronize_cache {
   output:
     val('cache synchronized')
 
-  when: { params.databases.expressionatlas.run }
+  when: { params.databases.expressionatlas?.run }
 
   script:
   """
@@ -116,7 +116,7 @@ workflow expressionatlas {
   emit: data
   main:
 
-  if( params.databases.expressionatlas.run ) {
+  if( params.databases.expressionatlas?.run ) {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
     Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
     Channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
