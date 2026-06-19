@@ -52,12 +52,17 @@ workflow lookup_ref_ids {
   take: ref_ids
 
   main:
-    ref_ids \
-    | collect \
-    | merge_and_split_all_publications \
-    | flatten \
-    | combine(fetch_publications()) \
-    | lookup_publications \
-    | set { publications }
+    if (params.get('needs_publications', false)) {
+      ref_ids \
+      | collect \
+      | merge_and_split_all_publications \
+      | flatten \
+      | combine(fetch_publications()) \
+      | lookup_publications \
+      | set { publications }
+    } else {
+      Channel.empty() | set { publications }
+    }
+
   emit: publications
 }
