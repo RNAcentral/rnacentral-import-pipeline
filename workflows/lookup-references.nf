@@ -27,8 +27,8 @@ process fetch_publications {
 
   script:
   """
-  cp /nfs/ftp/public/databases/pmc/PMCLiteMetadata/PMCLiteMetadata.tgz .
-  tar xvf PMCLiteMetadata.tgz
+  cp /nfs/ftp/public/databases/pmc/PMCOALiteMetadata/PMCOALiteMetadata.tgz .
+  tar xvf PMCOALiteMetadata.tgz
   """
 }
 
