@@ -5,6 +5,8 @@ nextflow.enable.dsl=2
 create_memory = params.export.sequence_search.create_fasta.memory_table
 
 process find_db_to_export {
+  when: { params.export?.sequence_search?.run }
+
   input:
   path(query)
 

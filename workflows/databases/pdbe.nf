@@ -5,7 +5,7 @@ process pdbe {
   output:
   path('*.csv')
 
-  when: { params.databases.pdbe?.run }
+  when: { params.databases.pdb?.run }
 
   script:
   """

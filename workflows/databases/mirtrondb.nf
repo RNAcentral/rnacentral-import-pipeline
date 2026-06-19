@@ -20,6 +20,8 @@ process parse {
   output:
   path('*.csv')
 
+  when: { params.databases.mirtrondb?.run }
+
   script:
   """
   rnac mirtrondb parse $data .

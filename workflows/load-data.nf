@@ -42,6 +42,8 @@ process release {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory  4.GB
 
+  when: { params.get('should_release', false) }
+
   input:
   path(pre_sql)
   path(post_sql)

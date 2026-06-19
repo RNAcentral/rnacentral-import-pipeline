@@ -20,6 +20,8 @@ process parse {
   output:
   path('*.csv')
 
+  when: { params.databases.modomics?.run }
+
   script:
   """
   rnac modomics parse $data .

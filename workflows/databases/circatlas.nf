@@ -22,6 +22,8 @@ process parse {
   output:
   path('*.csv')
 
+  when: { params.databases.circatlas?.run }
+
   script:
   """
   rnac circatlas parse $data .

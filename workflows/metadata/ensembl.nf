@@ -1,4 +1,6 @@
 process assemblies {
+  when: { params.databases.ensembl?.vertebrates?.run }
+
   input:
   path(connections)
   path(query)
@@ -15,6 +17,8 @@ process assemblies {
 }
 
 process fetch_compara {
+  when: { params.databases.ensembl?.vertebrates?.run }
+
   errorStrategy 'retry'
   maxRetries 10
 
@@ -44,6 +48,8 @@ process process_compara {
 }
 
 process proteins {
+  when: { params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run }
+
   input:
   path(connections)
   path(query)
@@ -58,6 +64,8 @@ process proteins {
 }
 
 process coordinate_systems {
+  when: { params.databases.ensembl?.vertebrates?.run }
+
   errorStrategy 'retry'
   maxRetries 10
 
@@ -75,6 +83,8 @@ process coordinate_systems {
 }
 
 process karyotypes {
+  when: { params.databases.ensembl?.vertebrates?.run }
+
   errorStrategy 'retry'
   maxRetries 10
 

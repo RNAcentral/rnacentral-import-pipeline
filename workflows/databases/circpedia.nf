@@ -31,6 +31,8 @@ process fetch_fasta {
   output:
   tuple val(species), path(annotation_file), path("${species.fasta}.fa")
 
+  when: { params.databases.circpedia?.run }
+
   script:
   """
   wget --no-check-certificate \

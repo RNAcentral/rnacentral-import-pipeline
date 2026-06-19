@@ -4,7 +4,7 @@ process fetch_data {
   output:
   path("data")
 
-  when: { params.databases.plncdb?.run }
+  when: { !params.databases.plncdb?.prefetch && params.databases.plncdb?.run }
 
   script:
   """

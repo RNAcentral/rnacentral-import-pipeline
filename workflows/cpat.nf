@@ -3,6 +3,8 @@
 nextflow.enable.dsl=2
 
 process find_models {
+  when: { params.cpat?.run }
+
   input:
   val(_flag)
 

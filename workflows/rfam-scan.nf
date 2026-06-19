@@ -1,4 +1,6 @@
 process generate_files {
+  when: { params.rfam?.run }
+
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
