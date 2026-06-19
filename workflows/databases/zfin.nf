@@ -5,6 +5,8 @@ process zfin {
   output:
   path('*.csv')
 
+  when: { params.databases.zfin.run }
+
   script:
   """
   rnac zfin fetch $params.databases.zfin.remote zfin.json

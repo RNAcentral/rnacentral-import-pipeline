@@ -5,6 +5,8 @@ process fetch {
   output:
   path('all.tsv')
 
+  when: { params.databases.mirtrondb.run }
+
   script:
   """
   cp ${params.databases.mirtrondb.remote} all.tsv

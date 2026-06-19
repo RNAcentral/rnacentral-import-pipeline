@@ -5,6 +5,8 @@ process quickgo_get {
   output:
   path('data.gpa')
 
+  when: { params.databases.quickgo.run }
+
   script:
   """
   scp $params.databases.quickgo.remote data.gpa.gz

@@ -4,6 +4,8 @@ process fetch_data {
   output:
   path("data")
 
+  when: { params.databases.plncdb.run }
+
   script:
   """
   rnac plncdb fetch-data $params.databases.plncdb.urls data
@@ -22,6 +24,8 @@ process parse_data {
 
   output:
   path('*.csv')
+
+  when: { params.databases.plncdb.run }
 
   script:
   """

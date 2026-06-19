@@ -9,6 +9,8 @@ process fetch_annotation {
   output:
   tuple val(species), path("${species.annotation}.txt")
 
+  when: { params.databases.circpedia.run }
+
   script:
   """
   wget \

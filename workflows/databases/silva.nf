@@ -2,6 +2,8 @@ process fetch {
   output:
   path('*.rnac')
 
+  when: { params.databases.silva.run }
+
   script:
   """
   wget -e robots=off -nH -r --cut-dirs 3 --no-parent -A "SILVA_*Parc.rnac.gz" $params.databases.silva.remote

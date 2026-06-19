@@ -5,6 +5,8 @@ process fetch_metadata {
   output:
   path('families.tsv')
 
+  when: { params.databases.ensembl._any.run }
+
   script:
   """
   mysql \
@@ -23,6 +25,8 @@ process find_urls {
 
   output:
   path('species.txt')
+
+  when: { params.databases.ensembl[division].run }
 
   script:
     """

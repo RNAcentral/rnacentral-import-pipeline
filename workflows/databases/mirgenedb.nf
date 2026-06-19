@@ -5,6 +5,8 @@ process mirgenedb {
   output:
   path('*.csv')
 
+  when: { params.databases.mirgenedb.run }
+
   script:
   """
   scp $params.databases.mirgenedb.remote mirgenedb.json

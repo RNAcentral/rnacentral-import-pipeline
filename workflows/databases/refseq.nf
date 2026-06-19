@@ -2,6 +2,8 @@ process fetch {
   output:
   path('*.gbff')
 
+  when: { params.databases.refseq.run }
+
   script:
   """
   wget "$params.databases.refseq.remote"

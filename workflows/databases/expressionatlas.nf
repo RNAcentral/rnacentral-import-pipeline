@@ -39,6 +39,8 @@ process synchronize_cache {
   output:
     val('cache synchronized')
 
+  when: { params.databases.expressionatlas.run }
+
   script:
   """
   find `readlink ${experiments_path}`/ -maxdepth 1 -type d ! -readable -o -type d ! -executable | sort -u >> exclude_dirs
