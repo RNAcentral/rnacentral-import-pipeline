@@ -21,6 +21,7 @@ process fetch_publications {
   queue 'datamover'
   memory 8.GB
   container ''
+  containerOptions "${params.common_container} --bind /nfs/ftp/"
 
   output:
   path('out')
