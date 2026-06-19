@@ -68,7 +68,7 @@ process fetch_lookup {
 
     script:
     """
-    psql -f $query \$PGDATABASE > lookup_dump.csv
+    psql -f $query \$PGDATABASE | grep -Ev '^(CREATE TABLE|COPY [0-9]+)\$' > lookup_dump.csv
     """
 }
 

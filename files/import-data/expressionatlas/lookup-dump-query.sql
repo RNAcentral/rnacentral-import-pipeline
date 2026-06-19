@@ -12,7 +12,7 @@ COPY(
     external_id,
     gene_synonym ,
     optional_id,
-    description,
+    rnc_accessions.description,
     seq_version,
     rna_type,
     COALESCE(seq_short, seq_long) as seq
