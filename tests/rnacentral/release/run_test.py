@@ -54,6 +54,17 @@ def test_run_patches_functions_and_checks_once(monkeypatch):
     assert "CREATE OR REPLACE FUNCTION rnc_load_xref.load_xref" in sql_calls[1]
     assert "perform rnc_load_xref.do_checks" not in sql_calls[1]
 
+    # The xref-join functions are patched to add a partition-pruning predicate.
+    pp1 = next(s for s in sql_calls if "FUNCTION rnc_load_xref.populate_pel_tables1" in s)
+    pp2 = next(s for s in sql_calls if "FUNCTION rnc_load_xref.populate_pel_tables2" in s)
+    lumv = next(s for s in sql_calls if "FUNCTION rnc_load_xref.load_upi_max_versions_table" in s)
+    assert "x.dbid = v_dbid" in pp1
+    assert "x.dbid = v_dbid" in pp2
+    assert "PREVIOUS_XREF.DBID = p_in_dbid" in lumv
+
+    # The load_md5_new_sequences index is created to support set_comparable_prot_upi.
+    assert any("load_md5_new_sequences$in_md5" in s for s in sql_calls)
+
     # The per-database load still runs for each release returned by TO_RELEASE.
     assert ("SELECT rnc_update.new_update_release(%s, %s)", (9, 123)) in conn.cursor_obj.calls
 
