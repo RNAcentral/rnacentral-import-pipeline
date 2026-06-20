@@ -306,6 +306,184 @@ $function$;
 """
 
 
+# The xref joins in populate_pel_tables1/2 and load_upi_max_versions_table filter
+# the (LIST-by-dbid partitioned) xref table on dbid as a *join key*, never a
+# constant, so the planner cannot prune and Appends across all ~59 partitions for
+# every outer row. Supplying dbid as a value the planner can prune on collapses
+# this to a single-partition scan (verified: "Subplans Removed: 58").
+#
+# All three additions are logically redundant: load_retro_tmp only ever holds
+# rows for the one database being loaded (load_retro_tmp_table truncates it and
+# inserts p_in_dbid as in_dbid for every row), so they cannot change which rows
+# match -- they only enable partition pruning.
+PATCH_POPULATE_PEL_TABLES1_SQL = """
+CREATE OR REPLACE FUNCTION rnc_load_xref.populate_pel_tables1(v_previous_release bigint)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+DECLARE
+    -- load_retro_tmp is single-dbid, so this is the dbid for the whole table.
+    v_dbid bigint := (SELECT in_dbid FROM load_retro_tmp LIMIT 1);
+BEGIN
+
+with l_data AS
+(
+  select x.dbid, x.created, x.upi, x.version_i, x.timestamp,
+         x.userstamp, x.ac, x.version, case
+           when (x.last < l.in_load_release and x.upi = l.comparable_prot_upi and (x.version = l.in_version or (x.version is null and l.in_version is null))) then l.in_load_release
+           else coalesce(v_previous_release,x.last)
+         end as last, case
+           when (x.last < l.in_load_release and x.upi = l.comparable_prot_upi and (x.version = l.in_version or (x.version is null and l.in_version is null))) then 'N'
+           else 'Y'
+         end as deleted,
+         case
+           when (x.last < l.in_load_release and x.upi = l.comparable_prot_upi and (x.version = l.in_version or (x.version is null and l.in_version is null))) then coalesce(l.in_taxid,x.taxid)
+           else x.taxid
+         end taxid
+  from load_retro_tmp l,
+       xref x
+  where x.ac = l.in_ac
+  and   x.dbid = l.in_dbid
+  and   x.dbid = v_dbid   -- partition pruning hint; redundant (load_retro_tmp is single-dbid)
+  and   l.comparable_prot_upi is not null
+  and   x.deleted = 'N'
+),
+ins1 AS
+(
+  insert into xref_pel_deleted
+  (
+    dbid,
+    created,
+    upi,
+    version_i,
+    timestamp,
+    userstamp,
+    ac,
+    VERSION,
+    last,
+    deleted,
+    taxid
+  )
+  select dbid, created, upi, version_i, timestamp,
+         userstamp, ac, VERSION, last, deleted,
+         taxid
+  from l_data
+  where deleted = 'Y'
+)
+insert into xref_pel_not_deleted
+(
+  dbid,
+  created,
+  upi,
+  version_i,
+  timestamp,
+  userstamp,
+  ac,
+  version,
+  last,
+  deleted,
+  taxid
+)
+select dbid, created, upi, version_i, timestamp,
+       userstamp, ac, version, last, deleted,
+       taxid
+from l_data
+where deleted = 'N';
+
+END;
+$function$;
+"""
+
+PATCH_POPULATE_PEL_TABLES2_SQL = """
+CREATE OR REPLACE FUNCTION rnc_load_xref.populate_pel_tables2()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+DECLARE
+    -- load_retro_tmp is single-dbid, so this is the dbid for the whole table.
+    v_dbid bigint := (SELECT in_dbid FROM load_retro_tmp LIMIT 1);
+BEGIN
+
+  insert into xref_pel_not_deleted
+  (
+    dbid,
+    created,
+    upi,
+    version_i,
+    timestamp,
+    userstamp,
+    ac,
+    version,
+    last,
+    deleted,
+    taxid
+  )
+  select l.in_dbid, l.in_load_release created, l.comparable_prot_upi upi,
+         case
+           when (x.upi != l.comparable_prot_upi) then x.version_i + 1
+           else x.version_i
+         end,
+         clock_timestamp() as "timestamp",
+         user userstamp, l.in_ac ac, l.in_version as "version", l.in_load_release as "last", 'N' deleted,
+         in_taxid taxid
+  from load_retro_tmp l, xref x
+  where x.ac = l.in_ac
+  and   x.dbid = l.in_dbid
+  and   x.dbid = v_dbid   -- partition pruning hint; redundant (load_retro_tmp is single-dbid)
+  and   l.comparable_prot_upi is not null
+  and   not -- this condition differentiates this procedure from populate_pel_tables1
+        (x.last < l.in_load_release and x.upi = l.comparable_prot_upi and (x.version = l.in_version or (x.version is null and l.in_version is null)))
+  and   x.deleted = 'N';
+
+END;
+$function$;
+"""
+
+# Here dbid is already available as the function argument p_in_dbid, and the WHERE
+# already enforces L.IN_DBID = p_in_dbid, so referencing p_in_dbid directly on the
+# xref side is exact -- and gives the planner a value to prune on.
+PATCH_LOAD_UPI_MAX_VERSIONS_SQL = """
+CREATE OR REPLACE FUNCTION rnc_load_xref.load_upi_max_versions_table(p_in_dbid bigint)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+BEGIN
+
+    EXECUTE 'TRUNCATE TABLE load_upi_max_versions';
+
+    INSERT INTO load_upi_max_versions
+      SELECT DISTINCT
+        L.IN_AC,
+        L.IN_DBID,
+        MAX(coalesce(PREVIOUS_XREF.VERSION_I, 0)) MAX_VERSION_I, -- VERSION_I set to 0 at first
+        PREVIOUS_XREF.UPI
+      FROM rnacen.xref previous_xref RIGHT OUTER JOIN load_retro_tmp l ON (PREVIOUS_XREF.DBID = p_in_dbid AND PREVIOUS_XREF.AC = L.IN_AC)
+     WHERE L.COMPARABLE_PROT_UPI IS NOT NULL AND L.IN_DBID = p_in_dbid   -- outer join, left side can be NULL
+     -- outer join, left side can be NULL
+       AND NOT EXISTS (
+            SELECT 1
+            FROM RNACEN.XREF X
+            WHERE X.AC      = L.IN_AC
+            AND X.DBID    = p_in_dbid
+            AND X.DELETED = 'N'
+          )
+      GROUP BY
+        L.IN_AC,
+        L.IN_DBID,
+        PREVIOUS_XREF.UPI;
+
+    --COMMIT;
+
+    execute 'analyze load_upi_max_versions';
+
+  END;
+$function$;
+"""
+
+
 def run(db_url):
     """
     Run the release logic. Each step uses its own connection so a server-side
@@ -313,6 +491,9 @@ def run(db_url):
     """
     _run(db_url, PATCH_XREF_PARTITION_EXCHANGE_SQL, label="patch_xref_partition_exchange", high_mem=True)
     _run(db_url, PATCH_LOAD_XREF_SQL, label="patch_load_xref", high_mem=True)
+    _run(db_url, PATCH_POPULATE_PEL_TABLES1_SQL, label="patch_populate_pel_tables1", high_mem=True)
+    _run(db_url, PATCH_POPULATE_PEL_TABLES2_SQL, label="patch_populate_pel_tables2", high_mem=True)
+    _run(db_url, PATCH_LOAD_UPI_MAX_VERSIONS_SQL, label="patch_load_upi_max_versions", high_mem=True)
     _run(db_url, "SELECT rnc_update.update_rnc_accessions()", label="update_rnc_accessions")
     _run(db_url, "SELECT rnc_update.update_literature_references()", label="update_literature_references")
     _run(db_url, CREATE_INDEX_SQL, label="create_index", high_mem=True)
