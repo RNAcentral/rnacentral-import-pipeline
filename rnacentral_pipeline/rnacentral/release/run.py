@@ -268,12 +268,41 @@ $function$;
 """
 
 
+# do_checks runs `select id, count(*) from xref group by id having count(*) > 1`,
+# a full scan + global aggregate of the *entire* xref table. The deployed
+# load_xref calls it once per database, so a single release re-checks the whole
+# table ~once per loaded database. It is logically a global invariant, so it only
+# needs to run once. This patch removes the per-database call; run() invokes
+# do_checks a single time after the per-database loop instead.
+PATCH_LOAD_XREF_SQL = """
+CREATE OR REPLACE FUNCTION rnc_load_xref.load_xref(p_previous_release bigint, p_in_dbid bigint)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+BEGIN
+    perform rnc_load_xref.prepare_pel_tables();
+    perform rnc_load_xref.populate_pel_tables1(p_previous_release);
+    perform rnc_load_xref.populate_pel_tables2();
+    perform rnc_load_xref.load_upi_max_versions_table(p_in_dbid);
+    perform rnc_load_xref.load_max_versions_table();
+    perform rnc_load_xref.populate_pel_tables3(p_in_dbid);
+    perform rnc_load_xref.populate_pel_tables4(p_in_dbid, p_previous_release);
+    perform rnc_load_xref.do_pel_exchange(p_in_dbid);
+    -- do_checks intentionally NOT called here; run() calls it once after the
+    -- per-database loop (it scans the whole xref table regardless of dbid).
+END;
+$function$;
+"""
+
+
 def run(db_url):
     """
     Run the release logic. Each step uses its own connection so a server-side
     crash on one long-running function doesn't abort the rest.
     """
     _run(db_url, PATCH_XREF_PARTITION_EXCHANGE_SQL, label="patch_xref_partition_exchange", high_mem=True)
+    _run(db_url, PATCH_LOAD_XREF_SQL, label="patch_load_xref", high_mem=True)
     _run(db_url, "SELECT rnc_update.update_rnc_accessions()", label="update_rnc_accessions")
     _run(db_url, "SELECT rnc_update.update_literature_references()", label="update_literature_references")
     _run(db_url, CREATE_INDEX_SQL, label="create_index", high_mem=True)
@@ -288,6 +317,13 @@ def run(db_url):
         LOGGER.info("Executing release %i from database %i", rid, dbid)
         _run(db_url, "SELECT rnc_update.new_update_release(%s, %s)", params=(dbid, rid),
              label=f"new_update_release(dbid={dbid}, rid={rid})")
+
+    # Verify xref primary key uniqueness once, after all databases are loaded,
+    # rather than once per database inside load_xref. The check is global (it
+    # ignores its argument), so a single run covers every partition.
+    if releases:
+        _run(db_url, "SELECT rnc_load_xref.do_checks(NULL::bigint)",
+             label="do_checks (once, post-loop)", high_mem=True)
 
 
 def check(limit_file, db_url, default_allowed_change=0.30):
