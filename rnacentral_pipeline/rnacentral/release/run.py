@@ -50,6 +50,16 @@ CREATE INDEX IF NOT EXISTS load_rnacentral_all$database
 ON rnacen.load_rnacentral_all(database)
 """
 
+# rnc_load_rna.set_comparable_prot_upi runs a correlated subquery that probes
+# load_md5_new_sequences by in_md5 once per load_retro_tmp row. The table has no
+# index, so that is a per-row sequential scan. load_md5_new_sequences is only
+# TRUNCATEd (not dropped) during a load, so a one-time index here survives every
+# per-database iteration.
+LOAD_MD5_INDEX_SQL = """
+CREATE INDEX IF NOT EXISTS load_md5_new_sequences$in_md5
+ON rnacen.load_md5_new_sequences(in_md5)
+"""
+
 TO_RELEASE = """
 SELECT dbid, id
 FROM rnacen.rnc_release
@@ -306,6 +316,7 @@ def run(db_url):
     _run(db_url, "SELECT rnc_update.update_rnc_accessions()", label="update_rnc_accessions")
     _run(db_url, "SELECT rnc_update.update_literature_references()", label="update_literature_references")
     _run(db_url, CREATE_INDEX_SQL, label="create_index", high_mem=True)
+    _run(db_url, LOAD_MD5_INDEX_SQL, label="create_load_md5_index", high_mem=True)
     _run(db_url, "SELECT rnc_update.prepare_releases('F')", label="prepare_releases")
 
     with _connect(db_url) as conn:
