@@ -47,6 +47,7 @@ class TaxonomyEntry(object):
     replaced_by = attr.ib(validator=optional(is_a(int)))
     rank = attr.ib(validator=is_a(str), default="")
     reference_proteome = attr.ib(validator=is_a(bool), default=False)
+    is_deleted = attr.ib(validator=is_a(bool), default=False)
 
     @classmethod
     def build(cls, entry, names, rank="", reference_proteome=False):
@@ -67,6 +68,24 @@ class TaxonomyEntry(object):
             reference_proteome=reference_proteome,
         )
 
+    @classmethod
+    def build_deleted(cls, tax_id):
+        """Build an entry for a taxid that NCBI has deleted (listed in
+        delnodes.dmp). Deleted taxids are stripped from every other dump, so we
+        have no name/lineage for them; we store a sentinel name and flag the row
+        as deleted. The loader preserves any name/lineage we already had for a
+        taxon that was live in a previous release (see 000__taxonomy.sql)."""
+        return cls(
+            tax_id=int(tax_id),
+            name="deleted taxid {}".format(tax_id),
+            lineage="",
+            aliases=[],
+            replaced_by=None,
+            rank="",
+            reference_proteome=False,
+            is_deleted=True,
+        )
+
     def writeable(self):
         yield [
             self.tax_id,
@@ -76,6 +95,7 @@ class TaxonomyEntry(object):
             self.replaced_by,
             self.rank,
             self.reference_proteome,
+            self.is_deleted,
         ]
 
 
@@ -101,6 +121,11 @@ def parse_nodes(handle):
     return {row[0]: row[2] for row in reader}
 
 
+def parse_delnodes(handle):
+    reader = ncbi_reader(handle)
+    return {row[0] for row in reader if row}
+
+
 def parse_ref_proteomes(handle):
     reader = csv.reader(handle, delimiter="\t")
     for _ in range(15):
@@ -108,11 +133,19 @@ def parse_ref_proteomes(handle):
     return {int(row[1]) for row in reader}
 
 
-def parse(handle, names_handle, merged_handle, nodes_handle, ref_proteomes_handle=None):
+def parse(
+    handle,
+    names_handle,
+    merged_handle,
+    nodes_handle,
+    delnodes_handle,
+    ref_proteomes_handle=None,
+):
     lineage = ncbi_reader(handle)
     names = grouped_extra(names_handle)
     merged = grouped_extra(merged_handle, group_idx=1)
     nodes = parse_nodes(nodes_handle)
+    deleted = parse_delnodes(delnodes_handle)
     ref_proteomes = (
         parse_ref_proteomes(ref_proteomes_handle) if ref_proteomes_handle else set()
     )
@@ -130,11 +163,26 @@ def parse(handle, names_handle, merged_handle, nodes_handle, ref_proteomes_handl
             assert int(replaced) == entry.tax_id
             yield attr.evolve(entry, tax_id=int(old_tax_id), replaced_by=entry.tax_id)
 
+    # Taxids NCBI has deleted outright. These are stripped from the other dumps,
+    # so they never appear in the lineage loop above, but RNAcentral may still
+    # hold active accessions stamped with them. Skip any that are somehow still
+    # live nodes as a guard against an inconsistent dump.
+    for del_tax_id in deleted:
+        if del_tax_id in nodes:
+            continue
+        yield TaxonomyEntry.build_deleted(del_tax_id)
+
 
 def parse_directory(
     directory: Path, ref_proteomes_path=None
 ) -> ty.Iterable[TaxonomyEntry]:
-    names = ["fullnamelineage.dmp", "names.dmp", "merged.dmp", "nodes.dmp"]
+    names = [
+        "fullnamelineage.dmp",
+        "names.dmp",
+        "merged.dmp",
+        "nodes.dmp",
+        "delnodes.dmp",
+    ]
     filenames = [os.path.join(directory, name) for name in names]
     with ExitStack() as stack:
         files = [stack.enter_context(open(f)) for f in filenames]

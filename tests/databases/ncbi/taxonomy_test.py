@@ -51,10 +51,28 @@ NAMES_DMP = (
 # --- merged.dmp fixture (empty — no merged taxids) ---
 MERGED_DMP = ""
 
+# --- delnodes.dmp fixture ---
+# Real format: deleted_taxid \t|\n (just a bare id per line). 2 is deleted; 9606
+# is included to check that a still-live node is never emitted as deleted.
+DELNODES_DMP = "2\t|\n" "9606\t|\n"
+
+# --- delnodes.dmp fixture (empty — no deleted taxids) ---
+DELNODES_DMP_EMPTY = ""
+
 
 def test_parse_nodes():
     result = taxonomy.parse_nodes(StringIO(NODES_DMP))
     assert result == {"9606": "species", "10090": "species", "9443": "order"}
+
+
+def test_parse_delnodes():
+    result = taxonomy.parse_delnodes(StringIO(DELNODES_DMP))
+    assert result == {"2", "9606"}
+
+
+def test_parse_delnodes_empty():
+    result = taxonomy.parse_delnodes(StringIO(DELNODES_DMP_EMPTY))
+    assert result == set()
 
 
 def test_parse_ref_proteomes():
@@ -100,6 +118,18 @@ def test_taxonomy_entry_writeable_includes_rank_and_proteome():
     row = rows[0]
     assert row[5] == "species"
     assert row[6] is True
+    assert row[7] is False
+
+
+def test_taxonomy_entry_build_deleted():
+    entry = taxonomy.TaxonomyEntry.build_deleted("2")
+    assert entry.tax_id == 2
+    assert entry.is_deleted is True
+    assert entry.name == "deleted taxid 2"
+    assert entry.lineage == ""
+    assert entry.replaced_by is None
+    row = list(entry.writeable())[0]
+    assert row[7] is True
 
 
 def test_parse_integrates_rank_and_proteome():
@@ -109,6 +139,7 @@ def test_parse_integrates_rank_and_proteome():
             StringIO(NAMES_DMP),
             StringIO(MERGED_DMP),
             StringIO(NODES_DMP),
+            StringIO(DELNODES_DMP_EMPTY),
             ref_proteomes_handle=StringIO(STATS_HEADER + STATS_DATA),
         )
     )
@@ -126,7 +157,29 @@ def test_parse_without_ref_proteomes():
             StringIO(NAMES_DMP),
             StringIO(MERGED_DMP),
             StringIO(NODES_DMP),
+            StringIO(DELNODES_DMP_EMPTY),
         )
     )
     for entry in entries:
         assert entry.reference_proteome is False
+
+
+def test_parse_emits_deleted_taxids():
+    entries = list(
+        taxonomy.parse(
+            StringIO(LINEAGE_DMP),
+            StringIO(NAMES_DMP),
+            StringIO(MERGED_DMP),
+            StringIO(NODES_DMP),
+            StringIO(DELNODES_DMP),
+        )
+    )
+    by_id = {e.tax_id: e for e in entries}
+    # 2 is deleted and should be emitted as a deleted sentinel
+    assert by_id[2].is_deleted is True
+    assert by_id[2].name == "deleted taxid 2"
+    # 9606 is in delnodes but still a live node, so it must keep its real data
+    assert by_id[9606].is_deleted is False
+    assert by_id[9606].name == "Homo sapiens"
+    # live taxa are flagged not-deleted
+    assert by_id[9443].is_deleted is False
