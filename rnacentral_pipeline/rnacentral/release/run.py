@@ -723,6 +723,83 @@ $function$;
 """
 
 
+# rnc_load_rna.store_new_sequences inserts the brand-new sequences into rna with a
+# SELECT DISTINCT over load_retro_tmp JOIN load_md5_new_sequences. The DISTINCT list
+# includes seq_long, so the dedup sort/hash compares (and detoasts) the full long
+# sequence text for every loaded row -- a pure-CPU operation that, on a large load,
+# was observed running >1.5 days having emitted zero rows (the INSERT cannot start
+# until the sort completes). The dedup only needs to collapse to one row per in_md5:
+# load_md5_new_sequences holds exactly one (prot_id, prot_upi) per in_md5, and an
+# md5 only reaches that table when load_md5_stats saw a single distinct sequence for
+# it (CNT_DST_SEQ_SHORT <= 1 AND CNT_DST_SEQ_LONG <= 1), so every load_retro_tmp row
+# sharing an in_md5 carries the same sequence. DISTINCT ON (in_md5) is therefore
+# equivalent on every input for which the original does not already raise a duplicate
+# rna.id, and it sorts on the 32-char md5 instead of the long sequence.
+PATCH_STORE_NEW_SEQUENCES_SQL = """
+CREATE OR REPLACE FUNCTION rnc_load_rna.store_new_sequences()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+BEGIN
+
+    INSERT INTO rna(
+        id,
+        upi,
+        crc64,
+        LEN,
+        seq_short,
+        seq_long,
+        md5,
+        TIMESTAMP,
+        USERSTAMP
+      )
+    SELECT DISTINCT ON (n.in_md5)
+          n.prot_id,
+          n.prot_upi,
+          l.in_crc64,
+          l.in_len,
+          l.in_seq_short,
+          l.in_seq_long,
+          n.in_md5,
+          clock_timestamp(),
+          USER
+    FROM load_md5_new_sequences n
+    JOIN load_retro_tmp l ON l.in_md5 = n.in_md5;
+
+  END;
+$function$;
+"""
+
+
+# rnc_load_rna.set_comparable_prot_upi back-fills comparable_prot_upi for the new
+# sequences using a per-row correlated scalar subquery against load_md5_new_sequences,
+# and rewrites every NULL row (matching or not). in_md5 is unique in
+# load_md5_new_sequences (built grouped by md5), so a join-based UPDATE ... FROM is
+# exactly equivalent -- non-matching rows stay NULL either way -- while replacing the
+# per-row probe with a single hash join and touching only the rows that actually match.
+PATCH_SET_COMPARABLE_PROT_UPI_SQL = """
+CREATE OR REPLACE FUNCTION rnc_load_rna.set_comparable_prot_upi()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+BEGIN
+
+    UPDATE load_retro_tmp l
+       SET comparable_prot_upi = n.prot_upi
+      FROM load_md5_new_sequences n
+     WHERE n.in_md5 = l.in_md5
+       AND l.comparable_prot_upi IS NULL;
+
+    EXECUTE 'create index load_retro_tmp$ac_dbid_upi on load_retro_tmp(in_ac, in_dbid, comparable_prot_upi)';
+    execute 'analyze load_retro_tmp';
+
+  END;
+$function$;
+"""
+
+
 def run(db_url):
     """
     Run the release logic. Each step uses its own connection so a server-side
@@ -734,6 +811,8 @@ def run(db_url):
     _run(db_url, PATCH_POPULATE_PEL_TABLES2_SQL, label="patch_populate_pel_tables2", high_mem=True)
     _run(db_url, PATCH_LOAD_UPI_MAX_VERSIONS_SQL, label="patch_load_upi_max_versions", high_mem=True)
     _run(db_url, PATCH_LOG_RELEASE_END_ATX_SQL, label="patch_log_release_end_atx", high_mem=True)
+    _run(db_url, PATCH_STORE_NEW_SEQUENCES_SQL, label="patch_store_new_sequences", high_mem=True)
+    _run(db_url, PATCH_SET_COMPARABLE_PROT_UPI_SQL, label="patch_set_comparable_prot_upi", high_mem=True)
     _run(db_url, "SELECT rnc_update.update_rnc_accessions()", label="update_rnc_accessions")
     _run(db_url, "SELECT rnc_update.update_literature_references()", label="update_literature_references")
     _run(db_url, CREATE_INDEX_SQL, label="create_index", high_mem=True)
