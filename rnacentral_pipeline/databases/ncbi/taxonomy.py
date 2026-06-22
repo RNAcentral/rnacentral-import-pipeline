@@ -28,6 +28,8 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 from sqlitedict import SqliteDict
 
+from rnacentral_pipeline.databases.helpers import phylogeny as phy
+
 NAME_ALIASES = {
     "common name",
     "equivalent name",
@@ -66,6 +68,30 @@ class TaxonomyEntry(object):
             replaced_by=None,
             rank=rank,
             reference_proteome=reference_proteome,
+        )
+
+    @classmethod
+    def build_from_ena(cls, tax_id):
+        """Build an entry for a taxid by resolving it against the ENA taxonomy
+        service (with the UniProt fallback baked into the phylogeny helper).
+        This is how we recover taxids that RNAcentral references but that are
+        absent from the NCBI taxdump file, because ENA assigns/exposes taxids
+        (especially environmental/uncultured ones) ahead of the taxdump.
+
+        Raises phy.UnknownTaxonId / phy.FailedTaxonId if the taxid cannot be
+        resolved, so callers can fail loudly rather than silently drop it."""
+        data = phy.phylogeny(int(tax_id))
+        name = data["scientificName"]
+        lineage = data.get("lineage") or ""
+        return cls(
+            tax_id=int(tax_id),
+            name=name,
+            lineage="{}{}".format(lineage, name),
+            aliases=[],
+            replaced_by=None,
+            rank=data.get("rank") or "",
+            reference_proteome=False,
+            is_deleted=False,
         )
 
     @classmethod
@@ -196,6 +222,48 @@ def parse_directory(
 def write(directory: Path, output, ref_proteomes_path=None):
     writer = csv.writer(output)
     for entry in parse_directory(directory, ref_proteomes_path=ref_proteomes_path):
+        writer.writerows(entry.writeable())
+
+
+class UnresolvableTaxids(Exception):
+    """Raised when one or more referenced taxids cannot be resolved against
+    ENA/UniProt. Carries every failure so the operator sees the full list in
+    one go rather than one taxid at a time."""
+
+    def __init__(self, failures):
+        self.failures = failures
+        detail = ", ".join("{} ({})".format(tid, reason) for tid, reason in failures)
+        super().__init__(
+            "Could not resolve {} taxid(s) against ENA/UniProt: {}".format(
+                len(failures), detail
+            )
+        )
+
+
+def resolve_missing(taxids) -> ty.List[TaxonomyEntry]:
+    """Resolve an iterable of taxids against ENA. Resolves every taxid before
+    returning anything: if any fail, raises UnresolvableTaxids listing them all
+    and yields no partial result, so a caller never loads a half-filled set."""
+    entries = []
+    failures = []
+    for taxid in taxids:
+        try:
+            entries.append(TaxonomyEntry.build_from_ena(taxid))
+        except (phy.UnknownTaxonId, phy.FailedTaxonId) as err:
+            failures.append((str(taxid), type(err).__name__))
+    if failures:
+        raise UnresolvableTaxids(failures)
+    return entries
+
+
+def write_missing(taxid_handle, output):
+    """Read taxids (one per line) that are missing from rnc_taxonomy, resolve
+    them against ENA, and write rows in the rnc_taxonomy load format. Fails
+    loudly (UnresolvableTaxids) if any taxid cannot be resolved."""
+    taxids = [line.strip() for line in taxid_handle if line.strip()]
+    entries = resolve_missing(taxids)
+    writer = csv.writer(output)
+    for entry in entries:
         writer.writerows(entry.writeable())
 
 

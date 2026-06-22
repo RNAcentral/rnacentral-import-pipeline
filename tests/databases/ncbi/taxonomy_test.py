@@ -15,7 +15,10 @@ limitations under the License.
 
 from io import StringIO
 
+import pytest
+
 from rnacentral_pipeline.databases.ncbi import taxonomy
+from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 # --- nodes.dmp fixtures ---
 # Real format: taxid \t|\t parent_taxid \t|\t rank \t|\t ...more fields... \t|\n
@@ -162,6 +165,60 @@ def test_parse_without_ref_proteomes():
     )
     for entry in entries:
         assert entry.reference_proteome is False
+
+
+def test_build_from_ena(monkeypatch):
+    monkeypatch.setattr(
+        taxonomy.phy,
+        "phylogeny",
+        lambda tax_id: {
+            "taxId": str(tax_id),
+            "scientificName": "uncultured Caudovirales phage",
+            "commonName": "",
+            "rank": "species",
+            "lineage": "Viruses; Duplodnaviria; ",
+        },
+    )
+    entry = taxonomy.TaxonomyEntry.build_from_ena(3016054)
+    assert entry.tax_id == 3016054
+    assert entry.name == "uncultured Caudovirales phage"
+    assert entry.lineage == "Viruses; Duplodnaviria; uncultured Caudovirales phage"
+    assert entry.rank == "species"
+    assert entry.is_deleted is False
+    assert entry.replaced_by is None
+
+
+def test_resolve_missing_collects_all_failures(monkeypatch):
+    def fake_phylogeny(tax_id):
+        if tax_id == 9606:
+            return {"scientificName": "Homo sapiens", "rank": "species", "lineage": ""}
+        if tax_id == 111:
+            raise phy.UnknownTaxonId(tax_id)
+        raise phy.FailedTaxonId(tax_id)
+
+    monkeypatch.setattr(taxonomy.phy, "phylogeny", fake_phylogeny)
+
+    with pytest.raises(taxonomy.UnresolvableTaxids) as excinfo:
+        taxonomy.resolve_missing(["9606", "111", "222"])
+    failed_ids = {tid for tid, _ in excinfo.value.failures}
+    assert failed_ids == {"111", "222"}
+
+
+def test_write_missing_round_trips(monkeypatch):
+    monkeypatch.setattr(
+        taxonomy.phy,
+        "phylogeny",
+        lambda tax_id: {
+            "scientificName": "Homo sapiens",
+            "rank": "species",
+            "lineage": "Eukaryota; Metazoa; ",
+        },
+    )
+    output = StringIO()
+    taxonomy.write_missing(StringIO("9606\n\n"), output)
+    row = output.getvalue().strip().split(",")
+    assert row[0] == "9606"
+    assert row[1] == "Homo sapiens"
 
 
 def test_parse_emits_deleted_taxids():
