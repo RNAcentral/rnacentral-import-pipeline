@@ -11,7 +11,19 @@ DECLARE
 
 BEGIN
 
-with new_stats as (
+with pred as (
+    -- Per-ac predecessor flag for this dbid, computed in a single pass.
+    -- Replaces two per-row correlated EXISTS(...) subqueries against xref that
+    -- each probed xref(ac, dbid, created) once per outer row, turning an
+    -- O(rows * lookups) nested loop into one hash aggregate + hash join.
+    -- An ac "has a predecessor" iff any of its xref rows (for this dbid) was
+    -- created before this release, i.e. the earliest created < l_this_release.
+    select ac, (min(created) < l_this_release) as has_predecessor
+    from xref
+    where dbid = l_dbid
+    group by ac
+),
+new_stats as (
     SELECT
       l_dbid dbid,
       l_this_release this_release,
@@ -81,29 +93,13 @@ with new_stats as (
                 END) retired_total,
               sum(
                 CASE
-                WHEN created = l_this_release AND EXISTS (
-                  SELECT
-                    1
-                  FROM
-                    xref p
-                  WHERE
-                    p.ac        = x.ac
-                  and p.dbid    = l_dbid
-                  and p.created < l_this_release)
+                WHEN created = l_this_release AND hp.has_predecessor
                 then 1
                 else 0
                 end) created_w_predecessors,
               sum(
                 CASE
-                WHEN created = l_this_release and not exists (
-                  SELECT
-                    1
-                  FROM
-                    xref p
-                  WHERE
-                    p.ac        = x.ac
-                  and p.dbid    = l_dbid
-                  and p.created < l_this_release)
+                WHEN created = l_this_release and not hp.has_predecessor
                 then 1
                 else 0
                 END) created_wo_predecessors,
@@ -149,6 +145,9 @@ with new_stats as (
                 else 0
                 END) active_total
         FROM xref as x
+        -- pred is built from the same xref/dbid rows, so every x.ac is present;
+        -- the join always matches (has_predecessor is never NULL for these rows).
+        JOIN pred hp ON hp.ac = x.ac
         WHERE x.dbid = l_dbid
         GROUP BY version_i) alias33
       ) q
