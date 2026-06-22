@@ -1,7 +1,7 @@
 # release.get_current_release
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_current_release__66753.sql`](../../../database_functions/release/release/get_current_release__66753.sql)
+Source: [`get_current_release.sql`](../../../database_functions/release/get_current_release.sql)
 
 ```sql
 get_current_release(in_dbid bigint) RETURNS bigint

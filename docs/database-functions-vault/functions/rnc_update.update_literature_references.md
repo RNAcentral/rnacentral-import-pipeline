@@ -1,7 +1,7 @@
 # rnc_update.update_literature_references
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`update_literature_references__66859.sql`](../../../database_functions/rnc_update/rnc_update/update_literature_references__66859.sql)
+Source: [`update_literature_references.sql`](../../../database_functions/rnc_update/update_literature_references.sql)
 
 ```sql
 update_literature_references() RETURNS void

@@ -1,7 +1,7 @@
 # release.get_release_type
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_release_type__66760.sql`](../../../database_functions/release/release/get_release_type__66760.sql)
+Source: [`get_release_type.sql`](../../../database_functions/release/get_release_type.sql)
 
 ```sql
 get_release_type(in_release_id bigint) RETURNS character

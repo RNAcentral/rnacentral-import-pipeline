@@ -1,7 +1,7 @@
 # rnc_load_xref.load_xref
 
 Schema: [[rnc_load_xref]] · `SECURITY DEFINER`
-Source: [`load_xref__66810.sql`](../../../database_functions/rnc_load_xref/rnc_load_xref/load_xref__66810.sql)
+Source: [`load_xref.sql`](../../../database_functions/rnc_load_xref/load_xref.sql)
 
 ```sql
 load_xref(p_previous_release bigint, p_in_dbid bigint) RETURNS void

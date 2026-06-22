@@ -1,7 +1,7 @@
 # rnc_update.move_staging_data
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`move_staging_data__66856.sql`](../../../database_functions/rnc_update/rnc_update/move_staging_data__66856.sql)
+Source: [`move_staging_data.sql`](../../../database_functions/rnc_update/move_staging_data.sql)
 
 ```sql
 move_staging_data(p_in_dbid bigint) RETURNS void

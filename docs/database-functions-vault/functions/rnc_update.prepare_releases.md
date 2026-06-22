@@ -1,7 +1,7 @@
 # rnc_update.prepare_releases
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`prepare_releases__66858.sql`](../../../database_functions/rnc_update/rnc_update/prepare_releases__66858.sql)
+Source: [`prepare_releases.sql`](../../../database_functions/rnc_update/prepare_releases.sql)
 
 ```sql
 prepare_releases(p_release_type character) RETURNS void

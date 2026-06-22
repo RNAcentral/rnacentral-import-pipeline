@@ -1,7 +1,7 @@
 # rnc_load_rna.load_md5_new_sequences_table
 
 Schema: [[rnc_load_rna]] · `SECURITY DEFINER`
-Source: [`load_md5_new_sequences_table__66800.sql`](../../../database_functions/rnc_load_rna/rnc_load_rna/load_md5_new_sequences_table__66800.sql)
+Source: [`load_md5_new_sequences_table.sql`](../../../database_functions/rnc_load_rna/load_md5_new_sequences_table.sql)
 
 ```sql
 load_md5_new_sequences_table() RETURNS void

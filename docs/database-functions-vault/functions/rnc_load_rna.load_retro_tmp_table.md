@@ -1,7 +1,7 @@
 # rnc_load_rna.load_retro_tmp_table
 
 Schema: [[rnc_load_rna]] · `SECURITY DEFINER`
-Source: [`load_retro_tmp_table__66802.sql`](../../../database_functions/rnc_load_rna/rnc_load_rna/load_retro_tmp_table__66802.sql)
+Source: [`load_retro_tmp_table.sql`](../../../database_functions/rnc_load_rna/load_retro_tmp_table.sql)
 
 ```sql
 load_retro_tmp_table(p_in_dbid bigint, p_in_load_release bigint) RETURNS void

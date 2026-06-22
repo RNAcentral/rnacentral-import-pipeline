@@ -1,7 +1,7 @@
 # rnc_load_rna.load_rna
 
 Schema: [[rnc_load_rna]] · `STABLE SECURITY DEFINER`
-Source: [`load_rna__66803.sql`](../../../database_functions/rnc_load_rna/rnc_load_rna/load_rna__66803.sql)
+Source: [`load_rna.sql`](../../../database_functions/rnc_load_rna/load_rna.sql)
 
 ```sql
 load_rna(p_in_dbid bigint, p_in_load_release bigint) RETURNS void

@@ -1,7 +1,7 @@
 # rnc_update.new_update_release
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`new_update_release__66857.sql`](../../../database_functions/rnc_update/rnc_update/new_update_release__66857.sql)
+Source: [`new_update_release.sql`](../../../database_functions/rnc_update/new_update_release.sql)
 
 ```sql
 new_update_release(p_in_dbid bigint, p_in_release_id bigint,

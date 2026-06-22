@@ -1,7 +1,7 @@
 # rnc_load_xref.load_max_versions_table
 
 Schema: [[rnc_load_xref]] · `SECURITY DEFINER`
-Source: [`load_max_versions_table__66808.sql`](../../../database_functions/rnc_load_xref/rnc_load_xref/load_max_versions_table__66808.sql)
+Source: [`load_max_versions_table.sql`](../../../database_functions/rnc_load_xref/load_max_versions_table.sql)
 
 ```sql
 load_max_versions_table() RETURNS void

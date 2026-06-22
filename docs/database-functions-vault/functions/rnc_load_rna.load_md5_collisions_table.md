@@ -1,7 +1,7 @@
 # rnc_load_rna.load_md5_collisions_table
 
 Schema: [[rnc_load_rna]] · `SECURITY DEFINER`
-Source: [`load_md5_collisions_table__66799.sql`](../../../database_functions/rnc_load_rna/rnc_load_rna/load_md5_collisions_table__66799.sql)
+Source: [`load_md5_collisions_table.sql`](../../../database_functions/rnc_load_rna/load_md5_collisions_table.sql)
 
 ```sql
 load_md5_collisions_table() RETURNS void

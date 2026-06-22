@@ -1,7 +1,7 @@
 # release.get_release_status
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_release_status__66759.sql`](../../../database_functions/release/release/get_release_status__66759.sql)
+Source: [`get_release_status.sql`](../../../database_functions/release/get_release_status.sql)
 
 ```sql
 get_release_status(in_release_id bigint) RETURNS character

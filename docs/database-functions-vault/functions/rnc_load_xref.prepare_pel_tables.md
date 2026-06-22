@@ -1,7 +1,7 @@
 # rnc_load_xref.prepare_pel_tables
 
 Schema: [[rnc_load_xref]] · `SECURITY DEFINER`
-Source: [`prepare_pel_tables__66815.sql`](../../../database_functions/rnc_load_xref/rnc_load_xref/prepare_pel_tables__66815.sql)
+Source: [`prepare_pel_tables.sql`](../../../database_functions/rnc_load_xref/prepare_pel_tables.sql)
 
 ```sql
 prepare_pel_tables() RETURNS void

@@ -1,7 +1,7 @@
 # release.get_release_id
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_release_id__66758.sql`](../../../database_functions/release/release/get_release_id__66758.sql)
+Source: [`get_release_id.sql`](../../../database_functions/release/get_release_id.sql)
 
 ```sql
 get_release_id(in_dbid bigint, in_release_date timestamp) RETURNS bigint

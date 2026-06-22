@@ -1,7 +1,7 @@
 # release.get_retired_count
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_retired_count__66761.sql`](../../../database_functions/release/release/get_retired_count__66761.sql)
+Source: [`get_retired_count.sql`](../../../database_functions/release/get_retired_count.sql)
 
 ```sql
 get_retired_count(in_dbid bigint, in_release bigint) RETURNS integer

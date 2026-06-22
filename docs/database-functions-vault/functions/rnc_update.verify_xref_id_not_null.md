@@ -1,7 +1,7 @@
 # rnc_update.verify_xref_id_not_null
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`verify_xref_id_not_null__66861.sql`](../../../database_functions/rnc_update/rnc_update/verify_xref_id_not_null__66861.sql)
+Source: [`verify_xref_id_not_null.sql`](../../../database_functions/rnc_update/verify_xref_id_not_null.sql)
 
 ```sql
 verify_xref_id_not_null() RETURNS void

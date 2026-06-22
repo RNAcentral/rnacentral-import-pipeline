@@ -1,7 +1,7 @@
 # rnc_load_xref.revert_pel
 
 Schema: [[rnc_load_xref]] · `SECURITY DEFINER`
-Source: [`revert_pel__66816.sql`](../../../database_functions/rnc_load_xref/rnc_load_xref/revert_pel__66816.sql)
+Source: [`revert_pel.sql`](../../../database_functions/rnc_load_xref/revert_pel.sql)
 
 ```sql
 revert_pel(p_in_db_id bigint) RETURNS void

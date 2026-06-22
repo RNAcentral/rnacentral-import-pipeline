@@ -1,7 +1,7 @@
 # rnc_update.create_release
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`create_release__66853.sql`](../../../database_functions/rnc_update/rnc_update/create_release__66853.sql)
+Source: [`create_release.sql`](../../../database_functions/rnc_update/create_release.sql)
 
 ```sql
 create_release(p_in_dbid bigint, p_release_type character) RETURNS void

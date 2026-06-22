@@ -1,7 +1,7 @@
 # release.get_previous_release
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_previous_release__66757.sql`](../../../database_functions/release/release/get_previous_release__66757.sql)
+Source: [`get_previous_release.sql`](../../../database_functions/release/get_previous_release.sql)
 
 ```sql
 get_previous_release(in_dbid bigint, in_release_id bigint) RETURNS bigint

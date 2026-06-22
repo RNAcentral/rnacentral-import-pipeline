@@ -1,7 +1,7 @@
 # release.set_release_status
 
 Schema: [[release]] · `SECURITY DEFINER`
-Source: [`set_release_status__66762.sql`](../../../database_functions/release/release/set_release_status__66762.sql)
+Source: [`set_release_status.sql`](../../../database_functions/release/set_release_status.sql)
 
 ```sql
 set_release_status(in_release_id bigint, release_status character) RETURNS void

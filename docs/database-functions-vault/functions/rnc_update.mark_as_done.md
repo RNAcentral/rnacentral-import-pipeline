@@ -1,7 +1,7 @@
 # rnc_update.mark_as_done
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`mark_as_done__66855.sql`](../../../database_functions/rnc_update/rnc_update/mark_as_done__66855.sql)
+Source: [`mark_as_done.sql`](../../../database_functions/rnc_update/mark_as_done.sql)
 
 ```sql
 mark_as_done(p_in_dbid bigint, p_in_load_release bigint) RETURNS void

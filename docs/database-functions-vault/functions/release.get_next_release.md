@@ -1,7 +1,7 @@
 # release.get_next_release
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_next_release__66756.sql`](../../../database_functions/release/release/get_next_release__66756.sql)
+Source: [`get_next_release.sql`](../../../database_functions/release/get_next_release.sql)
 
 ```sql
 get_next_release(in_dbid bigint, in_release_id bigint) RETURNS bigint

@@ -1,7 +1,7 @@
 # rnc_load_xref.load_upi_max_versions_table
 
 Schema: [[rnc_load_xref]] · `SECURITY DEFINER`
-Source: [`load_upi_max_versions_table__66809.sql`](../../../database_functions/rnc_load_xref/rnc_load_xref/load_upi_max_versions_table__66809.sql)
+Source: [`load_upi_max_versions_table.sql`](../../../database_functions/rnc_load_xref/load_upi_max_versions_table.sql)
 
 ```sql
 load_upi_max_versions_table(p_in_dbid bigint) RETURNS void

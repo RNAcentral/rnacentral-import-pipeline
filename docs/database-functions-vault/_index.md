@@ -1,9 +1,16 @@
 # RNAcentral database functions — call graph vault
 
 This is an [Obsidian](https://obsidian.md) vault documenting the PL/pgSQL functions
-exported under [`database_functions/`](../../database_functions). Open this folder as a
+in [`database_functions/`](../../database_functions). Open this folder as a
 vault (or just browse the Markdown) and use the **graph view** to explore how the
 functions call each other.
+
+> **Deployment:** `database_functions/` is the tracked source of truth; edit a
+> `<schema>/<func>.sql` file and `rnac release functions` (or the next release run) deploys
+> the changed ones, tracked in `rnacen.applied_functions`. See
+> [`database_functions/README.md`](../../database_functions/README.md). This vault graphs only
+> the release-load path; the tree also contains `rnacen`, `rnc_healthchecks`, `rnc_test`,
+> `stats`, `expunge`, `trembl_utils`, `database`, `upi` (not documented here).
 
 ## How it's organised
 
@@ -16,8 +23,10 @@ functions call each other.
 
 Every `[[link]]` is a call edge, so Obsidian's graph view *is* the call graph.
 
-> **Open work:** see [[follow-ups]] for the release-load performance follow-ups
-> (revert_pel fix, accessions mapping, dropping do_checks, optional perf, housekeeping).
+> **Open work:** see [[follow-ups]]. Performance items #1–#4 + `store_new_sequences` and the
+> `do_pel_exchange` FK fix are shipped/staged; remaining open work is `revert_pel` (stale
+> rollback path), the `update_rnc_accessions` `so_term`→`rna_type` mapping question, dropping
+> `do_checks`, and parallelizing the per-database loop.
 
 ## Schemas
 

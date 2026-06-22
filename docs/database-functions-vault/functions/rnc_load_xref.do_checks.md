@@ -1,7 +1,7 @@
 # rnc_load_xref.do_checks
 
 Schema: [[rnc_load_xref]] · `SECURITY DEFINER`
-Source: [`do_checks__66806.sql`](../../../database_functions/rnc_load_xref/rnc_load_xref/do_checks__66806.sql)
+Source: [`do_checks.sql`](../../../database_functions/rnc_load_xref/do_checks.sql)
 
 ```sql
 do_checks(p_in_db_id bigint) RETURNS void

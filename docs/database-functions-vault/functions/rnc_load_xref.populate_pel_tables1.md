@@ -1,7 +1,7 @@
 # rnc_load_xref.populate_pel_tables1
 
 Schema: [[rnc_load_xref]] · `SECURITY DEFINER`
-Source: [`populate_pel_tables1__66811.sql`](../../../database_functions/rnc_load_xref/rnc_load_xref/populate_pel_tables1__66811.sql)
+Source: [`populate_pel_tables1.sql`](../../../database_functions/rnc_load_xref/populate_pel_tables1.sql)
 
 ```sql
 populate_pel_tables1(v_previous_release bigint) RETURNS void

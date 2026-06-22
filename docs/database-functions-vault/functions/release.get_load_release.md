@@ -1,7 +1,7 @@
 # release.get_load_release
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_load_release__66755.sql`](../../../database_functions/release/release/get_load_release__66755.sql)
+Source: [`get_load_release.sql`](../../../database_functions/release/get_load_release.sql)
 
 ```sql
 get_load_release(in_dbid bigint) RETURNS bigint

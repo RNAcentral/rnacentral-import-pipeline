@@ -1,7 +1,7 @@
 # rnc_update.load_release
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`load_release__66854.sql`](../../../database_functions/rnc_update/rnc_update/load_release__66854.sql)
+Source: [`load_release.sql`](../../../database_functions/rnc_update/load_release.sql)
 
 ```sql
 load_release(p_in_dbid bigint, p_in_load_release bigint) RETURNS void

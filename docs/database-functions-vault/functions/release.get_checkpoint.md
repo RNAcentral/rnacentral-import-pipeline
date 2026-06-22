@@ -1,7 +1,7 @@
 # release.get_checkpoint
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_checkpoint__66752.sql`](../../../database_functions/release/release/get_checkpoint__66752.sql)
+Source: [`get_checkpoint.sql`](../../../database_functions/release/get_checkpoint.sql)
 
 ```sql
 get_checkpoint() RETURNS bigint

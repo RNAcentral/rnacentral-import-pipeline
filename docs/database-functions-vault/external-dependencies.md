@@ -1,8 +1,12 @@
 # External dependencies
 
-Functions that the code in [`database_functions/`](../../database_functions) calls but
-which are **not exported into this folder**. If you have these schemas, add them and they
-can be folded into the vault.
+Functions that the release-load code calls from schemas **outside the ones this vault graphs**.
+
+> **Note (2026-06-22):** as of the source-of-truth migration, all of these schemas
+> (`rnc_logging`, `rnc_load_xref_incremental`, `database`, `upi`) **are now dumped into
+> `database_functions/`** — their `.sql` files exist and deploy via the applier. They just
+> don't have call-graph notes in this vault yet. The table below is still useful as the list of
+> cross-schema call edges out of the release-load path.
 
 | Schema | Function | Called from | Purpose (inferred) |
 |---|---|---|---|

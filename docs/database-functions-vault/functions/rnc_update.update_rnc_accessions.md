@@ -1,7 +1,7 @@
 # rnc_update.update_rnc_accessions
 
 Schema: [[rnc_update]] · `SECURITY DEFINER`
-Source: [`update_rnc_accessions__66860.sql`](../../../database_functions/rnc_update/rnc_update/update_rnc_accessions__66860.sql)
+Source: [`update_rnc_accessions.sql`](../../../database_functions/rnc_update/update_rnc_accessions.sql)
 
 ```sql
 update_rnc_accessions() RETURNS void

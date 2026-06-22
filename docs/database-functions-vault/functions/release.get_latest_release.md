@@ -1,7 +1,7 @@
 # release.get_latest_release
 
 Schema: [[release]] · `STABLE SECURITY DEFINER`
-Source: [`get_latest_release__66754.sql`](../../../database_functions/release/release/get_latest_release__66754.sql)
+Source: [`get_latest_release.sql`](../../../database_functions/release/get_latest_release.sql)
 
 ```sql
 get_latest_release(in_dbid bigint) RETURNS bigint
