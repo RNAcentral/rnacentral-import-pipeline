@@ -15,6 +15,7 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.rnacentral.release import functions
 from rnacentral_pipeline.rnacentral.release import run
 from rnacentral_pipeline.rnacentral.release import database_stats as stats
 
@@ -44,6 +45,21 @@ def check_release(limit_file, db_url=None):
     A command to check if there are problems with new data.
     """
     run.check(limit_file, db_url)
+
+
+@cli.command("functions")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.option("--dry-run", is_flag=True, help="Show what would change without applying.")
+def sync_functions(db_url=None, dry_run=False):
+    """
+    Apply the database functions from database_functions/ whose source has changed
+    since they were last applied.
+    """
+    changed = functions.apply(db_url, dry_run=dry_run)
+    for fn in changed:
+        click.echo(f"{'pending' if dry_run else 'applied'}\t{fn.schema}.{fn.name}")
+    if not changed:
+        click.echo("all functions up to date")
 
 
 @cli.command("update-stats")
