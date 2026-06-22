@@ -43,6 +43,11 @@ FUNCTIONS_DIR = Path(__file__).resolve().parents[3] / "database_functions"
 # alongside everything else it manages.
 TRACKING_TABLE = "rnacen.applied_functions"
 
+# Schemas that are tracked in git but must never be pushed by a release deploy --
+# e.g. rnc_test holds test fixtures (setup/teardown/check_*) that have no business
+# running against production.
+DEPLOY_EXCLUDE_SCHEMAS = frozenset({"rnc_test"})
+
 
 @dc.dataclass(frozen=True)
 class Function:
@@ -60,10 +65,21 @@ class Function:
         return hashlib.sha256(self.sql.encode("utf-8")).hexdigest()
 
 
-def discover(base: Path = FUNCTIONS_DIR) -> ty.List[Function]:
-    """Load every <schema>/<func>.sql file under base, sorted by (schema, name)."""
+def discover(
+    base: Path = FUNCTIONS_DIR,
+    exclude_schemas: ty.Collection[str] = (),
+) -> ty.List[Function]:
+    """
+    Load every <schema>/<func>.sql file under base, sorted by (schema, name).
+
+    Schemas in exclude_schemas are skipped -- used to keep deploy-excluded schemas
+    (e.g. rnc_test) tracked in git without applying them to the database.
+    """
+    exclude = set(exclude_schemas)
     functions = []
     for path in sorted(base.glob("*/*.sql")):
+        if path.parent.name in exclude:
+            continue
         functions.append(
             Function(
                 schema=path.parent.name,
@@ -98,7 +114,7 @@ def apply(db_url: str, dry_run: bool = False) -> ty.List[Function]:
     replaced and recorded, or nothing is. Returns the list that was (or would be)
     applied.
     """
-    functions = discover()
+    functions = discover(exclude_schemas=DEPLOY_EXCLUDE_SCHEMAS)
     with psycopg2.connect(db_url) as conn:
         with conn.cursor() as cur:
             todo = pending(cur, functions)
