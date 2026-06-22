@@ -116,6 +116,19 @@ def run(db_url):
         _run(db_url, "SELECT rnc_update.new_update_release(%s, %s)", params=(dbid, rid),
              label=f"new_update_release(dbid={dbid}, rid={rid})")
 
+    # do_pel_exchange adds each partition's upi->rna foreign key (fk4) NOT VALID to keep the
+    # full-partition validation scan off the load's critical path. Validate them now, after
+    # the per-database loads have committed: VALIDATE CONSTRAINT takes only
+    # ShareUpdateExclusiveLock (does not block readers/writers), marks the constraint valid,
+    # and surfaces any (by-construction vanishingly unlikely) violation. The data is already
+    # committed at this point, so this is detection, not a pre-commit gate.
+    for (dbid, rid) in releases:
+        for suffix in ("deleted", "not_deleted"):
+            _run(db_url,
+                 f"ALTER TABLE xref_p{dbid}_{suffix} "
+                 f"VALIDATE CONSTRAINT xref_p{dbid}_{suffix}_fk4",
+                 label=f"validate fk4 xref_p{dbid}_{suffix}")
+
     # Verify xref primary key uniqueness once, after all databases are loaded,
     # rather than once per database inside load_xref. The check is global (it
     # ignores its argument), so a single run covers every partition.

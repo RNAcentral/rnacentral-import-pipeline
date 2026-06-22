@@ -145,8 +145,13 @@ BEGIN
             ' foreign key(dbid) references rnc_database (id)';
     execute 'alter table xref_p' || p_in_db_id || '_deleted add constraint xref_p' || p_in_db_id || '_deleted_fk3' ||
             ' foreign key(last) references rnc_release (id)';
+    -- upi -> rna is validated by construction (every upi written here came from
+    -- comparable_prot_upi/prot_upi, which already exist in rna). Added NOT VALID to skip
+    -- the in-transaction full-partition scan + probes into the 35GB rna(upi) index, which
+    -- dominates the per-database load. run() runs VALIDATE CONSTRAINT after the load loop
+    -- (ShareUpdateExclusive, off the critical path) to mark it valid and catch any violation.
     execute 'alter table xref_p' || p_in_db_id || '_deleted add constraint xref_p' || p_in_db_id || '_deleted_fk4' ||
-            ' foreign key(upi) references rna (upi)';
+            ' foreign key(upi) references rna (upi) not valid';
 
     --------------------------------------------------------
     --  Creating indexes on NOT deleted partition
@@ -168,8 +173,9 @@ BEGIN
             ' foreign key(dbid) references rnc_database (id)';
     execute 'alter table xref_p' || p_in_db_id || '_not_deleted add constraint xref_p' || p_in_db_id || '_not_deleted_fk3' ||
             ' foreign key(last) references rnc_release (id)';
+    -- See note on _deleted_fk4 above: NOT VALID here, validated off the critical path in run().
     execute 'alter table xref_p' || p_in_db_id || '_not_deleted add constraint xref_p' || p_in_db_id || '_not_deleted_fk4' ||
-            ' foreign key(upi) references rna (upi)';
+            ' foreign key(upi) references rna (upi) not valid';
 
     --------------------------------------------------------
     --  attach fresh partitions back to the correct parent
