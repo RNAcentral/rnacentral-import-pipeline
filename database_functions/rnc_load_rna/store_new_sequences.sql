@@ -16,40 +16,19 @@ BEGIN
         TIMESTAMP,
         USERSTAMP
       )
-    SELECT 
-          prot_id,
-          prot_upi,
-          in_crc64,
-          in_len,
-          in_seq_short,
-          in_seq_long,
-          in_md5,
-          clock_timestamp(),
-          USER
-    from (
-        SELECT DISTINCT
-          n.PROT_ID,
-          n.PROT_UPI,
+    SELECT DISTINCT ON (n.in_md5)
+          n.prot_id,
+          n.prot_upi,
           l.in_crc64,
           l.in_len,
           l.in_seq_short,
-          l.IN_SEQ_LONG,
-          l.in_md5
-        FROM
-          load_retro_tmp l,
-          load_md5_new_sequences n
-        WHERE
-          n.in_md5 = l.in_md5) alias1;
-
-    --COMMIT;
+          l.in_seq_long,
+          n.in_md5,
+          clock_timestamp(),
+          USER
+    FROM load_md5_new_sequences n
+    JOIN load_retro_tmp l ON l.in_md5 = n.in_md5;
 
   END;
-
-  /*
-    The main procedure for importing data from the staging table
-    into the main RNA table. Responsible for assigning UPIs.
-  */
-
-
 $function$
 

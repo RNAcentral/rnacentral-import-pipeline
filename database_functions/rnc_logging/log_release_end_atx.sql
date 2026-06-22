@@ -88,7 +88,7 @@ with new_stats as (
                     xref p
                   WHERE
                     p.ac        = x.ac
-                  and p.dbid    = x.dbid
+                  and p.dbid    = l_dbid
                   and p.created < l_this_release)
                 then 1
                 else 0
@@ -102,10 +102,10 @@ with new_stats as (
                     xref p
                   WHERE
                     p.ac        = x.ac
-                  and p.dbid    = x.dbid
+                  and p.dbid    = l_dbid
                   and p.created < l_this_release)
                 then 1
-                else 0        
+                else 0
                 END) created_wo_predecessors,
               sum(
                 CASE
@@ -160,7 +160,7 @@ with new_stats as (
       end_time,
       retired_prev_releases,
       retired_this_release,
-      retired_next_releases,                
+      retired_next_releases,
       retired_total,
       created_w_predecessors_v_1,
       created_w_predecessors_v_gt1,
@@ -223,6 +223,5 @@ with new_stats as (
       active_total = excluded.active_total;
 
   END;
-
 $function$
 

@@ -12,8 +12,8 @@ BEGIN
     perform rnc_load_xref.populate_pel_tables3(p_in_dbid);
     perform rnc_load_xref.populate_pel_tables4(p_in_dbid, p_previous_release);
     perform rnc_load_xref.do_pel_exchange(p_in_dbid);
-    perform rnc_load_xref.do_checks(p_in_dbid);
-  END;
-
+    -- do_checks intentionally NOT called here; run() calls it once after the
+    -- per-database loop (it scans the whole xref table regardless of dbid).
+END;
 $function$
 

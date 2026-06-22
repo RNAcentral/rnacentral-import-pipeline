@@ -13,14 +13,14 @@ BEGIN
         L.IN_DBID,
         MAX(coalesce(PREVIOUS_XREF.VERSION_I, 0)) MAX_VERSION_I, -- VERSION_I set to 0 at first
         PREVIOUS_XREF.UPI
-      FROM rnacen.xref previous_xref RIGHT OUTER JOIN load_retro_tmp l ON (PREVIOUS_XREF.DBID = L.IN_DBID AND PREVIOUS_XREF.AC = L.IN_AC)
+      FROM rnacen.xref previous_xref RIGHT OUTER JOIN load_retro_tmp l ON (PREVIOUS_XREF.DBID = p_in_dbid AND PREVIOUS_XREF.AC = L.IN_AC)
      WHERE L.COMPARABLE_PROT_UPI IS NOT NULL AND L.IN_DBID = p_in_dbid   -- outer join, left side can be NULL
      -- outer join, left side can be NULL
        AND NOT EXISTS (
             SELECT 1
             FROM RNACEN.XREF X
             WHERE X.AC      = L.IN_AC
-            AND X.DBID    = L.IN_DBID
+            AND X.DBID    = p_in_dbid
             AND X.DELETED = 'N'
           )
       GROUP BY
@@ -33,6 +33,5 @@ BEGIN
     execute 'analyze load_upi_max_versions';
 
   END;
-
 $function$
 
