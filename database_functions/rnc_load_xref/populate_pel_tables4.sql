@@ -112,6 +112,7 @@ BEGIN
           WHERE L.COMPARABLE_PROT_UPI IS NOT NULL
           AND X.AC                 = L.IN_AC
           AND X.DBID               = L.IN_DBID
+          AND X.UPI                = L.COMPARABLE_PROT_UPI -- retire the specific dropped (ac,upi), not only whole-accession removals
         )
     ;
 
