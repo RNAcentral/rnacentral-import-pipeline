@@ -14,7 +14,7 @@ DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_rna_type_idx;
 -- into it later.
 INSERT INTO rnc_rna_precomputed (id, upi, taxid, is_active) (
 SELECT
-  xref.upi || '_' || xref.taxid,
+  xref.urs_taxid,
   xref.upi,
   xref.taxid,
   true
