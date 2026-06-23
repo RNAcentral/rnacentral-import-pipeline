@@ -7,10 +7,18 @@ DECLARE
     l_dbid RNACEN.rnc_release.dbid%TYPE := p_dbid;
     l_this_release RNACEN.rnc_release.id%TYPE := p_this_release;
     l_prev_release RNACEN.rnc_release.id%TYPE := coalesce(coalesce(p_prev_release, release.get_previous_release(l_dbid, l_this_release)), 0);
-    l_sql_stmt varchar(4000);
 
 BEGIN
 
+-- Run the stats query via EXECUTE format() so the dbid/release values are
+-- interpolated as literals rather than passed as bind parameters. As plpgsql
+-- bind parameters the planner produces a generic plan that CANNOT prune the
+-- xref partitions on dbid (it seq-scans all ~118 partitions, ~341M rows);
+-- with literals it prunes to this dbid's two partitions (~1.26M rows) -- a
+-- ~1000x cheaper plan. The statement is otherwise byte-for-byte identical, so
+-- it is logically equivalent; only the plan changes. All three values are
+-- bigints (l_prev_release is coalesced to 0), so %s interpolation is safe.
+EXECUTE format($fmt$
 with pred as (
     -- Per-ac predecessor flag for this dbid, computed in a single pass.
     -- Replaces two per-row correlated EXISTS(...) subqueries against xref that
@@ -18,16 +26,16 @@ with pred as (
     -- O(rows * lookups) nested loop into one hash aggregate + hash join.
     -- An ac "has a predecessor" iff any of its xref rows (for this dbid) was
     -- created before this release, i.e. the earliest created < l_this_release.
-    select ac, (min(created) < l_this_release) as has_predecessor
+    select ac, (min(created) < %2$s) as has_predecessor
     from xref
-    where dbid = l_dbid
+    where dbid = %1$s
     group by ac
 ),
 new_stats as (
     SELECT
-      l_dbid dbid,
-      l_this_release this_release,
-      l_prev_release prev_release,
+      %1$s dbid,
+      %2$s this_release,
+      %3$s prev_release,
       clock_timestamp() end_time,
       retired_prev_releases,
       retired_this_release,
@@ -69,19 +77,19 @@ new_stats as (
             SELECT
               version_i,
               sum(
-                CASE WHEN deleted = 'Y' and last < l_prev_release
+                CASE WHEN deleted = 'Y' and last < %3$s
                 THEN 1
                 ELSE 0
                 END) retired_prev_releases,
               sum(
                 CASE
-                WHEN deleted = 'Y' AND LAST = l_prev_release
+                WHEN deleted = 'Y' AND LAST = %3$s
                 THEN 1
                 ELSE 0
                 END) retired_this_release,
               sum(
                 CASE
-                WHEN deleted = 'Y' and last > l_prev_release
+                WHEN deleted = 'Y' and last > %3$s
                 THEN 1
                 ELSE 0
                 END) retired_next_releases,
@@ -93,48 +101,48 @@ new_stats as (
                 END) retired_total,
               sum(
                 CASE
-                WHEN created = l_this_release AND hp.has_predecessor
+                WHEN created = %2$s AND hp.has_predecessor
                 then 1
                 else 0
                 end) created_w_predecessors,
               sum(
                 CASE
-                WHEN created = l_this_release and not hp.has_predecessor
+                WHEN created = %2$s and not hp.has_predecessor
                 then 1
                 else 0
                 END) created_wo_predecessors,
               sum(
                 CASE
-                when deleted = 'N' and created < l_this_release
+                when deleted = 'N' and created < %2$s
                 then 1
                 else 0
                 END) active_created_prev_releases,
               sum(
                 CASE
-                when deleted = 'N' and created = l_this_release
+                when deleted = 'N' and created = %2$s
                 then 1
                 else 0
                 END) active_created_this_release,
               sum(
-                case when deleted = 'N' and created > l_this_release
+                case when deleted = 'N' and created > %2$s
                 then 1
                 else 0
                 end) active_created_next_releases,
               sum(
                 case
-                when created = l_this_release
+                when created = %2$s
                 then 1
                 else 0
                 end) created_this_release,
               sum(
                 case
-                when deleted = 'N' and created != l_this_release and last = l_this_release
+                when deleted = 'N' and created != %2$s and last = %2$s
                 then 1
                 else 0
                 end) active_updated_this_release,
               sum(
                 case
-                when deleted = 'N' and created != l_this_release and last != l_this_release
+                when deleted = 'N' and created != %2$s and last != %2$s
                 then 1
                 else 0
                 end) active_untouched_this_release,
@@ -148,7 +156,7 @@ new_stats as (
         -- pred is built from the same xref/dbid rows, so every x.ac is present;
         -- the join always matches (has_predecessor is never NULL for these rows).
         JOIN pred hp ON hp.ac = x.ac
-        WHERE x.dbid = l_dbid
+        WHERE x.dbid = %1$s
         GROUP BY version_i) alias33
       ) q
     )
@@ -219,8 +227,8 @@ new_stats as (
       created_this_release = excluded.created_this_release,
       active_updated_this_release = excluded.active_updated_this_release,
       active_untouched_this_release = excluded.active_untouched_this_release,
-      active_total = excluded.active_total;
+      active_total = excluded.active_total
+$fmt$, l_dbid, l_this_release, l_prev_release);
 
   END;
 $function$
-
