@@ -52,6 +52,7 @@ dependencies = [
     "stopfree>=0.2.4",
 ]
 
+
 [dependency-groups]
 dev = [
     "black>=24.4.2",
