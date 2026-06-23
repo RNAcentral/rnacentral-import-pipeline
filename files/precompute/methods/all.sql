@@ -1,3 +1,5 @@
 COPY (
-  select upi from rna
+  SELECT urs_taxid
+  FROM xref
+  WHERE deleted = 'N'
 ) TO STDOUT

@@ -14,21 +14,6 @@ process create_schema {
   """
 }
 
-process fetch_all_urs_taxid {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
-  input:
-  path(query)
-
-  output:
-  path('data.csv')
-
-  script:
-  """
-  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
-  """
-}
-
 process select_outdated {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory '24 GB'
@@ -69,20 +54,18 @@ process build_table {
   memory '10GB'
 
   input:
-  tuple path('computed*.csv'), path(load), path('active.txt'), path('counts.sql')
+  tuple path('computed*.csv'), path(load), path('counts.sql')
 
   output:
   path('counts.txt')
 
   script:
   """
-  sort -u computed*.csv > to-load-urs.csv
-  expand-urs text active.txt to-load-urs.csv to-load-urs-taxid.csv
+  sort -u computed*.csv > to-load-urs-taxid.csv
   psql \
     -v ON_ERROR_STOP=1 \
     -f "$load" "\$PGDATABASE"
   psql -f counts.sql -v ON_ERROR_STOP=1 "\$PGDATABASE" > counts.txt
-
   """
 }
 
@@ -180,10 +163,7 @@ workflow build_urs_table {
     main:
       Channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
       Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
-      Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
       Channel.fromPath('files/precompute/get-urs-count.sql') | set { count_sql }
-
-      fetch_all_urs_taxid(active_sql) | set { active_urs }
 
       create_schema(schema_sql) \
       | combine(method) \
@@ -205,7 +185,6 @@ workflow build_urs_table {
       | mix(from_release, from_query, from_all, from_ids) \
       | collect \
       | combine(load_sql) \
-      | combine(active_urs) \
       | combine(count_sql) \
       | build_table \
       | splitCsv \

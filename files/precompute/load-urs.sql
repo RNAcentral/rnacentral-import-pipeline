@@ -5,21 +5,18 @@ BEGIN TRANSACTION;
 TRUNCATE TABLE precompute_urs CASCADE;
 TRUNCATE TABLE precompute_urs_taxid CASCADE;
 
-CREATE TEMP TABLE loaded_urs (
-  urs TEXT NOT NULL
-);
-
 CREATE TEMP TABLE loaded_urs_taxid (
   urs_taxid TEXT NOT NULL
 );
 
-\copy loaded_urs from 'to-load-urs.csv'
 \copy loaded_urs_taxid from 'to-load-urs-taxid.csv'
 
+-- The selection now produces urs_taxid directly, so derive the distinct URS
+-- list for precompute_urs from it rather than loading a separate URS file.
 INSERT INTO precompute_urs (urs) (
-SELECT
-  urs
-from loaded_urs
+SELECT DISTINCT
+  split_part(urs_taxid, '_', 1)
+from loaded_urs_taxid
 );
 
 ALTER TABLE precompute_urs
