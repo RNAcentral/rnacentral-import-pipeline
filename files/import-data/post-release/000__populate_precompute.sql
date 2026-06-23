@@ -19,9 +19,9 @@ SELECT
   xref.taxid,
   true
 FROM xref
-JOIN load_rnc_accessions acc ON acc.accession = xref.ac
 WHERE
   xref.deleted = 'N'
+  AND xref.ac IN (SELECT accession FROM load_rnc_accessions)
 ) ON CONFLICT DO NOTHING;
 
 -- Recreate indexes
