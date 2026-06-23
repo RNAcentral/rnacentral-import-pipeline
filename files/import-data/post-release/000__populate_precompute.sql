@@ -1,6 +1,9 @@
 \timing
 
 BEGIN TRANSACTION;
+-- Claim a larger amount of memory because we should have the DB to ourselves 
+-- for this step, and the hash tables can get big
+SET LOCAL work_mem = '1GB';
 
 -- Drop indexes to speed up bulk insert
 DROP INDEX IF EXISTS rnacen.ix_rnc_rna_precomputed__upi_taxid_last_release;
