@@ -1,9 +1,10 @@
 process fetch {
-  when { params.databases.refseq.run }
-
   output:
   path('*.gbff')
 
+  when: { params.databases.refseq?.run }
+
+  script:
   """
   wget "$params.databases.refseq.remote"
   gzip -d *.gbff.gz
@@ -19,6 +20,7 @@ process parse {
   output:
   path('*.csv')
 
+  script:
   """
   rnac refseq parse $data .
   """

@@ -1,4 +1,7 @@
 process lookup {
+  errorStrategy 'retry'
+  maxRetries 3
+
   input:
   path('terms*.csv')
 
@@ -17,8 +20,8 @@ process lookup {
 
 workflow batch_lookup_ontology_information {
   take: term_ids
-  emit: term_info
 
   main:
     term_ids | collect | lookup | set { term_info }
+  emit: term_info
 }

@@ -14,6 +14,7 @@ process merge_and_split {
   output:
   path('by-assembly/*.json')
 
+  script:
   """
   search-export genes select-and-split $locus $sequence by-assembly
   if [[ ! -e by-assembly/*.json ]]; then
@@ -24,11 +25,11 @@ process merge_and_split {
 
 process as_xml {
   tag { "$assembly" }
-  memory 10.GB
+  memory params.export.search.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly), path('raw*.json')
+  tuple val(assembly), path('raw*.json'), path('so_tree.json')
 
   output:
   path "${xml}.gz", emit: xml
@@ -38,7 +39,7 @@ process as_xml {
   xml = "genes_${assembly}_xml.xml"
   """
   cat raw*.json > members.json
-  search-export genes merge-assembly members.json merged.json
+  search-export genes merge-assembly so_tree.json members.json merged.json
   search-export genes as-xml merged.json $xml count
   xmllint $xml --schema ${params.export.search.schema} --stream
   gzip $xml
@@ -50,9 +51,7 @@ workflow genes {
   take:
     max_count
     sequence_json
-  emit:
-    xml
-    counts
+    so_tree
   main:
     Channel.fromPath('files/search-export/genes/region-info.sql') | set { locus_sql }
 
@@ -65,8 +64,12 @@ workflow genes {
     | filter { f -> !f.isEmpty() } \
     | map { fn -> [fn.name, fn] } \
     | groupTuple \
+    | combine(so_tree) \
     | as_xml
 
     as_xml.out.xml | set { xml }
     as_xml.out.counts | set { counts }
+  emit:
+    xml
+    counts
 }

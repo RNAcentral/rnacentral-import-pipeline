@@ -4,6 +4,7 @@ process slack_message {
     input:
     val(message)
 
+    script:
     """
     #!/bin/bash
     curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' $LITSCAN_SLACK_WEBHOOK
@@ -81,7 +82,7 @@ process submit_ids {
     tr A-Z a-z < all_ids.txt | sort -u > all_ids_sorted.txt
 
     # get ids already scanned by LitScan (Expert DB ids only)
-    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id not like 'urs%' ORDER BY job_id) TO STDOUT;" $PGDATABASE > old_ids.txt
+    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id not like 'urs%' ORDER BY job_id) TO STDOUT;" \$PGDATABASE > old_ids.txt
     sort old_ids.txt > old_ids_sorted.txt
 
     # get new ids
@@ -120,7 +121,7 @@ process submit_urs {
     tr a-z A-Z < output.txt | sort -u > urs.txt
 
     # get URS already scanned by LitScan
-    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id like 'urs%' ORDER BY job_id) TO STDOUT;" $PGDATABASE > urs_lower.txt
+    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id like 'urs%' ORDER BY job_id) TO STDOUT;" \$PGDATABASE > urs_lower.txt
     tr a-z A-Z < urs_lower.txt > urs_in_db.txt
 
     # get new URS

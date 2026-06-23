@@ -14,14 +14,14 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_karyotypes;
+ALTER TABLE rnacen.load_karyotypes SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-CREATE TABLE load_karyotypes (
-	assembly_id varchar(255) NOT NULL,
-    karyotype text
-);
+ANALYZE rnacen.load_karyotypes;
 $$
 ;

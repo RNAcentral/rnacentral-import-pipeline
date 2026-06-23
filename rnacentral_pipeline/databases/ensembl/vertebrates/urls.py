@@ -29,8 +29,9 @@ def latest_release(ftp: FTP) -> str:
     readme_lines = []
     ftp.retrlines("RETR current_README", readme_lines.append)
     cur_readme = "\n".join(readme_lines)
-    pattern = r"Ensembl Release (\d+) Databases."
-    match = re.search(pattern, cur_readme)
+    pattern = r"Ensembl Release (\d+) Databases\."
+    match = re.search(pattern, cur_readme, re.IGNORECASE)
+
     if not match:
         raise ValueError("Could not determine latest Ensembl release from README")
     release = match.group(1)
@@ -53,9 +54,8 @@ def generate_paths(base: str, release: str, handle) -> ty.Iterable[FtpInfo]:
     for entry in data:
         info = entry["organism"]
         name = info["name"]
-        url_name = info["url_name"]
         assembly = entry["assembly"]["assembly_default"]
-        organism_name = f"{url_name}.{assembly}.{release_id}"
+        organism_name = f"{name[0].upper() + name[1:]}.{assembly}.{release_id}"
         gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
         data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
         yield FtpInfo(

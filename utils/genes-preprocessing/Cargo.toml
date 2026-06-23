@@ -1,0 +1,12 @@
+[package]
+name = "gene-preprocessing"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "gene_preprocessing"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = "0.27.0"
+rayon = "1.11.0"

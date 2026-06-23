@@ -1,7 +1,5 @@
 COPY (
-select distinct
-    coalesce(pre.assigned_so_rna_type, pre.so_rna_type)
-FROM rnc_rna_precomputed pre
-where
-  coalesce(pre.assigned_so_rna_type, pre.so_rna_type) is not null
+SELECT DISTINCT(ontology_term_id)
+FROM ontology_terms
+WHERE ontology = 'SO'
 ) TO STDOUT

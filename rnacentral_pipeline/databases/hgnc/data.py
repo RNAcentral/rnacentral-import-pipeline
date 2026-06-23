@@ -137,7 +137,8 @@ def ensembl_mapping(conn):
         .on(acc.accession == xref.ac)
         .join(rna)
         .on(rna.upi == xref.upi)
-        .where((xref.dbid == 25) & (xref.taxid == 9606) & (xref.deleted == "N"))
+        # dbid 21 == NONCODE
+        .where((xref.dbid == 21) & (xref.taxid == 9606) & (xref.deleted == "N"))
     )
 
     found = coll.defaultdict(set)

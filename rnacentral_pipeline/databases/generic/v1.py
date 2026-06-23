@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import collections as coll
+import hashlib
 import itertools as it
 import logging
 
@@ -194,14 +195,77 @@ def features(record):
     if not record.get("sequenceFeatures", None):
         return []
     features = []
+    provider = record.get("database")
+    if provider is None and "primaryId" in record:
+        if ":" not in record["primaryId"]:
+            raise ValueError(
+                f"Invalid primaryId format (expected PREFIX:ID): {record['primaryId']}"
+            )
+        provider = record["primaryId"].split(":", 1)[0]
+    if provider is None:
+        raise ValueError("Missing provider: expected database or primaryId prefix")
+
+    def modification_features(modifications):
+        if not isinstance(modifications, list):
+            LOGGER.warning(
+                "Skipping sequence feature modifications due to unexpected type %s",
+                type(modifications),
+            )
+            return
+
+        sequence = record.get("sequence", "")
+        if not sequence:
+            raise ValueError("Missing sequence: cannot compute modification accession")
+        accession = f"{hashlib.md5(sequence.encode('utf-8')).hexdigest()}_modomics"
+        for raw in modifications:
+            if not isinstance(raw, dict):
+                LOGGER.warning(
+                    "Skipping sequence modification due to unexpected type %s",
+                    type(raw),
+                )
+                continue
+
+            position = raw.get("index", None)
+            if position is None:
+                LOGGER.warning("Skipping sequence modification due to missing index")
+                continue
+
+            modification = raw.get("shortName", None)
+            if modification is None:
+                LOGGER.warning(
+                    "Skipping sequence modification due to missing shortName"
+                )
+                continue
+
+            position = int(position)
+            features.append(
+                data.SequenceFeature(
+                    name="modification",
+                    feature_type="modification",
+                    location=[position, position + 1],
+                    sequence=str(modification),
+                    provider=provider,
+                    metadata={
+                        "accession": accession,
+                        "modification": str(modification),
+                        "index": position,
+                        "RNAmodsCode": raw.get("RNAmodsCode"),
+                        "fullName": raw.get("fullName"),
+                    },
+                )
+            )
+
     for key, feature in record["sequenceFeatures"].items():
+        if key == "modifications":
+            modification_features(feature)
+            continue
+
         ## Skip sequence features that do not have the required metadata
         if not isinstance(feature, dict):
             LOGGER.warning(
                 f"Skipping sequence feature {key} due to unexpected type {type(feature)}"
             )
             continue
-
         ## Skip sequence features that don't have the required fields
         if feature.get("indexes", None) is None:
             LOGGER.warning(
@@ -220,7 +284,7 @@ def features(record):
                 feature_type=key,
                 location=feature["indexes"],
                 sequence=feature["sequence"],
-                provider=record["database"],
+                provider=provider,
             )
         )
     return features
@@ -382,8 +446,14 @@ def as_entry(record, context):
     """
     Generate an Entry to import based off the database, exons and raw record.
     """
+    oid = optional_id(record, context)
+    pid = external_id(record)
+    if len(pid) > 100:
+        return None
+    if oid is not None and len(oid) > 100:
+        return None
     return data.Entry(
-        primary_id=external_id(record),
+        primary_id=pid,
         accession=record["primaryId"],
         ncbi_tax_id=taxid(record),
         database=context.database,
@@ -392,14 +462,11 @@ def as_entry(record, context):
         rna_type=record["soTermId"],
         url=record["url"],
         seq_version=record.get("version", "1"),
-        optional_id=optional_id(record, context),
+        optional_id=oid,
         description=description(record),
         note_data=note_data(record),
         xref_data=xrefs(record),
         related_sequences=related_sequences(record),
-        species=species(record),
-        lineage=lineage(record),
-        common_name=common_name(record),
         secondary_structure=secondary_structure(record),
         references=references(record),
         organelle=record.get("localization", None),
@@ -436,7 +503,11 @@ def parse(raw):
         entries = []
         for r in records:
             try:
-                entries.append(as_entry(r, context))
+                entry = as_entry(r, context)
+                if entry is not None:
+                    entries.append(entry)
+                else:
+                    LOGGER.warning("Overlong ID filtered for %s", r["primaryId"])
             except phy.UnknownTaxonId as e:
                 print("Unknown taxid for %s" % r["primaryId"])
                 print(f"UnknownTaxonId: {e}")

@@ -1,5 +1,6 @@
 process create_load_tables {
   time '2d'
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -8,8 +9,9 @@ process create_load_tables {
   output:
   val('done')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $create "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f $create "\$PGDATABASE"
   """
 }
 
@@ -17,6 +19,8 @@ process merge_and_import {
   tag { name }
   memory 9.GB
   maxForks 2
+  cpus 4
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -25,6 +29,7 @@ process merge_and_import {
   output:
   val(name)
 
+  script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
   """
@@ -33,9 +38,11 @@ process merge_and_import {
 process release {
   time '5d'
   maxForks 1
-  when { params.should_release }
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory  4.GB
+
+  when: { params.get('should_release', false) }
 
   input:
   path(pre_sql)
@@ -58,7 +65,7 @@ process release {
       while IFS='' read -r "script" || [[ -n "\$script" ]]; do
         if [[ ! -z "\$script" ]]; then
           echo "Running: \$fn/\$script"
-          psql -v ON_ERROR_STOP=1 -f \$script "$PGDATABASE"
+          psql -v ON_ERROR_STOP=1 -f \$script "\$PGDATABASE"
         fi
       done < "\$fn"
     fi
@@ -74,7 +81,6 @@ process release {
 
 workflow load_data {
   take: parsed
-  emit: released
   main:
     Channel.fromPath('files/import-data/limits.json') | set { limits }
     Channel.fromPath('files/schema/create_load.sql') | set { schema }
@@ -96,7 +102,7 @@ workflow load_data {
     | groupTuple \
     | map { [it[0][0], it[0][1], it[1]] } \
     | combine(create_load_tables(schema)) \
-    | map { n, ctl, fs, _ -> [n, ctl, fs] } \
+    | map { n, ctl, fs, _ready -> [n, ctl, fs] } \
     | merge_and_import \
     | set { imported_names }
 
@@ -121,4 +127,5 @@ workflow load_data {
     release(pre_scripts, post_scripts, limits) \
     | ifEmpty('no release') \
     | set { released }
+  emit: released
 }

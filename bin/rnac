@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-base="$(dirname $0)/.."
-export PYTHONPATH="$PYTHONPATH:$base"
+# Resolve to absolute path, following symlinks
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+base="$(dirname "$script_dir")"
+
+if [ -z "${PYTHONPATH:-}" ]; then
+  export PYTHONPATH="$base"
+else
+  export PYTHONPATH="$PYTHONPATH:$base"
+fi
+
 exec python3 -m rnacentral_pipeline "$@"

@@ -1,5 +1,7 @@
 process readme {
   publishDir "${params.export.ftp.publish}/genome_coordinates/", mode: 'copy'
+  time '5m'
+  memory '64 MB'
 
   input:
   path(raw)
@@ -7,26 +9,33 @@ process readme {
   output:
   path('readme.txt')
 
+  script:
   """
   cp $raw readme.txt
   """
 }
 
 process find_jobs {
+  time '5m'
+  memory '128 MB'
+
   input:
   path(query)
 
   output:
   path('coordinates.txt')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > coordinates.txt
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > coordinates.txt
   """
 }
 
 process fetch {
   tag { "${assembly}-${species}" }
   maxForks 2
+  time '20m'
+  memory '512 MB'
 
   input:
   tuple val(assembly), val(species), val(taxid), path(query)
@@ -34,14 +43,18 @@ process fetch {
   output:
   tuple val(assembly), val(species), path('result.json')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "\$PGDATABASE" > result.json
   """
 }
 
 process generate_bed {
   tag { "${assembly}-${species}" }
   publishDir "${params.export.ftp.publish}/genome_coordinates/bed/", mode: 'copy'
+  time '5m'
+  memory '1 GB'
+
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -49,6 +62,7 @@ process generate_bed {
   output:
   tuple val(assembly), path("${species}.${assembly}.bed.gz")
 
+  script:
   """
   set -euo pipefail
 
@@ -62,6 +76,8 @@ process generate_gff3 {
   tag { "${assembly}-${species}" }
   memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/genome_coordinates/gff3", mode: 'copy'
+  time '30m'
+  memory '2 GB'
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -69,6 +85,7 @@ process generate_gff3 {
   output:
   path("${species}.${assembly}.gff3.gz")
 
+  script:
   """
   set -euo pipefail
 
@@ -82,6 +99,8 @@ process generate_gff3_for_igv {
   tag { "${assembly}-${species}" }
   memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
+  time '30m'
+  memory '2 GB'
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -89,6 +108,7 @@ process generate_gff3_for_igv {
   output:
   path("${species}.${assembly}.rnacentral.gff3.gz")
 
+  script:
   """
   set -euo pipefail
 
@@ -101,12 +121,14 @@ process generate_gff3_for_igv {
 
 process index_gff3 {
   publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
-
+  time '5m'
+  memory '256 MB'
   input:
   path(gff)
 
   output:
   path("${gff.baseName}.gz.{tbi,csi}"), optional: true
+  script:
   """
   tabix -p gff $gff || tabix -C -p gff $gff
   """

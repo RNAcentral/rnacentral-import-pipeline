@@ -48,10 +48,16 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
         if region.source == "alignment" and region.identity:
             attributes["identity"] = ["%.2f" % region.identity]
 
+        if region.source == "genes-prediction":
+            attributes["provider"] = region.metadata["providing_databases"]
+
+        if not region.is_gene and region.metadata.get("parent_gene", None) is not None:
+            attributes["Parent"] = [region.metadata["parent_gene"]]
+
         yield Feature(
             seqid=region.chromosome,
             source="RNAcentral",
-            featuretype="transcript",
+            featuretype="predicted_gene" if region.is_gene else "transcript",
             start=region.start,
             end=region.stop,
             strand=region.string_strand(),

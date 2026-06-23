@@ -15,10 +15,11 @@ limitations under the License.
 
 import typing as ty
 from functools import lru_cache
+from io import StringIO
 
 import pytest
 
-from rnacentral_pipeline.databases.ensembl.data import Division
+from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 from rnacentral_pipeline.databases.ensembl.genomes import urls
 
 
@@ -41,3 +42,51 @@ def test_can_generate_reasonable_species(division, expected, found):
         assert expected in species(division)
     else:
         assert expected not in species(division)
+
+
+def test_can_generate_current_urls_from_species_metadata():
+    metadata = StringIO(
+        """
+[
+  {
+    "organism": {"name": "aspergillus_oryzae", "url_name": "Aspergillus_oryzae"},
+    "assembly": {"assembly_default": "ASM18445v3"},
+    "databases": [{"dbname": "aspergillus_oryzae_core_62_1"}]
+  }
+]
+""".strip()
+    )
+
+    found = list(
+        urls.generate_paths(
+            ftp=None,
+            division=Division.fungi,
+            base="ftp://ftp.ensemblgenomes.org/pub",
+            release="current",
+            handle=metadata,
+        )
+    )
+
+    assert found == [
+        FtpInfo(
+            division=Division.fungi,
+            species="aspergillus_oryzae",
+            data_files=(
+                "ftp://ftp.ensemblgenomes.org/pub/current/fungi/embl/"
+                "aspergillus_oryzae/Aspergillus_oryzae.ASM18445v3.62.*.dat.gz"
+            ),
+            gff_file=(
+                "ftp://ftp.ensemblgenomes.org/pub/current/fungi/gff3/"
+                "aspergillus_oryzae/Aspergillus_oryzae.ASM18445v3.62.gff3.gz"
+            ),
+        )
+    ]
+
+
+def test_can_extract_release_suffix_from_database_name():
+    entry = {
+        "organism": {"name": "aspergillus_oryzae"},
+        "databases": [{"dbname": "aspergillus_oryzae_core_62_1"}],
+    }
+
+    assert urls.release_suffix(entry) == "62"

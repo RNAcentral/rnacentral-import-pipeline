@@ -50,7 +50,7 @@ fn chunk_writer(
     final_name.set_extension("ncr");
 
     let file = File::create(final_name)?;
-    return Ok(BufWriter::new(file));
+    Ok(BufWriter::new(file))
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

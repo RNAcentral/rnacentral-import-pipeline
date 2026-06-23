@@ -21,16 +21,14 @@ WITH
   fields escaped by double-quote,
   fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_ontology_terms;
+ALTER TABLE rnacen.load_ontology_terms SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_ontology_terms (
-  ontology_term_id varchar(15),
-  ontology varchar(5),
-  name text,
-  definition text
-);
+ANALYZE rnacen.load_ontology_terms;
 $$
 ;

@@ -16,20 +16,6 @@ TARGET COLUMNS (
   is_protein_coding
 )
 
-BEFORE LOAD DO
-$$
-DROP TABLE IF EXISTS load_cpat;
-$$,
-$$
-CREATE TABLE load_cpat (
-  urs_taxid TEXT not null,
-  fickett_score float not null,
-  hexamer_score float not null,
-  coding_probability float not null,
-  is_protein_coding bool not null
-);
-$$
-
 AFTER LOAD DO
 $$
 INSERT INTO cpat_results (

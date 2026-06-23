@@ -12,7 +12,7 @@ COPY(
     external_id,
     gene_synonym ,
     optional_id,
-    description,
+    rnc_accessions.description,
     seq_version,
     rna_type,
     COALESCE(seq_short, seq_long) as seq
@@ -21,9 +21,18 @@ COPY(
   ON xref.upi = rna.upi
   join rnc_accessions
   ON xref.ac = rnc_accessions.accession
+  JOIN rnc_database
+  ON rnc_database.id = xref.dbid
 
   WHERE xref.deleted = 'N'
-  AND xref.dbid IN (25, 31, 34, 35, 36, 47)
+  AND upper(rnc_database.descr) IN (
+    'NONCODE',
+    'RFAM',
+    'SILVA',
+    'SNODB',
+    'SNOPY',
+    'ENSEMBL_GENCODE'
+  )
   AND (
     gene <> ''
     OR

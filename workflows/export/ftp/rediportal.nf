@@ -5,8 +5,9 @@ process dump {
     path query
 
 
+  script:
   """
-  psql -f $query "$PGDATABASE" > rediportal-mapping.csv
+  psql -f $query "\$PGDATABASE" > rediportal-mapping.csv
   """
 
 }

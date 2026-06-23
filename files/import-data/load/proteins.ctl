@@ -17,16 +17,14 @@ WITH
   skip header = 0,
   fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_protein_info;
+ALTER TABLE rnacen.load_protein_info SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_protein_info (
-  protein_accession text NOT NULL,
-  description text,
-  label text,
-  synonyms text[]
-);
+ANALYZE rnacen.load_protein_info;
 $$
 ;

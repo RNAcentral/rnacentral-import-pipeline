@@ -15,14 +15,15 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral.ftp_export import fasta
-from rnacentral_pipeline.rnacentral.ftp_export import go_terms
-from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
-from rnacentral_pipeline.rnacentral.ftp_export import release_note
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
-from rnacentral_pipeline.rnacentral.ftp_export import gpi
+from rnacentral_pipeline.rnacentral.ftp_export import (
+    fasta,
+    go_terms,
+    gpi,
+    id_mapping,
+    release_note,
+)
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed, gff3
 
 
 @click.group("ftp-export")
@@ -104,9 +105,16 @@ def export_go_temrs(filename, output):
 
 @cli.command("gpi")
 @click.option("--db-url", envvar="PGDATABASE")
+@click.option(
+    "--filter",
+    "gpi_filter",
+    type=click.Choice(["none", "species", "reference-proteome"], case_sensitive=False),
+    default="none",
+    help="Filter: species-only or reference-proteome-only",
+)
 @click.argument("output", default="-", type=click.File("w"))
-def export_gpi(output, db_url):
-    gpi.export(db_url, output)
+def export_gpi(output, db_url, gpi_filter):
+    gpi.export(db_url, output, gpi_filter=gpi.GpiFilter(gpi_filter))
 
 
 @cli.group("coordinates")

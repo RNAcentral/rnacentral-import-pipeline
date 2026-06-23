@@ -1,8 +1,13 @@
 use clap::Parser;
-use polars::lazy::dsl::col;
+use polars::{
+    datatypes::DataType::{
+        Int64,
+        List,
+    },
+    lazy::dsl::col,
+    prelude::*,
+};
 use std::fs;
-use polars::datatypes::DataType::{Int64, List};
-use polars::prelude::*;
 
 #[derive(Parser, Debug)]
 #[clap(author = "Andrew Green", version, about)]
@@ -30,19 +35,30 @@ fn main() -> Result<(), PolarsError> {
     // col 11: exon sizes
     // col 12: exon starts
 
-
     // Stay lazy as long as possible to minimise memory use
     let original_bed = original_bed
         .with_columns([col("column_11").str().split(","), col("column_12").str().split(",")])
-        .with_columns([col("column_11").cast(List(Box::new(Int64)))] )
+        .with_columns([col("column_11").cast(List(Box::new(Int64)))])
         .with_column(col("column_11").list().sum().alias("column_5"))
         .explode([col("column_11"), col("column_12")])
         .with_columns([col("column_11").cast(Int64), col("column_12").cast(Int64)])
         .with_column(col("column_2").alias("transcript_start"))
         .with_column(col("column_3").alias("transcript_end"))
-        .with_columns([(col("column_2") + col("column_12")).alias("column_2"), (col("column_2") + col("column_12") + col("column_11")).alias("column_3")] )
-        .select([col("column_1"), col("column_2"), col("column_3"), col("column_4"), col("column_5"), col("column_6"), col("transcript_start"), col("transcript_end")])
-        .sort_by_exprs(vec![col("column_1"), col("column_2")], vec![false,false], false, false);
+        .with_columns([
+            (col("column_2") + col("column_12")).alias("column_2"),
+            (col("column_2") + col("column_12") + col("column_11")).alias("column_3"),
+        ])
+        .select([
+            col("column_1"),
+            col("column_2"),
+            col("column_3"),
+            col("column_4"),
+            col("column_5"),
+            col("column_6"),
+            col("transcript_start"),
+            col("transcript_end"),
+        ])
+        .sort_by_exprs(vec![col("column_1"), col("column_2")], vec![false, false], false, false);
 
     let mut output_file = fs::File::create(&cli.output)?;
     let mut writer = CsvWriter::new(&mut output_file).has_header(false).with_delimiter(b'\t');
@@ -50,5 +66,4 @@ fn main() -> Result<(), PolarsError> {
     let mut expanded_bed = original_bed.collect()?;
 
     writer.finish(&mut expanded_bed)
-
 }

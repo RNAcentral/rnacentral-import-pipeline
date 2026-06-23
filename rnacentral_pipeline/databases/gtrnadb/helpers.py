@@ -114,13 +114,17 @@ def lineage(taxonomy: SqliteDict, data):
     return phy.lineage(ncbi_taxid)
 
 
+_species_cache = {}
+
+
 def species(taxonomy, data):
-    """
-    Get a standardized species name for the given taxon id.
-    """
     ncbi_taxid = taxid(data)
-    if ncbi_taxid in taxonomy:
-        return taxonomy[ncbi_taxid].name
+    if ncbi_taxid in _species_cache:
+        return _species_cache[ncbi_taxid]
+    entry = taxonomy.get(ncbi_taxid)
+    if entry is not None:
+        _species_cache[ncbi_taxid] = entry.name
+        return entry.name
     return phy.species(ncbi_taxid)
 
 

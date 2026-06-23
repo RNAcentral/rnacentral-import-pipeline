@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 create_memory = params.export.sequence_search.create_fasta.memory_table
 
 process find_db_to_export {
-  when { params.export.sequence_search.run }
+  when: { params.export?.sequence_search?.run }
 
   input:
   path(query)
@@ -13,8 +13,9 @@ process find_db_to_export {
   output:
   path('dbs.txt')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > dbs.txt
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > dbs.txt
   """
 }
 
@@ -28,12 +29,13 @@ process query_database {
   output:
   tuple val(name), path('raw.json')
 
+  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
     $partition \
     -f "$query" \
-    "$PGDATABASE" > raw.json
+    "\$PGDATABASE" > raw.json
   """
 }
 
@@ -95,7 +97,6 @@ process atomic_publish {
 
 workflow sequence_search {
   take: _flag
-  emit: done
   main:
     Channel.fromPath('files/ftp-export/sequences/databases.sql') | set { db_query }
     Channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
@@ -120,6 +121,7 @@ workflow sequence_search {
     create_fasta.out.stats | collect | set { stats }
 
     atomic_publish(sequences, hashes, stats) | set { done }
+  emit: done
 }
 
 workflow {

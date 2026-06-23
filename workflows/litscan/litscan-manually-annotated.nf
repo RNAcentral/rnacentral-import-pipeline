@@ -50,6 +50,7 @@ process import_manually_annotated_articles {
     output:
     val('done')
 
+    script:
     """
     pgloader --on-error-stop $ctl
     """
@@ -57,7 +58,6 @@ process import_manually_annotated_articles {
 
 workflow find_manually_annotated {
     take: ready
-    emit: done
     main:
       query = Channel.fromPath('workflows/litscan/manually_annotated/query.sql')
       get_expert_db_articles(ready, query) \
@@ -67,6 +67,7 @@ workflow find_manually_annotated {
 
       load_ctl = Channel.of("$baseDir/workflows/litscan/manually_annotated/save-manually-annotated.ctl")
       import_manually_annotated_articles(manually_annotated_articles, load_ctl) | set{ done }
+    emit: done
 }
 
 workflow {
