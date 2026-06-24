@@ -175,7 +175,7 @@ process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
   memory { params.genome_mapping.blat.directives.memory }
   errorStrategy =  { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
-  time { task.attempt == 1 ? 5.m : task.attempt == 2? 35.m : 210.m }
+  time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 300.m }
   maxRetries 3
 
   input:
