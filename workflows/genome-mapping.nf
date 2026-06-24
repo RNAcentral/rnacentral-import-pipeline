@@ -285,7 +285,8 @@ workflow genome_mapping {
       | blat_index \
       | join(split_sequences) \
       | flatMap { species, assembly, genome_chunks, chunks ->
-        [genome_chunks.collate(2), chunks]
+        def chunkList = chunks instanceof List ? chunks : [chunks]
+        [genome_chunks.collate(2), chunkList]
           .combinations()
           .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
       } \
