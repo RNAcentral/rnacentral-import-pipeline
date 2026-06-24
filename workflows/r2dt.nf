@@ -129,7 +129,7 @@ process layout_sequences {
   maxForks 200
   memory params.r2dt.layout.memory
   container params.r2dt.container
-  containerOptions "${params.common_container}"
+  containerOptions "${params.r2dt_container}"
   errorStrategy 'ignore'
 
   input:
