@@ -174,7 +174,9 @@ process index_genome_for_browser {
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
   memory { params.genome_mapping.blat.directives.memory }
-  errorStrategy 'ignore'
+  errorStrategy =  { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
+  time { task.attempt == 1 ? 5.m : task.attempt == 2? 35.m : 210.m }
+  maxRetries 3
 
   input:
   tuple val(species), val(assembly), path(genome), path(ooc), path(chunk)
