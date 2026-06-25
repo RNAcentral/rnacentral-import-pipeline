@@ -15,6 +15,7 @@ use crate::metadata::{
     },
     previous::Previous,
     r2dt_hit::R2dtHit,
+    repeatmasker::Repeatmasker,
     rfam_hit::RfamHit,
     stopfree::Stopfree,
     tcode::Tcode,
@@ -36,6 +37,7 @@ pub struct Metadata {
     pub possible_orf: Option<bool>,
     pub possible_orf_stopfree: Option<bool>,
     pub possible_orf_tcode: Option<bool>,
+    pub from_repeat: Option<bool>,
 }
 
 impl Metadata {
@@ -48,6 +50,7 @@ impl Metadata {
         orfs: Vec<Orf>,
         stopfree: Option<Stopfree>,
         tcode: Option<Tcode>,
+        repeatmasker: Option<Repeatmasker>,
     ) -> Result<Self> {
         if coordinates.len() > 0 {
             assert!(
@@ -69,6 +72,7 @@ impl Metadata {
 
         let possible_orf_stopfree = stopfree.and_then(|s| s.is_protein_coding);
         let possible_orf_tcode = tcode.and_then(|t| t.is_protein_coding);
+        let from_repeat = repeatmasker.and_then(|r| r.has_repeats);
         let possible_orf = orf::possible_orf(&orfs);
 
         return Ok(Self {
@@ -86,6 +90,7 @@ impl Metadata {
             possible_orf,
             possible_orf_stopfree,
             possible_orf_tcode,
+            from_repeat,
         });
     }
 }

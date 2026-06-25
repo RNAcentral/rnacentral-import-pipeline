@@ -48,6 +48,10 @@ enum MetadataCommand {
         tcode: PathBuf,
 
         #[structopt(parse(from_os_str))]
+        /// Filename of repeatmasker results
+        repeatmasker: PathBuf,
+
+        #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
     },
@@ -185,6 +189,7 @@ fn main() -> anyhow::Result<()> {
                 orfs,
                 stopfree,
                 tcode,
+                repeatmasker,
                 output,
             } => {
                 metadata::write_merge(
@@ -196,6 +201,7 @@ fn main() -> anyhow::Result<()> {
                     &orfs,
                     &stopfree,
                     &tcode,
+                    &repeatmasker,
                     &output,
                 )?;
             },
@@ -213,6 +219,9 @@ fn main() -> anyhow::Result<()> {
                 FileType::RfamHits => metadata::rfam_hit::group(&path, max_count, &output)?,
                 FileType::Stopfree => metadata::stopfree::group(&path, max_count, &output)?,
                 FileType::Tcode => metadata::tcode::group(&path, max_count, &output)?,
+                FileType::Repeatmasker => {
+                    metadata::repeatmasker::group(&path, max_count, &output)?
+                },
             },
         },
         Subcommand::GroupAccessions {

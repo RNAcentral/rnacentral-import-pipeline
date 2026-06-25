@@ -48,6 +48,7 @@ pub struct Normalized {
     possible_orf: Option<bool>,
     possible_orf_stopfree: Option<bool>,
     possible_orf_tcode: Option<bool>,
+    from_repeat: Option<bool>,
 }
 
 impl Normalized {
@@ -72,6 +73,7 @@ impl Normalized {
             possible_orf: metadata.possible_orf,
             possible_orf_stopfree: metadata.possible_orf_stopfree,
             possible_orf_tcode: metadata.possible_orf_tcode,
+            from_repeat: metadata.from_repeat,
         });
     }
 }

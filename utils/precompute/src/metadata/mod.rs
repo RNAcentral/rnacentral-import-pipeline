@@ -5,6 +5,7 @@ pub mod merged;
 pub mod orf;
 pub mod previous;
 pub mod r2dt_hit;
+pub mod repeatmasker;
 pub mod rfam_hit;
 pub mod stopfree;
 pub mod tcode;
@@ -33,6 +34,7 @@ pub use coordinate::Coordinate;
 pub use merged::Metadata;
 pub use previous::Previous;
 pub use r2dt_hit::R2dtHit;
+pub use repeatmasker::Repeatmasker;
 pub use rfam_hit::RfamHit;
 pub use stopfree::Stopfree;
 pub use tcode::Tcode;
@@ -46,6 +48,7 @@ pub fn write_merge(
     orf_file: &Path,
     stopfree_file: &Path,
     tcode_file: &Path,
+    repeatmasker_file: &Path,
     output: &Path,
 ) -> Result<()> {
     let mut basic = PsqlJsonIterator::from_path(basic_file)?;
@@ -56,6 +59,7 @@ pub fn write_merge(
     let mut orfs = PsqlJsonIterator::from_path(orf_file)?;
     let mut stopfree = PsqlJsonIterator::from_path(stopfree_file)?;
     let mut tcode = PsqlJsonIterator::from_path(tcode_file)?;
+    let mut repeatmasker = PsqlJsonIterator::from_path(repeatmasker_file)?;
 
     let mut output = rnc_utils::buf_writer(output)?;
     loop {
@@ -68,8 +72,9 @@ pub fn write_merge(
             orfs.next(),
             stopfree.next(),
             tcode.next(),
+            repeatmasker.next(),
         ) {
-            (None, None, None, None, None, None, None, None) => break,
+            (None, None, None, None, None, None, None, None, None) => break,
             (
                 Some(Required {
                     id: id1,
@@ -103,6 +108,10 @@ pub fn write_merge(
                     id: id8,
                     data: tcode,
                 }),
+                Some(Optional {
+                    id: id9,
+                    data: repeatmasker,
+                }),
             ) => {
                 assert!(
                     id1 == id2
@@ -111,7 +120,8 @@ pub fn write_merge(
                         && id1 == id5
                         && id1 == id6
                         && id1 == id7
-                        && id1 == id8,
+                        && id1 == id8
+                        && id1 == id9,
                     "The data ids are out of sync at {}",
                     id1
                 );
@@ -125,6 +135,7 @@ pub fn write_merge(
                     orfs,
                     stopfree,
                     tcode,
+                    repeatmasker,
                 )?;
                 serde_json::to_writer(&mut output, &merged)?;
                 writeln!(&mut output)?;

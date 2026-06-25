@@ -18,4 +18,6 @@ pub enum FileType {
     Stopfree,
     #[strum(serialize = "tcode")]
     Tcode,
+    #[strum(serialize = "repeatmasker")]
+    Repeatmasker,
 }
