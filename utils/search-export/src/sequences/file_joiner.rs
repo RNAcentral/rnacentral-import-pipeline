@@ -47,6 +47,7 @@ use super::{
     qa_status::QaStatus,
     r2dt::R2dt,
     raw::Raw,
+    repeatmasker::Repeatmasker,
     rfam_hit::RfamHit,
     so_tree,
     so_tree::SoMapping,
@@ -95,6 +96,7 @@ pub enum FileTypes {
     Precompute,
     QaStatus,
     R2dt,
+    Repeatmasker,
     RfamHits,
     PublicationCount,
     LitsummSummaries,
@@ -115,6 +117,7 @@ pub struct FileJoiner<'de> {
     precompute: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Precompute>>,
     qa_status: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<QaStatus>>,
     r2dt_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<R2dt>>,
+    repeatmasker: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Repeatmasker>>,
     rfam_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<RfamHit>>,
     publication_counts: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<PublicationCount>>,
     lit_summ: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<LitsummSummaries>>,
@@ -203,6 +206,7 @@ impl FileJoinerBuilder {
         let precompute = self.iterator_for(FileTypes::Precompute)?;
         let qa_status = self.iterator_for(FileTypes::QaStatus)?;
         let r2dt_hits = self.iterator_for(FileTypes::R2dt)?;
+        let repeatmasker = self.iterator_for(FileTypes::Repeatmasker)?;
         let rfam_hits = self.iterator_for(FileTypes::RfamHits)?;
         let publication_counts = self.iterator_for(FileTypes::PublicationCount)?;
         let lit_summ = self.iterator_for(FileTypes::LitsummSummaries)?;
@@ -221,6 +225,7 @@ impl FileJoinerBuilder {
             precompute,
             qa_status,
             r2dt_hits,
+            repeatmasker,
             rfam_hits,
             publication_counts,
             lit_summ,
@@ -246,6 +251,7 @@ impl<'de> Iterator for FileJoiner<'de> {
             self.precompute.next(),
             self.qa_status.next(),
             self.r2dt_hits.next(),
+            self.repeatmasker.next(),
             self.rfam_hits.next(),
             self.publication_counts.next(),
             self.lit_summ.next(),
@@ -255,6 +261,7 @@ impl<'de> Iterator for FileJoiner<'de> {
 
         match current {
             (
+                None,
                 None,
                 None,
                 None,
@@ -312,6 +319,10 @@ impl<'de> Iterator for FileJoiner<'de> {
                     id: id10,
                     data: r2dt,
                 })),
+                Some(Ok(Optional {
+                    id: id16,
+                    data: repeatmasker,
+                })),
                 Some(Ok(Multiple {
                     id: id11,
                     data: rfam_hits,
@@ -347,10 +358,11 @@ impl<'de> Iterator for FileJoiner<'de> {
                     || id1 != id13
                     || id1 != id14
                     || id1 != id15
+                    || id1 != id16
                 {
                     return Some(Err(Error::OutofSyncData(vec![
                         id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12, id13, id14,
-                        id15,
+                        id15, id16,
                     ])));
                 }
 
@@ -371,6 +383,7 @@ impl<'de> Iterator for FileJoiner<'de> {
                     .interacting_proteins(interacting_proteins)
                     .interacting_rnas(interacting_rnas)
                     .r2dt(r2dt)
+                    .repeatmasker(repeatmasker)
                     .rfam_hits(rfam_hits)
                     .orfs(orfs)
                     .publication_counts(publication_counts)

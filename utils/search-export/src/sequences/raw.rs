@@ -24,6 +24,7 @@ use crate::sequences::{
     precompute::Precompute,
     qa_status::QaStatus,
     r2dt::R2dt,
+    repeatmasker::Repeatmasker,
     rfam_hit::RfamHit,
     so_tree,
 };
@@ -42,6 +43,7 @@ pub struct Raw {
     precompute: Precompute,
     qa_status: Option<QaStatus>,
     r2dt: Option<R2dt>,
+    repeatmasker: Option<Repeatmasker>,
     rfam_hits: Vec<RfamHit>,
     orfs: Vec<Orf>,
     publication_counts: Option<PublicationCount>,
@@ -118,6 +120,11 @@ impl Raw {
     /// Get a reference to the raw's r2dt.
     pub fn r2dt(&self) -> &Option<R2dt> {
         &self.r2dt
+    }
+
+    /// Get a reference to the raw's repeatmasker presence flag.
+    pub fn repeatmasker(&self) -> &Option<Repeatmasker> {
+        &self.repeatmasker
     }
 
     /// Get a reference to the raw's rfam hits.

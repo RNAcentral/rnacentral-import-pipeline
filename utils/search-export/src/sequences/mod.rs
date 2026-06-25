@@ -16,6 +16,7 @@ pub mod publication_counts;
 pub mod qa_status;
 pub mod r2dt;
 pub mod raw;
+pub mod repeatmasker;
 pub mod rfam_hit;
 pub mod so_tree;
 pub mod writers;
