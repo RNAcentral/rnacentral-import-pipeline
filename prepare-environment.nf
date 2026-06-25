@@ -30,11 +30,28 @@ process get_r2dt_data {
   """
 }
 
+process get_dfam_data {
+  container ''
+
+  input:
+    tuple val(data_dir), val(url)
+
+  script:
+  """
+  mkdir -p $data_dir
+  cd $data_dir
+  fname=\$(basename "$url")
+  wget -O "\$fname" "$url"
+  gunzip -f "\$fname"
+  """
+}
+
 workflow prepare_environment {
   main:
     Channel.of("Starting environment preparation") | slack_message
 
     Channel.of("$params.r2dt.cms_path/../")| get_r2dt_data
+    Channel.of([params.repeatmasker.dfam_path, params.repeatmasker.dfam_url]) | get_dfam_data
 }
 
 workflow {
