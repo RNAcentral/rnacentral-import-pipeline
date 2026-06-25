@@ -40,6 +40,15 @@ CREATE TABLE search_export_accessions (
   standard_name TEXT
 );
 
+-- Ensure the RepeatMasker tracking table exists so the repeatmasker search
+-- part can join it even before the analyze pipeline has populated it.
+CREATE TABLE IF NOT EXISTS repeatmasker_results (
+  urs_taxid TEXT PRIMARY KEY,
+  has_repeats bool,
+  repeat_coverage float,
+  repeat_count integer
+);
+
 INSERT INTO search_export_urs (urs_taxid, urs, taxid) (
   SELECT
     pre.id,

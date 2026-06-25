@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -851,6 +851,7 @@ builder = entry(
                     keys="overlaps",
                 ),
                 fields("has_secondary_structure", has_value, keys="secondary"),
+                fields("has_repetitive_region", has_value, keys="repetitive"),
                 fields(
                     "secondary_structure_model",
                     get_or_empty("secondary_structure_model"),
