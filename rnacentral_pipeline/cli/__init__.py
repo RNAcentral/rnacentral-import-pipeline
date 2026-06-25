@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -63,6 +63,7 @@ from rnacentral_pipeline.cli import (
     release,
     rgd,
     repeats,
+    repeatmasker,
     rfam,
     ribocentre,
     ribovision,
@@ -150,6 +151,7 @@ cli.add_command(refseq.cli)
 cli.add_command(release.cli)
 cli.add_command(rgd.cli)
 cli.add_command(repeats.cli)
+cli.add_command(repeatmasker.cli)
 cli.add_command(rfam.cli)
 cli.add_command(ribovision.cli)
 cli.add_command(ribocentre.cli)
