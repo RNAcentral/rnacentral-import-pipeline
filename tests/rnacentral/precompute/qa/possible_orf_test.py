@@ -22,6 +22,7 @@ def build_sequence(possible_orf_flag, orf_info=None):
         possible_orf=possible_orf_flag,
         possible_orf_stopfree=False,
         possible_orf_tcode=False,
+        from_repeat=False,
     )
 
 
