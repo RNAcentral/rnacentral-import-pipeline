@@ -39,7 +39,7 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
         incomplete_sequence=incomplete.validate(sequence),
         possible_contamination=contamination.validate(rna_type, sequence),
         missing_rfam_match=missing.validate(rna_type, sequence),
-        from_repetitive_region=repetitive.validate(context, sequence),
+        from_repetitive_region=repetitive.validate(sequence),
         possible_orf=possible_orf.validate(sequence),
         possible_orf_stopfree=possible_orf_stopfree.validate(sequence),
         possible_orf_tcode=possible_orf_tcode.validate(sequence),

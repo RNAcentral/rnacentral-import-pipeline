@@ -93,6 +93,7 @@ class Sequence:
     possible_orf = attr.ib(validator=optional(is_a(bool)))
     possible_orf_stopfree = attr.ib(validator=optional(is_a(bool)))
     possible_orf_tcode = attr.ib(validator=optional(is_a(bool)))
+    from_repeat = attr.ib(validator=optional(is_a(bool)))
 
     @classmethod
     def build(cls, so_tree, data) -> Sequence:
@@ -141,6 +142,7 @@ class Sequence:
             possible_orf=data.get("possible_orf", None),
             possible_orf_stopfree=data.get("possible_orf_stopfree", None),
             possible_orf_tcode=data.get("possible_orf_tcode", None),
+            from_repeat=data.get("from_repeat", None),
         )
 
     @property

@@ -13,24 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
 
+NAME = "from_repetitive_region"
 
-def validate(context: Context, sequence: Sequence) -> QaResult:
-    repeats = context.repeats
-    for coordinate in sequence.coordinates:
-        if not repeats.has_assembly(coordinate.assembly_id):
-            continue
-        assem_reps = repeats.assembly(coordinate.assembly_id)
-        enclosed = assem_reps.is_enveloped(
-            coordinate.chromosome,
-            coordinate.start,
-            coordinate.stop,
-        )
-        if enclosed:
-            return QaResult.not_ok(
-                "from_repetitive_region", "This sequence overlaps a repetitive region"
-            )
-    return QaResult.ok("from_repetitive_region")
+
+def validate(sequence: Sequence) -> QaResult:
+    if sequence.from_repeat is None:
+        return QaResult.null(NAME)
+    if not sequence.from_repeat:
+        return QaResult.ok(NAME)
+    message = "This sequence overlaps a repetitive region, as annotated by RepeatMasker"
+    return QaResult.not_ok(NAME, message)
