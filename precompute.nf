@@ -14,6 +14,7 @@ include { query as basic_query} from './workflows/precompute/utils'
 include { query as orf_query} from './workflows/precompute/utils'
 include { query as stopfree_query} from './workflows/precompute/utils'
 include { query as tcode_query} from './workflows/precompute/utils'
+include { query as repeatmasker_query} from './workflows/precompute/utils'
 
 include { slack_closure } from './workflows/utils/slack'
 include { slack_message } from './workflows/utils/slack'
@@ -47,13 +48,14 @@ process build_metadata {
   path(orf)
   path(stopfree)
   path(tcode)
+  path(repeatmasker)
 
   output:
   path("metadata.json")
 
   script:
   """
-  precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev $orf $stopfree $tcode metadata.json
+  precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev $orf $stopfree $tcode $repeatmasker metadata.json
   """
 }
 
@@ -166,6 +168,7 @@ workflow precompute {
     Channel.fromPath('files/precompute/queries/orfs.sql') | set { orf_sql }
     Channel.fromPath('files/precompute/queries/stopfree.sql') | set { stopfree_sql }
     Channel.fromPath('files/precompute/queries/tcode.sql') | set { tcode_sql }
+    Channel.fromPath('files/precompute/queries/repeatmasker.sql') | set { repeatmasker_sql }
 
     // repeats | build_precompute_context | set { context }
     Channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
@@ -180,6 +183,7 @@ workflow precompute {
       orf_query(urs_counts, orf_sql),
       stopfree_query(urs_counts, stopfree_sql),
       tcode_query(urs_counts, tcode_sql),
+      repeatmasker_query(urs_counts, repeatmasker_sql),
     ) \
     | set { metadata }
 
