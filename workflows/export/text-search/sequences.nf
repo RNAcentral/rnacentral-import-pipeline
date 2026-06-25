@@ -12,6 +12,7 @@ include { query as rnas_query } from './utils'
 include { query as precompute_query } from './utils'
 include { query as qa_query } from './utils'
 include { query as r2dt_query } from './utils'
+include { query as repeatmasker_query } from './utils'
 include { query as ref_query } from './utils'
 include { query as rfam_query } from './utils'
 include { query as orf_query } from './utils'
@@ -62,6 +63,7 @@ process build_metadata {
   path(precompute)
   path(qa)
   path(r2dt)
+  path(repeatmasker)
   path(rfam)
   path(orf)
   path(text)
@@ -75,7 +77,7 @@ process build_metadata {
 
   script:
   """
-  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm $editing_events $go_flow_annotations merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $repeatmasker $rfam $orf $text $so_tree $litsumm $editing_events $go_flow_annotations merged.json
   """
 }
 
@@ -221,6 +223,7 @@ workflow sequences {
     Channel.fromPath('files/search-export/parts/precompute.sql') | set { precompute_sql }
     Channel.fromPath('files/search-export/parts/qa-status.sql') | set { qa_sql }
     Channel.fromPath('files/search-export/parts/r2dt.sql') | set { r2dt_sql }
+    Channel.fromPath('files/search-export/parts/repeatmasker.sql') | set { repeatmasker_sql }
     Channel.fromPath('files/search-export/parts/rfam-hits.sql') | set { rfam_sql }
     Channel.fromPath('files/search-export/parts/orfs.sql') | set { orf_sql }
     Channel.fromPath('files/search-export/parts/text-mining.sql') | set { text_sql }
@@ -253,6 +256,7 @@ workflow sequences {
       precompute_query(search_count, precompute_sql),
       qa_query(search_count, qa_sql),
       r2dt_query(search_count, r2dt_sql),
+      repeatmasker_query(search_count, repeatmasker_sql),
       rfam_query(search_count, rfam_sql),
       orf_query(search_count, orf_sql),
       text_mining_query(search_count, text_sql),
