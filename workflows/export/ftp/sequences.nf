@@ -118,6 +118,7 @@ process database_specific {
   export PYTHONIOENCODING=utf8
   psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "\$PGDATABASE" > raw.json
   json2fasta.py raw.json ${db.toLowerCase().replaceAll(' ', '_').replace('/', '_')}.fasta
+  gzip ${db.toLowerCase().replaceAll(' ', '_').replace('/', '_')}.fasta
   """
 }
 
