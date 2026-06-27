@@ -184,7 +184,7 @@ process store_genes {
 
 
 process deactivate_discarded {
-
+  memory 4.GB
   tag { taxid }
   maxForks 1
 
