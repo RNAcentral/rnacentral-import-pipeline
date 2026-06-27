@@ -1227,6 +1227,12 @@ def store_metadata(metadata, db_str):
 
     metadata = pl.read_json(metadata)
 
+    # An empty metadata file serialises to `[]`, which read_json loads as a
+    # 0-column frame (no "name"). Nothing to store for that taxon.
+    if "name" not in metadata.columns:
+        print("No gene metadata to store")
+        return
+
     if metadata.schema["name"] == pl.List(pl.Utf8):
         metadata = metadata.with_columns(pl.col("name").list.first())
 
