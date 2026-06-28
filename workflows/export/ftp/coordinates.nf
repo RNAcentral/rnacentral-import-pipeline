@@ -67,7 +67,7 @@ process generate_bed {
   set -euo pipefail
 
   rnac ftp-export coordinates as-bed $raw_data |\
-  sort -k1,1 -k2,2n |\
+  sort -T . -k1,1 -k2,2n |\
   gzip > ${species}.${assembly}.bed.gz
   """
 }
