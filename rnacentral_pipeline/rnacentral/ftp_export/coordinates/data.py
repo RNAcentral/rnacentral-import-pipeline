@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import itertools as it
 import json
+import sys
 import operator as op
 import typing as ty
 
@@ -179,7 +181,12 @@ def parse(regions) -> ty.Iterable[Region]:
 
 
 def from_file(handle, genes=True) -> ty.Iterable[Region]:
-    data = map(json.loads, handle)
+    # The query exports each record as a single CSV-quoted JSON field (COPY ... CSV).
+    # CSV avoids COPY text format's backslash-escaping, which corrupts JSON whose
+    # data contains a " or \.
+    csv.field_size_limit(sys.maxsize)  # records with many exons exceed the default limit
+    rows = csv.reader(handle)
+    data = (json.loads(row[0]) for row in rows)
     data = filter(lambda d: d["rna_type"] != "NULL", data)
     if not genes:
         data = filter(lambda d: d['rna_id'] != None, data)

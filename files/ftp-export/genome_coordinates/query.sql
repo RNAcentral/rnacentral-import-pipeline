@@ -69,4 +69,4 @@ FROM (
   -- Sort everything together
   ORDER BY chromosome, region_start, record_type DESC, id
 ) combined_results
-) TO STDOUT
+) TO STDOUT CSV
