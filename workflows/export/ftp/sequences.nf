@@ -111,7 +111,7 @@ process database_specific {
   tuple val(db), path(query)
 
   output:
-  file('*.fasta')
+  file('*.fasta.gz')
 
   script:
   """
