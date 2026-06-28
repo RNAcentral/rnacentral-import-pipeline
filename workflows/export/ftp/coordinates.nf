@@ -34,8 +34,10 @@ process find_jobs {
 process fetch {
   tag { "${assembly}-${species}" }
   maxForks 2
-  time '20m'
+  time { 20.m * (2 ** (task.attempt - 1)) }
   memory '512 MB'
+  errorStrategy 'retry'
+  maxRetries 5
 
   input:
   tuple val(assembly), val(species), val(taxid), path(query)
