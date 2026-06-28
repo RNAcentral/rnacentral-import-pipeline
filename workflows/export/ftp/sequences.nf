@@ -136,7 +136,7 @@ process find_species {
 }
 
 process by_species {
-  tag { species_name }
+  tag { species_name.replaceAll(/[^A-Za-z0-9._-]+/, '_') }
   maxForks params.export.ftp.sequences.by_species.max_forks
   publishDir "${params.export.ftp.publish}/sequences/by-species", mode: 'copy'
 
