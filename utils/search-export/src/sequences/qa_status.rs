@@ -14,9 +14,9 @@ pub struct QaStatus {
     possible_contamination: bool,
     incomplete_sequence: bool,
     missing_rfam_match: bool,
-    possible_orf: bool,
-    possible_orf_stopfree: bool,
-    possible_orf_tcode: bool,
+    possible_orf: Option<bool>,
+    possible_orf_stopfree: Option<bool>,
+    possible_orf_tcode: Option<bool>,
 }
 
 impl QaStatus {
