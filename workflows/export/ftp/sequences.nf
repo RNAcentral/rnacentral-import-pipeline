@@ -173,7 +173,7 @@ workflow fasta_export {
 
   Channel.fromPath('files/ftp-export/sequences/species.sql') \
   | find_species \
-  | splitCsv \
+  | splitCsv(quote: '"') \
   | combine(Channel.fromPath('files/ftp-export/sequences/by-species.sql')) \
   | by_species
 }
