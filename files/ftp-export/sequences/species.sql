@@ -1,7 +1,7 @@
 COPY (
 SELECT DISTINCT
     pre.taxid,
-    tax.name
+    replace(tax.name, ',', '') AS name
 FROM rnc_rna_precomputed pre
 JOIN rnc_taxonomy tax ON tax.id = pre.taxid
 WHERE
