@@ -98,6 +98,9 @@ def generate_file(raw, output, schema_file=None):
         r for r in results if re.match(SEQUENCE_PATTERN, r.get("sequence", ""))
     ]  ## Filters invalid sequences, but also empty dicts = disallowed types
 
+    if not results:
+        return
+
     if schema_file:
         with open(schema_file, "r") as raw:
             schema_data = json.load(raw)
