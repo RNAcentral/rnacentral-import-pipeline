@@ -135,23 +135,108 @@ process find_species {
   """
 }
 
-process by_species {
-  tag { species_name.replaceAll(/[^A-Za-z0-9._-]+/, '_') }
-  maxForks params.export.ftp.sequences.by_species.max_forks
+process split_by_species {
+  cpus 4
+  memory '16 GB'
+  time '12h'
   publishDir "${params.export.ftp.publish}/sequences/by-species", mode: 'copy'
 
   input:
-  tuple val(taxid), val(species_name), path(query)
+  tuple path(species_csv), path(fasta)
 
   output:
-  path('*.fasta.gz')
+  path('**/*.fasta.gz')
 
   script:
-  def filename = species_name.toLowerCase().replaceAll(/[^a-z0-9]+/, '_').replaceAll(/^_|_$/, '')
   """
-  export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" -v taxid=${taxid} "\$PGDATABASE" > raw.json
-  json2fasta.py raw.json - | gzip > ${filename}.fasta.gz
+  set -euo pipefail
+
+  # Split the species-specific FASTA into one (uncompressed) file per species,
+  # organised into kingdom subdirectories. Compression is done afterwards in
+  # parallel, so this stays single-threaded and cheap.
+  python3 - << 'PYEOF'
+import csv, os, re, subprocess
+from collections import Counter
+
+KINGDOMS = [
+    ('bacteria',    'Bacteria'),
+    ('archaea',     'Archaea'),
+    ('viruses',     'Viruses'),
+    ('plants',      'Viridiplantae'),
+    ('fungi',       'Fungi'),
+    ('vertebrates', 'Vertebrata'),
+    ('metazoa',     'Metazoa'),
+]
+
+def get_kingdom(lineage):
+    for name, marker in KINGDOMS:
+        if marker in lineage:
+            return name
+    return 'protists'
+
+def safe_name(name):
+    return re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
+
+# Load species from the single taxonomy query
+rows = []
+with open('${species_csv}') as f:
+    for taxid, name, lineage in csv.reader(f):
+        rows.append((taxid, get_kingdom(lineage), safe_name(name)))
+
+# Detect (kingdom, name) collisions so we can disambiguate just those with
+# the taxid, while leaving the common case as a clean species name.
+collisions = {key for key, n in Counter((k, n) for _, k, n in rows).items() if n > 1}
+
+species = {}
+for taxid, k, name in rows:
+    os.makedirs(k, exist_ok=True)
+    fname = f'{name}_{taxid}' if (k, name) in collisions else name
+    species[taxid] = (k, fname)
+
+# Stream FASTA into sort, annotating each line with its record's taxid.
+# Sequences are ordered by URS (not taxid), so we sort to group by taxid,
+# allowing a single sequential pass with O(1) open file handles. Keep sort's
+# scratch + memory in the work dir so it doesn't fill a small /tmp.
+sort_proc = subprocess.Popen(
+    ['sort', '-T', '.', '-S', '4G', '--stable', '-k1,1', '-t', '\t', '-o', 'sorted.tsv'],
+    stdin=subprocess.PIPE, text=True
+)
+with open('${fasta}') as fin:
+    taxid = ''
+    for line in fin:
+        if line.startswith('>'):
+            taxid = line.split()[0].rsplit('_', 1)[-1]
+        sort_proc.stdin.write(taxid + '\t' + line)
+sort_proc.stdin.close()
+if sort_proc.wait() != 0:
+    raise SystemExit('sort failed')
+
+# Single sequential pass: open one file at a time, switching on taxid change.
+current_taxid = None
+current_handle = None
+
+with open('sorted.tsv') as fin:
+    for raw in fin:
+        taxid, line = raw.split('\t', 1)
+        if taxid != current_taxid:
+            if current_handle:
+                current_handle.close()
+                current_handle = None
+            current_taxid = taxid
+            if taxid in species:
+                k, name = species[taxid]
+                current_handle = open(f'{k}/{name}.fasta', 'w')
+        if current_handle:
+            current_handle.write(line)
+
+if current_handle:
+    current_handle.close()
+
+os.unlink('sorted.tsv')
+PYEOF
+
+  # Compress every per-species file in parallel with stock gzip.
+  find . -mindepth 2 -name '*.fasta' -print0 | xargs -0 -r -P ${task.cpus} gzip
   """
 }
 
@@ -173,7 +258,6 @@ workflow fasta_export {
 
   Channel.fromPath('files/ftp-export/sequences/species.sql') \
   | find_species \
-  | splitCsv \
-  | combine(Channel.fromPath('files/ftp-export/sequences/by-species.sql')) \
-  | by_species
+  | combine(species_specific.out) \
+  | split_by_species
 }
