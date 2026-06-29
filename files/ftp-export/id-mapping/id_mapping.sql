@@ -20,4 +20,5 @@ on
     and pre.taxid = xref.taxid
 where
     xref.deleted = 'N'
+    AND right(xref.upi, 1) = :'chunk'
 ) TO STDOUT
