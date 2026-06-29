@@ -67,8 +67,9 @@ workflow id_mapping {
   | combine(id_query) \
   | build_id_mapping_chunk \
   | collect \
-  | combine(readme_template) \
-  | merge_id_mapping
+  | set { chunks }
+
+  merge_id_mapping(chunks, readme_template)
 
   merge_id_mapping.out.mapping | database_mapping
 }
