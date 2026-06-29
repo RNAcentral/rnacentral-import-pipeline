@@ -29,25 +29,6 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_genome_mapping;
-$$,
-$$
-create table load_genome_mapping (
-    urs_taxid text not null,
-    region_name text not null,
-    chromosome text,
-    strand int4,
-    exon_start int4,
-    exon_stop int4,
-    assembly_id varchar(255),
-    exon_count int,
-    identity float,
-    providing_database text
-);
-$$
-
 AFTER LOAD DO
 $$
 CREATE TABLE mapped_assemblies AS SELECT DISTINCT assembly_id FROM load_genome_mapping;

@@ -4,6 +4,7 @@ process slack_message {
     input:
     val(message)
 
+    script:
     """
     #!/bin/bash
     curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' $LITSCAN_SLACK_WEBHOOK

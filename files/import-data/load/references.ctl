@@ -23,17 +23,17 @@ TARGET COLUMNS (
 WITH
     truncate,
     drop indexes,
-    batch rows = 500,
-    batch size = 32MB,
-    prefetch rows = 500,
+    batch rows = 50000,
+    batch size = 256MB,
+    prefetch rows = 50000,
     workers = 4, concurrency = 2,
     skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
 
 SET
-    work_mem to '256 MB',
-    maintenance_work_mem to '256 MB'
+    work_mem to '128 MB',
+    maintenance_work_mem to '1280 MB'
 
 BEFORE LOAD DO
 $$
@@ -52,5 +52,8 @@ ALTER TABLE rnacen.load_rnc_references SET (
     autovacuum_enabled = true,
     toast.autovacuum_enabled = true
 );
+$$,
+$$
+ANALYZE rnacen.load_rnc_references;
 $$
 ;

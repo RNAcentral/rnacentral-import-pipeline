@@ -22,17 +22,14 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_ref_pubmed;
+ALTER TABLE rnacen.load_ref_pubmed SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_ref_pubmed (
-    ref_pubmed_id int,
-    authors text,
-    location text,
-    title text,
-    doi text
-);
+ANALYZE rnacen.load_ref_pubmed;
 $$
 ;

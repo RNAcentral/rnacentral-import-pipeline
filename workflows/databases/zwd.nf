@@ -1,5 +1,5 @@
 process zwd {
-  when: { params.databases.zwd.run }
+  when: { params.databases.zwd?.run }
 
   input:
   path(context)
@@ -7,6 +7,7 @@ process zwd {
   output:
   path('*.csv')
 
+  script:
   """
   wget -O zwd.json $params.databases.zwd.remote
   rnac zwd parse $context zwd.json .

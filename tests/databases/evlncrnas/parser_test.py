@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+import requests
 
 from rnacentral_pipeline.databases.evlncrnas import helpers, parser
 
@@ -75,3 +76,46 @@ def test_can_parse_evlncrnas3_fixture(monkeypatch, tmp_path):
     assert json.loads(entry.note) == {
         "url": "https://www.sdklab-biophysics-dzu.net/EVLncRNAs3/#/detail?id=EL3692"
     }
+
+
+def test_get_ncbi_accessions_treats_request_failure_as_missing(monkeypatch):
+    frame = pd.DataFrame(
+        [
+            {
+                "ID": "EL1",
+                "NCBI accession": "NR_038842",
+            }
+        ]
+    )
+
+    def failing_get(*_args, **_kwargs):
+        raise requests.ConnectionError("network is unreachable")
+
+    monkeypatch.setattr(parser.requests, "get", failing_get)
+
+    found, missing = parser.get_ncbi_accessions(frame)
+
+    assert found.empty
+    assert len(missing) == 1
+    assert pd.isna(missing.iloc[0]["sequence"])
+
+
+def test_get_ensembl_accessions_treats_request_failure_as_missing(monkeypatch):
+    frame = pd.DataFrame(
+        [
+            {
+                "Ensembl": "ENST000003",
+            }
+        ]
+    )
+
+    def failing_get(*_args, **_kwargs):
+        raise requests.ConnectionError("network is unreachable")
+
+    monkeypatch.setattr(parser.requests, "get", failing_get)
+
+    found, missing = parser.get_ensembl_accessions(frame)
+
+    assert found.empty
+    assert len(missing) == 1
+    assert pd.isna(missing.iloc[0]["sequence"])

@@ -103,6 +103,7 @@ process save_statistics {
     output:
     val('done')
 
+    script:
     """
     pgloader --on-error-stop --with "drop indexes" $ctl
     """

@@ -28,7 +28,7 @@ class QaResult:
     """
 
     name = attr.ib(validator=is_a(str))
-    has_issue = attr.ib(validator=is_a(bool))
+    has_issue = attr.ib(validator=optional(is_a(bool)))
     message = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
@@ -36,10 +36,16 @@ class QaResult:
         return cls(name=name, has_issue=False, message=None)
 
     @classmethod
+    def null(cls, name):
+        return cls(name=name, has_issue=None, message=None)
+
+    @classmethod
     def not_ok(cls, name, message):
         return cls(name=name, has_issue=True, message=message)
 
     def str_issue(self):
+        if self.has_issue is None:
+            return ""
         return str(int(self.has_issue))
 
 
@@ -54,6 +60,7 @@ class QaStatus:
     missing_rfam_match = attr.ib(validator=is_a(QaResult))
     from_repetitive_region = attr.ib(validator=is_a(QaResult))
     possible_orf = attr.ib(validator=is_a(QaResult))
+    possible_orf_stopfree = attr.ib(validator=is_a(QaResult))
     possible_orf_tcode = attr.ib(validator=is_a(QaResult))
 
     @property

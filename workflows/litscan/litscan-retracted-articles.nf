@@ -30,7 +30,6 @@ process check_articles {
 
 workflow find_retracted_articles {
     take: ready
-    emit: done
     main:
       fetch_pmcoa_metadata() | set { xml_dir }
       check_articles(ready, xml_dir) | set { done }

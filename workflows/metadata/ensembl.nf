@@ -1,5 +1,6 @@
 process assemblies {
-  when { params.databases.ensembl.vertebrates.run }
+  when:
+  params.databases.ensembl?.vertebrates?.run
 
   input:
   path(connections)
@@ -10,19 +11,22 @@ process assemblies {
   output:
   path('*.csv')
 
+  script:
   """
   rnac ensembl assemblies $connections $query $examples $known
   """
 }
 
 process fetch_compara {
-  when { params.databases.ensembl.vertebrates.run }
+  when: { params.databases.ensembl?.vertebrates?.run }
+
   errorStrategy 'retry'
   maxRetries 10
 
   output:
   path('*.nt.fasta.gz')
 
+  script:
   """
   wget '$params.databases.ensembl.compara.remote'
   """
@@ -38,13 +42,14 @@ process process_compara {
   output:
   path('compara.csv')
 
+  script:
   """
   zcat $gz | rnac ensembl compara - compara.csv
   """
 }
 
 process proteins {
-  when { params.databases.ensembl.vertebrates.run || params.databases.tarbase.run || params.databases.lncbase.run }
+  when: { params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run }
 
   input:
   path(connections)
@@ -53,13 +58,15 @@ process proteins {
   output:
   path('proteins.csv')
 
+  script:
   """
   rnac ensembl proteins $connections $query proteins.csv
   """
 }
 
 process coordinate_systems {
-  when { params.databases.ensembl.vertebrates.run }
+  when: { params.databases.ensembl?.vertebrates?.run }
+
   errorStrategy 'retry'
   maxRetries 10
 
@@ -70,19 +77,22 @@ process coordinate_systems {
   output:
   path('coordinate_systems.csv')
 
+  script:
   """
   rnac ensembl coordinate-systems $connections $query coordinate_systems.csv
   """
 }
 
 process karyotypes {
-  when { params.databases.ensembl.vertebrates.run }
+  when: { params.databases.ensembl?.vertebrates?.run }
+
   errorStrategy 'retry'
   maxRetries 10
 
   output:
   path('karyotypes.csv')
 
+  script:
   """
   rnac ensembl karyotypes karyotypes.csv
   """

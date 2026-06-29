@@ -10,11 +10,12 @@ process active {
   path('example.txt'), emit: 'example'
   path('readme.txt'), emit: 'readme'
 
+  script:
   """
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
   cp template.txt readme.txt
@@ -30,11 +31,12 @@ process inactive {
   output:
   path('rnacentral_inactive.fasta.gz')
 
+  script:
   """
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
   """
 }
 
@@ -45,11 +47,12 @@ process species_specific {
   output:
   path('rnacentral_species_specific_ids.fasta')
 
+  script:
   """
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -q -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral_species_specific_ids.fasta
   """
 }
@@ -64,6 +67,7 @@ process create_ssi {
   output:
   path('rnacentral_species_specific_ids.fasta.ssi')
 
+  script:
   """
   esl-sfetch --index rnacentral_species_specific_ids.fasta
   """
@@ -78,6 +82,7 @@ process compress_species_fasta {
   output:
   path('rnacentral_species_specific_ids.fasta.gz')
 
+  script:
   """
   gzip < rnacentral_species_specific_ids.fasta > rnacentral_species_specific_ids.fasta.gz
   """
@@ -91,8 +96,9 @@ process find_dbs {
   output:
   path('dbs.txt')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > dbs.txt
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > dbs.txt
   """
 }
 
@@ -110,8 +116,41 @@ process database_specific {
   script:
   """
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "\$PGDATABASE" > raw.json
   json2fasta.py raw.json ${db.toLowerCase().replaceAll(' ', '_').replace('/', '_')}.fasta
+  """
+}
+
+process find_species {
+  input:
+  path(query)
+
+  output:
+  path('species.csv')
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > species.csv
+  """
+}
+
+process by_species {
+  tag { species_name }
+  maxForks params.export.ftp.sequences.by_species.max_forks
+  publishDir "${params.export.ftp.publish}/sequences/by-species", mode: 'copy'
+
+  input:
+  tuple val(taxid), val(species_name), path(query)
+
+  output:
+  path('*.fasta.gz')
+
+  script:
+  def filename = species_name.toLowerCase().replaceAll(/[^a-z0-9]+/, '_').replaceAll(/^_|_$/, '')
+  """
+  export PYTHONIOENCODING=utf8
+  psql -v ON_ERROR_STOP=1 -f "$query" -v taxid=${taxid} "\$PGDATABASE" > raw.json
+  json2fasta.py raw.json - | gzip > ${filename}.fasta.gz
   """
 }
 
@@ -130,4 +169,10 @@ workflow fasta_export {
   | splitCsv \
   | combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql')) \
   | database_specific
+
+  Channel.fromPath('files/ftp-export/sequences/species.sql') \
+  | find_species \
+  | splitCsv \
+  | combine(Channel.fromPath('files/ftp-export/sequences/by-species.sql')) \
+  | by_species
 }

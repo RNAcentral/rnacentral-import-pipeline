@@ -85,9 +85,8 @@ def parse_differential(analytics, sdrf_path, lookup):
         taxid=pl.col("ontology").str.split("NCBITaxon_").list.last().cast(pl.Int64)
     ).select("taxid")
 
-    ## The skip_rows=2 here is because psql will write the CREATE and COPY acknowledgements in front of the csv data
     lookup_data = (
-        pl.scan_csv(lookup, skip_rows=2)
+        pl.scan_csv(lookup)
         .unique(["urs_taxid", "gene"])
         .select(["urs_taxid", "taxid", "gene"])
         .join(taxids.lazy(), on="taxid")
@@ -152,7 +151,7 @@ def parse_baseline(tpms, sdrf_path, lookup):
     ).select("taxid")
 
     lookup_data = (
-        pl.scan_csv(lookup, skip_rows=2)
+        pl.scan_csv(lookup)
         .unique(["urs_taxid", "gene"])
         .select(["urs_taxid", "taxid", "gene"])
         .join(taxids.lazy(), on="taxid")
@@ -179,7 +178,7 @@ def parse(handle, lookup):
         pl.scan_ndjson(handle).group_by("urs_taxid").agg(pl.col("experiment"))
     )
 
-    lookup_data = pl.scan_csv(lookup, skip_rows=2)
+    lookup_data = pl.scan_csv(lookup)
     ## Join against lookup to get the rest of the required information
     hits = grouped_data.join(lookup_data, on="urs_taxid", how="inner").collect(
         streaming=True

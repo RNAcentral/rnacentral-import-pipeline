@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl=2
 
-include { r2dt } from './workflows/r2dt'
+include { r2dt } from './workflows/r2dt.nf'
 
 process extract_gtrnadb_metadata {
   container params.r2dt.container
@@ -170,7 +170,7 @@ process parse_crw_models {
 
 process load_models {
 
-  memory '256 MB'
+  memory 6.GB
 
   input:
     path(all_data)

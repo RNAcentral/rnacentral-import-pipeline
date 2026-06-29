@@ -1,6 +1,5 @@
 process fetch_annotation {
   tag { species.annotation }
-  when { params.databases.circpedia.run }
   memory '2GB'
   errorStrategy 'terminate'
 
@@ -10,6 +9,9 @@ process fetch_annotation {
   output:
   tuple val(species), path("${species.annotation}.txt")
 
+  when: { params.databases.circpedia?.run }
+
+  script:
   """
   wget \
     "${params.databases.circpedia.annotation_base_url}${species.annotation}.txt.zip" \
@@ -20,7 +22,6 @@ process fetch_annotation {
 
 process fetch_fasta {
   tag { species.fasta }
-  when { params.databases.circpedia.run }
   memory '2GB'
   errorStrategy 'terminate'
 
@@ -30,6 +31,9 @@ process fetch_fasta {
   output:
   tuple val(species), path(annotation_file), path("${species.fasta}.fa")
 
+  when: { params.databases.circpedia?.run }
+
+  script:
   """
   wget --no-check-certificate \
     "${params.databases.circpedia.fasta_base_url}${species.fasta}.fa.zip" \
@@ -48,6 +52,7 @@ process parse_data {
   output:
   path('*.csv')
 
+  script:
   """
   rnac circpedia parse \
     --assembly ${species.assembly} \

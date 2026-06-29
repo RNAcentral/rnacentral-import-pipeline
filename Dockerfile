@@ -59,6 +59,7 @@ RUN apt update && apt upgrade -y && \
     libbz2-1.0 \
     liblzma5 \
     libncurses6 \
+    libopenmpi-dev \
     libssl3 \
     libxml2-utils \
     moreutils \

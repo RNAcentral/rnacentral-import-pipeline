@@ -9,14 +9,14 @@ ENV RNA=/rna
 WORKDIR $RNA
 
 # Install minimal build dependencies
-RUN apt update && apt install -y gcc make curl && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y gcc make curl libopenmpi-dev && rm -rf /var/lib/apt/lists/*
 
 # Download and build Infernal
 RUN curl -OL http://eddylab.org/infernal/infernal-${INFERNAL_VERSION}.tar.gz && \
     tar -xvzf infernal-${INFERNAL_VERSION}.tar.gz && \
     rm infernal-${INFERNAL_VERSION}.tar.gz && \
     cd infernal-${INFERNAL_VERSION} && \
-    ./configure --prefix=$RNA/infernal-${INFERNAL_VERSION} && \
+    ./configure --prefix=$RNA/infernal-${INFERNAL_VERSION}  --enable-mpi && \
     make && \
     make install && \
     cd easel && \
@@ -24,6 +24,7 @@ RUN curl -OL http://eddylab.org/infernal/infernal-${INFERNAL_VERSION}.tar.gz && 
 
 # Stage 2: Final - minimal runtime image
 FROM debian:trixie-slim
+RUN apt update && apt install -y libopenmpi-dev && rm -rf /var/lib/apt/lists/*
 ARG INFERNAL_VERSION
 ENV RNA=/rna
 WORKDIR $RNA
