@@ -47,20 +47,27 @@ process create_fasta {
   tuple val(name), path(json)
 
   output:
-  path "splits/$name*.fasta", emit: sequences
+  path "splits/$name*.fasta", emit: sequences, optional: true
   path "${name}.hash", emit: hashes
   path "${name}.seqstat", emit: stats
 
   script:
   def ordered = "${name}-ordered.fasta"
   """
+  set -o pipefail
   json2fasta.py ${json} - | rnac ftp-export sequences valid-nhmmer - ${ordered}
   md5sum ${ordered} > ${name}.hash
   cp ${ordered} ${name}.fasta
-  esl-seqstat --dna ${name}.fasta > ${name}.seqstat
-  split-sequences \
-    --max-file-size ${params.export.sequence_search.max_file_size} \
-    ${name}.fasta splits/
+  mkdir -p splits
+  if [ -s ${name}.fasta ]; then
+    esl-seqstat --dna ${name}.fasta > ${name}.seqstat
+    split-sequences \
+      --max-file-size ${params.export.sequence_search.max_file_size} \
+      ${name}.fasta splits/
+  else
+    echo "WARNING: ${name}.fasta is empty - no nhmmer-valid sequences matched; skipping seqstat/split" >&2
+    : > ${name}.seqstat
+  fi
   """
 }
 
@@ -109,7 +116,7 @@ workflow sequence_search {
     find_db_to_export(db_query) \
     | splitCsv \
     | combine(db_specific_query) \
-    | map { db, query -> [db, query, "-v db='%${db}%'"] } \
+    | map { db, full_descr, query -> [db, query, "-v db='%${full_descr}%'"] } \
     | mix(simple_queries) \
     | map { db, query, param -> [db.toLowerCase().replace(' ', '_').replace('/', '_'), query, param] } \
     | map { db, q, p -> [(db == "tmrna_website" ? "tmrna_web" : db), q, p] } \

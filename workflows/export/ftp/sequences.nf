@@ -108,7 +108,7 @@ process database_specific {
   publishDir "${params.export.ftp.publish}/sequences/by-database", mode: 'copy'
 
   input:
-  tuple val(db), path(query)
+  tuple val(db), val(full_descr), path(query)
 
   output:
   file('*.fasta.gz')
@@ -116,7 +116,7 @@ process database_specific {
   script:
   """
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "\$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${full_descr}%' "\$PGDATABASE" > raw.json
   json2fasta.py raw.json ${db.toLowerCase().replaceAll(' ', '_').replace('/', '_')}.fasta
   gzip ${db.toLowerCase().replaceAll(' ', '_').replace('/', '_')}.fasta
   """
