@@ -27,7 +27,7 @@ process fetch_directory {
   tuple val(name), val(remotes)
 
   output:
-  path("${name}-chunks/*.ncr")
+  path("${name}-chunks/*.ncr"), optional: true
 
   """
   rsync \
@@ -40,15 +40,19 @@ process fetch_directory {
     ${remotes.join(' ')} "copied"
 
   find copied -type f -empty -delete
-  find copied -type f -name '*.gz' | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
+  find copied -type f -name '*.gz' | xargs -r -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -r -I {} rm {}.gz
 
   pushd copied
-  find . -type f -name '*.tar' | xargs -I {} tar -xvf {}
+  find . -type f -name '*.tar' | xargs -r -I {} tar -xvf {}
   popd
-  find copied -type f -name '*.ncr.gz' | xargs zcat > ${name}.ncr
+  find copied -type f -name '*.ncr.gz' | xargs -r zcat > ${name}.ncr
 
   mkdir $name-chunks
-  split-ena --max-sequences ${params.databases.ena.max_sequences} ${name}.ncr ${name}-chunks
+  if [ -s ${name}.ncr ]; then
+    split-ena --max-sequences ${params.databases.ena.max_sequences} ${name}.ncr ${name}-chunks
+  else
+    echo "No .ncr data fetched for ${name} batch; emitting no chunks" >&2
+  fi
   """
 }
 
