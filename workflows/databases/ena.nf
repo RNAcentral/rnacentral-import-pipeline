@@ -12,7 +12,7 @@ process list_subdirs {
   tuple val(name), path("${name}-dirs.txt")
 
   """
-  find -L ${path} -mindepth 1 -maxdepth 1 -type d > ${name}-dirs.txt
+  find -L ${path} -mindepth 1 -maxdepth 1 -type d -printf '%s\\t%p\\n' > ${name}-dirs.txt
   """
 }
 
@@ -109,10 +109,27 @@ workflow ena {
     ]) \
     | list_subdirs \
     | flatMap { name, listing ->
-        listing.readLines()
-          .findAll { it.trim() }
-          .collate( params.databases.ena.subdir_batch_size )
-          .collect { batch -> [name, batch.collect { it.trim() }] }
+        // Greedy bin-pack subdirs into batches by inode-size weight (a cheap
+        // proxy for entry count), so a few huge subdirs don't make some tasks
+        // far heavier than others. A subdir larger than the budget lands in a
+        // batch of its own.
+        long budget = params.databases.ena.subdir_batch_bytes as long
+        def batches = []
+        def cur = []
+        long curBytes = 0
+        listing.readLines().findAll { it.trim() }.each { line ->
+          def (sz, dir) = line.split('\t', 2)
+          long bytes = sz as long
+          if (cur && curBytes + bytes > budget) {
+            batches << [name, cur]
+            cur = []
+            curBytes = 0
+          }
+          cur << dir
+          curBytes += bytes
+        }
+        if (cur) batches << [name, cur]
+        return batches
       } \
     | set { subdir_batches }
 
