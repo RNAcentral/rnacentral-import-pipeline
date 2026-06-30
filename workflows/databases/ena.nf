@@ -1,3 +1,21 @@
+process list_subdirs {
+  tag { "$name" }
+  when { params.databases.ena.run }
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+  time '1h'
+
+  input:
+  tuple val(name), val(path)
+
+  output:
+  tuple val(name), path("${name}-dirs.txt")
+
+  """
+  find -L ${path} -mindepth 1 -maxdepth 1 -type d > ${name}-dirs.txt
+  """
+}
+
 process fetch_directory {
   tag { "$name" }
   when { params.databases.ena.run }
@@ -6,20 +24,20 @@ process fetch_directory {
   time '2d'
 
   input:
-  tuple val(name), val(remote)
+  tuple val(name), val(remotes)
 
   output:
   path("${name}-chunks/*.ncr")
 
   """
   rsync \
-    -avPL \
+    -aL --partial \
     --prune-empty-dirs \
     --include='*/' \
     --include='**/*.ncr.gz' \
     --include='**/*.tar' \
     --exclude='*.fasta.gz' \
-    "$remote" "copied"
+    ${remotes.join(' ')} "copied"
 
   find copied -type f -empty -delete
   find copied -type f -name '*.gz' | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
@@ -80,12 +98,24 @@ workflow ena {
     fetch_metadata(urls) | set { metadata }
 
     Channel.fromList([
-      ['con', "$params.databases.ena.remote/con/"],
-      ['std', "$params.databases.ena.remote/std/"],
+      ['wgs', "$params.databases.ena.remote/wgs/"],
       ['tls', "$params.databases.ena.remote/tls/"],
       ['tsa', "$params.databases.ena.remote/tsa/"],
-      ['wgs', "$params.databases.ena.remote/wgs/"],
     ]) \
+    | list_subdirs \
+    | flatMap { name, listing ->
+        listing.readLines()
+          .findAll { it.trim() }
+          .collate( params.databases.ena.subdir_batch_size )
+          .collect { batch -> [name, batch.collect { it.trim() }] }
+      } \
+    | set { subdir_batches }
+
+    Channel.fromList([
+      ['con', ["$params.databases.ena.remote/con/"]],
+      ['std', ["$params.databases.ena.remote/std/"]],
+    ]) \
+    | mix( subdir_batches ) \
     | fetch_directory \
     | flatten \
     | combine(metadata) \
