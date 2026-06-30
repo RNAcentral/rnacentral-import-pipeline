@@ -181,7 +181,7 @@ process editing_events {
 
 process as_xml {
   tag { "$min-$max" }
-  memory { params.export.search.memory * task.attempt }
+  memory { (params.export.search.memory as nextflow.util.MemoryUnit) * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
   maxRetries 3
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
