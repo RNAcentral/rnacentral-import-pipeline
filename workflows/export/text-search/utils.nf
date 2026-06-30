@@ -1,3 +1,17 @@
+process fetch_schema {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  errorStrategy 'retry'
+  maxRetries 3
+
+  output:
+  path('schema.xsd')
+
+  script:
+  """
+  curl -fsSL ${params.export.search.schema} -o schema.xsd
+  """
+}
+
 process fetch {
   tag { "${query.baseName}" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
