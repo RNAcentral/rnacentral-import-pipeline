@@ -74,6 +74,7 @@ process fetch_metadata {
 process process_file {
   memory '8GB'
   tag { "$raw" }
+  time '10m'
 
   input:
   tuple path(raw), path(tpa), path(model_lengths)
