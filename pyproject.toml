@@ -50,7 +50,6 @@ dependencies = [
     "datasets>=3.5.0",
     "fastjsonschema>=2.21.2",
     "stopfree>=0.2.4",
-    "fastcrc>=0.3.5",
     "crcmod>=1.7",
 ]
 
