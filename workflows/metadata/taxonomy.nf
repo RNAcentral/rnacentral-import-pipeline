@@ -1,5 +1,5 @@
 process taxonomy {
-  memory '2GB'
+  memory '4GB'
   errorStrategy 'retry'
 
   output:
