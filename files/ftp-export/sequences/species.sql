@@ -9,6 +9,6 @@ WHERE
     pre.is_active = true
     AND pre.taxid IS NOT NULL
 GROUP BY pre.taxid, tax.name, tax.lineage
-HAVING count(*) > 10
+HAVING count(*) > 100
 ORDER BY tax_name
 ) TO STDOUT CSV

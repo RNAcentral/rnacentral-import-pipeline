@@ -122,6 +122,21 @@ process database_specific {
   """
 }
 
+process by_species_readme {
+  publishDir "${params.export.ftp.publish}/sequences/by-species/", mode: 'copy'
+
+  input:
+  path('template.txt')
+
+  output:
+  path('readme.txt')
+
+  script:
+  """
+  cp template.txt readme.txt
+  """
+}
+
 process find_species {
   input:
   path(query)
@@ -159,13 +174,14 @@ import csv, os, re, subprocess
 from collections import Counter
 
 KINGDOMS = [
-    ('bacteria',    'Bacteria'),
-    ('archaea',     'Archaea'),
-    ('viruses',     'Viruses'),
-    ('plants',      'Viridiplantae'),
-    ('fungi',       'Fungi'),
-    ('vertebrates', 'Vertebrata'),
-    ('metazoa',     'Metazoa'),
+    ('bacteria',      'Bacteria'),
+    ('archaea',       'Archaea'),
+    ('viruses',       'Viruses'),
+    ('plants',        'Viridiplantae'),
+    ('fungi',         'Fungi'),
+    ('vertebrates',   'Vertebrata'),
+    ('metazoa',       'Metazoa'),
+    ('environmental', 'unclassified entries'),
 ]
 
 def get_kingdom(lineage):
@@ -260,4 +276,6 @@ workflow fasta_export {
   | find_species \
   | combine(species_specific.out) \
   | split_by_species
+
+  Channel.fromPath('files/ftp-export/sequences/by-species-readme.txt') | by_species_readme
 }
