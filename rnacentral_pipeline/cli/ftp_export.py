@@ -80,6 +80,17 @@ def sequences_parquet(query, output, db_url):
         dataframe.write_parquet(output)
 
 
+@export_sequences.command("parquet-from-json")
+@click.argument("json_file", type=click.Path(exists=True, dir_okay=False))
+@click.argument("output", type=click.Path(writable=True))
+def sequences_parquet_from_json(json_file, output):
+    """
+    Build the active-sequences parquet from the shared JSON-lines dump (the same
+    file the FASTA export reads) rather than re-querying the database.
+    """
+    parquet.ndjson_2_dataframe(json_file).write_parquet(output)
+
+
 @export_sequences.command("valid-nhmmer")
 @click.argument("active", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
