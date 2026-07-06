@@ -2,7 +2,7 @@ process active {
   publishDir "${params.export.ftp.publish}/sequences/", mode: 'copy'
 
   input:
-  path(query)
+  path(active_json)
   path('template.txt')
 
   output:
@@ -15,7 +15,7 @@ process active {
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
+  json2fasta.py "$active_json" rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
   cp template.txt readme.txt
@@ -257,9 +257,11 @@ PYEOF
 }
 
 workflow fasta_export {
-  Channel.fromPath('files/ftp-export/sequences/active.sql') | set { active_sql }
+  take:
+    active_json
+  main:
   Channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
-  active(active_sql, readme)
+  active(active_json, readme)
 
   Channel.fromPath('files/ftp-export/sequences/inactive.sql') | inactive
   Channel.fromPath('files/ftp-export/sequences/species-specific.sql') \

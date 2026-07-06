@@ -7,6 +7,7 @@ include { id_mapping } from './ftp/id-mapping'
 include { ensembl_export } from './ftp/ensembl'
 include { fasta_export } from './ftp/sequences'
 include { rediportal } from './ftp/rediportal.nf'
+include { active_sequences } from './active-sequences'
 
 process release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -128,7 +129,9 @@ process gpi_reference_proteome {
 }
 
 workflow ftp {
-  take: _flag
+  take:
+    _flag
+    active_json
   main:
     if (params.export.ftp.run) {
       Channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
@@ -148,11 +151,11 @@ workflow ftp {
       id_mapping()
       export_coordinates()
       ensembl_export()
-      fasta_export()
+      fasta_export(active_json)
       rediportal()
     }
 }
 
 workflow {
-  ftp(Channel.of('ready'))
+  ftp(Channel.of('ready'), active_sequences())
 }
