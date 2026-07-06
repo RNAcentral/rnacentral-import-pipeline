@@ -215,9 +215,7 @@ def features(record):
 
         sequence = record.get("sequence", "")
         if not sequence:
-            raise ValueError(
-                "Missing sequence: cannot compute modification accession"
-            )
+            raise ValueError("Missing sequence: cannot compute modification accession")
         accession = f"{hashlib.md5(sequence.encode('utf-8')).hexdigest()}_modomics"
         for raw in modifications:
             if not isinstance(raw, dict):
@@ -229,9 +227,7 @@ def features(record):
 
             position = raw.get("index", None)
             if position is None:
-                LOGGER.warning(
-                    "Skipping sequence modification due to missing index"
-                )
+                LOGGER.warning("Skipping sequence modification due to missing index")
                 continue
 
             modification = raw.get("shortName", None)
@@ -450,8 +446,14 @@ def as_entry(record, context):
     """
     Generate an Entry to import based off the database, exons and raw record.
     """
+    oid = optional_id(record, context)
+    pid = external_id(record)
+    if len(pid) > 100:
+        return None
+    if oid is not None and len(oid) > 100:
+        return None
     return data.Entry(
-        primary_id=external_id(record),
+        primary_id=pid,
         accession=record["primaryId"],
         ncbi_tax_id=taxid(record),
         database=context.database,
@@ -460,14 +462,11 @@ def as_entry(record, context):
         rna_type=record["soTermId"],
         url=record["url"],
         seq_version=record.get("version", "1"),
-        optional_id=optional_id(record, context),
+        optional_id=oid,
         description=description(record),
         note_data=note_data(record),
         xref_data=xrefs(record),
         related_sequences=related_sequences(record),
-        species=species(record),
-        lineage=lineage(record),
-        common_name=common_name(record),
         secondary_structure=secondary_structure(record),
         references=references(record),
         organelle=record.get("localization", None),
@@ -504,7 +503,11 @@ def parse(raw):
         entries = []
         for r in records:
             try:
-                entries.append(as_entry(r, context))
+                entry = as_entry(r, context)
+                if entry is not None:
+                    entries.append(entry)
+                else:
+                    LOGGER.warning("Overlong ID filtered for %s", r["primaryId"])
             except phy.UnknownTaxonId as e:
                 print("Unknown taxid for %s" % r["primaryId"])
                 print(f"UnknownTaxonId: {e}")

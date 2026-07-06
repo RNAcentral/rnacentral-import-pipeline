@@ -8,9 +8,9 @@ include { sequence_search } from './workflows/export/sequence-search'
 
 workflow export {
   take: ready
-  emit: done
   main:
     ready | (text_search & ftp & sequence_search) | mix | collect | set { done }
+  emit: done
 }
 
 workflow {

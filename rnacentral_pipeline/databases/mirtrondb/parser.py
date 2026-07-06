@@ -97,7 +97,7 @@ def parse(handle: ty.IO):
             accession=name,
             ncbi_tax_id=SPECIES[species],
             database="MIRTRONDB",
-            sequence=raw["sequence"].strip(),
+            sequence=raw["sequence"].strip().replace("U", "T"),
             regions=[],
             rna_type=RNA_TYPES[rna_type],
             url=f"http://mirtrondb.cp.utfpr.edu.br/fetch_details.php?mrt_details={name}",

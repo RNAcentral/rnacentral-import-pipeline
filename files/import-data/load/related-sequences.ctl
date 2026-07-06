@@ -20,20 +20,14 @@ WITH truncate,
   fields escaped by double-quote,
   fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_rnc_related_sequences;
-$$,
-$$
-create table load_rnc_related_sequences (
-  source_accession varchar(100) NOT NULL,
-  source_urs_taxid text,
-  target_accession varchar(100) NOT NULL,
-  relationship_type text NOT NULL,
-  methods text[]
+ALTER TABLE rnacen.load_rnc_related_sequences SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
 );
 $$,
 $$
-create index ix_load_rnc_related_sequences__relationship_type on load_rnc_related_sequences(relationship_type);
+ANALYZE rnacen.load_rnc_related_sequences;
 $$
 ;

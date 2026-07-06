@@ -31,22 +31,6 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-CREATE TABLE IF NOT EXISTS load_rnc_text_mining (
-    pattern_group text,
-    pattern text,
-    matching_word text,
-    sentence text,
-    md5 text,
-    authors text,
-    location text,
-    title text,
-    pmid text,
-    doi text
-);
-$$
-
 AFTER LOAD DO
 $$
 INSERT INTO rnc_references (
@@ -74,7 +58,7 @@ INSERT INTO rnc_text_mining_patterns (
   pattern_name
 ) (
 SELECT
-  pattern_group, 
+  pattern_group,
   pattern
 FROM load_rnc_text_mining
 ) ON CONFLICT (pattern_group, pattern_name) DO NOTHING;
@@ -86,7 +70,7 @@ INSERT INTO rnc_text_mining_sentences (
   reference_id
 ) (
 SELECT
-  load.sentence, 
+  load.sentence,
   refs.id
 FROM load_rnc_text_mining load
 JOIN rnc_references refs
@@ -109,8 +93,8 @@ INSERT INTO rnc_text_mining_matches (
     JOIN rnc_text_mining_sentences sent
     ON
       sent.sentence = load.sentence
-    JOIN rnc_references refs 
-    ON 
+    JOIN rnc_references refs
+    ON
       refs.id = sent.reference_id
       AND refs.pmid = load.pmid
     JOIN rnc_text_mining_patterns patt

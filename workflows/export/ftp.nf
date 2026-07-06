@@ -19,6 +19,7 @@ process release_note {
   output:
   path('release_notes.txt')
 
+  script:
   """
   rnac ftp-export release-note ${template_file} ${params.release} release_notes.txt
   mkdir -p ${params.export.ftp.publish}/help-requests
@@ -38,8 +39,9 @@ process md5 {
   path("md5.tsv.gz")
   path("readme.txt")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > md5.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > md5.tsv
   head -10 md5.tsv > example.txt
   gzip md5.tsv
   cat template.txt > readme.txt
@@ -58,8 +60,9 @@ process rfam_annotations {
   path("example.txt")
   path("readme.txt")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > rfam_annotations.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > rfam_annotations.tsv
   head rfam_annotations.tsv > example.txt
   gzip rfam_annotations.tsv
   cat template.txt > readme.txt
@@ -76,8 +79,9 @@ process rfam_go_matches {
   output:
   path("rnacentral_rfam_annotations.tsv.gz")
 
+  script:
   """
-  psql -f "$query" "$PGDATABASE" > raw_go.json
+  psql -f "$query" "\$PGDATABASE" > raw_go.json
   rnac ftp-export rfam-go-annotations raw_go.json rnacentral_rfam_annotations.tsv
   gzip rnacentral_rfam_annotations.tsv
   """
@@ -90,9 +94,36 @@ process gpi {
   output:
   path("rnacentral.gpi*")
 
+  script:
   """
   rnac ftp-export gpi rnacentral.gpi
   gzip -k rnacentral.gpi
+  """
+}
+
+process gpi_species {
+  memory params.export.ftp.gpi.memory
+  publishDir "${params.export.ftp.publish}/gpi/", mode: 'copy'
+
+  output:
+  path("rnacentral.species.gpi*")
+
+  """
+  rnac ftp-export gpi --filter species rnacentral.species.gpi
+  gzip -k rnacentral.species.gpi
+  """
+}
+
+process gpi_reference_proteome {
+  memory params.export.ftp.gpi.memory
+  publishDir "${params.export.ftp.publish}/gpi/", mode: 'copy'
+
+  output:
+  path("rnacentral.reference_proteome.gpi*")
+
+  """
+  rnac ftp-export gpi --filter reference-proteome rnacentral.reference_proteome.gpi
+  gzip -k rnacentral.reference_proteome.gpi
   """
 }
 
@@ -112,6 +143,8 @@ workflow ftp {
       rfam_annotations(rfam_annotation_query, rfam_readme)
 
       gpi()
+      gpi_species()
+      gpi_reference_proteome()
       id_mapping()
       export_coordinates()
       ensembl_export()

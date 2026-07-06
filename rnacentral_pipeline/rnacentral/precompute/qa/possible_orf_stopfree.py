@@ -20,6 +20,8 @@ NAME = "possible_orf_stopfree"
 
 
 def validate(sequence: Sequence) -> QaResult:
+    if sequence.possible_orf_stopfree is None:
+        return QaResult.null(NAME)
     if not sequence.possible_orf_stopfree:
         return QaResult.ok(NAME)
     message = "This sequence contains a possible ORF, as annotated by stopfree"

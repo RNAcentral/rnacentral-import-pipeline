@@ -4,6 +4,9 @@ process mgnify_fetch {
   output:
     path('*.json')
 
+  when: { params.databases.mgnify?.run }
+
+  script:
   """
   cp /nfs/ftp/public/databases/metagenomics/rnacentral/mgnify_genomes/* .
   """
@@ -17,6 +20,7 @@ process mgnify_parse {
   output:
     path('*.csv')
 
+  script:
   """
   rnac mgnify parse $json .
   """
@@ -26,7 +30,7 @@ process mgnify_parse {
 workflow mgnify {
   emit: data
   main:
-    if ( params.databases.mgnify.run ) {
+    if ( params.databases.mgnify?.run ) {
       mgnify_fetch | flatten | mgnify_parse | set { data }
     }
     else {

@@ -16,6 +16,7 @@ include { query as ref_query } from './utils'
 include { query as rfam_query } from './utils'
 include { query as orf_query } from './utils'
 include { query as locus_query } from './utils'
+include { fetch_schema } from './utils'
 include { build_search_accessions } from './build-accession-table'
 
 process setup {
@@ -28,9 +29,10 @@ process setup {
   output:
   path('counts.txt')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$sql" "$PGDATABASE"
-  psql -v ON_ERROR_STOP=1 -f "$counts" "$PGDATABASE" > counts.txt
+  psql -v ON_ERROR_STOP=1 -f "$sql" "\$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$counts" "\$PGDATABASE" > counts.txt
   """
 }
 
@@ -43,8 +45,9 @@ process fetch_so_tree {
   output:
   path('so-term-tree.json')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   rnac search-export so-term-tree raw.json so-term-tree.json
   """
 }
@@ -71,6 +74,7 @@ process build_metadata {
   output:
   path("merged.json")
 
+  script:
   """
   search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm $editing_events $go_flow_annotations merged.json
   """
@@ -103,13 +107,14 @@ process fetch_accession {
   output:
   tuple val(min), val(max), path("raw.json")
 
+  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
     -v min=$min \
     -v max=$max \
     -f "$sql" \
-    "$PGDATABASE" > raw.json
+    "\$PGDATABASE" > raw.json
   """
 }
 
@@ -122,8 +127,9 @@ process text_mining_query {
   output:
   path("publication-count.json")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$script" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$script" "\$PGDATABASE" > raw.json
   search-export group publication-count raw.json ${max_count} publication-count.json
   """
 }
@@ -136,8 +142,9 @@ process litsumm_summaries {
   output:
   path("litsumm-summaries.json")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   search-export group litsumm-summaries raw.json ${max_count} litsumm-summaries.json
   """
 }
@@ -151,8 +158,9 @@ process go_flow_annotations {
   output:
   path("go-flow-llm-annotations.json")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   search-export group go-flow-annotation raw.json ${max_count} go-flow-llm-annotations.json
   """
 }
@@ -165,19 +173,22 @@ process editing_events {
   output:
   path("editing-events.json")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
   search-export group editing-events raw.json ${max_count} editing-events.json
   """
 }
 
 process as_xml {
   tag { "$min-$max" }
-  memory params.export.search.memory
+  memory { (params.export.search.memory as nextflow.util.MemoryUnit) * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
+  maxRetries 3
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(raw), path(metadata)
+  tuple val(min), val(max), path(raw), path(metadata), path('schema.xsd')
 
   output:
   path "${xml}.gz", emit: xml
@@ -189,7 +200,7 @@ process as_xml {
   """
   search-export sequences normalize $raw $metadata data.json
   rnac search-export as-xml data.json $xml count
-  xmllint $xml --schema ${params.export.search.schema} --stream
+  xmllint $xml --schema schema.xsd --stream
   gzip $xml
   """
 }
@@ -255,6 +266,8 @@ workflow sequences {
     )\
     | set { metadata }
 
+    fetch_schema()
+
     search_count \
     | build_ranges \
     | splitCsv \
@@ -264,6 +277,7 @@ workflow sequences {
     | combine(accessions_ready) \
     | fetch_accession \
     | combine(metadata) \
+    | combine(fetch_schema.out) \
     | as_xml
 
     as_xml.out.sequences | set { sequence_json }

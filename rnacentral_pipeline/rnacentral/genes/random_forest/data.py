@@ -17,6 +17,7 @@ import io
 import multiprocessing as mp
 import random
 import re
+import traceback
 import uuid
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import lru_cache
@@ -53,7 +54,7 @@ exon_stop,
 strand,
 so_rna_type as so_type
 
-from rnc_sequence_regions_active_mapped sr
+from rnc_sequence_regions_active sr
 join rnc_sequence_exons ex on ex.region_id = sr.id
 join rnc_rna_precomputed pc on pc.id = sr.urs_taxid
 
@@ -141,6 +142,22 @@ type_scores = {
 }
 
 so_graph = obo.read_obo(SO_ONTOLOGY_URL)
+
+# Generic "ncRNA" SO term. Any SO id we can't find in the loaded ontology
+# (renamed/removed across SO releases, or never present) gets short-circuited
+# to this so we degrade to crappy-but-valid typing instead of erroring out.
+GENERIC_NCRNA = "SO:0000655"
+
+
+def normalize_so_type(so_type):
+    """Map an SO id to itself if it exists in the ontology, else GENERIC_NCRNA.
+
+    None and any id that is not a node in so_graph collapse to the generic
+    ncRNA term, which is guaranteed to be present.
+    """
+    if so_type is not None and so_type in so_graph:
+        return so_type
+    return GENERIC_NCRNA
 
 
 @lru_cache()
@@ -342,8 +359,13 @@ def merge_genes(
         pl.max_horizontal("last_release", "last_release_new").alias("last_release")
     )
     ##If the membership changes, we need to increment the version of the gene.
+    ## Sort both member lists before comparing: list equality is order-sensitive,
+    ## and the two sides come from different sources (DB dump vs fresh classify
+    ## output), so an ordering difference must not be read as a membership change.
     common = common.with_columns(
-        version=pl.when(pl.col("members") == pl.col("members_new"))
+        version=pl.when(
+            pl.col("members").list.sort() == pl.col("members_new").list.sort()
+        )
         .then(pl.col("version"))
         .otherwise(pl.col("version") + 1)
     )
@@ -411,7 +433,14 @@ def merge_genes(
                             {
                                 "name": old_row["name"],
                                 "internal_name": old_row["internal_name"],
-                                "members": new_row["members"],
+                                ## Wrap in an outer list: members is a list of
+                                ## region_names, and pl.DataFrame reads a bare list
+                                ## as values-down-the-rows. With schema=List(Utf8)
+                                ## that coerces each region_name string into a list
+                                ## of its characters and splits one gene into many
+                                ## rows. [[...]] makes it a single row holding the
+                                ## list.
+                                "members": [new_row["members"]],
                                 "start": min(new_row["start"], old_row["start"]),
                                 "stop": max(new_row["stop"], old_row["stop"]),
                                 "strand": strand,
@@ -530,6 +559,23 @@ def store_genes(final_genes, taxid, db_str):
         taxid=pl.lit(taxid, dtype=pl.Int64),
     )
 
+    ## The merge can emit more than one row per internal_name (e.g. the inner
+    ## coordinate join in merge_genes producing a cartesian product when a row
+    ## matches several rows on the other side). Duplicates here would break the
+    ## upsert below ("ON CONFLICT DO UPDATE cannot affect row a second time")
+    ## and would also double-insert members when this frame is exploded later,
+    ## so collapse to one row per internal_name before storing.
+    before = for_database.height
+    for_database = for_database.unique(
+        subset=["internal_name"], keep="first", maintain_order=True
+    )
+    dropped = before - for_database.height
+    if dropped:
+        print(
+            f"WARNING: dropped {dropped} duplicate internal_name row(s) "
+            f"before storing genes for taxid {taxid}"
+        )
+
     ## This just gets columns in the right order for the insert
     rnc_genes = for_database.select(
         pl.col("internal_name"),
@@ -544,15 +590,18 @@ def store_genes(final_genes, taxid, db_str):
         pl.col("last_release"),
         pl.col("members").list.len().alias("member_count"),
         pl.col("taxid"),
+        ## Anything we are storing is, by definition, active in this release.
+        ## Genes dropped by the merge are deactivated separately (deactivate_discarded).
+        pl.lit(True).alias("is_active"),
     )
 
     insert_query = """
-    INSERT INTO rnc_genes (internal_name, public_name, assembly_id, chromosome, start, stop, strand, version, first_release, last_update, member_count, taxid) VALUES """
+    INSERT INTO rnc_genes (internal_name, public_name, assembly_id, chromosome, start, stop, strand, version, first_release, last_update, member_count, taxid, is_active) VALUES """
     args_str = ""
     for row in rnc_genes.iter_rows():
-        args_str += cur.mogrify("(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s),", row).decode(
-            "utf-8"
-        )
+        args_str += cur.mogrify(
+            "(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s),", row
+        ).decode("utf-8")
 
     args_str = args_str.rstrip(",")
 
@@ -572,7 +621,8 @@ def store_genes(final_genes, taxid, db_str):
         first_release = EXCLUDED.first_release,
         last_update = EXCLUDED.last_update,
         member_count = EXCLUDED.member_count,
-        taxid = EXCLUDED.taxid
+        taxid = EXCLUDED.taxid,
+        is_active = EXCLUDED.is_active
     """
     )
     cur.execute(upsert_query)
@@ -608,26 +658,171 @@ def store_genes(final_genes, taxid, db_str):
         how="inner",
     ).rename({"id": "locus_id"})
 
-    ## Now we can insert the members. This is going to be an upsert, but we leave the old ones
-    ## linked, because we should only ever be adding to the membership of a gene.
-    ## This assumption needs to be checked though.
-    member_insert_query = "INSERT INTO rnc_gene_members (rnc_gene_id, locus_id) VALUES "
-    member_args_str = ""
-    for row in rnc_genes_for_membertable.iter_rows(named=True):
-        member_args_str += cur.mogrify(
-            "(%s,%s),", (row["rnc_gene_id"], row["locus_id"])
-        ).decode("utf-8")
-    member_args_str = member_args_str.rstrip(",")
-    member_upsert_query = (
-        member_insert_query
-        + member_args_str
-        + """
-    ON CONFLICT (rnc_gene_id, locus_id)
-    DO NOTHING
+    ## Reconcile membership before inserting: a gene can lose members between
+    ## releases, and rnc_gene_members is never otherwise pruned. We delete any
+    ## (rnc_gene_id, locus_id) pair for the genes in this batch that is not in the
+    ## current desired set, so the table always reflects current membership. This
+    ## lets fetch_stored_genes trust rnc_gene_members directly (with a stable sort).
+    desired_pairs = [
+        (row["rnc_gene_id"], row["locus_id"])
+        for row in rnc_genes_for_membertable.iter_rows(named=True)
+    ]
+    batch_gene_ids = sorted({pair[0] for pair in desired_pairs})
+    ## batch_gene_ids is derived from desired_pairs, so it is non-empty only when
+    ## desired_pairs is non-empty; no separate empty-desired_pairs branch is needed.
+    if batch_gene_ids:
+        ## Pass the desired (rnc_gene_id, locus_id) set as two parallel arrays and
+        ## reconstruct it server-side with unnest. A literal row-constructor
+        ## `NOT IN ((a,b),(c,d),...)` is parsed into a deeply nested OR/AND tree that
+        ## overflows the parser/planner stack ("stack depth limit exceeded") once the
+        ## list is large; arrays + unnest keep the parse tree flat regardless of size.
+        desired_gene_ids = [pair[0] for pair in desired_pairs]
+        desired_locus_ids = [pair[1] for pair in desired_pairs]
+        delete_query = """
+        DELETE FROM rnc_gene_members m
+        WHERE m.rnc_gene_id = ANY(%s)
+        AND NOT EXISTS (
+            SELECT 1
+            FROM unnest(%s::bigint[], %s::bigint[]) AS d(rnc_gene_id, locus_id)
+            WHERE d.rnc_gene_id = m.rnc_gene_id
+              AND d.locus_id = m.locus_id
+        )
+        """
+        cur.execute(
+            delete_query,
+            (batch_gene_ids, desired_gene_ids, desired_locus_ids),
+        )
+        conn.commit()
+
+    ## Now insert the current members. Still an upsert so re-running is idempotent;
+    ## the reconcile above has already removed any members no longer present.
+    ## Skip entirely when there are no members to insert: an empty VALUES list
+    ## produces "syntax error at or near ON". This happens when none of the gene
+    ## members resolved to a locus in rnc_sequence_regions for this assembly.
+    if rnc_genes_for_membertable.height == 0:
+        print(
+            f"WARNING: no gene members resolved to loci for taxid {taxid}; "
+            "skipping rnc_gene_members insert"
+        )
+    else:
+        member_insert_query = (
+            "INSERT INTO rnc_gene_members (rnc_gene_id, locus_id) VALUES "
+        )
+        member_args_str = ""
+        for row in rnc_genes_for_membertable.iter_rows(named=True):
+            member_args_str += cur.mogrify(
+                "(%s,%s),", (row["rnc_gene_id"], row["locus_id"])
+            ).decode("utf-8")
+        member_args_str = member_args_str.rstrip(",")
+        member_upsert_query = (
+            member_insert_query
+            + member_args_str
+            + """
+        ON CONFLICT (rnc_gene_id, locus_id)
+        DO NOTHING
+        """
+        )
+        cur.execute(member_upsert_query)
+        conn.commit()
+
+
+def fetch_stored_genes(taxid, db_str):
     """
-    )
-    cur.execute(member_upsert_query)
-    conn.commit()
+    Reconstruct the merge-format gene JSON for a taxon from the database.
+
+    This is the inverse of store_genes: it pulls the currently-active genes for
+    a taxon back out of rnc_genes / rnc_gene_members so they can be used as the
+    ``previous_genes`` input to merge_genes.
+
+    Returns a tuple of (genes DataFrame, prev_release_number). The DataFrame is
+    empty when no active genes exist for the taxon (a new taxon), in which case
+    prev_release_number is None and the caller should use init_genes instead of
+    merging.
+
+    The ``members`` list is aggregated with a stable ORDER BY so that the
+    list-equality check in merge_genes (which decides version bumps) is not
+    tripped by ordering differences. This relies on store_genes reconciling
+    membership (it deletes members no longer present), so rnc_gene_members holds
+    only each gene's current members.
+    """
+    db_str = db_str.replace("postgres", "postgresql")
+
+    conn = pg.connect(db_str)
+    try:
+        query = """
+        SELECT
+            g.public_name AS name,
+            g.internal_name,
+            g.assembly_id,
+            g.chromosome,
+            g.start,
+            g.stop,
+            g.strand,
+            g.version,
+            g.first_release,
+            g.last_update AS last_release,
+            array_agg(sr.region_name ORDER BY sr.region_name) AS members
+        FROM rnc_genes g
+        JOIN rnc_gene_members gm ON gm.rnc_gene_id = g.id
+        JOIN rnc_sequence_regions sr ON sr.id = gm.locus_id
+        WHERE g.taxid = %(taxid)s
+          AND g.is_active = true
+        GROUP BY
+            g.public_name, g.internal_name, g.assembly_id, g.chromosome,
+            g.start, g.stop, g.strand, g.version, g.first_release, g.last_update
+        """
+        genes = pl.read_database(
+            conn.cursor().mogrify(query, {"taxid": taxid}).decode("utf-8"),
+            conn,
+        )
+    finally:
+        conn.close()
+
+    prev_release_number = None
+    if genes.height > 0:
+        prev_release_number = int(genes.get_column("last_release").max())
+
+    return genes, prev_release_number
+
+
+def deactivate_discarded(merged_genes, taxid, db_str):
+    """
+    Mark genes dropped by the merge as inactive.
+
+    A gene present in the previous release but absent from the merged output is
+    not deleted (its version history is preserved); instead its is_active flag is
+    set false. Genes still present were re-activated by store_genes' upsert, so
+    here we only need to flip the ones missing from the merged file.
+    """
+    db_str = db_str.replace("postgres", "postgresql")
+
+    merged = pl.read_json(merged_genes)
+
+    ## Guard against an empty merged file. pl.read_json on `[]` returns a DataFrame
+    ## with no columns, so get_column would raise ColumnNotFoundError. Beyond that,
+    ## an empty merge would make `internal_name != ANY('{}')` true for every row and
+    ## deactivate the entire taxon. An empty merge is never expected for an existing
+    ## taxon, so treat it as a no-op rather than a wipe.
+    if merged.is_empty() or "internal_name" not in merged.columns:
+        return
+
+    kept_internal_names = merged.get_column("internal_name").to_list()
+
+    conn = pg.connect(db_str)
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE rnc_genes
+            SET is_active = false
+            WHERE taxid = %s
+              AND NOT (internal_name = ANY(%s))
+            """,
+            (taxid, kept_internal_names),
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def get_accessions(urs_taxids, db_str):
@@ -644,15 +839,17 @@ def get_accessions(urs_taxids, db_str):
             0.0 as cm_overlap
             FROM
             rnc_accession_active a
-            JOIN genes_urs_taxid t
-                ON t.urs_taxid = a.urs_taxid
             JOIN rnc_accessions ac
                 ON ac.accession = a.accession
-                WHERE t.urs_taxid = ANY(%s)""",
+                WHERE a.urs_taxid = ANY(%s)""",
                 (urs_taxids,),
             )
 
-            accessions = pl.DataFrame(cur.fetchall()).cast({"cm_overlap": pl.Float64})
+            accessions = pl.DataFrame(cur.fetchall(), schema={"urs_taxid": pl.String,
+                                                              "database": pl.String,
+                                                              "description": pl.String,
+                                                              "rna_type": pl.String,
+                                                              "cm_overlap": pl.Float64})
         conn.commit()
         return accessions
     except Exception as e:
@@ -668,12 +865,20 @@ def get_accessions(urs_taxids, db_str):
 
 
 def get_cm_hits(urs_taxids, db_str):
+    # urs is the accession prefix before the taxid, e.g. URS123_9606 -> URS123.
+    # Derive it here so we no longer need a shared lookup table to map
+    # urs_taxid -> urs.
+    urs_list = [u.split("_")[0] for u in urs_taxids]
+
     def get_rfam():
         conn = pg.connect(db_str)
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
 
             cur.execute(
                 """
+                    WITH g(urs_taxid, urs) AS (
+                        SELECT * FROM unnest(%s::text[], %s::text[])
+                    )
                     SELECT
                     g.urs_taxid,
                     'RFAM' as database,
@@ -681,14 +886,13 @@ def get_cm_hits(urs_taxids, db_str):
                     rfm.so_rna_type as rna_type,
                     rf.sequence_completeness as cm_overlap
 
-                    FROM genes_urs_taxid g
+                    FROM g
                     LEFT JOIN rfam_model_hits_old rf
                             ON rf.upi = g.urs
                     JOIN rfam_models rfm
                             ON rfm.rfam_model_id = rf.rfam_model_id
-                    WHERE g.urs_taxid = ANY(%s)
             """,
-                (urs_taxids,),
+                (urs_taxids, urs_list),
             )
             res = cur.fetchall()
             cur.close()
@@ -729,6 +933,9 @@ def get_cm_hits(urs_taxids, db_str):
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
+                    WITH g(urs_taxid, urs) AS (
+                        SELECT * FROM unnest(%s::text[], %s::text[])
+                    )
                     SELECT
                     g.urs_taxid,
                     'R2DT' as database,
@@ -737,15 +944,14 @@ def get_cm_hits(urs_taxids, db_str):
                     r2.sequence_coverage as cm_overlap
 
 
-                    FROM genes_urs_taxid g
+                    FROM g
                     LEFT JOIN r2dt_results r2
                             ON r2.urs = g.urs
                     JOIN r2dt_models r2m
                             ON r2m.id = r2.model_id
-                    WHERE g.urs_taxid = ANY(%s)
 
                 """,
-                (urs_taxids,),
+                (urs_taxids, urs_list),
             )
 
             res = cur.fetchall()
@@ -788,11 +994,12 @@ def get_cm_hits(urs_taxids, db_str):
 
 
 def calculate_type_specificity(so_type):
-    if so_type is None:
-        return -1000
+    # Unknown/missing SO ids are short-circuited to the generic ncRNA term
+    # rather than blowing up (NodeNotFound) or being heavily penalised.
+    so_type = normalize_so_type(so_type)
     try:
         return nx.shortest_path_length(so_graph, so_type, "SO:0000673")
-    except nx.NetworkXNoPath:
+    except (nx.NetworkXNoPath, nx.NodeNotFound):
         return -1000
 
 
@@ -816,17 +1023,27 @@ def process_chunk(chunk, db_str):
 def process_group(group_data, db_str, progress_queue=None):
     """Process a single group - extracted from your original loop"""
     group_key, group_df = group_data
-    gene_name = group_key
+    gene_name = group_key[0] if isinstance(group_key, (tuple, list)) else group_key
 
     try:
-        descriptions = get_accessions(
-            group_df.get_column("urs_taxid").unique().to_list(), db_str
-        )
-        cm_hits = get_cm_hits(
-            group_df.get_column("urs_taxid").unique().to_list(), db_str
-        )
+        urs_taxids = group_df.get_column("urs_taxid").unique().to_list()
+        descriptions = get_accessions(urs_taxids, db_str)
+        if descriptions is None:
+            # get_accessions swallows DB errors and returns None; treat that as
+            # a hard failure for this gene rather than blowing up on .vstack.
+            raise RuntimeError(
+                f"get_accessions returned None for {gene_name} "
+                f"(members={urs_taxids}); see 'error getting accessions' above"
+            )
+        cm_hits = get_cm_hits(urs_taxids, db_str)
         cm_hits = cm_hits.with_columns(pl.col("cm_overlap").fill_null(0.0))
         descriptions = descriptions.vstack(cm_hits)
+        if descriptions.is_empty():
+            # No active accessions and no CM hits for any member, so there is
+            # nothing to score. Skip rather than emitting a null rna_type.
+            raise RuntimeError(
+                f"no descriptions or CM hits for {gene_name} (members={urs_taxids})"
+            )
         descriptions_with_scores = descriptions.with_columns(
             desc_score=pl.struct(
                 pl.col("database"), pl.col("description")
@@ -855,6 +1072,10 @@ def process_group(group_data, db_str, progress_queue=None):
             .get_column("rna_type")
             .to_list()[0]
         )
+        # Guarantee the stored so_rna_type is a real ontology term: a missing or
+        # unknown SO id collapses to the generic ncRNA type instead of erroring
+        # downstream (and avoids ever emitting a null into the NOT NULL column).
+        best_type = normalize_so_type(best_type)
 
         result = {
             "name": gene_name,
@@ -868,10 +1089,15 @@ def process_group(group_data, db_str, progress_queue=None):
         return result
 
     except Exception as e:
-        print(f"Error processing {gene_name}: {e}")
+        # Surface the real cause: a bare repr (e.g. an empty IndexError) is
+        # useless, so log the full traceback. The sentinel carries an explicit
+        # rna_type=None so get_metadata can filter it out before it ever
+        # reaches the NOT NULL so_rna_type column.
+        print(f"Error processing {gene_name}: {e!r}")
+        print(traceback.format_exc())
         if progress_queue:
             progress_queue.put(1)
-        return {"name": gene_name, "description": "ERROR"}
+        return {"name": gene_name, "description": "ERROR", "rna_type": None}
 
 
 def remove_species_mention(description, species_name=None, common_name=None):
@@ -933,26 +1159,6 @@ def get_metadata(final_genes, db_str):
         pl.col("members").str.split("@").list.first().alias("urs_taxid")
     )
 
-    buffer = io.StringIO()
-    for name in final_genes.get_column("urs_taxid").unique().to_list():
-        buffer.write(f"{name}\t{name.split('_')[0]}\n")
-    buffer.seek(0)
-
-    ## Create a temp table from the region names
-    conn = pg.connect(db_str)
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("DROP TABLE IF EXISTS genes_urs_taxid")
-    cur.execute("CREATE TABLE genes_urs_taxid (urs_taxid TEXT, urs TEXT)")
-    cur.copy_from(
-        buffer,
-        "genes_urs_taxid",
-        columns=(
-            "urs_taxid",
-            "urs",
-        ),
-    )
-    conn.commit()
-    conn.close()
     # Main parallelization code
     grouped = final_genes.group_by("name", maintain_order=True)
     group_items = list(grouped)  # Convert to list for multiprocessing
@@ -978,7 +1184,35 @@ def get_metadata(final_genes, db_str):
             except Exception as e:
                 print(f"Error processing chunk: {e}")
 
-    metadata = pl.DataFrame(results)
+    # Pin the schema explicitly: every result dict has these three string keys,
+    # but rna_type (and description, via the error sentinel) is frequently None.
+    # With the default infer_schema_length polars can infer rna_type as Null
+    # from an all-None prefix and then fail to append a real SO id like
+    # "SO:0000651". An explicit Utf8 schema makes construction order-independent.
+    metadata = pl.DataFrame(
+        results,
+        schema={
+            "name": pl.Utf8,
+            "description": pl.Utf8,
+            "rna_type": pl.Utf8,
+        },
+    )
+
+    # Drop genes whose metadata could not be computed (see process_group). They
+    # carry rna_type=None, which would violate the NOT NULL so_rna_type column.
+    # The full traceback for each was already logged above; here we just report
+    # the count and the affected gene names so they don't crash store_metadata.
+    if "rna_type" not in metadata.columns:
+        metadata = metadata.with_columns(rna_type=pl.lit(None, dtype=pl.Utf8))
+    failed = metadata.filter(pl.col("rna_type").is_null())
+    if not failed.is_empty():
+        failed_names = failed.get_column("name").to_list()
+        print(
+            f"Dropping {failed.height} gene(s) with no computable metadata: "
+            f"{failed_names}"
+        )
+        metadata = metadata.filter(pl.col("rna_type").is_not_null())
+
     metadata = metadata.with_columns(
         short_description=pl.col("description")
         .map_elements(remove_species_mention, return_dtype=pl.Utf8)
@@ -991,7 +1225,16 @@ def store_metadata(metadata, db_str):
     conn = pg.connect(db_str)
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    metadata = pl.read_json(metadata).with_columns(pl.col("name").list.first())
+    metadata = pl.read_json(metadata)
+
+    # An empty metadata file serialises to `[]`, which read_json loads as a
+    # 0-column frame (no "name"). Nothing to store for that taxon.
+    if "name" not in metadata.columns:
+        print("No gene metadata to store")
+        return
+
+    if metadata.schema["name"] == pl.List(pl.Utf8):
+        metadata = metadata.with_columns(pl.col("name").list.first())
 
     buffer = io.StringIO()
     for name in metadata.get_column("name").to_list():

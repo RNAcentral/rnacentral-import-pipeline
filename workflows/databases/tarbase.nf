@@ -10,13 +10,14 @@ process fetch {
   errorStrategy 'retry'
   maxRetries 10
 
-  when: { params.databases.tarbase.run }
+  when: { params.databases.tarbase?.run }
 
   input:
   val remote
   output:
   path('*.tsv')
 
+  script:
   """
   wget -O tarbase.tsv.gz ${remote}
   gzip -d tarbase.tsv.gz
@@ -27,7 +28,7 @@ process parse {
   memory { 8.GB * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
-  when: { params.databases.tarbase.run }
+  when: { params.databases.tarbase?.run }
 
   input:
   path tsv_file
@@ -35,6 +36,7 @@ process parse {
   output:
   path('*.csv')
 
+  script:
   """
   rnac tarbase parse ${tsv_file} .
   """

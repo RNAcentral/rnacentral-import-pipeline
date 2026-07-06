@@ -1,8 +1,9 @@
 COPY (
 select
-  display_name
+  display_name,
+  full_descr
 from rnc_database
 where
   alive = 'Y'
   and num_sequences > 0
-) TO STDOUT
+) TO STDOUT CSV

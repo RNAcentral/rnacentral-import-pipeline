@@ -17,14 +17,14 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_rfam_go_terms;
+ALTER TABLE rnacen.load_rfam_go_terms SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-create table load_rfam_go_terms (
-    ontology_term_id character varying(10) COLLATE pg_catalog."default" NOT NULL,
-    rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL
-);
+ANALYZE rnacen.load_rfam_go_terms;
 $$
 ;

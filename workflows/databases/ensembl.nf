@@ -1,12 +1,13 @@
 process fetch_metadata {
-  when { params.databases.ensembl._any.run }
-
   input:
   path(query)
 
   output:
   path('families.tsv')
 
+  when: { params.databases.ensembl?._any?.run }
+
+  script:
   """
   mysql \
     --host ${params.connections.rfam.host} \
@@ -17,8 +18,6 @@ process fetch_metadata {
 }
 
 process find_urls {
-  when { params.databases.ensembl[division].run }
-
   memory '20GB'
 
   input:
@@ -26,6 +25,8 @@ process find_urls {
 
   output:
   path('species.txt')
+
+  when: { params.databases.ensembl[division]?.run }
 
   script:
     """
@@ -45,6 +46,7 @@ process fetch_species_data {
   output:
   tuple val(division), path("*.dat"), path("${species}.gff")
 
+  script:
   """
   lowercase_assembly_url() {
     PYTHONPATH="${workflow.launchDir}" python -c "from rnacentral_pipeline.databases.ensembl.url_helpers import lowercase_assembly_in_url; print(lowercase_assembly_in_url('\$1'))"
@@ -76,6 +78,7 @@ process parse_data {
   output:
   path('*.csv')
 
+  script:
   """
   rnac ensembl parse $division --family-file $rfam $embl $gff .
 #  rnac ensembl pseudogenes $division $embl ensembl-pseudogenes.csv
@@ -94,7 +97,7 @@ workflow ensembl {
       'metazoa',
       'vertebrates',
     ]) \
-    | filter { division -> params.databases.ensembl[division].run } \
+    | filter { division -> params.databases.ensembl[division]?.run } \
     | find_urls \
     | splitCsv \
     | filter { division, species, dat_url, gff_url ->

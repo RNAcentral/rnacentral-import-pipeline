@@ -1,14 +1,13 @@
 process find_genomes_with_repeats {
-  when { params.precompute.run }
-
   input:
   tuple path(query), path(connections)
 
   output:
   path("info.csv")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > assemblies.csv
+  psql -v ON_ERROR_STOP=1 -f $query "\$PGDATABASE" > assemblies.csv
   rnac repeats find-databases $connections assemblies.csv info.csv
   """
 }

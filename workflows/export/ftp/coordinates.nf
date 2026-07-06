@@ -9,6 +9,7 @@ process readme {
   output:
   path('readme.txt')
 
+  script:
   """
   cp $raw readme.txt
   """
@@ -24,16 +25,19 @@ process find_jobs {
   output:
   path('coordinates.txt')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > coordinates.txt
+  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > coordinates.txt
   """
 }
 
 process fetch {
   tag { "${assembly}-${species}" }
   maxForks 2
-  time '20m'
+  time { 20.m * (2 ** (task.attempt - 1)) }
   memory '512 MB'
+  errorStrategy 'retry'
+  maxRetries 5
 
   input:
   tuple val(assembly), val(species), val(taxid), path(query)
@@ -41,8 +45,9 @@ process fetch {
   output:
   tuple val(assembly), val(species), path('result.json')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "\$PGDATABASE" > result.json
   """
 }
 
@@ -59,11 +64,12 @@ process generate_bed {
   output:
   tuple val(assembly), path("${species}.${assembly}.bed.gz")
 
+  script:
   """
   set -euo pipefail
 
   rnac ftp-export coordinates as-bed $raw_data |\
-  sort -k1,1 -k2,2n |\
+  sort -T . -k1,1 -k2,2n |\
   gzip > ${species}.${assembly}.bed.gz
   """
 }
@@ -81,11 +87,12 @@ process generate_gff3 {
   output:
   path("${species}.${assembly}.gff3.gz")
 
+  script:
   """
   set -euo pipefail
 
   rnac ftp-export coordinates as-gff3 $raw_data - |\
-  sort -t"`printf '\\t'`" -k1,1 -k4,4n |\
+  sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n |\
   gzip > "${species}.${assembly}.gff3.gz"
   """
 }
@@ -103,11 +110,12 @@ process generate_gff3_for_igv {
   output:
   path("${species}.${assembly}.rnacentral.gff3.gz")
 
+  script:
   """
   set -euo pipefail
 
   rnac ftp-export coordinates as-gff3 $raw_data - |\
-  sort -t"`printf '\\t'`" -k1,1 -k4,4n |\
+  sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n |\
   sed s/noncoding_exon/exon/g |\
   bgzip > "${species}.${assembly}.rnacentral.gff3.gz"
   """
@@ -122,6 +130,7 @@ process index_gff3 {
 
   output:
   path("${gff.baseName}.gz.{tbi,csi}"), optional: true
+  script:
   """
   tabix -p gff $gff || tabix -C -p gff $gff
   """

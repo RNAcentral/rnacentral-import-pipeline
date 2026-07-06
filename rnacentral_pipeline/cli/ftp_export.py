@@ -120,9 +120,16 @@ def export_go_temrs(filename, output):
 
 @cli.command("gpi")
 @click.option("--db-url", envvar="PGDATABASE")
+@click.option(
+    "--filter",
+    "gpi_filter",
+    type=click.Choice(["none", "species", "reference-proteome"], case_sensitive=False),
+    default="none",
+    help="Filter: species-only or reference-proteome-only",
+)
 @click.argument("output", default="-", type=click.File("w"))
-def export_gpi(output, db_url):
-    gpi.export(db_url, output)
+def export_gpi(output, db_url, gpi_filter):
+    gpi.export(db_url, output, gpi_filter=gpi.GpiFilter(gpi_filter))
 
 
 @cli.group("coordinates")

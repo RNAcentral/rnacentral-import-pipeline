@@ -116,15 +116,23 @@ def ftp(host):
 
 
 def toplevel_file(
-    host, species, assembly_id, directory, files, kind, release, dna_type="dna"
+    host, species, assembly_id, directory, files, kind, dna_type="dna"
 ):
     upper_species = species[0].upper() + species[1:]
     if kind == "fa":
         base = f"{upper_species}.{assembly_id}.{dna_type}.{{type}}.fa.gz"
     else:
-        # Here is an example of what the URL should look like:
-        # ftp.ensembl.org/pub/release-110/gff3/homo_sapiens/Homo_sapiens.GRCh38.110.gff3.gz
-        # Warning:  it's not uncommon to find an empty directory for a given version.
+        # Infer the release number from the filenames present in the directory
+        # e.g. Homo_sapiens.GRCh38.115.gff3.gz -> release = "115"
+        release_pattern = re.compile(
+            rf"{re.escape(upper_species)}\.{re.escape(assembly_id)}\.(\d+)\.{re.escape(kind)}\.gz"
+        )
+        release = next(
+            (m.group(1) for f in files if (m := release_pattern.match(f))),
+            None,
+        )
+        if release is None:
+            raise NoTopLevelFiles(f"{species}/{assembly_id}")
         base = f"{upper_species}.{assembly_id}.{release}.{kind}.gz"
 
     primary = base.format(type="primary_assembly")
@@ -159,16 +167,6 @@ def url_for(species: str, assembly_id: str, kind: str, host: str, soft_masked=Fa
             with ftp(host.host) as conn:
                 conn.cwd("pub")
 
-                ## Parse the readme for the current release to avoid getting a half baked release
-                readme_lines = []
-                conn.retrlines("RETR current_README", readme_lines.append)
-                cur_readme = "\n".join(readme_lines)
-                pattern = r"[Cc]urrent release is (?:Ensembl )?Genomes\s*(\d+)"
-                match = re.search(pattern, cur_readme)
-                if not match:
-                    raise ValueError("Could not determine latest Ensembl release from README")
-                release = match.group(1)
-
                 for path in host.paths(species, kind):
                     try:
                         conn.cwd(path)
@@ -182,7 +180,6 @@ def url_for(species: str, assembly_id: str, kind: str, host: str, soft_masked=Fa
                         path,
                         possible,
                         kind,
-                        release,
                         dna_type=dna_type,
                     )
 

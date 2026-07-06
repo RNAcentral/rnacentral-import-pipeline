@@ -1,3 +1,4 @@
+include { circatlas } from './databases/circatlas'
 include { circpedia } from './databases/circpedia'
 include { crw } from './databases/crw'
 include { ena } from './databases/ena'
@@ -41,13 +42,13 @@ include {ribocentre } from './databases/ribocentre'
 
 process build_context {
   memory '6GB'
-  when { params.needs_taxonomy }
   errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
   maxRetries 5
 
   output:
   path('context.db')
 
+  script:
   """
   wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
   tar xvf new_taxdump.tar.gz
@@ -61,10 +62,16 @@ workflow parse_databases {
   emit: data
   main:
 
-    build_context | set { context }
+    if (params.get('needs_taxonomy', false)) {
+      build_context | set { context }
+    }
+    else {
+      Channel.empty() | set { context }
+    }
 
     Channel.empty() \
     | mix(
+      circatlas(),
       circpedia(),
       crw(),
       five_s_rrnadb(),

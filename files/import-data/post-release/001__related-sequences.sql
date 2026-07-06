@@ -1,11 +1,26 @@
 \timing
 
+-- Batching constant for the four DO blocks below: n_batches = 16.
+-- The four INSERT...ON CONFLICT statements against rnc_related_sequences are
+-- split into n_batches smaller statements so the FK after-row trigger queue
+-- drains at each statement boundary (otherwise it OOMs the backend on
+-- production-sized loads). Hash partition is on load.source_accession because
+-- it is part of the ON CONFLICT key, which guarantees colliding rows always
+-- land in the same batch.
+-- If you change n_batches, update ALL FOUR DECLARE sections below.
+
 BEGIN;
+
+-- Drop indexes to speed up bulk inserts
+DROP INDEX IF EXISTS rnacen.ix_rnc_related_sequences__target_ac;
+DROP INDEX IF EXISTS rnacen.rnc_related_relationship_type_idx;
+DROP INDEX IF EXISTS rnacen.rnc_related_sequences_source_urs_taxid_idx;
+DROP INDEX IF EXISTS rnacen.rnc_related_sequences_target_urs_taxid_idx;
 
 -- Update the load table to contain the source URS
 UPDATE load_rnc_related_sequences load
 SET
-  source_urs_taxid = xref.upi || '_' || xref.taxid
+  source_urs_taxid = xref.urs_taxid
 from xref
 where
   xref.ac = load.source_accession
@@ -16,27 +31,35 @@ where
 delete from load_rnc_related_sequences where source_urs_taxid is null;
 
 -- Copy over all related proteins.
-INSERT INTO rnc_related_sequences (
-  source_urs_taxid,
-  source_accession,
-  target_accession,
-  relationship_type,
-  methods
-) (
-select
-  load.source_urs_taxid,
-  load.source_accession,
-  load.target_accession,
-  load.relationship_type::related_sequence_relationship,
-  load.methods
-from load_rnc_related_sequences load
-WHERE
-  load.relationship_type = 'target_protein'
-)
-ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
-SET
-  methods = EXCLUDED.methods || rnc_related_sequences.methods
-;
+DO $$
+DECLARE
+  n_batches CONSTANT int := 16;  -- KEEP IN SYNC with the other DO blocks in this file
+BEGIN
+  FOR i IN 0..n_batches-1 LOOP
+    INSERT INTO rnc_related_sequences (
+      source_urs_taxid,
+      source_accession,
+      target_accession,
+      relationship_type,
+      methods
+    ) (
+    select
+      load.source_urs_taxid,
+      load.source_accession,
+      load.target_accession,
+      load.relationship_type::related_sequence_relationship,
+      load.methods
+    from load_rnc_related_sequences load
+    WHERE
+      load.relationship_type = 'target_protein'
+      AND abs(hashtext(load.source_accession)) % n_batches = i
+    )
+    ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
+    SET
+      methods = EXCLUDED.methods || rnc_related_sequences.methods
+    ;
+  END LOOP;
+END $$;
 
 -- Delete all target_proteins that should be copied over now
 delete from load_rnc_related_sequences where relationship_type = 'target_protein';
@@ -44,45 +67,53 @@ delete from load_rnc_related_sequences where relationship_type = 'target_protein
 -- For related RNA try to figure out what the accession/URS is.
 
 -- If the accession is one we know just use it
-INSERT INTO rnc_related_sequences (
-  source_urs_taxid,
-  source_accession,
-  target_urs_taxid,
-  target_accession,
-  relationship_type,
-  methods
-) (
-select distinct
-  load.source_urs_taxid,
-  load.source_accession,
-  target.upi || '_' || target.taxid,
-  load.target_accession,
-  load.relationship_type::related_sequence_relationship,
-  load.methods
-from load_rnc_related_sequences load
-join xref target on target.ac = load.target_accession
-where
-  load.relationship_type IN ('target_rna', 'isoform')
-  and target.deleted = 'N'
-)
-ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
-SET
-  methods = EXCLUDED.methods || rnc_related_sequences.methods
-;
+DO $$
+DECLARE
+  n_batches CONSTANT int := 16;  -- KEEP IN SYNC with the other DO blocks in this file
+BEGIN
+  FOR i IN 0..n_batches-1 LOOP
+    INSERT INTO rnc_related_sequences (
+      source_urs_taxid,
+      source_accession,
+      target_urs_taxid,
+      target_accession,
+      relationship_type,
+      methods
+    ) (
+    select distinct
+      load.source_urs_taxid,
+      load.source_accession,
+      target.urs_taxid,
+      load.target_accession,
+      load.relationship_type::related_sequence_relationship,
+      load.methods
+    from load_rnc_related_sequences load
+    join xref target on target.ac = load.target_accession
+    where
+      load.relationship_type IN ('target_rna', 'isoform')
+      and target.deleted = 'N'
+      and abs(hashtext(load.source_accession)) % n_batches = i
+    )
+    ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
+    SET
+      methods = EXCLUDED.methods || rnc_related_sequences.methods
+    ;
+  END LOOP;
+END $$;
 
 -- Delete the loaded rnas with a known acccession
 delete from load_rnc_related_sequences load
 USING xref
 WHERE
   xref.ac = load.target_accession
-  and load.relationship_type = 'target_rna'
+  and load.relationship_type IN ('target_rna', 'isoform')
   and xref.deleted = 'N'
 ;
 
 -- Build a table representing the related Ensembl genes
 create temp table gene_upi_mapping as
 select
-  xref.upi || '_' || xref.taxid "urs_taxid",
+  xref.urs_taxid,
   'ENSEMBL:' || split_part(acc.optional_id, '.', 1) "versionless_gene"
 from xref
 join rnc_accessions acc
@@ -96,32 +127,40 @@ where
 create index ix_gene_upi_mapping__versionless_gene on gene_upi_mapping(versionless_gene);
 
 -- If the accession is a known ensembl gene copy that over
-INSERT INTO rnc_related_sequences (
-  source_urs_taxid,
-  source_accession,
-  target_urs_taxid,
-  target_accession,
-  relationship_type,
-  methods
-) (
-select distinct on
-  (load.source_accession, load.target_accession, load.relationship_type) load.source_urs_taxid,
-  load.source_accession,
-  gene.urs_taxid,
-  load.target_accession,
-  load.relationship_type::related_sequence_relationship,
-  load.methods
-from load_rnc_related_sequences load
-join gene_upi_mapping gene
-ON
-  gene.versionless_gene = load.target_accession
-where
-  load.relationship_type = 'target_rna'
-)
-ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
-SET
-  methods = EXCLUDED.methods || rnc_related_sequences.methods
-;
+DO $$
+DECLARE
+  n_batches CONSTANT int := 16;  -- KEEP IN SYNC with the other DO blocks in this file
+BEGIN
+  FOR i IN 0..n_batches-1 LOOP
+    INSERT INTO rnc_related_sequences (
+      source_urs_taxid,
+      source_accession,
+      target_urs_taxid,
+      target_accession,
+      relationship_type,
+      methods
+    ) (
+    select distinct on
+      (load.source_accession, load.target_accession, load.relationship_type) load.source_urs_taxid,
+      load.source_accession,
+      gene.urs_taxid,
+      load.target_accession,
+      load.relationship_type::related_sequence_relationship,
+      load.methods
+    from load_rnc_related_sequences load
+    join gene_upi_mapping gene
+    ON
+      gene.versionless_gene = load.target_accession
+    where
+      load.relationship_type = 'target_rna'
+      and abs(hashtext(load.source_accession)) % n_batches = i
+    )
+    ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
+    SET
+      methods = EXCLUDED.methods || rnc_related_sequences.methods
+    ;
+  END LOOP;
+END $$;
 
 -- Cleanup the sequences with known gene
 DELETE FROM load_rnc_related_sequences load
@@ -132,27 +171,36 @@ WHERE
 ;
 
 -- Insert whatever remains with empty source_urs_taxid
-INSERT INTO rnc_related_sequences (
-  source_urs_taxid,
-  source_accession,
-  target_urs_taxid,
-  target_accession,
-  relationship_type,
-  methods
-) (
-select distinct
-  load.source_urs_taxid,
-  load.source_accession,
-  null,
-  load.target_accession,
-  load.relationship_type::related_sequence_relationship,
-  load.methods
-from load_rnc_related_sequences load
-)
-ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
-SET
-  methods = EXCLUDED.methods || rnc_related_sequences.methods
-;
+DO $$
+DECLARE
+  n_batches CONSTANT int := 16;  -- KEEP IN SYNC with the other DO blocks in this file
+BEGIN
+  FOR i IN 0..n_batches-1 LOOP
+    INSERT INTO rnc_related_sequences (
+      source_urs_taxid,
+      source_accession,
+      target_urs_taxid,
+      target_accession,
+      relationship_type,
+      methods
+    ) (
+    select distinct
+      load.source_urs_taxid,
+      load.source_accession,
+      null,
+      load.target_accession,
+      load.relationship_type::related_sequence_relationship,
+      load.methods
+    from load_rnc_related_sequences load
+    where
+      abs(hashtext(load.source_accession)) % n_batches = i
+    )
+    ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
+    SET
+      methods = EXCLUDED.methods || rnc_related_sequences.methods
+    ;
+  END LOOP;
+END $$;
 
 -- Ensure all methods are distinct
 update rnc_related_sequences related
@@ -164,5 +212,11 @@ where
 ;
 
 drop table load_rnc_related_sequences;
+
+-- Recreate indexes
+CREATE INDEX ix_rnc_related_sequences__target_ac ON rnacen.rnc_related_sequences USING btree (target_accession);
+CREATE INDEX rnc_related_relationship_type_idx ON rnacen.rnc_related_sequences USING btree (relationship_type);
+CREATE INDEX rnc_related_sequences_source_urs_taxid_idx ON rnacen.rnc_related_sequences USING btree (source_urs_taxid);
+CREATE INDEX rnc_related_sequences_target_urs_taxid_idx ON rnacen.rnc_related_sequences USING btree (target_urs_taxid);
 
 COMMIT;
