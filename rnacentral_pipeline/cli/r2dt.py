@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.rnacentral import attempted, r2dt
+from rnacentral_pipeline.rnacentral.r2dt import s3 as r2dt_s3
 
 
 @click.group("r2dt")
@@ -254,6 +255,62 @@ def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
     output = Path(output)
     r2dt.prepare_s3(
         model_info, directory, output, file_list, allow_missing=allow_missing
+    )
+
+
+@cli.command("upload-s3")
+@click.option("--env", default="prod", help="top-level prefix / environment")
+@click.option("--workers", default=32, help="parallel uploads")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.argument("file_list", type=click.Path(exists=True, dir_okay=False))
+def r2dt_upload_s3(file_list, env, workers, endpoint, bucket):
+    """
+    Upload the gzipped SVGs listed in FILE_LIST (produced by prepare-s3) to S3.
+
+    Replaces update-svg.sh: uploads via boto3 with server-side Content-MD5
+    verification and fails loudly if any object does not upload, rather than
+    silently swallowing HTTP errors.
+    """
+    r2dt_s3.upload(file_list, env, endpoint=endpoint, bucket=bucket, workers=workers)
+
+
+@cli.command("verify-s3")
+@click.option("--env", default="prod")
+@click.option("--workers", default=32)
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.argument("file_list", type=click.Path(exists=True, dir_okay=False))
+@click.argument("output", default="-", type=click.File("w"))
+def r2dt_verify_s3(file_list, output, env, workers, endpoint, bucket):
+    """
+    Checksum the files in FILE_LIST against what is actually in the bucket.
+
+    Writes one line per problem (MISSING / SIZE / CHECKSUM / ERROR) to OUTPUT and
+    exits non-zero if anything is missing or does not match.
+    """
+    problems = r2dt_s3.verify(
+        file_list, env, endpoint=endpoint, bucket=bucket, workers=workers, out=output
+    )
+    if problems:
+        raise click.ClickException(f"{problems} files missing or mismatched in {bucket}")
+
+
+@cli.command("list-s3")
+@click.option("--env", default="prod")
+@click.option("--workers", default=32)
+@click.option("--depth", default=2, help="delimiter levels to shard on")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.argument("output", default="-", type=click.File("w"))
+def r2dt_list_s3(output, env, workers, depth, endpoint, bucket):
+    """
+    List the bare URS of every SVG in the bucket (one per line) to OUTPUT.
+
+    Used to reconcile what is in S3 against the DB should_show set.
+    """
+    r2dt_s3.list_svgs(
+        env, output, endpoint=endpoint, bucket=bucket, workers=workers, depth=depth
     )
 
 
