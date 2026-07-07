@@ -13,72 +13,111 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import click
 import json
+import pathlib
+
+import click
 import psycopg2
 import psycopg2.extras
 import requests
-import time
+from lxml import etree
+
+RETRACTED_MARKER = "retracted publication"
+
+
+def iter_retracted_pmcids(xml_path, candidates):
+    """
+    Stream a PMCOA XML file and yield pmcids whose PubType marks them retracted
+    AND which are present in the candidates set.
+    """
+    context = etree.iterparse(
+        str(xml_path), events=("end",), tag="PMC_ARTICLE", recover=True
+    )
+    for _, elem in context:
+        pub_type = elem.findtext("PubType") or ""
+        if RETRACTED_MARKER in pub_type.lower():
+            pmcid = elem.findtext("pmcid")
+            if pmcid and pmcid in candidates:
+                yield pmcid
+        elem.clear()
+        # also drop earlier siblings so memory does not accumulate
+        parent = elem.getparent()
+        if parent is not None:
+            while elem.getprevious() is not None:
+                del parent[0]
+    del context
 
 
 @click.command()
-@click.argument('database')
-@click.argument('webhook')
-def main(database, webhook):
+@click.argument("database")
+@click.argument("webhook")
+@click.argument(
+    "xml_dir",
+    type=click.Path(
+        exists=True, file_okay=False, dir_okay=True, path_type=pathlib.Path
+    ),
+)
+def main(database, webhook, xml_dir):
     """
-    Function to find articles that have been retracted.
-    :param database: params to connect to the db
-    :param webhook: address to send message to slack channel
-    :return: None
+    Find retracted articles by scanning the PMCOA Lite Metadata XML files in
+    XML_DIR and bulk-updating litscan_article in one shot.
     """
     conn = None
     try:
         conn = psycopg2.connect(database)
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # retrieve all articles identified by LitScan
-        cursor.execute(""" SELECT pmcid FROM litscan_article WHERE retracted IS NOT TRUE """)
-        rows = cursor.fetchall()
-        articles = []
-        for row in rows:
-            articles.append(row[0])
+        cursor.execute(
+            "SELECT pmcid FROM litscan_article "
+            "WHERE retracted IS NOT TRUE AND pmcid IS NOT NULL"
+        )
+        candidates = {row[0] for row in cursor.fetchall()}
 
-        # check 1000 articles at a time
-        step = 1000
+        if not candidates:
+            return
 
-        # list of articles that have been retracted
-        retracted_articles = []
+        retracted = set()
+        for xml_file in sorted(xml_dir.glob("PMCOA*.xml")):
+            for pmcid in iter_retracted_pmcids(xml_file, candidates):
+                retracted.add(pmcid)
 
-        for sublist in range(0, len(articles), step):
-            check_pmcid = articles[sublist:sublist + step]
+        if not retracted:
+            conn.commit()
+            return
 
-            # create json object
-            obj = {"ids": []}
-            for pmcid in check_pmcid:
-                obj["ids"].append({"src": "PMC", "extId": pmcid})
-
-            # use the Status Update Search module of the Europe PMC RESTful API
-            data = requests.post("https://www.ebi.ac.uk/europepmc/webservices/rest/status-update-search", json=obj).json()
-
-            if "articlesWithStatusUpdate" in data and len(data["articlesWithStatusUpdate"]) > 0:
-                for item in data["articlesWithStatusUpdate"]:
-                    if "statusUpdates" in item and "RETRACTED" in item["statusUpdates"]:
-                        # update article
-                        cursor.execute("UPDATE litscan_article SET retracted=TRUE WHERE pmcid=%s", (item["extId"],))
-                        retracted_articles.append(item["extId"])
-
-            time.sleep(0.3)
-
-        # Commit the changes to the database
+        cursor.execute(
+            "CREATE TEMP TABLE retracted_pmcids (pmcid TEXT PRIMARY KEY) "
+            "ON COMMIT DROP"
+        )
+        psycopg2.extras.execute_values(
+            cursor,
+            "INSERT INTO retracted_pmcids (pmcid) VALUES %s",
+            [(p,) for p in retracted],
+            page_size=1000,
+        )
+        cursor.execute(
+            """
+            UPDATE litscan_article a
+               SET retracted = TRUE
+              FROM retracted_pmcids r
+             WHERE a.pmcid = r.pmcid
+               AND a.retracted IS NOT TRUE
+            RETURNING a.pmcid
+            """
+        )
+        newly_retracted = [row[0] for row in cursor.fetchall()]
         conn.commit()
 
-        # send a message on Slack
-        if retracted_articles:
-            message = f'{len(retracted_articles)} {"articles have" if len(retracted_articles) > 1 else "article has"} ' \
-                      f'been retracted: {", ".join(retracted_articles)}'
+        if newly_retracted and webhook:
+            verb = "articles have" if len(newly_retracted) > 1 else "article has"
+            message = (
+                f"{len(newly_retracted)} {verb} been retracted: "
+                f"{', '.join(newly_retracted)}"
+            )
             requests.post(webhook, json.dumps({"text": message}))
     except (ValueError, psycopg2.DatabaseError) as error:
-        requests.post(webhook, json.dumps({"text": error}))
+        if webhook:
+            requests.post(webhook, json.dumps({"text": str(error)}))
     finally:
         if conn is not None:
             conn.close()
