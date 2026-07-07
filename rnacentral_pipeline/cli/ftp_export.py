@@ -88,7 +88,7 @@ def sequences_parquet_from_json(json_file, output):
     Build the active-sequences parquet from the shared JSON-lines dump (the same
     file the FASTA export reads) rather than re-querying the database.
     """
-    parquet.ndjson_2_dataframe(json_file).write_parquet(output)
+    parquet.ndjson_2_parquet(json_file, output)
 
 
 @export_sequences.command("valid-nhmmer")

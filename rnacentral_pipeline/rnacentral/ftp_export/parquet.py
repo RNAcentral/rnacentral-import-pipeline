@@ -14,9 +14,11 @@ limitations under the License.
 """
 
 import re
+from itertools import islice
 from pathlib import Path
 
 import polars as pl
+import pyarrow.parquet as pq
 
 from rnacentral_pipeline.rnacentral.ftp_export.sequences_json import parse
 
@@ -41,20 +43,40 @@ def query_2_dataframe(query_path: str | Path, conn) -> pl.DataFrame:
     return pl.read_database(unwrap_copy(query_str), conn)
 
 
-def ndjson_2_dataframe(json_path: str | Path) -> pl.DataFrame:
+def ndjson_2_parquet(json_path: str | Path, output: str | Path, batch_size: int = 50_000):
     """
-    Build a dataframe from the active-sequence dump file (the same JSON-lines the
-    FASTA export consumes), decoded via the shared parser so the two exports agree.
+    Stream the active-sequence dump (the same JSON-lines the FASTA export consumes,
+    decoded via the shared parser) into parquet a batch at a time, so peak memory is
+    one batch rather than the whole dump. The dump has a fixed schema (a single
+    json_build_object in active.sql), so the first batch defines it and later
+    batches cast to match.
     """
-    # ponytail: materialises the whole dump in memory, matching the DB path; the
-    # pipeline runs this on a high-memory node. Switch to a batched pl.read_ndjson
-    # (with backslash un-doubling) if memory becomes the limiter.
     with open(json_path) as handle:
-        return pl.DataFrame(list(parse(handle)))
+        records = parse(handle)
+        writer = None
+        try:
+            while batch := list(islice(records, batch_size)):
+                table = pl.DataFrame(batch).to_arrow()
+                if writer is None:
+                    writer = pq.ParquetWriter(str(output), table.schema)
+                writer.write_table(table.cast(writer.schema))
+        finally:
+            if writer is not None:
+                writer.close()
 
 
 if __name__ == "__main__":
+    import tempfile
+
     # ponytail: unwrap is the only non-trivial logic here; DB read is exercised in the release run.
     assert unwrap_copy("COPY (\nSELECT 1\n) TO STDOUT").strip() == "SELECT 1"
     assert unwrap_copy("select a from b") == "select a from b"
+
+    # streaming write across multiple batches must round-trip every row
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / "dump.json"
+        out = Path(tmp) / "out.parquet"
+        src.write_text("".join(f'{{"id": "u{i}", "sequence": "ACGT"}}\n' for i in range(5)))
+        ndjson_2_parquet(src, out, batch_size=2)
+        assert pl.read_parquet(out).height == 5, pl.read_parquet(out)
     print("ok")
