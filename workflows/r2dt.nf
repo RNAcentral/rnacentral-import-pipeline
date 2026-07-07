@@ -148,7 +148,7 @@ process layout_sequences {
 
 process publish_layout {
   maxForks 50
-  errorStrategy { task.attempt < 5 ? "retry" : "ignore" }
+  errorStrategy { task.attempt < 5 ? "retry" : "terminate" }
   maxRetries 5
   queue 'datamover'
   memory { 1.GB * task.attempt }
@@ -163,7 +163,7 @@ process publish_layout {
   """
   rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
   rnac r2dt prepare-s3 --allow-missing $mapping $output for-upload file-list
-  update-svg.sh file-list $params.r2dt.s3.env
+  rnac r2dt upload-s3 --env $params.r2dt.s3.env file-list
   """
 }
 
