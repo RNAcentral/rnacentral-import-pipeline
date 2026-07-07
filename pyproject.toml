@@ -53,6 +53,7 @@ dependencies = [
     "pyarrow>=18.0.0",
     "duckdb>=1.1.0",
     "crcmod>=1.7",
+    "boto3>=1.43.40",
 ]
 
 
