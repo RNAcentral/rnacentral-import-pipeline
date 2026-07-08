@@ -41,7 +41,7 @@ def _records_2_parquet(records, output: str | Path, batch_size: int):
 
 
 def copy_query_2_parquet(
-    query_path: str | Path, conn, output: str | Path, batch_size: int = 50_000
+    query_path: str | Path, conn, output: str | Path, batch_size: int = 250_000
 ):
     """
     Stream a `COPY (...) TO STDOUT` query straight into parquet. Unlike read_database
