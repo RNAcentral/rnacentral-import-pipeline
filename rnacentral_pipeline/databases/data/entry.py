@@ -114,8 +114,9 @@ class Entry:
     interactions: ty.List[Interaction] = utils.possibly_empty(list)
     go_annotations: ty.List[GoTermAnnotation] = utils.possibly_empty(list)
 
-    ## Track and cache validity for speed when writing
-    _valid: ty.Optional[bool] = attr.ib(default=None, init=False)
+    ## Track and cache validity for speed when writing. eq/repr excluded so this
+    ## mutable cache stays out of the frozen value object's identity.
+    _valid: ty.Optional[bool] = attr.ib(default=None, init=False, eq=False, repr=False)
 
     @property
     def database_name(self) -> str:
