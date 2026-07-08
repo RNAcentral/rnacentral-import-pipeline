@@ -73,11 +73,7 @@ def export_sequences():
 @click.option("--db-url", envvar="PGDATABASE")
 def sequences_parquet(query, output, db_url):
     with connection(db_url) as conn:
-        dataframe = parquet.query_2_dataframe(query, conn)
-
-    if dataframe is not None:
-        ## Means the query ran ok and we have stuff to write
-        dataframe.write_parquet(output)
+        parquet.copy_query_2_parquet(query, conn, output)
 
 
 @export_sequences.command("parquet-from-json")
