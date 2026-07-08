@@ -89,6 +89,10 @@ process parse {
   tag { "$family" }
   queue 'datamover'
   containerOptions "${params.common_container} --bind /nfs:/nfs"
+  memory { 2.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 10
+
 
   input:
   tuple val(family), path(sequence_info), path(families_info)
