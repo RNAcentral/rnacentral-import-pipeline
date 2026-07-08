@@ -98,10 +98,14 @@ process parse {
 
   script:
   """
+  mkdir tmp
+  export TMPDIR=`pwd`/tmp
   cp '/nfs/ftp/public/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz' sequences.fa.gz
   gzip -d sequences.fa.gz
 
   rnac rfam parse $families_info $sequence_info sequences.fa .
+
+  rm -rf ./tmp
   """
 }
 
