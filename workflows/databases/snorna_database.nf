@@ -1,5 +1,5 @@
 process snorna_database {
-  when: { params.databases.snorna_database.run }
+  when: { params.databases.snorna_database?.run }
 
   output:
   path('*.{csv,parquet}')

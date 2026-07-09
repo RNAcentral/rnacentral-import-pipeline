@@ -9,6 +9,8 @@ process fetch_annotation {
   output:
   tuple val(species), path("${species.annotation}.txt")
 
+  when: { params.databases.circpedia?.run }
+
   script:
   """
   wget \
@@ -28,6 +30,8 @@ process fetch_fasta {
 
   output:
   tuple val(species), path(annotation_file), path("${species.fasta}.fa")
+
+  when: { params.databases.circpedia?.run }
 
   script:
   """

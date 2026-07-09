@@ -4,6 +4,8 @@ process fetch_data {
   output:
   path("data")
 
+  when: { !params.databases.plncdb?.prefetch && params.databases.plncdb?.run }
+
   script:
   """
   rnac plncdb fetch-data $params.databases.plncdb.urls data
@@ -23,6 +25,8 @@ process parse_data {
   output:
   path('*.{csv,parquet}')
 
+  when: { params.databases.plncdb?.run }
+
   script:
   """
   # rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data
@@ -34,7 +38,7 @@ workflow plncdb {
   emit: data_files
 
   main:
-  if( params.databases.plncdb.run ) {
+  if( params.databases.plncdb?.run ) {
     Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
     | parse_data \
     | flatten

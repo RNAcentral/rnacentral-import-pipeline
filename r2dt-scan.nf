@@ -6,6 +6,7 @@ include { r2dt } from './workflows/r2dt.nf'
 
 process extract_gtrnadb_metadata {
   container params.r2dt.container
+  containerOptions "${params.r2dt_container}"
   memory '256 MB'
   input:
     path(model_path)
@@ -37,6 +38,7 @@ process parse_gtrnadb_model {
 
 process extract_ribovision_metadata {
     container params.r2dt.container
+    containerOptions "${params.r2dt_container}"
     memory '256 MB'
 
     output:
@@ -73,6 +75,7 @@ process parse_ribovision_models {
 
 process extract_rnasep_metadata {
   container params.r2dt.container
+  containerOptions "${params.r2dt_container}"
   memory '256 MB'
 
   output:
@@ -106,6 +109,7 @@ process parse_rnasep_models {
 
 process extract_rfam_metadata {
   container params.r2dt.container
+  containerOptions "${params.r2dt_container}"
   memory '256 MB'
 
   input:
@@ -137,6 +141,7 @@ process parse_rfam_models {
 
 process extract_crw_metadata {
   container params.r2dt.container
+  containerOptions "${params.r2dt_container}"
   memory '256 MB'
 
   input:

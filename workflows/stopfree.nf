@@ -3,6 +3,8 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
+  when: { params.stopfree?.run }
+
   input:
   val(_flag)
 
@@ -17,6 +19,8 @@ process build_ranges {
 }
 
 process find_sequences {
+  when: { params.stopfree?.run }
+
   maxForks params.stopfree.query_max_forks
 
   input:
@@ -50,6 +54,8 @@ process stopfree_scan {
 }
 
 process store_results {
+  when: { params.stopfree?.load }
+
   memory 9.GB
 
   input:
@@ -94,6 +100,7 @@ workflow stopfree {
     stopfree_scan.out | collect | set { data }
 
     store_results(data, load_ctl, post_load) | set { done }
+    data | map { _ -> 'stopfree done' } | first | set { done }
     }
   emit: done
 }

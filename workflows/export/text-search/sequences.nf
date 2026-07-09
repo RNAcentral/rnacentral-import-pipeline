@@ -16,6 +16,7 @@ include { query as ref_query } from './utils'
 include { query as rfam_query } from './utils'
 include { query as orf_query } from './utils'
 include { query as locus_query } from './utils'
+include { fetch_schema } from './utils'
 include { build_search_accessions } from './build-accession-table'
 
 process setup {
@@ -181,11 +182,13 @@ process editing_events {
 
 process as_xml {
   tag { "$min-$max" }
-  memory params.export.search.memory
+  memory { (params.export.search.memory as nextflow.util.MemoryUnit) * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
+  maxRetries 3
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(raw), path(metadata)
+  tuple val(min), val(max), path(raw), path(metadata), path('schema.xsd')
 
   output:
   path "${xml}.gz", emit: xml
@@ -197,7 +200,7 @@ process as_xml {
   """
   search-export sequences normalize $raw $metadata data.json
   rnac search-export as-xml data.json $xml count
-  xmllint $xml --schema ${params.export.search.schema} --stream
+  xmllint $xml --schema schema.xsd --stream
   gzip $xml
   """
 }
@@ -263,6 +266,8 @@ workflow sequences {
     )\
     | set { metadata }
 
+    fetch_schema()
+
     search_count \
     | build_ranges \
     | splitCsv \
@@ -272,6 +277,7 @@ workflow sequences {
     | combine(accessions_ready) \
     | fetch_accession \
     | combine(metadata) \
+    | combine(fetch_schema.out) \
     | as_xml
 
     as_xml.out.sequences | set { sequence_json }

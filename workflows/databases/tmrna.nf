@@ -1,5 +1,5 @@
 process tmrna {
-  when: { params.databases.tmrna.run }
+  when: { params.databases.tmrna?.run }
 
   output:
   path('*.{csv,parquet}')

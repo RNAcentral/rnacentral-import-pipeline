@@ -9,9 +9,9 @@ HAVING FIELDS (
   possible_contamination,
   missing_rfam_match,
   from_repetitive_region,
-  possible_orf,
-  possible_orf_stopfree,
-  possible_orf_tcode,
+  possible_orf [null if ""],
+  possible_orf_stopfree [null if ""],
+  possible_orf_tcode [null if ""],
   messages
 )
 INTO {{PGDATABASE}}?load_qa_status

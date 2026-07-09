@@ -4,6 +4,8 @@ process find_urls {
   output:
   path("urls.txt")
 
+  when: { params.databases.pirbase?.run }
+
   script:
   """
   rnac pirbase urls-for $params.databases.pirbase.remote urls.txt
@@ -16,6 +18,8 @@ process find_known {
 
   output:
   path(known)
+
+  when: { params.databases.pirbase?.run }
 
   script:
   """

@@ -7,9 +7,9 @@ workflow parse_metadata {
   main:
     Channel.empty() \
     | mix(
-      rfam(), 
-      ensembl(),
-      taxonomy(),
+      rfam(),
+      params.databases.ensembl._any.run ? ensembl() : Channel.empty(),
+      params.needs_taxonomy ? taxonomy() : Channel.empty(),
     ) \
     | flatten \
     | set { data }

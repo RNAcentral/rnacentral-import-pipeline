@@ -3,6 +3,8 @@ nextflow.enable.dsl=2
 include { model_info } from './r2dt/model-info.nf'
 
 process fetch_model_mapping {
+  when: { params.r2dt?.run }
+
   memory '16 MB'
 
   input:
@@ -19,6 +21,8 @@ process fetch_model_mapping {
 }
 
 process get_partitions {
+  when: { params.r2dt?.run }
+
   input:
   val(_flag)
   path(query)
@@ -37,6 +41,8 @@ process get_partitions {
 
 
 process fetch_xrefs {
+  when: { params.r2dt?.run }
+
   input:
   tuple val(partition), path(query)
 
@@ -54,6 +60,8 @@ process fetch_xrefs {
 }
 
 process fetch_tracked {
+  when: { params.r2dt?.run }
+
   input:
   val(_flag)
   path(query)
@@ -72,6 +80,8 @@ process fetch_tracked {
 
 
 process extract_sequences {
+  when: { params.r2dt?.run }
+
   memory '12GB'
 
   input:
@@ -119,7 +129,7 @@ process layout_sequences {
   maxForks 200
   memory params.r2dt.layout.memory
   container params.r2dt.container
-  containerOptions "${params.common_container}"
+  containerOptions "${params.r2dt_container}"
   errorStrategy 'ignore'
 
   input:

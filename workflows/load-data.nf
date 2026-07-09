@@ -1,5 +1,5 @@
 process create_load_tables {
-  time '2d'
+  time '1h'
   cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
@@ -51,11 +51,13 @@ process merge_and_import {
 }
 
 process release {
-  time '5d'
+  time '1d'
   maxForks 1
   cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory  4.GB
+
+  when: { params.get('should_release', false) }
 
   input:
   path(pre_sql)

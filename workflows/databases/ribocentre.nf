@@ -2,7 +2,7 @@
 process fetch_ribocentre {
   memory 1.GB
 
-  when: { params.databases.ribocentre.run }
+  when: { params.databases.ribocentre?.run }
   output:
   path("ribocentre.json")
 
@@ -16,7 +16,7 @@ process parse_ribocentre {
   memory { 2.GB * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
-  when: { params.databases.ribocentre.run }
+  when: { params.databases.ribocentre?.run }
   input:
   path ribocentre_json
   output:

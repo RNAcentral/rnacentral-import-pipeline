@@ -2,6 +2,8 @@ process fetch {
   output:
   path('EVLncRNAs3_alldata')
 
+  when: { params.databases.evlncrnas?.run }
+
   script:
   """
   wget --no-check-certificate --read-timeout=30 -t 1 \
@@ -18,6 +20,8 @@ process rnc_dump {
 
   output:
   path('*.{csv,parquet}')
+
+  when: { params.databases.evlncrnas?.run }
 
   script:
   """

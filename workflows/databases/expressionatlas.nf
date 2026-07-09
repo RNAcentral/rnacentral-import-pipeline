@@ -39,6 +39,8 @@ process synchronize_cache {
   output:
     val('cache synchronized')
 
+  when: { params.databases.expressionatlas?.run }
+
   script:
   """
   find `readlink ${experiments_path}`/ -maxdepth 1 -type d ! -readable -o -type d ! -executable | sort -u >> exclude_dirs
@@ -66,7 +68,7 @@ process fetch_lookup {
 
     script:
     """
-    psql -f $query \$PGDATABASE > lookup_dump.csv
+    psql -f $query \$PGDATABASE | grep -Ev '^(CREATE TABLE|COPY [0-9]+)\$' > lookup_dump.csv
     """
 }
 
@@ -114,7 +116,7 @@ workflow expressionatlas {
   emit: data
   main:
 
-  if( params.databases.expressionatlas.run ) {
+  if( params.databases.expressionatlas?.run ) {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
     Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
     Channel.of(params.databases.expressionatlas.cache) | set { ea_cache }

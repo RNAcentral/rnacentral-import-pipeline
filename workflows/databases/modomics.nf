@@ -5,6 +5,8 @@ process fetch {
   output:
   path('modomics.json')
 
+  when: { params.databases.modomics?.run }
+
   script:
   """
   cp ${params.databases.modomics.remote} modomics.json
@@ -17,6 +19,8 @@ process parse {
 
   output:
   path('*.{csv,parquet}')
+
+  when: { params.databases.modomics?.run }
 
   script:
   """

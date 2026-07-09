@@ -3,6 +3,8 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
+  when: { params.tcode?.run }
+
   input:
   val(_flag)
 
@@ -17,6 +19,8 @@ process build_ranges {
 }
 
 process find_sequences {
+  when: { params.tcode?.run }
+
   input:
   tuple val(min), val(max), path(query)
 
@@ -61,6 +65,8 @@ process parse_results {
 }
 
 process store_results {
+  when: { params.tcode?.load }
+
   memory 9.GB
 
   input:
@@ -106,6 +112,7 @@ workflow tcode {
     parse_results.out | collect | set { data }
 
     store_results(data, load_ctl, post_load) | set { done }
+    data | map { _ -> 'tcode done' } | first | set { done }
     }
   emit: done
 }

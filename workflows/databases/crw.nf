@@ -5,6 +5,8 @@ process fetch_and_process {
   output:
   path('*.{csv,parquet}')
 
+  when: { params.databases.crw?.run }
+
   script:
   """
   psql -f "$metadata_query" "\$PGDATABASE" > metadata.json

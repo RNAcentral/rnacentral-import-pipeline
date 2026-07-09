@@ -3,6 +3,8 @@
 nextflow.enable.dsl = 2
 
 process setup {
+  when: { params.genome_mapping?.run }
+
   input:
   val(_flag)
   path(query)
@@ -172,7 +174,9 @@ process index_genome_for_browser {
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
   memory { params.genome_mapping.blat.directives.memory }
-  errorStrategy 'ignore'
+  errorStrategy =  { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
+  time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 24.h }
+  maxRetries 3
 
   input:
   tuple val(species), val(assembly), path(genome), path(ooc), path(chunk)
@@ -298,7 +302,8 @@ workflow genome_mapping {
       | blat_index \
       | join(split_sequences) \
       | flatMap { species, assembly, genome_chunks, chunks ->
-        [genome_chunks.collate(2), chunks]
+        def chunkList = chunks instanceof List ? chunks : [chunks]
+        [genome_chunks.collate(2), chunkList]
           .combinations()
           .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
       } \

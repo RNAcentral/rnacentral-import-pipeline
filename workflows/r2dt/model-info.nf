@@ -1,6 +1,8 @@
 process fetch_model_stats {
+  when: { params.r2dt?.run }
+
   container params.r2dt.container
-  containerOptions "${params.common_container}"
+  containerOptions "${params.r2dt_container}"
 
   input:
   val(_flag)

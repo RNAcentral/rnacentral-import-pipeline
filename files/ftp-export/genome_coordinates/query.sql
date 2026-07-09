@@ -65,8 +65,11 @@ FROM (
   FROM rnc_genes g
   JOIN rnc_gene_metadata md ON md.rnc_gene_id = g.id
   WHERE g.assembly_id = :'assembly_id'
+    AND g.start IS NOT NULL
+    AND g.stop IS NOT NULL
+    AND g.stop > g.start
 
   -- Sort everything together
   ORDER BY chromosome, region_start, record_type DESC, id
 ) combined_results
-) TO STDOUT
+) TO STDOUT CSV

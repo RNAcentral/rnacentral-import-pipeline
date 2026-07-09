@@ -32,7 +32,7 @@ process process_chunk {
   tuple val(min), val(max), file(raw), path(schema)
 
   output:
-  path("ensembl-xref-$min-${max}.json")
+  path("ensembl-xref-$min-${max}.json"), optional: true
 
   script:
   """

@@ -1,5 +1,5 @@
 process zwd {
-  when: { params.databases.zwd.run }
+  when: { params.databases.zwd?.run }
 
   input:
   path(context)

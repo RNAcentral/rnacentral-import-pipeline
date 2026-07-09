@@ -5,6 +5,8 @@ process fetch_metadata {
   output:
   path('families.tsv')
 
+  when: { params.databases.ensembl?._any?.run }
+
   script:
   """
   mysql \
@@ -23,6 +25,8 @@ process find_urls {
 
   output:
   path('species.txt')
+
+  when: { params.databases.ensembl[division]?.run }
 
   script:
     """
@@ -93,7 +97,7 @@ workflow ensembl {
       'metazoa',
       'vertebrates',
     ]) \
-    | filter { division -> params.databases.ensembl[division].run } \
+    | filter { division -> params.databases.ensembl[division]?.run } \
     | find_urls \
     | splitCsv \
     | filter { division, species, dat_url, gff_url ->

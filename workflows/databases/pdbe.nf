@@ -5,6 +5,8 @@ process pdbe {
   output:
   path('*.{csv,parquet}')
 
+  when: { params.databases.pdb?.run }
+
   script:
   """
   wget  http://ftp.ebi.ac.uk/pub/databases/Rfam/.preview/pdb_full_region.txt.gz

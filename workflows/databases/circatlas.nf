@@ -5,6 +5,8 @@ process fetch {
   output:
   path('circatlas.json')
 
+  when: { params.databases.circatlas?.run }
+
   script:
   """
   cp ${params.databases.circatlas.remote} circatlas.json
@@ -12,13 +14,15 @@ process fetch {
 }
 
 process parse {
-  memory { params.databases.circatlas.process.directives.memory }
+  memory '16 GB'
 
   input:
   path(data)
 
   output:
   path('*.{csv,parquet}')
+
+  when: { params.databases.circatlas?.run }
 
   script:
   """

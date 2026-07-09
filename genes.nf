@@ -48,7 +48,8 @@ process fetch_so_model{
 
 
 process fetch_transcripts {
-
+  memory '32 GB'
+  maxForks 15
   tag { taxid }
 
   input:
@@ -66,7 +67,7 @@ process fetch_transcripts {
 
 
 process preprocess_transcripts {
-
+  memory '256 GB'
   tag { taxid }
 
   input:
@@ -83,7 +84,9 @@ process preprocess_transcripts {
 
 
 process classify_transcripts {
-
+  memory { 64.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 4
   tag { taxid }
 
   input:
@@ -101,8 +104,9 @@ process classify_transcripts {
 
 
 process fetch_previous_genes {
-
+  maxForks 15
   tag { taxid }
+  memory '8 GB'
 
   input:
     tuple val(taxid), path(this_release)
@@ -118,7 +122,7 @@ process fetch_previous_genes {
 
 
 process forward_merge {
-
+  memory '16 GB'
   tag { taxid }
 
   input:
@@ -134,7 +138,7 @@ process forward_merge {
     --next_genes ${this_release} \
     --output merged_${taxid}.json \
     --prev_release_number ${prev_release} \
-    --next_release_number ${params.genes.release}
+    --next_release_number ${params.release}
   """
 }
 
@@ -154,7 +158,7 @@ process init_genes {
   rnac genes utils init \
     --genes ${this_release} \
     --output merged_${taxid}.json \
-    --release_number ${params.genes.release}
+    --release_number ${params.release}
   """
 }
 
@@ -163,6 +167,8 @@ process store_genes {
 
   tag { taxid }
   maxForks 1
+  memory { 16.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
   input:
     tuple val(taxid), path(merged)
@@ -178,7 +184,7 @@ process store_genes {
 
 
 process deactivate_discarded {
-
+  memory 4.GB
   tag { taxid }
   maxForks 1
 
@@ -196,7 +202,7 @@ process deactivate_discarded {
 
 
 process process_metadata {
-
+  memory '16 GB'
   tag { taxid }
 
   input:
@@ -245,10 +251,12 @@ workflow genes {
   | splitCsv \
   | map { row -> row[0] } \
   | fetch_transcripts \
+  | filter {_taxid, transcripts -> transcripts.size() > 0 } \
   | combine( so_model ) \
   | preprocess_transcripts \
   | combine( rf_model ) \
   | classify_transcripts \
+  | filter {_taxid, genes -> genes.size() > 2 } \
   | fetch_previous_genes \
   | branch { row ->
       existing:  row[3].text.trim() != ''

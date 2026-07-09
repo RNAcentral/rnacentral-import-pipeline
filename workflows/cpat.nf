@@ -3,6 +3,8 @@
 nextflow.enable.dsl=2
 
 process find_models {
+  when: { params.cpat?.run }
+
   input:
   val(_flag)
 
@@ -134,6 +136,9 @@ workflow cpat {
     parse_results.out.orfs | collect | set { orfs }
 
     store_results(data, orfs, load_ctl, orf_ctl, result_post_load, orf_post_load)
+    data | map { _ -> 'cpat done' } | first | set { done }
+    }
+  emit: done
 }
 
 workflow {

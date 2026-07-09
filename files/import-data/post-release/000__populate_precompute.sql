@@ -1,6 +1,12 @@
 \timing
 
 BEGIN TRANSACTION;
+-- Claim a larger amount of memory because we should have the DB to ourselves
+-- for this step, and the hash tables can get big
+SET LOCAL work_mem = '1GB';
+-- Speed up the 6 CREATE INDEX rebuilds below, which are the dominant cost at large
+-- scale. Index builds use maintenance_work_mem, not work_mem.
+SET LOCAL maintenance_work_mem = '2GB';
 
 -- Drop indexes to speed up bulk insert
 DROP INDEX IF EXISTS rnacen.ix_rnc_rna_precomputed__upi_taxid_last_release;
@@ -14,14 +20,14 @@ DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_rna_type_idx;
 -- into it later.
 INSERT INTO rnc_rna_precomputed (id, upi, taxid, is_active) (
 SELECT
-  xref.upi || '_' || xref.taxid,
+  xref.urs_taxid,
   xref.upi,
   xref.taxid,
   true
 FROM xref
-JOIN load_rnc_accessions acc ON acc.accession = xref.ac
 WHERE
   xref.deleted = 'N'
+  AND xref.ac IN (SELECT accession FROM load_rnc_accessions)
 ) ON CONFLICT DO NOTHING;
 
 -- Recreate indexes

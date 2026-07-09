@@ -1,5 +1,5 @@
 process hgnc {
-  when: { params.databases.hgnc.run }
+  when: { params.databases.hgnc?.run }
 
   output:
   path('*.{csv,parquet}')

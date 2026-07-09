@@ -25,17 +25,20 @@ process merge_and_split_all_publications {
 }
 
 process fetch_publications {
+  when: { params.get('needs_publications', false) }
+
   queue 'datamover'
   memory 8.GB
   container ''
+  containerOptions "${params.common_container} --bind /nfs/ftp/"
 
   output:
   path('out')
 
   script:
   """
-  cp /nfs/ftp/public/databases/pmc/PMCLiteMetadata/PMCLiteMetadata.tgz .
-  tar xvf PMCLiteMetadata.tgz
+  cp /nfs/ftp/public/databases/pmc/PMCOALiteMetadata/PMCOALiteMetadata.tgz .
+  tar xvf PMCOALiteMetadata.tgz
   """
 }
 
@@ -60,12 +63,17 @@ workflow lookup_ref_ids {
   take: ref_ids
 
   main:
-    ref_ids \
-    | collect \
-    | merge_and_split_all_publications \
-    | flatten \
-    | combine(fetch_publications()) \
-    | lookup_publications \
-    | set { publications }
+    if (params.get('needs_publications', false)) {
+      ref_ids \
+      | collect \
+      | merge_and_split_all_publications \
+      | flatten \
+      | combine(fetch_publications()) \
+      | lookup_publications \
+      | set { publications }
+    } else {
+      Channel.empty() | set { publications }
+    }
+
   emit: publications
 }
