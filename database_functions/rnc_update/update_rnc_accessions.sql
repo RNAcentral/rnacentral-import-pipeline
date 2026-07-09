@@ -73,6 +73,21 @@ create index if not exists load_rnc_accessions$accession on load_rnc_accessions(
       db_xref=excluded.db_xref,
       rna_type=excluded.rna_type,
       url=excluded.url
+    -- Skip no-op updates: only rewrite the row if at least one updated column
+    -- actually changed. IS DISTINCT FROM is NULL-safe. This column list MUST stay
+    -- identical to the SET list above. Avoids rewriting every unchanged accession
+    -- (dead tuples/WAL/bloat) on reloads where most rows are unchanged.
+    WHERE (
+      t1.description, t1.organelle, t1.chromosome, t1.function, t1.feature_name,
+      t1.gene, t1.gene_synonym, t1.inference, t1.locus_tag, t1.mol_type,
+      t1.ncRNA_class, t1.note, t1.product, t1.standard_name, t1.non_coding_id,
+      t1.database, t1.external_id, t1.optional_id, t1.db_xref, t1.rna_type, t1.url
+    ) IS DISTINCT FROM (
+      excluded.description, excluded.organelle, excluded.chromosome, excluded.function, excluded.feature_name,
+      excluded.gene, excluded.gene_synonym, excluded.inference, excluded.locus_tag, excluded.mol_type,
+      excluded.ncRNA_class, excluded.note, excluded.product, excluded.standard_name, excluded.non_coding_id,
+      excluded.database, excluded.external_id, excluded.optional_id, excluded.db_xref, excluded.rna_type, excluded.url
+    )
 ';
 
 
