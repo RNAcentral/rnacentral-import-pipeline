@@ -149,18 +149,18 @@ def parse_directory(
             yield from parse(*files)
 
 
-def write(directory: Path, output):
+def write(directory: Path, output, ref_proteomes_path=None):
     if isinstance(output, (str, Path)):
         path = Path(output)
         if is_parquet():
             with typed_parquet_writer(path, schemas.TAXONOMY) as writer:
-                for entry in parse_directory(directory):
+                for entry in parse_directory(directory, ref_proteomes_path=ref_proteomes_path):
                     for row in entry.writeable():
                         writer.writerow(row)
             return
         with path.open("w") as handle:
             writer = csv.writer(handle)
-            for entry in parse_directory(directory):
+            for entry in parse_directory(directory, ref_proteomes_path=ref_proteomes_path):
                 writer.writerows(entry.writeable())
         return
 

@@ -99,7 +99,7 @@ workflow stopfree {
 
     stopfree_scan.out | collect | set { data }
 
-    store_results(data, load_ctl, post_load) | set { done }
+    store_results(data, load_ctl, post_load)
     data | map { _ -> 'stopfree done' } | first | set { done }
     }
   emit: done

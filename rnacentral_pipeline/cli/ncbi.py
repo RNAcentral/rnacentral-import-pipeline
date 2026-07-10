@@ -42,8 +42,9 @@ def cli():
         file_okay=False,
     ),
 )
-@click.argument("output", default="taxonomy.csv", type=click.File("w"))
+@click.argument("output", default="taxonomy.csv")
 @click.option("--ref-proteomes", default=None, type=click.Path(exists=True))
+@format_option
 def parse_taxonomy(ncbi, output, ref_proteomes):
     taxonomy.write(ncbi, output, ref_proteomes_path=ref_proteomes)
 
