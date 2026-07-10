@@ -19,6 +19,11 @@ BEGIN
     raise notice 'executing function: % oid: %', fcesig, fcoid;   
     execute 'set application_name = ''' || fcesig || '''';
 
+    -- The DISTINCT ON (accession) forces a full sort of load_rnc_accessions
+    -- which dominates the plan. SET LOCAL (txn-scoped) buys a big sort budget to
+    -- cut external-merge spill. Keep an eye on LockState for File Locks/IO waits
+    SET LOCAL work_mem = '2GB';
+
     RAISE NOTICE 'Updating rnc_accessions';
 
 /*
