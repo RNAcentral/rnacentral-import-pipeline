@@ -74,20 +74,32 @@ create index if not exists load_rnc_accessions$accession on load_rnc_accessions(
       rna_type=excluded.rna_type,
       url=excluded.url
     -- Skip no-op updates: only rewrite the row if at least one updated column
-    -- actually changed. IS DISTINCT FROM is NULL-safe. This column list MUST stay
-    -- identical to the SET list above. Avoids rewriting every unchanged accession
-    -- (dead tuples/WAL/bloat) on reloads where most rows are unchanged.
-    WHERE (
-      t1.description, t1.organelle, t1.chromosome, t1.function, t1.feature_name,
-      t1.gene, t1.gene_synonym, t1.inference, t1.locus_tag, t1.mol_type,
-      t1.ncRNA_class, t1.note, t1.product, t1.standard_name, t1.non_coding_id,
-      t1.database, t1.external_id, t1.optional_id, t1.db_xref, t1.rna_type, t1.url
-    ) IS DISTINCT FROM (
-      excluded.description, excluded.organelle, excluded.chromosome, excluded.function, excluded.feature_name,
-      excluded.gene, excluded.gene_synonym, excluded.inference, excluded.locus_tag, excluded.mol_type,
-      excluded.ncRNA_class, excluded.note, excluded.product, excluded.standard_name, excluded.non_coding_id,
-      excluded.database, excluded.external_id, excluded.optional_id, excluded.db_xref, excluded.rna_type, excluded.url
-    )
+    -- actually changed. Postgres does NOT support row-wise IS DISTINCT FROM
+    -- between row constructors, so compare column-by-column and OR them.
+    -- IS DISTINCT FROM is NULL-safe. This list MUST stay identical to the SET
+    -- list above. Avoids rewriting every unchanged accession (dead
+    -- tuples/WAL/bloat) on reloads where most rows are unchanged.
+    WHERE t1.description    IS DISTINCT FROM excluded.description
+       OR t1.organelle      IS DISTINCT FROM excluded.organelle
+       OR t1.chromosome     IS DISTINCT FROM excluded.chromosome
+       OR t1.function       IS DISTINCT FROM excluded.function
+       OR t1.feature_name   IS DISTINCT FROM excluded.feature_name
+       OR t1.gene           IS DISTINCT FROM excluded.gene
+       OR t1.gene_synonym   IS DISTINCT FROM excluded.gene_synonym
+       OR t1.inference      IS DISTINCT FROM excluded.inference
+       OR t1.locus_tag      IS DISTINCT FROM excluded.locus_tag
+       OR t1.mol_type       IS DISTINCT FROM excluded.mol_type
+       OR t1.ncRNA_class    IS DISTINCT FROM excluded.ncRNA_class
+       OR t1.note           IS DISTINCT FROM excluded.note
+       OR t1.product        IS DISTINCT FROM excluded.product
+       OR t1.standard_name  IS DISTINCT FROM excluded.standard_name
+       OR t1.non_coding_id  IS DISTINCT FROM excluded.non_coding_id
+       OR t1.database       IS DISTINCT FROM excluded.database
+       OR t1.external_id    IS DISTINCT FROM excluded.external_id
+       OR t1.optional_id    IS DISTINCT FROM excluded.optional_id
+       OR t1.db_xref        IS DISTINCT FROM excluded.db_xref
+       OR t1.rna_type       IS DISTINCT FROM excluded.rna_type
+       OR t1.url            IS DISTINCT FROM excluded.url
 ';
 
 
