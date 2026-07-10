@@ -1543,14 +1543,14 @@ wheels = [
 
 [[package]]
 name = "obonet"
-version = "0.3.0"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "networkx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2e/fc/97f0e16bec803df17d3d55fe2b117c9f2a9df166cc071a70c0704234b818/obonet-0.3.0.tar.gz", hash = "sha256:fd801166cd28a2ef86126f22c8e3da30f5c3b6a3adfc62536abea1aa9956a2b4", size = 23397, upload-time = "2021-04-04T01:55:21.103Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/a3/e8909a913d94d95806519906235baae831dae43df706eb006a0bb48c776b/obonet-1.3.0.tar.gz", hash = "sha256:7c128bfe455bd7a134a3e6122e89338b896b4dea116511a850cec1a2e2a98294", size = 27644, upload-time = "2026-06-03T14:21:22.851Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/cd/b85ac3bbffd3cac33701a2a5b7dbdffdd2ab3d40f174dc3bf7a4ff8137cb/obonet-0.3.0-py3-none-any.whl", hash = "sha256:d436eb4f57afa6f1a48992c3a4132126da9793e1439f667ab23cc74d8e957aee", size = 7862, upload-time = "2021-04-04T01:55:20.199Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/81/72afd839f6502b72cb01a641a39c43cc6e77bbba101dd07194008b9c735f/obonet-1.3.0-py3-none-any.whl", hash = "sha256:77d981082aa95cf0d6c78568a8079f43c781c8dd5df30a9b2f7c665b87e4f0fc", size = 10941, upload-time = "2026-06-03T14:21:21.697Z" },
 ]
 
 [[package]]
@@ -2437,7 +2437,7 @@ requires-dist = [
     { name = "more-itertools", specifier = ">=9.0" },
     { name = "nltk", specifier = ">=3.8.1" },
     { name = "numpy", specifier = "<2" },
-    { name = "obonet", specifier = "==0.3.0" },
+    { name = "obonet", specifier = ">=1.1" },
     { name = "onnxruntime", specifier = ">=1.22.0" },
     { name = "openpyxl", specifier = ">=3.0.10" },
     { name = "pandas", specifier = ">=1.5.1" },

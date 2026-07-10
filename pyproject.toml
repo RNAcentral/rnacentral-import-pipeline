@@ -21,7 +21,7 @@ dependencies = [
     "jsonschema>=4.17",
     "lxml>=4.9.1",
     "more-itertools>=9.0",
-    "obonet==0.3.0",
+    "obonet>=1.1",
     "pandas>=1.5.1",
     "PyPika>=0.48.8",
     "pyyaml>=6.0",
