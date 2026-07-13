@@ -8,11 +8,14 @@ DECLARE
     fcesig text;
     fcoid oid;
     sql_stmt text;
-    -- Number of hash buckets to split the upsert into. Peak per-statement memory
-    -- is ~1/n_batches of the whole load, so bump this if a bigger import still OOMs.
-    n_batches int := 16;
--- the following could be a good idea
--- https://stackoverflow.com/questions/7682102/putting-explain-results-into-a-table
+    -- Range-batch size (rows of the deduped staging table per upsert statement).
+    -- Each statement queues one FK-check after-trigger event per inserted row
+    -- (rnc_accessions.rna_type -> ontology_terms) plus per-tuple ExecutorState for
+    -- its whole life, so peak memory scales with batch size, NOT import size.
+    -- Smaller = safer/slower; this is the knob to turn down if it ever OOMs again.
+    v_batch_size bigint := 15000000;
+    v_total bigint;
+    lo bigint;
     explain_stmt text;
     explain_result text;
 BEGIN
@@ -22,42 +25,49 @@ BEGIN
     raise notice 'executing function: % oid: %', fcesig, fcoid;
     execute 'set application_name = ''' || fcesig || '''';
 
-    -- Per-batch DISTINCT ON sort budget. SET LOCAL is txn-scoped so it doesn't
-    -- leak to site connections. Kept modest (this VM is memory-tight); with
-    -- batching each sort is only ~1/n_batches of the data anyway.
+    -- Sort budget for the one big DISTINCT ON dedup sort below. SET LOCAL is
+    -- txn-scoped so it doesn't leak to site connections. Kept modest (this VM is
+    -- memory-tight); the sort spills to disk rather than getting a big budget.
     SET LOCAL work_mem = '256MB';
 
-    RAISE NOTICE 'Updating rnc_accessions in % batches', n_batches;
+    -- STEP 1 - dedup once into a sorted staging table.
+    -- A plain CREATE TABLE AS carries none of the FK/trigger/ON CONFLICT weight,
+    -- so the single big sort here is safe (spills under work_mem, no per-row
+    -- after-trigger queue). DISTINCT ON (accession) is the defensive dedup that
+    -- must stay: it stops ON CONFLICT hitting the same accession twice in one
+    -- command. Doing it ONCE here (instead of per hash bucket) means the whole
+    -- 124 GB source is scanned + sorted exactly once. row_number() over the same
+    -- accession ordering gives a dense integer key to slice on cheaply.
+    RAISE NOTICE 'Building deduped staging table load_dedup';
+    CREATE TEMP TABLE load_dedup AS
+    SELECT row_number() OVER (ORDER BY accession) AS rn, d.*
+    FROM (
+      SELECT DISTINCT ON (accession)
+        accession, parent_ac, seq_version, feature_start, feature_end,
+        feature_name, description, organelle, chromosome, function, gene,
+        gene_synonym, inference, locus_tag, mol_type, ncRNA_class, note,
+        product, standard_name, non_coding_id, database, external_id,
+        optional_id, db_xref, so_term, url
+      FROM rnacen.load_rnc_accessions
+      ORDER BY accession
+    ) d;
+    -- Tiny (one int column) index so each range slice is an indexed read, not a
+    -- rescan of the ~110 GB staging table.
+    CREATE INDEX ON load_dedup(rn);
+    ANALYZE load_dedup;
 
-/*
+    SELECT max(rn) INTO v_total FROM load_dedup;
+    RAISE NOTICE 'load_dedup has % deduped rows; upserting in batches of %',
+                 v_total, v_batch_size;
 
-    -- This index is not beneficial/used during the insert/update
-
-    sql_stmt := '
-create index if not exists load_rnc_accessions$accession on load_rnc_accessions(accession)
-';
-    RAISE NOTICE 'Executing: %', sql_stmt;
-    EXECUTE sql_stmt;
-*/
-
-    -- BATCHED UPSERT.
-    -- A single INSERT ... ON CONFLICT over the whole load table (~228M rows)
-    -- queues one FK-check after-trigger event per inserted row
-    -- (rnc_accessions.rna_type -> ontology_terms) for the life of the statement,
-    -- plus per-tuple ExecutorState allocations -> the process OOMs regardless of
-    -- work_mem. Splitting into n_batches disjoint hash buckets means each
-    -- statement fires + frees its FK checks and ExecutorState when it ends, so
-    -- peak memory is ~1/n_batches and independent of how large the import is.
-    --
-    -- Bucketing on accession (the conflict arbiter key) keeps every row for a
-    -- given accession in the SAME batch, so DISTINCT ON dedup and ON CONFLICT
-    -- stay correct. abs(hashtextextended(...)) is a stable per-accession bucket.
-    --
-    -- ponytail: hash buckets mean each batch re-scans load_rnc_accessions (~n
-    -- passes total). If that scan I/O becomes the bottleneck, switch to range
-    -- batching on accession backed by a btree on load_rnc_accessions(accession)
-    -- for a single ordered pass (and the DISTINCT ON sort disappears too).
-    FOR i IN 0..(n_batches - 1) LOOP
+    -- STEP 2 - range-batch the upsert over disjoint rn slices.
+    -- Each batch reads only its slice via the rn index (no rescan, no re-sort);
+    -- being a separate statement it fires + frees its FK-check queue and
+    -- ExecutorState when it completes, bounding peak memory to ~one batch.
+    -- rn slices are disjoint whole-accession sets (dedup already happened), so
+    -- ON CONFLICT never sees the same accession twice within a batch.
+    lo := 1;
+    WHILE lo <= v_total LOOP
         sql_stmt := format($q$
     insert into rnacen.rnc_accessions as t1 (
       accession, parent_ac, seq_version, feature_start, feature_end,
@@ -66,14 +76,13 @@ create index if not exists load_rnc_accessions$accession on load_rnc_accessions(
       product, standard_name, non_coding_id, database, external_id,
       optional_id, db_xref, rna_type, url
     )
-    SELECT DISTINCT ON (t2.accession) accession, t2.parent_ac, t2.seq_version,
-      t2.feature_start, t2.feature_end, t2.feature_name, t2.description,
-      t2.organelle, t2.chromosome, t2.function, t2.gene, t2.gene_synonym,
-      t2.inference, t2.locus_tag, t2.mol_type, t2.ncRNA_class, t2.note,
-      t2.product, t2.standard_name, t2.non_coding_id,
-      t2.database, t2.external_id, t2.optional_id, t2.db_xref, t2.so_term, t2.url
-    FROM rnacen.load_rnc_accessions as t2
-    WHERE mod(abs(hashtextextended(t2.accession, 0)), %s) = %s
+    SELECT accession, parent_ac, seq_version, feature_start, feature_end,
+      feature_name, description, organelle, chromosome, function, gene,
+      gene_synonym, inference, locus_tag, mol_type, ncRNA_class, note,
+      product, standard_name, non_coding_id, database, external_id,
+      optional_id, db_xref, so_term, url
+    FROM load_dedup
+    WHERE rn >= %s AND rn < %s
       on conflict (accession)
       do update
     SET
@@ -125,29 +134,25 @@ create index if not exists load_rnc_accessions$accession on load_rnc_accessions(
        OR t1.db_xref        IS DISTINCT FROM excluded.db_xref
        OR t1.rna_type       IS DISTINCT FROM excluded.rna_type
        OR t1.url            IS DISTINCT FROM excluded.url
-$q$, n_batches, i);
+$q$, lo, lo + v_batch_size);
 
         -- EXPLAIN the first batch only, for the log (all batches share a plan).
-        IF i = 0 THEN
+        IF lo = 1 THEN
             explain_stmt := 'EXPLAIN (VERBOSE) ' || sql_stmt;
             EXECUTE explain_stmt into explain_result;
             RAISE NOTICE 'Batch plan: %', explain_result;
         END IF;
 
-        RAISE NOTICE 'Executing batch % of %', i + 1, n_batches;
+        RAISE NOTICE 'Upserting rn [%, %)', lo, lo + v_batch_size;
         EXECUTE sql_stmt;
+        lo := lo + v_batch_size;
     END LOOP;
 
-    --COMMIT;
     RAISE NOTICE 'rnc_accessions updated';
 
-/*
-    sql_stmt := '
-drop index load_rnc_accessions$accession
-';
-    RAISE NOTICE 'Executing: %', sql_stmt;
-    EXECUTE sql_stmt;
-*/
+    -- TEMP table auto-drops at transaction end; explicit drop keeps peak disk low
+    -- if anything runs after this in the same session.
+    DROP TABLE load_dedup;
 
     sql_stmt := '
 analyze rnacen.rnc_accessions
