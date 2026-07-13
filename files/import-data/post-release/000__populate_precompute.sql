@@ -4,12 +4,14 @@ BEGIN TRANSACTION;
 -- Claim a larger amount of memory because we should have the DB to ourselves
 -- for this step, and the hash tables can get big
 SET LOCAL work_mem = '1GB';
--- Speed up the 6 CREATE INDEX rebuilds below, which are the dominant cost at large
+-- Speed up the CREATE INDEX rebuilds below, which are the dominant cost at large
 -- scale. Index builds use maintenance_work_mem, not work_mem.
 SET LOCAL maintenance_work_mem = '2GB';
 
--- Drop indexes to speed up bulk insert
-DROP INDEX IF EXISTS rnacen.ix_rnc_rna_precomputed__upi_taxid_last_release;
+-- Drop indexes to speed up bulk insert.
+-- NB: (upi,taxid,last_release) was removed here - 0 scans over a 14-day prod
+-- window; every query on upi/upi+taxid uses rnc_rna_precomputed_upi_idx (upi,taxid,
+-- 423M scans) instead, so we no longer build/maintain that 11 GB index.
 DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_98db0b07;
 DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_is_active_idx;
 DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_upi_idx;
@@ -31,7 +33,6 @@ WHERE
 ) ON CONFLICT DO NOTHING;
 
 -- Recreate indexes
-CREATE INDEX ix_rnc_rna_precomputed__upi_taxid_last_release ON rnacen.rnc_rna_precomputed USING btree (upi, taxid, last_release);
 CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
 CREATE INDEX rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
 CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (upi, taxid);
