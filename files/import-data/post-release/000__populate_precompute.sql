@@ -21,6 +21,14 @@ DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_rna_type_idx;
 CREATE UNLOGGED TABLE tmp_load_accessions AS
 SELECT accession FROM load_rnc_accessions;
 
+-- xref is PARTITION BY LIST (dbid); restricting on dbid (not just ac) lets
+-- Postgres prune to only the partitions for databases actually in this load,
+-- instead of scanning every xref_pN_not_deleted partition.
+CREATE UNLOGGED TABLE tmp_load_dbids AS
+SELECT DISTINCT d.id AS dbid
+FROM rnc_database d
+JOIN load_rnc_accessions a ON a.database = d.descr;
+
 -- Populate rnc_rna_precomputed with partial data so we can create foreign keys
 -- into it later.
 INSERT INTO rnc_rna_precomputed (id, upi, taxid, is_active) (
@@ -32,10 +40,12 @@ SELECT
 FROM xref
 WHERE
   xref.deleted = 'N'
+  AND xref.dbid IN (SELECT dbid FROM tmp_load_dbids)
   AND xref.ac IN (SELECT accession FROM tmp_load_accessions)
 ) ON CONFLICT DO NOTHING;
 
 DROP TABLE tmp_load_accessions;
+DROP TABLE tmp_load_dbids;
 
 -- Recreate indexes
 CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
