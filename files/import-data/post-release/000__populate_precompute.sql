@@ -42,6 +42,9 @@ JOIN load_rnc_accessions a ON a.database = d.descr;
 -- rnc_update.update_rnc_accessions. This collapses the batch loop down to
 -- just the new rows instead of re-scanning xref per batch for rows that were
 -- always going to conflict.
+
+SET LOCAL max_parallel_workers_per_gather = 0;
+
 CREATE UNLOGGED TABLE tmp_new_precompute AS
 SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.upi, xref.taxid
 FROM xref
