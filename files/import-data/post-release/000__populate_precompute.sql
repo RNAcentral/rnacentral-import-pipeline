@@ -33,7 +33,29 @@ JOIN load_rnc_accessions a ON a.database = d.descr;
 
 -- Populate rnc_rna_precomputed with partial data so we can create foreign keys
 -- into it later.
--- Range-batch the insert over disjoint rn slices of tmp_load_accessions.
+-- Most accessions in a load already have a precompute row from a prior
+-- release (same urs_taxid), so a straight join+ON CONFLICT DO NOTHING spends
+-- almost all of its time computing rows that get thrown away at the conflict
+-- check. Anti-join against rnc_rna_precomputed.id (the PK, and NOT dropped
+-- above) ONCE up front to materialise only the genuinely new rows, same
+-- no-op-skipping idea as the IS DISTINCT FROM guard in
+-- rnc_update.update_rnc_accessions. This collapses the batch loop down to
+-- just the new rows instead of re-scanning xref per batch for rows that were
+-- always going to conflict.
+CREATE UNLOGGED TABLE tmp_new_precompute AS
+SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.upi, xref.taxid
+FROM xref
+WHERE
+  xref.deleted = 'N'
+  AND xref.dbid IN (SELECT dbid FROM tmp_load_dbids)
+  AND xref.ac IN (SELECT accession FROM tmp_load_accessions)
+  AND NOT EXISTS (
+    SELECT 1 FROM rnc_rna_precomputed p WHERE p.id = xref.urs_taxid
+  );
+CREATE INDEX ON tmp_new_precompute(rn);
+ANALYZE tmp_new_precompute;
+
+-- Range-batch the insert over disjoint rn slices of tmp_new_precompute.
 -- A single multi-hundred-million-row INSERT emits WAL in one continuous burst,
 -- which can force WAL-volume-triggered checkpoints (checkpoints_req) back to
 -- back instead of the normal checkpoint_timeout cadence, causing sustained I/O
@@ -47,20 +69,20 @@ DECLARE
     sql_stmt text;
     explain_result text;
 BEGIN
-    SELECT max(rn) INTO v_total FROM tmp_load_accessions;
-    RAISE NOTICE 'tmp_load_accessions has % rows; inserting in batches of %', v_total, v_batch_size;
+    SELECT max(rn) INTO v_total FROM tmp_new_precompute;
+    IF v_total IS NULL THEN
+        RAISE NOTICE 'No new rnc_rna_precomputed rows to insert';
+        RETURN;
+    END IF;
+    RAISE NOTICE 'tmp_new_precompute has % new rows; inserting in batches of %', v_total, v_batch_size;
 
     lo := 1;
     WHILE lo <= v_total LOOP
         sql_stmt := format($q$
             INSERT INTO rnc_rna_precomputed (id, upi, taxid, is_active) (
-            SELECT xref.urs_taxid, xref.upi, xref.taxid, true
-            FROM xref
-            JOIN tmp_load_accessions t ON t.accession = xref.ac
-            WHERE
-              xref.deleted = 'N'
-              AND xref.dbid IN (SELECT dbid FROM tmp_load_dbids)
-              AND t.rn >= %s AND t.rn < %s
+            SELECT id, upi, taxid, true
+            FROM tmp_new_precompute
+            WHERE rn >= %s AND rn < %s
             ) ON CONFLICT DO NOTHING
         $q$, lo, lo + v_batch_size);
 
@@ -78,6 +100,7 @@ END $$;
 
 DROP TABLE tmp_load_accessions;
 DROP TABLE tmp_load_dbids;
+DROP TABLE tmp_new_precompute;
 
 -- Recreate indexes
 CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
