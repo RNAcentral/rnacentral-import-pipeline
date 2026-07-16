@@ -2,8 +2,15 @@
 
 BEGIN TRANSACTION;
 -- Claim a larger amount of memory because we should have the DB to ourselves
--- for this step, and the hash tables can get big
-SET LOCAL work_mem = '1GB';
+-- for this step, and sorts/hash tables can get big. Verified via EXPLAIN: the
+-- anti-join below sorts the ~230M pruned xref candidate rows and merges them
+-- against an Index Only Scan of rnc_rna_precomputed_pkey (planner's own
+-- choice, cheaper here than hashing) - work_mem bounds that sort, more of it
+-- means fewer merge passes. Safe to raise regardless of which join strategy
+-- the planner picks: max_parallel_workers_per_gather=0 below keeps everything
+-- serial, so this comes from normal backend memory, not the /dev/shm-backed
+-- segments that broke the earlier parallel attempt.
+SET LOCAL work_mem = '2GB';
 -- Speed up the CREATE INDEX rebuilds below, which are the dominant cost at large
 -- scale. Index builds use maintenance_work_mem, not work_mem.
 SET LOCAL maintenance_work_mem = '2GB';
@@ -43,18 +50,45 @@ JOIN load_rnc_accessions a ON a.database = d.descr;
 -- just the new rows instead of re-scanning xref per batch for rows that were
 -- always going to conflict.
 
+-- Parallel workers stage shared work areas (hash tables, parallel sorts) in
+-- /dev/shm (dynamic_shared_memory_type = posix), a fixed-size tmpfs mount
+-- unrelated to work_mem and often much smaller than RAM in containers/VMs -
+-- keep this off so everything below spills to normal disk temp files
+-- instead. Leave enable_hashjoin/enable_mergejoin alone and let the planner
+-- pick: forcing a strategy here previously produced a much worse plan than
+-- what the planner chooses on its own.
 SET LOCAL max_parallel_workers_per_gather = 0;
 
-CREATE UNLOGGED TABLE tmp_new_precompute AS
-SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.upi, xref.taxid
-FROM xref
-WHERE
-  xref.deleted = 'N'
-  AND xref.dbid IN (SELECT dbid FROM tmp_load_dbids)
-  AND xref.ac IN (SELECT accession FROM tmp_load_accessions)
-  AND NOT EXISTS (
-    SELECT 1 FROM rnc_rna_precomputed p WHERE p.id = xref.urs_taxid
-  );
+-- xref.dbid IN (SELECT dbid FROM tmp_load_dbids) does NOT prune partitions -
+-- verified via EXPLAIN: Postgres compiles it to a Hash Semi Join sitting
+-- ABOVE a full Append over all ~59 xref_pN_not_deleted partitions, because
+-- the right-hand side comes from a table, not a literal. Static (plan-time)
+-- pruning only fires for a literal/constant array on the partition key. Since
+-- the actual dbids aren't known until runtime, pull them into a real array
+-- and splice that in as a literal via EXECUTE - same "constant-hint, not
+-- join-key" fix already applied elsewhere (see database-functions-vault
+-- follow-ups #2).
+DO $$
+DECLARE
+    v_dbids int[];
+    sql_stmt text;
+BEGIN
+    SELECT array_agg(dbid) INTO v_dbids FROM tmp_load_dbids;
+
+    sql_stmt := format($q$
+        CREATE UNLOGGED TABLE tmp_new_precompute AS
+        SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.upi, xref.taxid
+        FROM xref
+        WHERE
+          xref.deleted = 'N'
+          AND xref.dbid = ANY(%L::int[])
+          AND xref.ac IN (SELECT accession FROM tmp_load_accessions)
+          AND NOT EXISTS (
+            SELECT 1 FROM rnc_rna_precomputed p WHERE p.id = xref.urs_taxid
+          )
+    $q$, v_dbids);
+    EXECUTE sql_stmt;
+END $$;
 CREATE INDEX ON tmp_new_precompute(rn);
 ANALYZE tmp_new_precompute;
 
