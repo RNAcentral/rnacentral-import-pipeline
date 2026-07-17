@@ -1,5 +1,15 @@
 \timing
 
+-- Must run outside the transaction below (VACUUM can't run in a transaction
+-- block). Keeps rnc_rna_precomputed's planner stats (reltuples) fresh and its
+-- visibility map up to date - the latter matters even more than the former:
+-- the anti-join below depends on an Index Only Scan of rnc_rna_precomputed_pkey
+-- to skip heap fetches, which only works once VACUUM has marked pages
+-- all-visible. Confirmed via EXPLAIN that a stale/never-vacuumed table still
+-- picks the same plan shape either way, so this alone does not fix a bad
+-- plan - see enable_nestloop below for that.
+VACUUM ANALYZE rnacen.rnc_rna_precomputed;
+
 BEGIN TRANSACTION;
 -- Claim a larger amount of memory because we should have the DB to ourselves
 -- for this step, and sorts/hash tables can get big. Verified via EXPLAIN: the
@@ -58,6 +68,22 @@ JOIN load_rnc_accessions a ON a.database = d.descr;
 -- pick: forcing a strategy here previously produced a much worse plan than
 -- what the planner chooses on its own.
 SET LOCAL max_parallel_workers_per_gather = 0;
+
+-- The planner badly underestimates the anti-join below as yielding ~1 row
+-- (no cross-table correlation stats exist between xref.urs_taxid and
+-- rnc_rna_precomputed.id for two large, mostly-uncorrelated key sets), so it
+-- picks a Nested Loop for the "ac IN (...)" membership check instead of a
+-- Hash Semi Join. With a 228M-row inner side that doesn't fit work_mem for a
+-- Materialize, Nested Loop re-scans the full accession list from disk once
+-- per row that actually survives the anti-join (likely millions) - this is
+-- what turned a job that should run in minutes into a multi-day hang.
+-- Verified via EXPLAIN: forcing Hash Semi Join here costs one bounded pass
+-- over each side regardless of how many rows the anti-join really yields, so
+-- unlike the nested loop plan its cost isn't at the mercy of that bad
+-- estimate. Like the parallelism knob above, SET LOCAL holds for the rest of
+-- this transaction (not just this statement) - harmless for the later batched
+-- INSERT, which has no anti-join to mis-plan.
+SET LOCAL enable_nestloop = off;
 
 -- xref.dbid IN (SELECT dbid FROM tmp_load_dbids) does NOT prune partitions -
 -- verified via EXPLAIN: Postgres compiles it to a Hash Semi Join sitting
