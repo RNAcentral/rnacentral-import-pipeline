@@ -15,6 +15,8 @@ include { query as orf_query} from './workflows/precompute/utils'
 include { query as stopfree_query} from './workflows/precompute/utils'
 include { query as tcode_query} from './workflows/precompute/utils'
 
+include { qc_precompute } from './workflows/utils/qc'
+
 include { slack_closure } from './workflows/utils/slack'
 include { slack_message } from './workflows/utils/slack'
 
@@ -141,6 +143,9 @@ process load_data {
   path(qa_post_load)
   path(post)
 
+  output:
+  val('done')
+
   script:
   if (params.writer_format == 'parquet')
     """
@@ -222,6 +227,9 @@ workflow precompute {
     process_range.out.qa | collect | set { qa }
 
     load_data(data, qa, data_ctl, qa_ctl, data_post_load, qa_post_load, post_load)
+
+    // Final precompute step: QC — active-sequence counts + flags.
+    load_data.out | qc_precompute
 }
 
 workflow {

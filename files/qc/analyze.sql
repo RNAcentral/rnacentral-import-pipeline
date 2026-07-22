@@ -1,0 +1,70 @@
+-- Analyze QC. -v snapshot=1: emit before-snapshot CSV (cpat/stopfree/tcode
+-- counts). Default: report sequences processed this run per analysis + flag
+-- (tracked via pipeline_tracking last_run; untracked via before/after diff).
+-- Vars: snapshot, run_start.
+\pset pager off
+\timing off
+SET statement_timeout = '180s';
+
+\if :{?snapshot}
+
+-- Before-snapshot: CSV of untracked result-table counts.
+\pset tuples_only on
+\pset format unaligned
+\pset fieldsep ','
+SELECT 'cpat',     count(*) FROM cpat_results
+UNION ALL
+SELECT 'stopfree', count(*) FROM stopfree_results
+UNION ALL
+SELECT 'tcode',    count(*) FROM tcode_results;
+
+\else
+
+-- After-report: tracked analyses via last_run, untracked via before/after diff.
+CREATE TEMP TABLE before_counts (analysis text, before_count bigint);
+\copy before_counts FROM 'analyze-before.csv' WITH (FORMAT csv)
+
+\echo
+\echo '### Analyze — sequences processed this run'
+WITH tracked AS (
+  SELECT 'rfam scan' AS analysis, 1 AS ord,
+         count(*) FILTER (WHERE last_run >= NULLIF(:'run_start', '')::timestamptz) AS processed_this_run,
+         count(*) AS total
+  FROM pipeline_tracking_qa_scan
+  UNION ALL
+  SELECT 'r2dt', 2,
+         count(*) FILTER (WHERE last_run >= NULLIF(:'run_start', '')::timestamptz), count(*)
+  FROM pipeline_tracking_traveler
+  UNION ALL
+  SELECT 'genome mapping', 3,
+         count(*) FILTER (WHERE last_run >= NULLIF(:'run_start', '')::timestamptz), count(*)
+  FROM pipeline_tracking_genome_mapping
+),
+untracked AS (
+  SELECT ac.analysis, ac.ord,
+         ac.after_count - coalesce(bc.before_count, 0) AS processed_this_run,
+         ac.after_count AS total
+  FROM (
+    SELECT 'cpat'     AS analysis, 4 AS ord, count(*) AS after_count FROM cpat_results
+    UNION ALL SELECT 'tcode',    5, count(*) FROM tcode_results
+    UNION ALL SELECT 'stopfree', 6, count(*) FROM stopfree_results
+  ) ac
+  LEFT JOIN before_counts bc ON bc.analysis = ac.analysis
+)
+SELECT analysis, processed_this_run, total,
+       CASE
+         WHEN NULLIF(:'run_start', '') IS NOT NULL AND processed_this_run <= 0
+           THEN 'CHECK'
+         ELSE 'ok'
+       END AS status
+FROM (
+  SELECT analysis, ord, processed_this_run, total FROM tracked
+  UNION ALL
+  SELECT analysis, ord, processed_this_run, total FROM untracked
+) x
+ORDER BY ord;
+
+\echo
+\echo 'status  ok = sequences processed this run | CHECK = nothing processed (step skipped/failed?)'
+
+\endif
