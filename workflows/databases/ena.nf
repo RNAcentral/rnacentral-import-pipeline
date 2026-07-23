@@ -82,23 +82,74 @@ process process_file {
   time '10m'
 
   input:
-  tuple path(raw), path(tpa), path(model_lengths)
+  tuple path(raw), path(to_parse), path(tpa), path(model_lengths)
 
   output:
-  path('*.{csv,parquet}')
+  path('*.{csv,parquet}'), optional: true
 
   script:
   """
-  ena2fasta.py $raw sequences.fasta
+  # Delta: keep only the new/changed records (KEEP_ALL on the first delta run), so
+  # ribotyper and the parse run on the changed subset alone. An empty result means
+  # the whole chunk was unchanged -- emit nothing. See docs/incremental-parsing-ena.md.
+  kept=\$(rnac ena filter --only $to_parse $raw filtered.ncr)
+  if [[ "\$kept" -eq 0 ]]; then
+    echo "No new/changed records in $raw; skipping ribotyper and parse" >&2
+    exit 0
+  fi
+
+  ena2fasta.py filtered.ncr sequences.fasta
   if [[ -e sequences.fasta ]]; then
     /rna/ribovore/ribotyper.pl sequences.fasta ribotyper-results
   else
     mkdir ribotyper-results
   fi
-  rnac ena parse --counts $raw-counts.txt $raw $tpa ribotyper-results $model_lengths .
+  rnac ena parse --counts $raw-counts.txt filtered.ncr $tpa ribotyper-results $model_lengths .
 
   mkdir $baseDir/ena-counts 2>/dev/null || true
   cp $raw-counts.txt $baseDir/ena-counts/
+  """
+}
+
+// Cheap per-chunk pass: accession,signature for every record, no ribotyper or DB.
+process ena_signatures {
+  tag { "$raw" }
+  time '30m'
+
+  input:
+  path(raw)
+
+  output:
+  path('signatures.csv')
+
+  when: { params.databases.ena?.run }
+
+  script:
+  """
+  rnac ena signatures $raw signatures.csv
+  """
+}
+
+// Single reduce: diff all chunk signatures against the stored ENA manifest in the
+// database, producing the to-parse filter plus the manifest.csv / deletions.csv the
+// generic delta wiring already consumes.
+process ena_delta_diff {
+  memory '4GB'
+
+  input:
+  path('signatures*.csv')
+
+  output:
+  path('to_parse.txt'), emit: to_parse
+  path('deletions.csv'), emit: deletions
+  path('manifest.csv'), emit: manifest
+
+  when: { params.databases.ena?.run }
+
+  script:
+  """
+  cat signatures*.csv > all-signatures.csv
+  rnac ena delta-diff all-signatures.csv to_parse.txt deletions.csv manifest.csv
   """
 }
 
@@ -128,8 +179,23 @@ workflow ena {
     | mix( subdir_batches ) \
     | fetch_directory \
     | flatten \
+    | set { chunks }
+
+    // Signature every chunk, reduce to one global diff.
+    chunks | ena_signatures | collect | ena_delta_diff
+
+    // Parse only the changed records: pair every chunk with the single to-parse
+    // filter and the metadata, then filter+ribotyper+parse inside process_file.
+    chunks \
+    | combine(ena_delta_diff.out.to_parse) \
     | combine(metadata) \
     | process_file \
+    | set { parsed }
+
+    // manifest.csv and deletions.csv join the data stream; import-data.nf routes
+    // them (deletions -> load_deletions, manifest -> rnac manifest apply post-release).
+    parsed \
+    | mix(ena_delta_diff.out.manifest, ena_delta_diff.out.deletions) \
     | set { data }
 
   emit: data

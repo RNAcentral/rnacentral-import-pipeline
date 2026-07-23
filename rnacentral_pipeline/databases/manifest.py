@@ -16,12 +16,14 @@ docs/incremental-parsing.md.
 
 import csv
 import hashlib
+import io
 import json
 from pathlib import Path
 import typing as ty
 
 import attr
 import psycopg2
+from psycopg2.extras import execute_values
 
 MANIFEST_TABLE = "rnacen.rnc_import_manifest"
 
@@ -47,6 +49,15 @@ def record_signature(raw: ty.Any) -> str:
     """
     canonical = json.dumps(raw, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def text_signature(raw: str) -> str:
+    """
+    A stable hash of an already-serialised raw record (e.g. an EMBL record block).
+    Used where the raw form is text rather than a structured object; hashing the
+    whole text can never produce a false "unchanged".
+    """
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
 @attr.s(frozen=True)
@@ -137,17 +148,21 @@ def store_signatures(
                 f"DELETE FROM {MANIFEST_TABLE} WHERE database = %s AND accession = ANY(%s)",
                 (database, dropped),
             )
-        for accession, signature in signatures.items():
-            cur.execute(
-                f"""
-                INSERT INTO {MANIFEST_TABLE} (database, accession, signature)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (database, accession)
-                DO UPDATE SET signature = excluded.signature,
-                              updated_at = clock_timestamp()
-                """,
-                (database, accession, signature),
-            )
+        # Batched upsert: a per-row INSERT loop is fine for a few thousand HGNC rows
+        # but hopeless for ENA's millions, so send them in pages.
+        rows = ((database, accession, signature) for accession, signature in signatures.items())
+        execute_values(
+            cur,
+            f"""
+            INSERT INTO {MANIFEST_TABLE} (database, accession, signature)
+            VALUES %s
+            ON CONFLICT (database, accession)
+            DO UPDATE SET signature = excluded.signature,
+                          updated_at = clock_timestamp()
+            """,
+            rows,
+            page_size=5000,
+        )
     conn.commit()
 
 
@@ -202,3 +217,79 @@ def apply_artifacts(
             signatures.get(database, {}),
             dropped.get(database, []),
         )
+
+
+@attr.s(frozen=True)
+class DbDiff:
+    """Result of a database-side diff (see :func:`diff_via_db`)."""
+
+    to_parse = attr.ib(type=ty.List[str])   # accessions new or changed since last import
+    deletions = attr.ib(type=ty.List[str])  # accessions present last import, now absent
+    is_bootstrap = attr.ib(type=bool)       # True when there was no prior manifest
+
+
+def diff_via_db(
+    conn,
+    database: str,
+    signatures: ty.Iterable[ty.Tuple[str, str]],
+) -> DbDiff:
+    """
+    Diff a large new signature set against the stored manifest inside Postgres.
+
+    ``signatures`` is an iterable of ``(accession, signature)`` for every record in
+    the new import. For databases the size of ENA, loading both the new and the old
+    manifest into Python to diff them is memory-hungry; instead the new set is
+    COPYed into a temp table and the set differences are computed in SQL against
+    :data:`MANIFEST_TABLE` scoped to ``database``.
+
+    Returns the accessions to parse (new or changed), the accessions to delete
+    (stored but now absent), and whether this is a bootstrap (no prior manifest for
+    the database). On bootstrap ``to_parse`` is empty and callers should parse
+    everything -- the caller, not this function, decides how to represent "all".
+    """
+    ensure_table(conn)
+    with conn.cursor() as cur:
+        cur.execute(
+            "CREATE TEMP TABLE _new_manifest (accession text PRIMARY KEY, signature text NOT NULL) ON COMMIT DROP"
+        )
+
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        for accession, signature in signatures:
+            writer.writerow([accession, signature])
+        buffer.seek(0)
+        cur.copy_expert(
+            "COPY _new_manifest (accession, signature) FROM STDIN WITH CSV", buffer
+        )
+
+        cur.execute(
+            f"SELECT count(*) FROM {MANIFEST_TABLE} WHERE database = %s", (database,)
+        )
+        is_bootstrap = cur.fetchone()[0] == 0
+
+        to_parse: ty.List[str] = []
+        if not is_bootstrap:
+            cur.execute(
+                f"""
+                SELECT n.accession
+                FROM _new_manifest n
+                LEFT JOIN {MANIFEST_TABLE} m
+                  ON m.database = %s AND m.accession = n.accession
+                WHERE m.accession IS NULL OR m.signature <> n.signature
+                """,
+                (database,),
+            )
+            to_parse = [row[0] for row in cur]
+
+        cur.execute(
+            f"""
+            SELECT m.accession
+            FROM {MANIFEST_TABLE} m
+            LEFT JOIN _new_manifest n ON n.accession = m.accession
+            WHERE m.database = %s AND n.accession IS NULL
+            """,
+            (database,),
+        )
+        deletions = [row[0] for row in cur]
+
+    return DbDiff(to_parse=to_parse, deletions=deletions, is_bootstrap=is_bootstrap)
