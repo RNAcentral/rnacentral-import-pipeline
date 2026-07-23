@@ -83,6 +83,19 @@ BEGIN
   ASSERT (select count(*) from rnc_release where status = 'L') = 2,
          'forced mode should create one release per loaded database';
 END $$;
+
+-- 4. A delta-parsed database (one that has an import manifest) selects DELTA
+--    instead of INCREMENTAL; a database with no manifest still selects INCREMENTAL.
+create table rnacen.rnc_import_manifest (
+  database text, accession text, signature text,
+  updated_at timestamptz default now(), primary key (database, accession)
+);
+insert into rnacen.rnc_import_manifest (database, accession, signature)
+  values ('DBONE', 'x', 'sig');
+DO $$
+BEGIN
+  ASSERT release.get_load_release_type(1) = 'D', 'db with a manifest selects DELTA';
+END $$;
 SQL
 
 P -d postgres -c "drop database if exists $DB;" >/dev/null

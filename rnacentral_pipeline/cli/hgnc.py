@@ -18,7 +18,10 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.writers import entry_writer
+from rnacentral_pipeline.databases import manifest
 from rnacentral_pipeline.databases.hgnc import parser
+
+DATABASE = "HGNC"
 
 
 @click.group("hgnc")
@@ -42,8 +45,14 @@ def cli():
 )
 def process_hgnc(filename, output, db_url=None):
     """
-    Process the raw HGNC file into importable CSV files
+    Process the raw HGNC file into importable CSV files.
+
+    Only records that are new or changed since the last import are mapped and
+    written; dropped records go to deletions.csv and the full signature set to
+    manifest.csv, both consumed by the load step. See docs/incremental-parsing.md.
     """
-    entries = parser.parse(Path(filename), db_url)
+    previous = manifest.load_signatures_for(db_url, DATABASE)
+    result = parser.parse(Path(filename), db_url, previous)
     with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+        writer.write(result.entries)
+    manifest.write_artifacts(output, DATABASE, result.signatures, result.deletions)

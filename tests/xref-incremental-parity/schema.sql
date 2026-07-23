@@ -42,3 +42,4 @@ create unlogged table rnacen.load_retro_tmp (
 );
 create unlogged table rnacen.load_upi_max_versions (ac varchar(200), dbid smallint, max_version_i bigint, upi varchar(30));
 create unlogged table rnacen.load_max_versions (ac varchar(200), dbid smallint, max_version_i bigint);
+create unlogged table rnacen.load_deletions (database varchar(40), accession varchar(200));
