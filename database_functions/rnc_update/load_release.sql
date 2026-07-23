@@ -25,6 +25,8 @@ BEGIN
       perform rnc_load_xref.load_xref(v_previous_release, p_in_dbid);
     elsif v_release_type = 'I' THEN
       perform rnc_load_xref_incremental.load_xref_incremental(v_previous_release, p_in_dbid);
+    elsif v_release_type = 'D' THEN
+      perform rnc_load_xref_incremental.load_xref_delta(v_previous_release, p_in_dbid);
     END IF;
 
     -- mark release as done

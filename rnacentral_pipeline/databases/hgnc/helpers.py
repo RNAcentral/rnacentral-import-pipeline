@@ -51,12 +51,13 @@ def url(entry: HgncEntry) -> str:
 
 
 def load(path: Path) -> ty.List[HgncEntry]:
-    data = []
+    return [HgncEntry.from_raw(raw) for raw in load_raw(path)]
+
+
+def load_raw(path: Path) -> ty.List[dict]:
+    """The raw HGNC records, before mapping to HgncEntry -- used for signatures."""
     with path.open("r") as handle:
-        raw_data = json.load(handle)
-        for raw in raw_data["response"]["docs"]:
-            data.append(HgncEntry.from_raw(raw))
-    return data
+        return json.load(handle)["response"]["docs"]
 
 
 def description(entry: HgncEntry) -> str:
