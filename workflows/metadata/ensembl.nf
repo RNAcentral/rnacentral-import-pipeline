@@ -18,13 +18,13 @@ process assemblies {
 }
 
 process fetch_compara {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
   output:
   path('*.nt.fasta.gz')
+
+  when: { params.databases.ensembl?.vertebrates?.run }
 
   script:
   """
@@ -65,8 +65,6 @@ process proteins {
 }
 
 process coordinate_systems {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
@@ -77,6 +75,8 @@ process coordinate_systems {
   output:
   path('coordinate_systems.csv')
 
+  when: { params.databases.ensembl?.vertebrates?.run }
+
   script:
   """
   rnac ensembl coordinate-systems $connections $query coordinate_systems.csv
@@ -84,13 +84,13 @@ process coordinate_systems {
 }
 
 process karyotypes {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
   output:
   path('karyotypes.csv')
+
+  when: { params.databases.ensembl?.vertebrates?.run }
 
   script:
   """

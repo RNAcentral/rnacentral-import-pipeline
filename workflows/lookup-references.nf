@@ -16,15 +16,14 @@ process merge_and_split_all_publications {
 }
 
 process fetch_publications {
-  when: { params.get('needs_publications', false) }
-
   queue 'datamover'
   memory 8.GB
   container ''
-  containerOptions "${params.common_container} --bind /nfs/ftp/"
 
   output:
   path('out')
+
+  when: { params.get('needs_publications', false) }
 
   script:
   """

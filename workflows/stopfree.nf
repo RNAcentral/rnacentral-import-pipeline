@@ -19,8 +19,6 @@ process build_ranges {
 }
 
 process find_sequences {
-  when: { params.stopfree?.run }
-
   maxForks params.stopfree.query_max_forks
 
   input:
@@ -28,6 +26,8 @@ process find_sequences {
 
   output:
   path('sequences/*.fasta'), optional: true
+
+  when: { params.stopfree?.run }
 
   script:
   """
@@ -54,13 +54,13 @@ process stopfree_scan {
 }
 
 process store_results {
-  when: { params.stopfree?.load }
-
   memory 9.GB
 
   input:
   path('results*.csv')
   path(result_ctl)
+
+  when: { params.stopfree?.load }
 
   script:
   """

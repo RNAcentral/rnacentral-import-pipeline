@@ -3,8 +3,6 @@ nextflow.enable.dsl=2
 include { model_info } from './r2dt/model-info.nf'
 
 process fetch_model_mapping {
-  when: { params.r2dt?.run }
-
   memory '16 MB'
 
   input:
@@ -13,6 +11,8 @@ process fetch_model_mapping {
 
   output:
   path('mapping.json')
+
+  when: { params.r2dt?.run }
 
   script:
   """
@@ -80,8 +80,6 @@ process fetch_tracked {
 
 
 process extract_sequences {
-  when: { params.r2dt?.run }
-
   memory '12GB'
 
   input:
@@ -91,6 +89,8 @@ process extract_sequences {
 
   output:
   path('raw.json')
+
+  when: { params.r2dt?.run }
 
   script:
   """
