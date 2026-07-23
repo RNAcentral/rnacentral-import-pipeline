@@ -1,9 +1,9 @@
 -- Precompute QC: active-sequence counts + flags, from rnc_rna_precomputed and
 -- qa_status. active = is_active AND taxid IS NOT NULL; precomputed this run =
 -- update_date >= run start. Vars: run_start, qa_issue_pct_max (default 50).
-\pset pager off
-\timing off
 SET statement_timeout = '240s';
+\pset border 0
+\pset footer off
 
 \if :{?qa_issue_pct_max}
 \else
@@ -31,18 +31,15 @@ FROM (
   FROM pc
   UNION ALL
   SELECT 2, 'precomputed_this_run', precomputed_this_run::text,
-         CASE WHEN NULLIF(:'run_start', '') IS NOT NULL AND precomputed_this_run = 0 THEN 'CHECK' ELSE 'ok' END
+         CASE WHEN NULLIF(:'run_start', '') IS NOT NULL AND precomputed_this_run = 0 THEN 'CHECK: precompute did not run' ELSE 'ok' END
   FROM pc
   UNION ALL
   SELECT 3, 'active_missing_rna_type', active_missing_rna_type::text,
-         CASE WHEN active_missing_rna_type > 0 THEN 'CHECK' ELSE 'ok' END
+         CASE WHEN active_missing_rna_type > 0 THEN 'CHECK: rna_type assignment incomplete' ELSE 'ok' END
   FROM pc
   UNION ALL
   SELECT 4, 'qa_sequences_with_issues', round(100.0 * with_issue / nullif(total, 0), 1)::text || '%',
-         CASE WHEN 100.0 * with_issue / nullif(total, 0) > :qa_issue_pct_max THEN 'CHECK' ELSE 'ok' END
+         CASE WHEN 100.0 * with_issue / nullif(total, 0) > :qa_issue_pct_max THEN 'CHECK: above sanity bound' ELSE 'ok' END
   FROM qa
 ) m
 ORDER BY ord;
-
-\echo
-\echo 'status  ok | CHECK: precomputed_this_run=0 (precompute did not run), active_missing_rna_type>0 (rna_type assignment incomplete), or qa_sequences_with_issues above sanity bound'

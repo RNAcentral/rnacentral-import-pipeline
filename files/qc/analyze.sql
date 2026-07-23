@@ -2,8 +2,6 @@
 -- counts). Default: report sequences processed this run per analysis + flag
 -- (tracked via pipeline_tracking last_run; untracked via before/after diff).
 -- Vars: snapshot, run_start.
-\pset pager off
-\timing off
 SET statement_timeout = '180s';
 
 \if :{?snapshot}
@@ -19,6 +17,9 @@ UNION ALL
 SELECT 'tcode',    count(*) FROM tcode_results;
 
 \else
+
+\pset border 0
+\pset footer off
 
 -- After-report: tracked analyses via last_run, untracked via before/after diff.
 CREATE TEMP TABLE before_counts (analysis text, before_count bigint);
@@ -54,7 +55,7 @@ untracked AS (
 SELECT analysis, processed_this_run, total,
        CASE
          WHEN NULLIF(:'run_start', '') IS NOT NULL AND processed_this_run <= 0
-           THEN 'CHECK'
+           THEN 'CHECK: nothing processed (step skipped/failed?)'
          ELSE 'ok'
        END AS status
 FROM (
@@ -63,8 +64,5 @@ FROM (
   SELECT analysis, ord, processed_this_run, total FROM untracked
 ) x
 ORDER BY ord;
-
-\echo
-\echo 'status  ok = sequences processed this run | CHECK = nothing processed (step skipped/failed?)'
 
 \endif

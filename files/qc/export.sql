@@ -1,17 +1,17 @@
 -- Export release summary: before->after active sequences per database and
 -- rna_type, from rnc_rna_precomputed (before = not (re)precomputed this run, so
 -- change is increase-only). CHECK if a row changed >5%. Vars: run_start.
-\pset pager off
-\timing off
 SET statement_timeout = '600s';
+\pset border 0
+\pset footer off
 
 \echo
 \echo '### Sequences per database (before -> after this release; CHECK if >5% changed this run)'
 SELECT database, before_sequences, after_sequences,
        round(100.0 * (after_sequences - before_sequences) / nullif(before_sequences, 0), 1) AS change_pct,
        CASE
-         WHEN before_sequences = 0 AND after_sequences > 0 THEN 'CHECK'
-         WHEN (after_sequences - before_sequences) > 0.05 * before_sequences THEN 'CHECK'
+         WHEN before_sequences = 0 AND after_sequences > 0 THEN 'CHECK: new (was 0)'
+         WHEN (after_sequences - before_sequences) > 0.05 * before_sequences THEN 'CHECK: >5% change'
          ELSE 'ok'
        END AS status
 FROM (
@@ -30,8 +30,8 @@ ORDER BY after_sequences DESC;
 SELECT rna_type, before_sequences, after_sequences,
        round(100.0 * (after_sequences - before_sequences) / nullif(before_sequences, 0), 1) AS change_pct,
        CASE
-         WHEN before_sequences = 0 AND after_sequences > 0 THEN 'CHECK'
-         WHEN (after_sequences - before_sequences) > 0.05 * before_sequences THEN 'CHECK'
+         WHEN before_sequences = 0 AND after_sequences > 0 THEN 'CHECK: new (was 0)'
+         WHEN (after_sequences - before_sequences) > 0.05 * before_sequences THEN 'CHECK: >5% change'
          ELSE 'ok'
        END AS status
 FROM (

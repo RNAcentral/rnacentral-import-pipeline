@@ -29,7 +29,30 @@ def qc_dir() { params.qc?.publish_dir ?: 'qc-reports' }
 // Echo a finished report to the Nextflow console (publishDir handles the file).
 def print_report(report) {
   def dir = qc_dir()
-  report.view { f -> "\n===== QC report — also written to ${dir}/${f.name} =====\n${f.text}" }
+  report.view { f -> "\n— QC report — also written to ${dir}/${f.name}\n${f.text}" }
+}
+
+// Shared report header for every stage: title, UTC timestamp, target database
+// (profile label pro/dev/tst + the live host:port/db it actually connected to,
+// so a wrong-DB mix-up is visible), and wall-clock elapsed since pipeline start.
+// Returns bash that sets \$target/\$elapsed then echoes the lines — drop the
+// interpolation inside the report's { ... } block.
+def qc_header(stage) {
+  def env_label = (workflow.profile ?: '').tokenize(',')*.trim().find { it in ['pro', 'dev', 'tst'] } ?: ''
+  def prefix = env_label ? env_label + ' — ' : ''
+  def run_start = workflow.start ?: ''
+  return """\
+    target=\$(psql -Aqt -c "select coalesce(host(inet_server_addr()),'localhost')||':'||coalesce(inet_server_port()::text,'?')||'/'||current_database()" "\$PGDATABASE" 2>/dev/null || echo unknown)
+    elapsed=""
+    start_epoch=\$(date -d '${run_start}' +%s 2>/dev/null || echo "")
+    if [ -n "\$start_epoch" ]; then
+      secs=\$(( \$(date -u +%s) - start_epoch ))
+      elapsed=\$(printf '%dh %02dm' \$((secs/3600)) \$(((secs%3600)/60)))
+    fi
+    echo " RNAcentral QC report — ${stage}"
+    echo " Generated (UTC): \$(date -u '+%Y-%m-%d %H:%M:%S')"
+    echo " Loaded into: ${prefix}\$target"
+    [ -n "\$elapsed" ] && echo " Elapsed: \$elapsed\""""
 }
 
 // Generic single-shot QC report (precompute, genes). errorStrategy 'ignore' so
@@ -65,11 +88,8 @@ process qc_report {
   report="${stage}-qc-report.txt"
 
   {
-    echo "======================================================================"
-    echo " RNAcentral QC report — ${stage} stage"
-    echo " Generated (UTC): \$(date -u '+%Y-%m-%d %H:%M:%S')"
-    echo "======================================================================"
-    psql -P pager=off -v run_start='${run_start}' -v release='${release}' -f $query "\$PGDATABASE" 2>&1
+    ${qc_header("${stage} stage")}
+    psql -q -P pager=off -v run_start='${run_start}' -v release='${release}' -f $query "\$PGDATABASE" 2>&1
   } | tee "\$report"
 
   ${slack}
@@ -109,13 +129,10 @@ process qc_import_report {
   report="import-qc-report.txt"
 
   {
-    echo "======================================================================"
-    echo " RNAcentral QC report — import stage"
-    echo " Generated (UTC): \$(date -u '+%Y-%m-%d %H:%M:%S')"
+    ${qc_header('import stage')}
     echo " Databases imported this run: ${run_dbs ?: '(none detected)'}"
-    echo "======================================================================"
     echo
-    psql -P pager=off -v run_dbs='${run_dbs}' -v run_start='${run_start}' -f ${query} "\$PGDATABASE" 2>&1
+    psql -q -P pager=off -v run_dbs='${run_dbs}' -v run_start='${run_start}' -f ${query} "\$PGDATABASE" 2>&1
   } | tee "\$report"
 
   ${slack}
@@ -185,11 +202,8 @@ process qc_analyze_after {
   report="analyze-qc-report.txt"
 
   {
-    echo "======================================================================"
-    echo " RNAcentral QC report — analyze stage"
-    echo " Generated (UTC): \$(date -u '+%Y-%m-%d %H:%M:%S')"
-    echo "======================================================================"
-    psql -P pager=off -v run_start='${run_start}' -f ${query} "\$PGDATABASE" 2>&1
+    ${qc_header('analyze stage')}
+    psql -q -P pager=off -v run_start='${run_start}' -f ${query} "\$PGDATABASE" 2>&1
   } | tee "\$report"
 
   ${slack}
@@ -272,11 +286,8 @@ process qc_export_report {
 
   # 1. Validate the published FTP files -> report (small, Slack + console).
   {
-    echo "======================================================================"
-    echo " RNAcentral QC report — export stage"
-    echo " Generated (UTC): \$(date -u '+%Y-%m-%d %H:%M:%S')"
+    ${qc_header('export stage')}
     echo " Publish dir: \$pubdir"
-    echo "======================================================================"
     echo
     echo '### Exported files'
     had_problem=0
@@ -307,9 +318,8 @@ process qc_export_report {
 
   # 2. Full release summary -> file only (too big for Slack).
   {
-    echo "RNAcentral release summary (per-database and per-rna_type, before -> after)"
-    echo "Generated (UTC): \$(date -u '+%Y-%m-%d %H:%M:%S')"
-    psql -P pager=off -v run_start='${run_start}' -f ${query} "\$PGDATABASE" 2>&1
+    ${qc_header('release summary')}
+    psql -q -P pager=off -v run_start='${run_start}' -f ${query} "\$PGDATABASE" 2>&1
   } > "\$summary"
 
   ${slack}
