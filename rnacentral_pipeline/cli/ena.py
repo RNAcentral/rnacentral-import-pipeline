@@ -13,14 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import os
 from pathlib import Path
 
 import click
+import psycopg2
 
-from rnacentral_pipeline.databases.ena import context, parser
+from rnacentral_pipeline.databases import manifest
+from rnacentral_pipeline.databases.ena import context, delta, parser
 from rnacentral_pipeline.rnacentral.notify.slack import send_notification
 from rnacentral_pipeline.writers import entry_writer
+
+DATABASE = "ENA"
 
 
 @click.group("ena")
@@ -83,3 +88,72 @@ def process_ena(
             send_notification("ENA parsing error", message)
 
         ctx.dump_counts(Path(counts))
+
+
+@cli.command("signatures")
+@click.argument("ena_file", type=click.Path(exists=True))
+@click.argument("output", type=click.File("w"))
+def ena_signatures(ena_file, output):
+    """
+    Emit accession,signature CSV for every record in an ENA .ncr chunk. Cheap: no
+    ribotyper, no database. One file per chunk; the diff step unions them. See
+    docs/incremental-parsing-ena.md.
+    """
+    delta.write_signatures(Path(ena_file), output)
+
+
+@cli.command("delta-diff")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("signatures_csv", type=click.Path(exists=True))
+@click.argument("to_parse", type=click.File("w"))
+@click.argument("deletions_csv", type=click.File("w"))
+@click.argument("manifest_csv", type=click.File("w"))
+def ena_delta_diff(signatures_csv, to_parse, deletions_csv, manifest_csv, db_url=None):
+    """
+    Diff the collected new signatures against the stored ENA manifest, in the
+    database, and write the three side-channel files:
+
+      * to_parse    -- accessions to fully parse (new or changed), or the KEEP_ALL
+                       sentinel on the first delta run (no prior manifest);
+      * deletions   -- database,accession rows for records that dropped out;
+      * manifest    -- database,accession,signature for every current record.
+    """
+
+    def signature_rows():
+        with open(signatures_csv, "r", newline="") as handle:
+            for accession, signature in csv.reader(handle):
+                yield accession, signature
+
+    conn = psycopg2.connect(db_url)
+    try:
+        result = manifest.diff_via_db(conn, DATABASE, signature_rows())
+    finally:
+        conn.close()
+
+    if result.is_bootstrap:
+        to_parse.write(delta.KEEP_ALL + "\n")
+    else:
+        for accession in result.to_parse:
+            to_parse.write(accession + "\n")
+
+    deletions_writer = csv.writer(deletions_csv)
+    for accession in result.deletions:
+        deletions_writer.writerow([DATABASE, accession])
+
+    manifest_writer = csv.writer(manifest_csv)
+    for accession, signature in signature_rows():
+        manifest_writer.writerow([DATABASE, accession, signature])
+
+
+@cli.command("filter")
+@click.option("--only", required=True, type=click.Path(exists=True))
+@click.argument("ena_file", type=click.Path(exists=True))
+@click.argument("output", type=click.Path())
+def ena_filter(only, ena_file, output):
+    """
+    Copy through only the records whose accession is listed in --only (the to-parse
+    file); the KEEP_ALL sentinel copies everything. Prints the number of records
+    kept so the workflow can skip ribotyper/parse for an empty result.
+    """
+    written = delta.filter_records(Path(ena_file), Path(only), Path(output))
+    click.echo(written)
