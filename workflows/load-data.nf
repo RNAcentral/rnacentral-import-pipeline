@@ -87,15 +87,15 @@ process release {
   }
 
   echo "TIMING \$(date +%T) start release-check"
-  ${should_release ? '' : '# ' }rnac release check $limits
+  ${should_release ? '' : '# ' }rnac --log-level info release check $limits
   echo "TIMING \$(date +%T) start pre-release-sql"
   run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   echo "TIMING \$(date +%T) start release-run"
-  ${should_release ? '' : '# ' }rnac release run
+  ${should_release ? '' : '# ' }rnac --log-level info release run
   echo "TIMING \$(date +%T) start post-release-sql"
   run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   echo "TIMING \$(date +%T) start update-stats"
-  ${should_release ? '' : '# ' }rnac release update-stats
+  ${should_release ? '' : '# ' }rnac --log-level info release update-stats
   echo "TIMING \$(date +%T) done"
   """
 }

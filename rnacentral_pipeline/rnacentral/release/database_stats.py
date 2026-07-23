@@ -269,14 +269,20 @@ PENDING_STATS_TABLE = "rnacen.rnc_stats_pending"
 
 
 def pending_dbids(conn) -> ty.Optional[ty.Set[int]]:
-    """Databases loaded this run (written by run.py); None if unrecorded -> update all."""
+    """
+    Databases loaded this run, as recorded by run.py.
+
+    None means the scope was never recorded (pre-rnc_stats_pending release, or a
+    run that skipped release-run) and every database is updated. An empty set is
+    a recorded scope of nothing - a run that released no database - and must not
+    be conflated with None, or every no-op delta run pays the full sweep.
+    """
     with conn.cursor() as cur:
         cur.execute("SELECT to_regclass(%s)", (PENDING_STATS_TABLE,))
         if cur.fetchone()[0] is None:
             return None
         cur.execute(f"SELECT dbid FROM {PENDING_STATS_TABLE}")
-        dbids = {row[0] for row in cur}
-    return dbids or None
+        return {row[0] for row in cur}
 
 
 def update_stats(db_url: str):
@@ -291,6 +297,9 @@ def update_stats(db_url: str):
         pending = pending_dbids(conn)
         if pending is None:
             LOGGER.info("No recorded release scope; updating stats for all databases")
+        elif not pending:
+            LOGGER.info("Nothing was released this run; leaving all stats as they are")
+            return
         else:
             db_ids = [(db_id, descr) for (db_id, descr) in db_ids if db_id in pending]
             LOGGER.info(
