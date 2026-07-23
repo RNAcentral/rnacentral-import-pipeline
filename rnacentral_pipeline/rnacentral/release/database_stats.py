@@ -265,6 +265,20 @@ def insert(conn, stats: DatabaseStats):
             cur.execute(str(update))
 
 
+PENDING_STATS_TABLE = "rnacen.rnc_stats_pending"
+
+
+def pending_dbids(conn) -> ty.Optional[ty.Set[int]]:
+    """Databases loaded this run (written by run.py); None if unrecorded -> update all."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT to_regclass(%s)", (PENDING_STATS_TABLE,))
+        if cur.fetchone()[0] is None:
+            return None
+        cur.execute(f"SELECT dbid FROM {PENDING_STATS_TABLE}")
+        dbids = {row[0] for row in cur}
+    return dbids or None
+
+
 def update_stats(db_url: str):
     db = Table("rnc_database")
     with psycopg2.connect(db_url) as conn:
@@ -272,6 +286,17 @@ def update_stats(db_url: str):
         with conn.cursor() as cur:
             cur.execute(str(query))
             db_ids = list(cur)
+
+        # Unchanged DBs keep valid stats; their lineage tree may lag a taxonomy change.
+        pending = pending_dbids(conn)
+        if pending is None:
+            LOGGER.info("No recorded release scope; updating stats for all databases")
+        else:
+            db_ids = [(db_id, descr) for (db_id, descr) in db_ids if db_id in pending]
+            LOGGER.info(
+                "Updating stats only for the %i database(s) loaded this run", len(db_ids)
+            )
+
         for (db_id, descr) in db_ids:
             if descr == "ENA":
                 LOGGER.info("Skipping %s", descr)

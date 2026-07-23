@@ -47,6 +47,26 @@ def _run(db_url, sql, params=None, label="query", high_mem=False):
             cur.execute(sql, params)
 
 
+# Databases loaded this run, for update-stats to scope to (see database_stats.py).
+PENDING_STATS_TABLE = "rnacen.rnc_stats_pending"
+
+
+def _record_pending_stats(db_url, dbids):
+    with _connect(db_url) as conn:
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            LOGGER.info("Recording %i loaded database(s) for update-stats", len(dbids))
+            cur.execute(
+                f"CREATE TABLE IF NOT EXISTS {PENDING_STATS_TABLE} (dbid bigint PRIMARY KEY)"
+            )
+            cur.execute(f"TRUNCATE {PENDING_STATS_TABLE}")
+            if dbids:
+                cur.executemany(
+                    f"INSERT INTO {PENDING_STATS_TABLE} (dbid) VALUES (%s)",
+                    [(dbid,) for dbid in dbids],
+                )
+
+
 CREATE_INDEX_SQL = """
 CREATE INDEX IF NOT EXISTS load_rnacentral_all$database
 ON rnacen.load_rnacentral_all(database)
@@ -142,6 +162,9 @@ def run(db_url, force_full=False):
     if releases:
         _run(db_url, "SELECT rnc_load_xref.do_checks(NULL::bigint)",
              label="do_checks (once, post-loop)", high_mem=True)
+
+    # `releases` was captured before mark_as_done flipped their status.
+    _record_pending_stats(db_url, [dbid for (dbid, _rid) in releases])
 
 
 def check(limit_file, db_url, default_allowed_change=0.30):
