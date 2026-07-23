@@ -86,6 +86,7 @@ on
     db.id = xref.dbid
 where
     xref.deleted = 'N'
+    and xref.dbid in ({dbids})
 group by db.descr
 """
 
@@ -179,13 +180,21 @@ def check(limit_file, db_url, default_allowed_change=0.30):
     new_counts = {}
     with _connect(db_url) as conn:
         with conn.cursor() as cur:
-            cur.execute(COUNT_QUERY)
-            for (descr, raw_count) in cur.fetchall():
-                cur_counts[descr] = float(raw_count)
-
             cur.execute(LOAD_COUNT_QUERY)
             for (descr, raw_count) in cur.fetchall():
                 new_counts[descr] = float(raw_count)
+
+            # Only loaded databases can change; scope the xref count to their
+            # partitions (dbids spliced as literals so the partitions prune).
+            if new_counts:
+                cur.execute(
+                    "SELECT id FROM rnc_database WHERE descr = ANY(%s)", (list(new_counts),)
+                )
+                dbids = ",".join(str(int(row[0])) for row in cur)
+                if dbids:
+                    cur.execute(COUNT_QUERY.format(dbids=dbids))
+                    for (descr, raw_count) in cur.fetchall():
+                        cur_counts[descr] = float(raw_count)
 
     problems = False
     for name, previous in cur_counts.items():
