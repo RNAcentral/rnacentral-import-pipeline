@@ -27,13 +27,22 @@ DECLARE
           AND r.status = 'L'
         );
 
+    v_type character;
+
 BEGIN
 
     RAISE NOTICE 'Preparing the release table';
 
     FOR v_db IN q
     LOOP
-      perform rnc_update.create_release(p_in_dbid => v_db.ID, p_release_type => p_release_type);
+      -- 'A' (auto) picks FULL vs INCREMENTAL per database from its history;
+      -- an explicit 'F'/'I' forces that type for every database (escape hatch).
+      IF p_release_type = 'A' THEN
+        v_type := release.get_load_release_type(v_db.ID);
+      ELSE
+        v_type := p_release_type;
+      END IF;
+      perform rnc_update.create_release(p_in_dbid => v_db.ID, p_release_type => v_type);
     END LOOP;
 
   END;

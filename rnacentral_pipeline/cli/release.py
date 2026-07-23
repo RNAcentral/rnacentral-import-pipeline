@@ -29,11 +29,16 @@ def cli():
 
 @cli.command("run")
 @click.option("--db-url", envvar="PGDATABASE")
-def run_release(db_url=None):
+@click.option(
+    "--force-full",
+    is_flag=True,
+    help="Force a full (non-incremental) release for every database.",
+)
+def run_release(db_url=None, force_full=False):
     """
     A command to run the release logic in the database.
     """
-    run.run(db_url)
+    run.run(db_url, force_full=force_full)
 
 
 @cli.command("check")
