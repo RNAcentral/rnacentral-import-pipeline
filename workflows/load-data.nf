@@ -79,18 +79,24 @@ process release {
     if [[ -s "\$fn" ]]; then
       while IFS='' read -r "script" || [[ -n "\$script" ]]; do
         if [[ ! -z "\$script" ]]; then
-          echo "Running: \$fn/\$script"
+          echo "TIMING \$(date +%T) start-sql \$script"
           psql -v ON_ERROR_STOP=1 -f \$script "\$PGDATABASE"
         fi
       done < "\$fn"
     fi
   }
 
+  echo "TIMING \$(date +%T) start release-check"
   ${should_release ? '' : '# ' }rnac release check $limits
+  echo "TIMING \$(date +%T) start pre-release-sql"
   run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
+  echo "TIMING \$(date +%T) start release-run"
   ${should_release ? '' : '# ' }rnac release run
+  echo "TIMING \$(date +%T) start post-release-sql"
   run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
+  echo "TIMING \$(date +%T) start update-stats"
   ${should_release ? '' : '# ' }rnac release update-stats
+  echo "TIMING \$(date +%T) done"
   """
 }
 
