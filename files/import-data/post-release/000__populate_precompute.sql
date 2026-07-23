@@ -25,15 +25,15 @@ SET LOCAL work_mem = '2GB';
 -- scale. Index builds use maintenance_work_mem, not work_mem.
 SET LOCAL maintenance_work_mem = '2GB';
 
--- Drop indexes to speed up bulk insert.
--- NB: (upi,taxid,last_release) was removed here - 0 scans over a 14-day prod
--- window; every query on upi/upi+taxid uses rnc_rna_precomputed_upi_idx (upi,taxid,
--- 423M scans) instead, so we no longer build/maintain that 11 GB index.
-DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_98db0b07;
-DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_is_active_idx;
-DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_upi_idx;
-DROP INDEX IF EXISTS rnacen.ix_rnc_rna_precomputed_assigned_rna;
-DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_rna_type_idx;
+-- NB on the index set: (upi,taxid,last_release) was removed - 0 scans over a
+-- 14-day prod window; every query on upi/upi+taxid uses rnc_rna_precomputed_upi_idx
+-- (upi,taxid, 423M scans) instead, so we no longer build/maintain that 11 GB index.
+-- The drop-to-speed-bulk-insert step used to live here, unconditionally. It now runs
+-- below and only when the new-row count justifies it (see the gate after the
+-- anti-join) - dropping and rebuilding these 5 indexes over the whole ~230M-row
+-- table is a fixed ~13-14 min cost, and for an incremental/delta release that adds
+-- almost nothing it is pure waste. The rebuild at the end is idempotent, so only the
+-- indexes we actually drop get rebuilt.
 
 CREATE UNLOGGED TABLE tmp_load_accessions AS
 SELECT row_number() OVER () AS rn, accession FROM load_rnc_accessions;
@@ -118,6 +118,33 @@ END $$;
 CREATE INDEX ON tmp_new_precompute(rn);
 ANALYZE tmp_new_precompute;
 
+-- Only drop the indexes when we are about to insert enough rows that a full
+-- drop-and-rebuild beats maintaining them during the INSERT. Below the threshold
+-- (every delta/incremental release, and any barely-changed database) we keep the
+-- indexes in place and let the small batched INSERT maintain them - this is what
+-- turns a ~14 min fixed cost into seconds. The threshold is deliberately
+-- conservative: rebuilding all 5 indexes over ~230M rows costs ~13-14 min, while
+-- index maintenance for a few million inserted rows is far cheaper, so 10M is well
+-- inside the safe zone. Tune it if real release sizes warrant. The anti-join above
+-- already ran (it uses the PK, never dropped), so dropping here does not affect it.
+DO $$
+DECLARE
+    v_new bigint;
+    v_threshold constant bigint := 10000000;
+BEGIN
+    SELECT count(*) INTO v_new FROM tmp_new_precompute;
+    IF v_new >= v_threshold THEN
+        RAISE NOTICE 'populate_precompute: % new rows >= %; dropping indexes for bulk rebuild', v_new, v_threshold;
+        DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_98db0b07;
+        DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_is_active_idx;
+        DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_upi_idx;
+        DROP INDEX IF EXISTS rnacen.ix_rnc_rna_precomputed_assigned_rna;
+        DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_rna_type_idx;
+    ELSE
+        RAISE NOTICE 'populate_precompute: % new rows < %; keeping indexes in place', v_new, v_threshold;
+    END IF;
+END $$;
+
 -- Range-batch the insert over disjoint rn slices of tmp_new_precompute.
 -- A single multi-hundred-million-row INSERT emits WAL in one continuous burst,
 -- which can force WAL-volume-triggered checkpoints (checkpoints_req) back to
@@ -165,11 +192,14 @@ DROP TABLE tmp_load_accessions;
 DROP TABLE tmp_load_dbids;
 DROP TABLE tmp_new_precompute;
 
--- Recreate indexes
-CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
-CREATE INDEX rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
-CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (upi, taxid);
-CREATE INDEX ix_rnc_rna_precomputed_assigned_rna ON rnacen.rnc_rna_precomputed USING btree (assigned_so_rna_type);
-CREATE INDEX rnc_rna_precomputed_rna_type_idx ON rnacen.rnc_rna_precomputed USING btree (rna_type);
+-- Recreate indexes. IF NOT EXISTS makes this idempotent: it rebuilds exactly the
+-- indexes dropped above (bulk-rebuild path) and is a cheap catalog no-op when they
+-- were kept in place (small-delta path). It also self-heals if a prior run died
+-- after dropping but before rebuilding.
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (upi, taxid);
+CREATE INDEX IF NOT EXISTS ix_rnc_rna_precomputed_assigned_rna ON rnacen.rnc_rna_precomputed USING btree (assigned_so_rna_type);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_rna_type_idx ON rnacen.rnc_rna_precomputed USING btree (rna_type);
 
 COMMIT;
