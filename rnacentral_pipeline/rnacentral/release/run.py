@@ -98,10 +98,15 @@ group by database
 """
 
 
-def run(db_url):
+def run(db_url, force_full=False):
     """
     Run the release logic. Each step uses its own connection so a server-side
     crash on one long-running function doesn't abort the rest.
+
+    By default each database's release type is chosen automatically: the first
+    load of a database is FULL (it bootstraps the xref partition), every later
+    load is INCREMENTAL (only new/changed rows are touched). Pass force_full=True
+    to force a FULL release for every database -- e.g. after a schema change.
     """
     # Deploy any changed database functions from database_functions/ before the
     # release logic runs. Replaces the per-function CREATE OR REPLACE patches that
@@ -119,7 +124,9 @@ def run(db_url):
     )
     _run(db_url, CREATE_INDEX_SQL, label="create_index", high_mem=True)
     _run(db_url, LOAD_MD5_INDEX_SQL, label="create_load_md5_index", high_mem=True)
-    _run(db_url, "SELECT rnc_update.prepare_releases('F')", label="prepare_releases")
+    # 'A' = auto (per-database FULL/INCREMENTAL from history); 'F' forces FULL.
+    _run(db_url, "SELECT rnc_update.prepare_releases(%s)",
+         params=("F" if force_full else "A",), label="prepare_releases")
 
     with _connect(db_url) as conn:
         with conn.cursor() as cur:

@@ -4,21 +4,22 @@ from rnacentral_pipeline.rnacentral.release import run
 class FakeCursor:
     def __init__(self):
         self.calls = []
-        self._results = [(9, 123)]
-        self._last_sql = ""
+        self._last = ""
 
     def execute(self, sql, params=None):
         self.calls.append((sql, params))
-        self._last_sql = sql
+        self._last = sql
 
     def fetchall(self):
-        # run.run() calls functions.apply(), which reads the tracking table and
-        # expects (schema, name, sha) triples. Returning the release tuples for
-        # that query blows up in _applied_shas; an empty result just means
-        # "nothing applied yet", so every function gets deployed.
-        if "applied_functions" in self._last_sql:
+        # functions.apply asks which functions were already applied -- pretend none,
+        # so it proceeds to (re)deploy them. It expects (schema, name, sha) triples,
+        # so handing it the release tuples would blow up in _applied_shas.
+        if "applied_functions" in self._last:
             return []
-        return self._results
+        # run() asks which releases are pending loading (status = 'L').
+        if "FROM rnacen.rnc_release" in self._last:
+            return [(9, 123)]
+        return []
 
     def __enter__(self):
         return self
@@ -45,15 +46,20 @@ class FakeConnection:
     def commit(self):
         self.commits += 1
 
+    def rollback(self):
+        pass
 
-def test_run_patches_functions_and_checks_once(monkeypatch):
+
+def _run_capture(monkeypatch, **kwargs):
     conn = FakeConnection()
     # _connect passes keepalive/options kwargs, so the stub must accept them.
     monkeypatch.setattr(run.psycopg2, "connect", lambda *a, **k: conn)
+    run.run("postgres://example", **kwargs)
+    return conn.cursor_obj.calls
 
-    run.run("postgres://example")
 
-    sql_calls = [sql for sql, _ in conn.cursor_obj.calls]
+def test_run_patches_functions_and_checks_once(monkeypatch):
+    sql_calls = [sql for sql, _ in _run_capture(monkeypatch)]
 
     # Functions are deployed from database_functions/ in (schema, name) order,
     # interleaved with tracking-table INSERTs, so match on content rather than
@@ -98,12 +104,26 @@ def test_run_patches_functions_and_checks_once(monkeypatch):
     # The load_md5_new_sequences index is created to support set_comparable_prot_upi.
     assert any("load_md5_new_sequences$in_md5" in s for s in sql_calls)
 
-    # The per-database load still runs for each release returned by TO_RELEASE.
-    assert (
-        "SELECT rnc_update.new_update_release(%s, %s)",
-        (9, 123),
-    ) in conn.cursor_obj.calls
+
+def test_run_defaults_to_auto_release_type(monkeypatch):
+    calls = _run_capture(monkeypatch)
+    sql_calls = [sql for sql, _ in calls]
+
+    # Release type is chosen per database from history: 'A' (auto), not a forced 'F'.
+    assert ("SELECT rnc_update.prepare_releases(%s)", ("A",)) in calls
+    assert "SELECT rnc_update.prepare_releases('F')" not in sql_calls
+
+    # The per-database load still runs for each release returned by the pending query.
+    assert ("SELECT rnc_update.new_update_release(%s, %s)", (9, 123)) in calls
 
     # do_checks runs exactly once, after the per-database loop.
     assert sql_calls[-1] == "SELECT rnc_load_xref.do_checks(NULL::bigint)"
     assert sum("do_checks(NULL::bigint)" in sql for sql in sql_calls) == 1
+
+
+def test_run_force_full_forces_full_release_type(monkeypatch):
+    calls = _run_capture(monkeypatch, force_full=True)
+
+    # --force-full pins every database to a FULL release.
+    assert ("SELECT rnc_update.prepare_releases(%s)", ("F",)) in calls
+    assert ("SELECT rnc_update.prepare_releases(%s)", ("A",)) not in calls
