@@ -54,5 +54,9 @@ def process_hgnc(filename, output, db_url=None):
     previous = manifest.load_signatures_for(db_url, DATABASE)
     result = parser.parse(Path(filename), db_url, previous)
     with entry_writer(Path(output)) as writer:
-        writer.write(result.entries)
+        # A delta parse legitimately yields no entries when nothing changed; that is
+        # the fast-path success case, not the "parser produced nothing" failure the
+        # default guard catches. Safe here only because HGNC loads in DELTA mode,
+        # which retires via the explicit deletions list, never by absence.
+        writer.write(result.entries, allow_empty=True)
     manifest.write_artifacts(output, DATABASE, result.signatures, result.deletions)
