@@ -112,7 +112,7 @@ process query_accession_range {
 process process_range {
   tag { "$min-$max" }
   memory params.precompute.range.memory
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
 
   input:
   tuple val(min), val(max), path(accessions), path(metadata)

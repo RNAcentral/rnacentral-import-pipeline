@@ -15,7 +15,7 @@ process get_organisms {
 
 process create_csv {
     memory '4GB'
-    publishDir "$baseDir/workflows/litscan/organisms/", mode: 'copy'
+    publishDir "$projectDir/workflows/litscan/organisms/", mode: 'copy'
 
     input:
     file(organism_textmining_mentions)
@@ -50,7 +50,7 @@ workflow load_organisms {
       | create_csv
       | set{ organism_pmid }
 
-      load_ctl = channel.of("$baseDir/workflows/litscan/organisms/load-organisms.ctl")
+      load_ctl = channel.of("$projectDir/workflows/litscan/organisms/load-organisms.ctl")
       import_organisms(organism_pmid, load_ctl) \
       | set{ done }
     emit: done

@@ -1,7 +1,7 @@
 nextflow.enable.dsl=2
 
 process get_urs {
-    publishDir "$baseDir/workflows/references/metadata/rnacentral", mode: 'copy'
+    publishDir "$projectDir/workflows/references/metadata/rnacentral", mode: 'copy'
 
     input:
     path(database)
@@ -16,7 +16,7 @@ process get_urs {
 }
 
 process get_job {
-    publishDir "$baseDir/workflows/references/metadata/rnacentral", mode: 'copy'
+    publishDir "$projectDir/workflows/references/metadata/rnacentral", mode: 'copy'
 
     input:
     path(database)

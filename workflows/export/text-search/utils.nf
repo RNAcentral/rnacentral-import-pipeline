@@ -1,5 +1,5 @@
 process fetch_schema {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
   errorStrategy 'retry'
   maxRetries 3
 
@@ -14,7 +14,7 @@ process fetch_schema {
 
 process fetch {
   tag { "${query.baseName}" }
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
 
   input:
   val(max_count)
@@ -32,7 +32,7 @@ process fetch {
 process group {
   memory params.search_export.memory
   tag { "${name}" }
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
 
   input:
   tuple val(name), path("raw.json"), val(max_count)

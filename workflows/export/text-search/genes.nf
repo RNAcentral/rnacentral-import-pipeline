@@ -29,7 +29,7 @@ process as_xml {
   memory { params.export.search.memory * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
   maxRetries 3
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
 
   input:
   tuple val(assembly), path('raw*.json'), path('so_tree.json'), path('schema.xsd')

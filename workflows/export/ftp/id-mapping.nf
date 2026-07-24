@@ -43,7 +43,7 @@ process merge_id_mapping {
 
 process database_mapping {
   publishDir "${params.export.ftp.publish}/id_mapping/database_mappings/", mode: 'copy'
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
 
   input:
   path('id_mapping.tsv.gz')
