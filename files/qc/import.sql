@@ -2,8 +2,8 @@
 -- release_stats (correct for ENA). Flags NOT IMPORTED (import_date < run start)
 -- and "data disappeared" (>retired_pct retired AND carried_over dropped).
 -- Vars: run_dbs, run_start, retired_pct (default 0.05).
-\pset border 0
-\pset footer off
+\pset pager off
+\timing off
 SET statement_timeout = '60s';
 
 \if :{?retired_pct}
@@ -25,22 +25,20 @@ latest AS (
   FROM hist
   ORDER BY dbid, this_release DESC
 )
--- Compact, phone-friendly set of columns (border 0, no pipes). The dropped
--- columns (prev_release, import_date, carried_over) still feed the status CASE
--- below; they're just not printed. Query release_stats directly if you need them.
-SELECT d.display_name              AS db,
-       l.this_release              AS release,
-       l.ff_loaded_rows            AS imported,
-       l.created_this_release      AS "new",
-       l.retired_this_release      AS "gone",
-       l.active_total              AS total,
+SELECT d.display_name              AS database,
+       l.prev_release,
+       l.this_release              AS current_release,
+       l.end_time::date            AS import_date,
+       l.ff_loaded_rows            AS rows_imported,
+       l.created_this_release      AS created,
+       l.retired_this_release      AS retired,
        CASE
          WHEN l.end_time < NULLIF(:'run_start', '')::timestamptz
            THEN 'NOT IMPORTED'
          WHEN l.prev_active_total > 0
               AND l.retired_this_release > :retired_pct * l.prev_active_total
               AND l.active_created_prev_releases < l.prev_carried_over
-           THEN 'CHECK: possible partial/failed import'
+           THEN 'CHECK: data disappeared'
          ELSE 'ok'
        END                         AS status
 FROM rnc_database d
@@ -48,3 +46,6 @@ JOIN latest l ON l.dbid = d.id
 WHERE lower(replace(replace(d.descr, '_', ''), ' ', '')) = ANY (string_to_array(:'run_dbs', ','))
    OR lower(replace(replace(d.display_name, '_', ''), ' ', '')) = ANY (string_to_array(:'run_dbs', ','))
 ORDER BY d.display_name;
+
+\echo
+\echo 'status  ok = imported cleanly | NOT IMPORTED = no new release this run (import_date < run start) | CHECK: data disappeared = >5% retired AND carried_over fell vs last release (possible partial/failed import)'
