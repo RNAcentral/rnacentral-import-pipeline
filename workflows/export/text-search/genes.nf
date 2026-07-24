@@ -26,7 +26,7 @@ process merge_and_split {
 
 process as_xml {
   tag { "$assembly" }
-  memory { (params.export.search.memory as nextflow.util.MemoryUnit) * task.attempt }
+  memory { params.export.search.memory * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
   maxRetries 3
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"

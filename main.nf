@@ -22,7 +22,7 @@ def willRun(key, db) {
 // which are permitted at the top level).
 params.databases.ensembl._any.run =
   ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { d -> params.databases.ensembl[d]?.get('run', false) }
-params.needs_publications = params.databases.any { key, db -> willRun(key, db) }
+params.needs_publications = !params.get('skip_publications', false) && params.databases.any { key, db -> willRun(key, db) }
 params.should_release     = params.databases.any { key, db -> willRun(key, db) && db.get('release', true) }
 params.needs_taxonomy     = params.databases.any { key, db -> willRun(key, db) && db.get('needs_taxonomy', false) }
 
