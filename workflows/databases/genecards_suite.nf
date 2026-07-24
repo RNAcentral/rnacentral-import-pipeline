@@ -41,7 +41,6 @@ process process {
 }
 
 workflow genecards_suite {
-  emit: data
   main:
     Channel.fromList([
       ['genecards', params.databases.genecards.remote, params.databases.genecards.column],
@@ -51,4 +50,6 @@ workflow genecards_suite {
     | fetch \
     | process \
     | set { data }
+
+  emit: data
 }

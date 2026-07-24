@@ -47,7 +47,6 @@ process parse_data {
 }
 
 workflow pirbase {
-  emit: data_files
   main:
     Channel.fromPath('files/import-data/pirbase/known-md5.sql') | set { query }
 
@@ -59,4 +58,6 @@ workflow pirbase {
     | parse_data \
     | flatten \
     | set { data_files }
+
+  emit: data_files
 }

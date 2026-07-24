@@ -1,8 +1,8 @@
 process lncbase {
-  when: { params.databases.lncbase?.run }
-
   output:
   path('*.csv')
+
+  when: { params.databases.lncbase?.run }
 
   script:
   """

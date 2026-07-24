@@ -108,6 +108,7 @@ process gpi_species {
   output:
   path("rnacentral.species.gpi*")
 
+  script:
   """
   rnac ftp-export gpi --filter species rnacentral.species.gpi
   gzip -k rnacentral.species.gpi
@@ -121,6 +122,7 @@ process gpi_reference_proteome {
   output:
   path("rnacentral.reference_proteome.gpi*")
 
+  script:
   """
   rnac ftp-export gpi --filter reference-proteome rnacentral.reference_proteome.gpi
   gzip -k rnacentral.reference_proteome.gpi

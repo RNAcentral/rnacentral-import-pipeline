@@ -3,13 +3,13 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
-  when: { params.tcode?.run }
-
   input:
   val(_flag)
 
   output:
   path('ranges.csv')
+
+  when: { params.tcode?.run }
 
   script:
   def chunk_size = params.tcode.db_chunk_size
@@ -19,13 +19,13 @@ process build_ranges {
 }
 
 process find_sequences {
-  when: { params.tcode?.run }
-
   input:
   tuple val(min), val(max), path(query)
 
   output:
   path('sequences/*.fasta'), optional: true
+
+  when: { params.tcode?.run }
 
   script:
   """

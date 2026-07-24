@@ -57,7 +57,6 @@ process fetch_ensembl_data {
 }
 
 workflow repeats {
-  emit: repeats
   main:
     Channel.fromPath('files/repeats/find-assemblies.sql') \
     | combine(Channel.fromPath('config/databases.json')) \
@@ -68,4 +67,5 @@ workflow repeats {
     | fetch_ensembl_data
 
     fetch_ensembl_data.out.repeats | collect | set { repeats }
+  emit: repeats
 }

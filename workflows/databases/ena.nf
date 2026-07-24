@@ -1,6 +1,5 @@
 process list_subdirs {
   tag { "$name" }
-  when { params.databases.ena.run }
   queue 'datamover'
   containerOptions "${params.common_container} --bind /nfs:/nfs"
   time '1h'
@@ -11,6 +10,9 @@ process list_subdirs {
   output:
   tuple val(name), path("${name}-dirs.txt")
 
+  when: { params.databases.ena.run }
+
+  script:
   """
   find -L ${path} -mindepth 1 -maxdepth 1 -type d > ${name}-dirs.txt
   """
@@ -101,7 +103,6 @@ process process_file {
 }
 
 workflow ena {
-  emit: data
   main:
     Channel.fromPath('files/import-data/ena/tpa-urls.txt') | set { urls }
     fetch_metadata(urls) | set { metadata }
@@ -130,4 +131,6 @@ workflow ena {
     | combine(metadata) \
     | process_file \
     | set { data }
+
+  emit: data
 }

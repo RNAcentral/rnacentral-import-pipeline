@@ -59,7 +59,6 @@ process build_context {
 }
 
 workflow parse_databases {
-  emit: data
   main:
 
     if (params.get('needs_taxonomy', false)) {
@@ -115,4 +114,5 @@ workflow parse_databases {
     ) \
     | flatten \
     | set { data }
+  emit: data
 }

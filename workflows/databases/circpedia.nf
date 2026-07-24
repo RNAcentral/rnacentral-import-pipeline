@@ -63,12 +63,12 @@ process parse_data {
 }
 
 workflow circpedia {
-  emit: data
-
   main:
     Channel.fromList(params.databases.circpedia.species)
     | fetch_annotation
     | fetch_fasta
     | parse_data
     | set { data }
+
+  emit: data
 }

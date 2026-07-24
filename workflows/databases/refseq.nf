@@ -28,7 +28,7 @@ process parse {
 
 
 workflow refseq {
-  emit: data
   main:
     fetch | flatten | parse | set { data }
+  emit: data
 }

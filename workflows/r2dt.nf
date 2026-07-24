@@ -21,14 +21,14 @@ process fetch_model_mapping {
 }
 
 process get_partitions {
-  when: { params.r2dt?.run }
-
   input:
   val(_flag)
   path(query)
 
   output:
   path('databases.csv')
+
+  when: { params.r2dt?.run }
 
   script:
   """
@@ -41,13 +41,13 @@ process get_partitions {
 
 
 process fetch_xrefs {
-  when: { params.r2dt?.run }
-
   input:
   tuple val(partition), path(query)
 
   output:
   path('urs_xref.csv')
+
+  when: { params.r2dt?.run }
 
   script:
   """
@@ -60,14 +60,14 @@ process fetch_xrefs {
 }
 
 process fetch_tracked {
-  when: { params.r2dt?.run }
-
   input:
   val(_flag)
   path(query)
 
   output:
   path('urs_tracked.csv')
+
+  when: { params.r2dt?.run }
 
   script:
   """

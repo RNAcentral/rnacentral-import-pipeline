@@ -86,7 +86,6 @@ process parse_data {
 }
 
 workflow ensembl {
-  emit: data
   main:
     Channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
 
@@ -110,4 +109,6 @@ workflow ensembl {
     | combine(fetch_metadata(rfam)) \
     | parse_data \
     | set { data }
+
+  emit: data
 }

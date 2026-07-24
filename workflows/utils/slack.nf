@@ -1,8 +1,8 @@
 process slack_message {
-  when: { params.get('notify', false) }
-
   input:
   val(message)
+
+  when: { params.get('notify', false) }
 
   script:
   params.notify ? """
@@ -12,10 +12,10 @@ process slack_message {
 
 
 process slack_file {
-  when: { params.get('notify', false) }
-
   input:
   path(message)
+
+  when: { params.get('notify', false) }
 
   script:
   params.notify ? """

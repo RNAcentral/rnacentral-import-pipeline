@@ -35,8 +35,6 @@ process parse_data {
 }
 
 workflow plncdb {
-  emit: data_files
-
   main:
   if( params.databases.plncdb?.run ) {
     Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
@@ -49,5 +47,5 @@ workflow plncdb {
   Channel.empty() | set { data_files }
   }
 
-
+  emit: data_files
 }

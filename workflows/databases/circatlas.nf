@@ -31,7 +31,7 @@ process parse {
 }
 
 workflow circatlas {
-  emit: data
   main:
   fetch | parse | set { data }
+  emit: data
 }

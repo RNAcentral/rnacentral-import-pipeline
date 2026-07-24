@@ -113,7 +113,6 @@ process group_and_convert {
 
 workflow expressionatlas {
 
-  emit: data
   main:
 
   if( params.databases.expressionatlas?.run ) {
@@ -143,6 +142,7 @@ workflow expressionatlas {
     Channel.empty() | set { data }
   }
 
+  emit: data
 }
 
 

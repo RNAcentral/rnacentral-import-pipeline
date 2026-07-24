@@ -29,7 +29,8 @@ process parse {
 }
 
 workflow modomics {
-  emit: data
   main:
   fetch | parse | set { data }
+
+  emit: data
 }

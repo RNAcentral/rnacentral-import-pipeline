@@ -1,8 +1,8 @@
 process psicquic {
-  when: { params.databases.psicquic?.run }
-
   output:
   path("*.csv")
+
+  when: { params.databases.psicquic?.run }
 
   script:
   """

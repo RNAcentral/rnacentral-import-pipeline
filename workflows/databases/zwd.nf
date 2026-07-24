@@ -1,11 +1,11 @@
 process zwd {
-  when: { params.databases.zwd?.run }
-
   input:
   path(context)
 
   output:
   path('*.csv')
+
+  when: { params.databases.zwd?.run }
 
   script:
   """

@@ -1,8 +1,8 @@
 process japonicusdb {
-  when: { params.databases.japonicusdb?.run }
-
   output:
   path('*.csv')
+
+  when: { params.databases.japonicusdb?.run }
 
   script:
   """

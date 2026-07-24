@@ -29,7 +29,8 @@ process parse {
 }
 
 workflow mirtrondb {
-  emit: data
   main:
   fetch | parse | set { data }
+
+  emit: data
 }

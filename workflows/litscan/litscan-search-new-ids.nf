@@ -141,7 +141,6 @@ process submit_urs {
 }
 
 workflow search_new_ids {
-    emit: done
     main:
       Channel.of("Starting LitScan pipeline") | slack_message
 
@@ -154,6 +153,7 @@ workflow search_new_ids {
       | submit_ids \
       | submit_urs \
       | set { done }
+    emit: done
 }
 
 workflow {

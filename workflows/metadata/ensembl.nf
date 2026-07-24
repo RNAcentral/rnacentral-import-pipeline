@@ -1,7 +1,4 @@
 process assemblies {
-  when:
-  params.databases.ensembl?.vertebrates?.run
-
   input:
   path(connections)
   path(query)
@@ -10,6 +7,9 @@ process assemblies {
 
   output:
   path('*.csv')
+
+  when:
+  params.databases.ensembl?.vertebrates?.run
 
   script:
   """
@@ -49,14 +49,14 @@ process process_compara {
 }
 
 process proteins {
-  when: { params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run }
-
   input:
   path(connections)
   path(query)
 
   output:
   path('proteins.csv')
+
+  when: { params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run }
 
   script:
   """
@@ -99,13 +99,12 @@ process karyotypes {
 }
 
 workflow compara {
-  emit: data
   main:
     fetch_compara | flatten | process_compara | set { data }
+  emit: data
 }
 
 workflow ensembl {
-  emit: data
   main:
     Channel.fromPath('config/databases.json') | set { conn }
 
@@ -126,4 +125,5 @@ workflow ensembl {
     ) \
     | flatten \
     | set { data }
+  emit: data
 }

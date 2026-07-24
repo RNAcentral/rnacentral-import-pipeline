@@ -3,13 +3,13 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
-  when: { params.stopfree?.run }
-
   input:
   val(_flag)
 
   output:
   path('ranges.csv')
+
+  when: { params.stopfree?.run }
 
   script:
   def chunk_size = params.stopfree.db_chunk_size

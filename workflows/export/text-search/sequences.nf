@@ -206,12 +206,6 @@ process as_xml {
 }
 
 workflow sequences {
-  emit:
-    xml
-    counts
-    search_count
-    sequence_json
-    so_tree
   main:
     Channel.fromPath('files/search-export/setup.sql') | set { setup_sql }
 
@@ -283,4 +277,10 @@ workflow sequences {
     as_xml.out.sequences | set { sequence_json }
     as_xml.out.counts | set { counts }
     as_xml.out.xml | set { xml }
+  emit:
+    xml
+    counts
+    search_count
+    sequence_json
+    so_tree
 }

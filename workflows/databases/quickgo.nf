@@ -35,8 +35,6 @@ process quickgo_parse {
 
 workflow quickgo {
 
-  emit: data
-
   main:
     if ( params.databases.quickgo?.run ) {
       quickgo_get | quickgo_parse | set { data }
@@ -45,5 +43,6 @@ workflow quickgo {
       Channel.empty() | set { data }
     }
 
+  emit: data
 
 }

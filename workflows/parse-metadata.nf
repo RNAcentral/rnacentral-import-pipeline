@@ -3,7 +3,6 @@ include { ensembl } from './metadata/ensembl'
 include { taxonomy } from './metadata/taxonomy'
 
 workflow parse_metadata {
-  emit: data
   main:
     Channel.empty() \
     | mix(
@@ -13,4 +12,5 @@ workflow parse_metadata {
     ) \
     | flatten \
     | set { data }
+  emit: data
 }

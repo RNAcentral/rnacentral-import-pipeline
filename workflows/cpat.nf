@@ -3,8 +3,6 @@
 nextflow.enable.dsl=2
 
 process find_models {
-  when: { params.cpat?.run }
-
   input:
   val(_flag)
 
@@ -12,6 +10,8 @@ process find_models {
   path('CPAT-3.0.4/dat/*_logitModel.RData'), emit: rdata
   path('CPAT-3.0.4/dat/*_Hexamer.tsv'), emit: hexamers
   path('cutoffs.csv'), emit: cutoffs
+
+  when: { params.cpat?.run }
 
   script:
   """
