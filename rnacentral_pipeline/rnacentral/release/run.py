@@ -171,11 +171,22 @@ def run(db_url, force_full=False):
 def check(limit_file, db_url, default_allowed_change=0.30):
     """
     Check the load tables for reasonable looking sequence counts.
+
+    Two-sided: the same per-database limit (from limit_file, else
+    default_allowed_change) applies to both growth and shrink. The shrink side
+    matters because incremental/full releases retire any active xref ABSENT from
+    the load, so a parse that silently comes up far short would delete real rows by
+    absence. Smaller swings are expected and left for the QC report to surface.
+
+    Delta-parsed databases are exempt from the shrink check: their load table holds
+    only new/changed rows (deletions come from an explicit list, not absence), so a
+    loaded count far below the active count is expected, not a red flag.
     """
 
     limits = json.load(limit_file)
     cur_counts = {}
     new_counts = {}
+    delta_dbs = set()
     with _connect(db_url) as conn:
         with conn.cursor() as cur:
             cur.execute(LOAD_COUNT_QUERY)
@@ -194,13 +205,32 @@ def check(limit_file, db_url, default_allowed_change=0.30):
                     for (descr, raw_count) in cur.fetchall():
                         cur_counts[descr] = float(raw_count)
 
+            # Databases loaded via delta parsing (an import manifest exists for them);
+            # exempt from the shrink check below. Guard the lookup: the manifest table
+            # may not exist on older schemas.
+            cur.execute("SELECT to_regclass('rnacen.rnc_import_manifest')")
+            if cur.fetchone()[0] is not None:
+                cur.execute("SELECT database FROM rnacen.rnc_import_manifest")
+                delta_dbs = {row[0] for row in cur}
+
     problems = False
     for name, previous in cur_counts.items():
-        current = new_counts.get(name, default_allowed_change)
-        change = (current - previous) / float(current)
-        if change > limits.get(name, default_allowed_change):
-            LOGGER.error("Database %s increased by %f", name, change)
+        current = new_counts.get(name, 0.0)
+        if not current:
+            continue
+        limit = limits.get(name, default_allowed_change)
+        increase = (current - previous) / float(current)
+        if increase > limit:
+            LOGGER.error("Database %s increased by %f", name, increase)
             problems = True
+        elif name not in delta_dbs and previous:
+            decrease = (previous - current) / float(previous)
+            if decrease > limit:
+                LOGGER.error(
+                    "Database %s decreased by %f (loaded %d distinct sequences vs %d active)",
+                    name, decrease, int(current), int(previous),
+                )
+                problems = True
 
     if problems:
         raise ValueError("Overly large changes with release")
