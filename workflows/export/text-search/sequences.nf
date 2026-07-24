@@ -119,10 +119,11 @@ process fetch_accession {
 }
 
 process text_mining_query {
+  container ''
+
   input:
   val(max_count)
   path(script)
-  container ''
 
   output:
   path("publication-count.json")

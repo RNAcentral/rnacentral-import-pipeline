@@ -6,31 +6,25 @@ nextflow.enable.dsl = 2
 // main.config, but Nextflow 26+ forbids variable declarations in config files.
 params.connections = new groovy.json.JsonSlurper().parse(new File(params.connection_file))
 
-// Infer needs_publications, should_release, and needs_taxonomy from which
-// databases are configured to run. Previously a for loop in nextflow.config,
-// which Nextflow 26+ no longer supports in config files.
-for (item in params.databases) {
-  def db = item.value;
-  def will_run = db.get('run', false);
-  if (item.key == 'ensembl') {
-    def ensembl_will_run = ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any {
-      db[it]?.get('run', false)
-    }
-    will_run = ensembl_will_run
-    if (ensembl_will_run) {
-      params.databases.ensembl._any.run = ensembl_will_run
-    }
+// Whether a database entry is configured to run. Ensembl is special-cased: it
+// runs if any of its divisions do.
+def willRun(key, db) {
+  if (key == 'ensembl') {
+    return ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { db[it]?.get('run', false) }
   }
-  if (will_run) {
-    params.needs_publications = true;
-    if (db.get('release', true)) {
-      params.should_release = true;
-    }
-    if (db.get('needs_taxonomy', false)) {
-      params.needs_taxonomy = true
-    }
-  }
+  return db.get('run', false)
 }
+
+// Infer needs_publications, should_release, and needs_taxonomy from which
+// databases are configured to run. Previously a for loop in nextflow.config;
+// Nextflow 26+ forbids loops in config files and top-level loop statements in
+// scripts, so these are derived with collection expressions (param assignments,
+// which are permitted at the top level).
+params.databases.ensembl._any.run =
+  ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { params.databases.ensembl[it]?.get('run', false) }
+params.needs_publications = params.databases.any { key, db -> willRun(key, db) }
+params.should_release     = params.databases.any { key, db -> willRun(key, db) && db.get('release', true) }
+params.needs_taxonomy     = params.databases.any { key, db -> willRun(key, db) && db.get('needs_taxonomy', false) }
 
 include { genes } from './genes'
 include { import_data } from './import-data'

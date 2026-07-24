@@ -45,7 +45,7 @@ process create_xml {
     script:
     """
     rm -f "$params.litscan_index"/metadata*
-    litscan-create-xml-metadata.py "$PSYCOPG_CONN" $merged_metadata metadata_*
+    litscan-create-xml-metadata.py "\$PSYCOPG_CONN" $merged_metadata metadata_*
     """
 }
 
@@ -89,7 +89,7 @@ process get_statistics {
 
     script:
     """
-    litscan-get-statistics.py "$PSYCOPG_CONN" statistics.csv
+    litscan-get-statistics.py "\$PSYCOPG_CONN" statistics.csv
     """
 }
 
@@ -104,7 +104,7 @@ process save_statistics {
     script:
     """
     pgloader --on-error-stop $ctl
-    curl -X POST -H 'Content-type: application/json' --data '{"text":"LitScan workflow completed"}' $LITSCAN_SLACK_WEBHOOK
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"LitScan workflow completed"}' \$LITSCAN_SLACK_WEBHOOK
     """
 }
 

@@ -12,7 +12,7 @@ process get_organisms {
 
     script:
     """
-    psql -v ON_ERROR_STOP=1 -f $query $PGDB_EMBASSY_USER > organism_pmcid
+    psql -v ON_ERROR_STOP=1 -f $query \$PGDB_EMBASSY_USER > organism_pmcid
     """
 }
 
@@ -42,5 +42,5 @@ workflow find_organisms {
 }
 
 workflow {
-  find_organisms()
+  find_organisms(channel.of('ready'))
 }

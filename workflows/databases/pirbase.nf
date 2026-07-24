@@ -17,7 +17,7 @@ process find_known {
   path(query)
 
   output:
-  path(known)
+  path('known')
 
   when: { params.databases.pirbase?.run }
 

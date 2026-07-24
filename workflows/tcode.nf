@@ -103,7 +103,7 @@ workflow tcode {
     parse_results.out | collect | set { data }
 
     store_results(data, load_ctl)
-    data | map { _ -> 'tcode done' } | first | set { done }
+    data | map { _v -> 'tcode done' } | first | set { done }
     }
   emit: done
 }

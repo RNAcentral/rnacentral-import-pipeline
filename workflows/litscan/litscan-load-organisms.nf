@@ -57,5 +57,5 @@ workflow load_organisms {
 }
 
 workflow {
-  load_organisms()
+  load_organisms(channel.of('ready'))
 }

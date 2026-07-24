@@ -7,7 +7,7 @@ process slack_message {
     script:
     """
     #!/bin/bash
-    curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' $LITSCAN_SLACK_WEBHOOK
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' \$LITSCAN_SLACK_WEBHOOK
     """
 }
 
@@ -20,7 +20,7 @@ process get_ids {
 
     script:
     """
-    psql -t -A -f $database "$PGDB_EMBASSY_USER" > results
+    psql -t -A -f $database "\$PGDB_EMBASSY_USER" > results
     """
 }
 
@@ -102,7 +102,7 @@ process submit_ids {
       curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new id/gene/synonym submitted"}' \$LITSCAN_SLACK_WEBHOOK
     else
       # new_ids.txt is empty
-      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new id/gene/synonym to submit"}' $LITSCAN_SLACK_WEBHOOK
+      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new id/gene/synonym to submit"}' \$LITSCAN_SLACK_WEBHOOK
     fi
     """
 }
@@ -135,7 +135,7 @@ process submit_urs {
       curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new URS submitted"}' \$LITSCAN_SLACK_WEBHOOK
     else
       # new_urs.txt is empty
-      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new URS to submit"}' $LITSCAN_SLACK_WEBHOOK
+      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new URS to submit"}' \$LITSCAN_SLACK_WEBHOOK
     fi
     """
 }

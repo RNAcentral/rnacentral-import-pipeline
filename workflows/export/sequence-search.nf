@@ -2,8 +2,6 @@
 
 nextflow.enable.dsl=2
 
-create_memory = params.export.sequence_search.create_fasta.memory_table
-
 process find_db_to_export {
   input:
   path(query)
@@ -41,7 +39,7 @@ process query_database {
 
 process create_fasta {
   tag { name }
-  memory { create_memory.get(name.replaceAll("-", "_"), create_memory.__default) }
+  memory { def cm = params.export.sequence_search.create_fasta.memory_table; cm.get(name.replaceAll("-", "_"), cm.__default) }
 
   input:
   tuple val(name), path(json)
