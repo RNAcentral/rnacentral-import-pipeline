@@ -20,22 +20,21 @@ workflow analyze {
 }
 
 workflow {
-  analyze(channel.of('ready'))
+  main:
+    analyze(channel.of('ready'))
 
-  workflow.onComplete {
+  onComplete:
     try {
-      def msg = workflow?.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
+      def msg = workflow.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
       slack_closure(msg)
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }
-  }
 
-  workflow.onError {
+  onError:
     try {
       slack_closure("Analyze workflow hit an error and crashed")
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }
-  }
 }

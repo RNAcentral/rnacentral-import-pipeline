@@ -38,14 +38,14 @@ workflow prepare_environment {
 }
 
 workflow {
-  channel.of("Starting...") | slack_message
-  prepare_environment()
+  main:
+    channel.of("Starting...") | slack_message
+    prepare_environment()
 
-  workflow.onComplete {
+  onComplete:
     try {
       slack_closure("Environment preparation completed")
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }
-  }
 }
