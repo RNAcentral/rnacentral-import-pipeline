@@ -261,7 +261,7 @@ workflow genome_mapping {
     if (params.genome_mapping.run) {
       setup(ready, find_species) \
       | splitCsv \
-      | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+      | filter { s, _a, _t, _d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
       | set { genome_info }
 
       genome_info \
@@ -290,7 +290,7 @@ workflow genome_mapping {
           .combinations()
           .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
       } \
-      | filter { s, a, g, o, chunk -> !chunk.isEmpty() } \
+      | filter { _s, _a, _g, _o, chunk -> !chunk.isEmpty() } \
       | blat
 
       blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }

@@ -55,7 +55,7 @@ workflow genome_mapping {
 
     setup(ready, find_species) \
     | splitCsv \
-    | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+    | filter { s, _a, _t, _d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
     | set { genome_info }
 
     genome_info | create_json | collect | merge_json

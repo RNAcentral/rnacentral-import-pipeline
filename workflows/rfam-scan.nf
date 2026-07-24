@@ -119,9 +119,9 @@ workflow rfam_scan {
       | combine(compute_required_sql) \
       | sequences \
       | flatMap { version, files ->
-        (files instanceof ArrayList) ? files.collect { [version, it] } : [[version, files]]
+        (files instanceof ArrayList) ? files.collect { f -> [version, f] } : [[version, files]]
       } \
-      | filter { v, f -> !f.isEmpty() } \
+      | filter { _v, f -> !f.isEmpty() } \
       | combine(generate_files.out.cm_files) \
       | scan
 

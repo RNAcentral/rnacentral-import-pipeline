@@ -92,15 +92,15 @@ workflow load_data {
       def ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
       [[name, ctl], f]
     } \
-    | filter {
-      def status = it[0][1].exists()
+    | filter { entry ->
+      def status = entry[0][1].exists()
       if (!status) {
-        log.info "Skipping data ${it[0][1].getBaseName()}"
+        log.info "Skipping data ${entry[0][1].getBaseName()}"
       }
       status
     } \
     | groupTuple \
-    | map { [it[0][0], it[0][1], it[1]] } \
+    | map { t -> [t[0][0], t[0][1], t[1]] } \
     | combine(create_load_tables(schema)) \
     | map { n, ctl, fs, _ready -> [n, ctl, fs] } \
     | merge_and_import \

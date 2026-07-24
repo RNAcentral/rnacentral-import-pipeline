@@ -80,7 +80,7 @@ process store_results {
 }
 
 workflow tcode {
-  take: flag
+  take: _flag
   main:
     if( !params.tcode.run ) {
       channel.of('tcode skipped') | set { done }

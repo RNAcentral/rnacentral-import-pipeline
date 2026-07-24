@@ -100,7 +100,7 @@ workflow build_precompute_accessions {
     | mix(xref_only) \
     | collect \
     | combine(post_sql) \
-    | map { it[-1] } \
+    | map { row -> row[-1] } \
     | finalize_accession_table \
     | set { built }
   emit: built

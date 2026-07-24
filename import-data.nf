@@ -20,9 +20,9 @@ workflow import_data {
       parse_databases(),
       parse_metadata(),
     ) \
-    | branch {
-      terms: it.name == "terms.csv"
-      ref_ids: it.name == "ref_ids.csv"
+    | branch { r ->
+      terms: r.name == "terms.csv"
+      ref_ids: r.name == "ref_ids.csv"
       csv: true
     } \
     | set { results }

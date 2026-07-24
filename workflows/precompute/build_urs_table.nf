@@ -188,11 +188,11 @@ workflow build_urs_table {
       create_schema(schema_sql) \
       | combine(method) \
       | map { _flag, method_val -> method_val } \
-      | branch {
-        release: it == 'release'
-        query: it == 'query'
-        all: it == 'all'
-        ids: it == 'ids'
+      | branch { v ->
+        release: v == 'release'
+        query: v == 'query'
+        all: v == 'all'
+        ids: v == 'ids'
       } \
       | set { to_build }
 

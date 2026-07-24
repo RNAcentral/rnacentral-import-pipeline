@@ -115,9 +115,9 @@ workflow ena {
     | list_subdirs \
     | flatMap { name, listing ->
         listing.readLines()
-          .findAll { it.trim() }
+          .findAll { line -> line.trim() }
           .collate( params.databases.ena.subdir_batch_size )
-          .collect { batch -> [name, batch.collect { it.trim() }] }
+          .collect { batch -> [name, batch.collect { s -> s.trim() }] }
       } \
     | set { subdir_batches }
 

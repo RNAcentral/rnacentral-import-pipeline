@@ -99,12 +99,12 @@ workflow ensembl {
     | filter { division -> params.databases.ensembl[division]?.run } \
     | find_urls \
     | splitCsv \
-    | filter { division, species, dat_url, gff_url ->
+    | filter { division, species, _dat_url, _gff_url ->
       !params.databases.ensembl[division].exclude.any { p -> species.toLowerCase() =~ p }
     } \
     | fetch_species_data \
     | flatMap { division, dat_files, gff_file ->
-      (dat_files instanceof ArrayList) ? dat_files.collect { [division, it, gff_file] } : [[division, dat_files, gff_file]]
+      (dat_files instanceof ArrayList) ? dat_files.collect { f -> [division, f, gff_file] } : [[division, dat_files, gff_file]]
     } \
     | combine(fetch_metadata(rfam)) \
     | parse_data \

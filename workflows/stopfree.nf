@@ -69,7 +69,7 @@ process store_results {
 }
 
 workflow stopfree {
-  take: flag
+  take: _flag
   main:
     if( !params.stopfree.run ) {
       channel.of('stopfree skipped') | set { done }

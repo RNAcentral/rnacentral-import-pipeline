@@ -10,7 +10,7 @@ params.connections = new groovy.json.JsonSlurper().parse(new File(params.connect
 // runs if any of its divisions do.
 def willRun(key, db) {
   if (key == 'ensembl') {
-    return ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { db[it]?.get('run', false) }
+    return ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { d -> db[d]?.get('run', false) }
   }
   return db.get('run', false)
 }
@@ -21,7 +21,7 @@ def willRun(key, db) {
 // scripts, so these are derived with collection expressions (param assignments,
 // which are permitted at the top level).
 params.databases.ensembl._any.run =
-  ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { params.databases.ensembl[it]?.get('run', false) }
+  ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { d -> params.databases.ensembl[d]?.get('run', false) }
 params.needs_publications = params.databases.any { key, db -> willRun(key, db) }
 params.should_release     = params.databases.any { key, db -> willRun(key, db) && db.get('release', true) }
 params.needs_taxonomy     = params.databases.any { key, db -> willRun(key, db) && db.get('needs_taxonomy', false) }

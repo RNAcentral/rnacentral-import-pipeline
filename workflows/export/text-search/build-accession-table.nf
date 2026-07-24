@@ -73,7 +73,7 @@ workflow build_search_accessions {
     | build_accession_table \
     | collect \
     | combine(post_sql) \
-    | map { it[-1] } \
+    | map { row -> row[-1] } \
     | finalize_accession_table \
     | set { built }
   emit: built

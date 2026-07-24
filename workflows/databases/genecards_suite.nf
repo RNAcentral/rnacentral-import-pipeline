@@ -46,7 +46,7 @@ workflow genecards_suite {
       ['genecards', params.databases.genecards.remote, params.databases.genecards.column],
       ['malacards', params.databases.malacards.remote, params.databases.malacards.column],
     ]) \
-    | filter { name, r, c -> params.databases[name]?.run } \
+    | filter { name, _r, _c -> params.databases[name]?.run } \
     | fetch \
     | process \
     | set { data }

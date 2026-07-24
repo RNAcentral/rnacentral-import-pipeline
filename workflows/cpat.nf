@@ -112,7 +112,7 @@ workflow cpat {
     | map { model_name, rd, hexamer -> [model_name, rd, hexamer, params.cpat.taxid_mapping[model_name]] } \
     | combine(query) \
     | find_sequences \
-    | flatMap { model_name, rd, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { [model_name, rd, hexamer, it] } : [[model_name, rd, hexamer, seqs]] } \
+    | flatMap { model_name, rd, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { s -> [model_name, rd, hexamer, s] } : [[model_name, rd, hexamer, seqs]] } \
     | cpat_scan \
     | filter { _model, f -> f.exists() } \
     | combine(find_models.out.cutoffs) \
