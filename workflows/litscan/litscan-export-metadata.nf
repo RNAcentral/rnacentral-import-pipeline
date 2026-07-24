@@ -14,7 +14,7 @@ process create_metadata {
 }
 
 process merge_metadata {
-    publishDir "$projectDir/workflows/litscan/metadata/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/metadata/", mode: 'copy'
 
     input:
     file(results)
@@ -24,8 +24,8 @@ process merge_metadata {
 
     script:
     """
-    if [[ -f $projectDir/workflows/litscan/metadata/rfam/extra-ids.txt ]]; then
-      cat $projectDir/workflows/litscan/metadata/rfam/extra-ids.txt > merged_metadata
+    if [[ -f $baseDir/workflows/litscan/metadata/rfam/extra-ids.txt ]]; then
+      cat $baseDir/workflows/litscan/metadata/rfam/extra-ids.txt > merged_metadata
     fi
 
     cat $results | sort -fb | uniq -i >> merged_metadata
@@ -79,7 +79,7 @@ process load_database_table {
 }
 
 process get_statistics {
-    publishDir "$projectDir/workflows/litscan/metadata/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/metadata/", mode: 'copy'
 
     input:
     val(_flag)
@@ -117,10 +117,10 @@ workflow export_metadata {
 
       create_xml(metadata) | create_release_file
 
-      load = channel.of("$projectDir/workflows/litscan/metadata/load-metadata.ctl")
+      load = channel.of("$baseDir/workflows/litscan/metadata/load-metadata.ctl")
       load_database_table(metadata, load) | get_statistics | set{ statistics }
 
-      load_statistics = channel.of("$projectDir/workflows/litscan/metadata/load-statistics.ctl")
+      load_statistics = channel.of("$baseDir/workflows/litscan/metadata/load-statistics.ctl")
       save_statistics(statistics, load_statistics)
 }
 

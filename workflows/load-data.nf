@@ -1,7 +1,7 @@
 process create_load_tables {
   time '1h'
   cache false
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   file(create)
@@ -21,7 +21,7 @@ process merge_and_import {
   maxForks 2
   cpus 4
   cache false
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   tuple val(name), path(ctl), path('raw*.csv')
@@ -39,7 +39,7 @@ process release {
   time '5d'
   maxForks 1
   cache false
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory  4.GB
 
   input:

@@ -1,5 +1,5 @@
 process generate_files {
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   val(_flag)
@@ -26,7 +26,7 @@ process generate_files {
 
 process sequences {
   memory '4GB'
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   // clusterOptions '-R "rusage[scratch=4000]"'
 
   input:
@@ -37,7 +37,7 @@ process sequences {
 
   script:
   """
-  export TMPDIR="$projectDir/work/tmp"
+  export TMPDIR="$baseDir/work/tmp"
   psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "\$PGDATABASE" | uniq | sort -u > active-urs
   psql -v ON_ERROR_STOP=1 -v 'name=rfam' -f "$computed" "\$PGDATABASE" | sort > computed
   comm -23 active-urs computed > urs-to-compute
@@ -51,7 +51,7 @@ process scan {
   cpus { params.rfam.cpus }
   memory { params.rfam.memory * params.rfam.cpus }
   errorStrategy 'ignore'
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   tuple path(version), path('sequences.fasta'), path(cm_files)
@@ -83,7 +83,7 @@ process scan {
 }
 
 process import_data {
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory 6.GB
   input:
   path('raw*.csv')

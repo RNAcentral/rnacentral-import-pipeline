@@ -38,7 +38,7 @@ process check_ids {
 }
 
 process sort_ids {
-    publishDir "$projectDir/workflows/litscan/results/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/results/", mode: 'copy'
 
     input:
     tuple val(database), file(output)
@@ -54,7 +54,7 @@ process sort_ids {
 
 process prepare_to_submit {
     memory '2GB'
-    publishDir "$projectDir/workflows/litscan/submit/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/submit/", mode: 'copy'
 
     input:
     tuple val(database), path("${database}.txt")
@@ -78,7 +78,7 @@ process submit_ids {
     script:
     """
     # create file with IDs (without URS)
-    find $projectDir/workflows/litscan/submit/ -name "*.txt" -print0 | xargs -0 sed '/^URS/d' > all_ids.txt
+    find $baseDir/workflows/litscan/submit/ -name "*.txt" -print0 | xargs -0 sed '/^URS/d' > all_ids.txt
     tr A-Z a-z < all_ids.txt | sort -u > all_ids_sorted.txt
 
     # get ids already scanned by LitScan (Expert DB ids only)
@@ -117,7 +117,7 @@ process submit_urs {
     script:
     """
     # create file with URS only
-    find $projectDir/workflows/litscan/submit/ -name "*.txt" -print0 | xargs -0 sed '/^URS/!d' > output.txt
+    find $baseDir/workflows/litscan/submit/ -name "*.txt" -print0 | xargs -0 sed '/^URS/!d' > output.txt
     tr a-z A-Z < output.txt | sort -u > urs.txt
 
     # get URS already scanned by LitScan

@@ -1,6 +1,6 @@
 process query {
   tag { "${query.baseName}" }
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   val(max_count)

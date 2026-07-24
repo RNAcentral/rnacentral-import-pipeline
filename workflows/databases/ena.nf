@@ -97,8 +97,8 @@ process process_file {
   fi
   rnac ena parse --counts $raw-counts.txt $raw $tpa ribotyper-results $model_lengths .
 
-  mkdir $projectDir/ena-counts 2>/dev/null || true
-  cp $raw-counts.txt $projectDir/ena-counts/
+  mkdir $baseDir/ena-counts 2>/dev/null || true
+  cp $raw-counts.txt $baseDir/ena-counts/
   """
 }
 

@@ -9,7 +9,7 @@ include { fasta_export } from './ftp/sequences'
 include { rediportal } from './ftp/rediportal.nf'
 
 process release_note {
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   publishDir "${params.export.ftp.publish}/", mode: 'copy'
 

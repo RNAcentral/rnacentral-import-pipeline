@@ -194,16 +194,16 @@ process load_models {
 
 
 workflow {
-  rfam_models = channel.of("$projectDir/singularity/bind/r2dt/data/cms/rfam/all.cm")
-  crw_models = channel.of("$projectDir/singularity/bind/r2dt/data/cms/crw/all.cm")
+  rfam_models = channel.of("$baseDir/singularity/bind/r2dt/data/cms/rfam/all.cm")
+  crw_models = channel.of("$baseDir/singularity/bind/r2dt/data/cms/crw/all.cm")
   crw_metadata = channel.of("https://raw.githubusercontent.com/RNAcentral/R2DT/v1.3/data/crw-metadata.tsv")
-  gtrnadb_models = channel.fromPath("$projectDir/singularity/bind/r2dt/data/cms/gtrnadb/*.cm")
+  gtrnadb_models = channel.fromPath("$baseDir/singularity/bind/r2dt/data/cms/gtrnadb/*.cm")
   ribovision_lsu_metadata_url = channel.of("https://raw.githubusercontent.com/RNAcentral/R2DT/v1.3/data/ribovision-lsu/metadata.tsv")
   ribovision_ssu_metadata_url = channel.of("https://raw.githubusercontent.com/RNAcentral/R2DT/v1.3/data/ribovision-ssu/metadata.tsv")
 
   rnasep_metadata_url = channel.of("https://raw.githubusercontent.com/RNAcentral/R2DT/v1.3/data/rnasep/metadata.tsv")
 
-  load_ctl = channel.of("$projectDir/files/r2dt/load-models.ctl")
+  load_ctl = channel.of("$baseDir/files/r2dt/load-models.ctl")
 
   rfam_models | extract_rfam_metadata | set { rfam_basepairs }
   rfam_models.combine(rfam_basepairs) | parse_rfam_models | set { rfam_data }

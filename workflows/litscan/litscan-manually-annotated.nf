@@ -28,7 +28,7 @@ process sort_expert_db_articles {
 }
 
 process find_manually_annotated_articles {
-    publishDir "$projectDir/workflows/litscan/manually_annotated/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/manually_annotated/", mode: 'copy'
 
     input:
     file(sorted_results)
@@ -65,7 +65,7 @@ workflow find_manually_annotated {
       | find_manually_annotated_articles \
       | set{ manually_annotated_articles }
 
-      load_ctl = channel.of("$projectDir/workflows/litscan/manually_annotated/save-manually-annotated.ctl")
+      load_ctl = channel.of("$baseDir/workflows/litscan/manually_annotated/save-manually-annotated.ctl")
       import_manually_annotated_articles(manually_annotated_articles, load_ctl) | set{ done }
     emit: done
 }

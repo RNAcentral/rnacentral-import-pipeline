@@ -6,7 +6,7 @@ include { sequences } from './text-search/sequences'
 include { genes } from './text-search/genes'
 
 process create_release_note {
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   path('count*')

@@ -1,6 +1,6 @@
 process create_schema {
   executor 'local'
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   path(sql)
@@ -15,7 +15,7 @@ process create_schema {
 }
 
 process fetch_all_urs_taxid {
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   path(query)
@@ -30,7 +30,7 @@ process fetch_all_urs_taxid {
 }
 
 process select_outdated {
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory '24 GB'
   cpus 4
 
@@ -49,7 +49,7 @@ process select_outdated {
 
 process run_query {
   tag { "$query.baseName" }
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   val(_flag)
@@ -65,7 +65,7 @@ process run_query {
 }
 
 process build_table {
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory '10GB'
 
   input:
@@ -87,7 +87,7 @@ process build_table {
 }
 
 process sort_ids {
-  containerOptions "--contain --workdir $projectDir/work/tmp --bind $projectDir"
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   val(_flag)
