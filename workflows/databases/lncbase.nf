@@ -2,7 +2,7 @@ process lncbase {
   output:
   path('*.csv')
 
-  when: { params.databases.lncbase?.run }
+  when: params.databases.lncbase?.run
 
   script:
   """

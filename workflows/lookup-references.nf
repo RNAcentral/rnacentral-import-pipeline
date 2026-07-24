@@ -23,7 +23,7 @@ process fetch_publications {
   output:
   path('out')
 
-  when: { params.get('needs_publications', false) }
+  when: params.get('needs_publications', false)
 
   script:
   """

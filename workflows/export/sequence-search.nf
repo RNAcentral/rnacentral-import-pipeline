@@ -9,7 +9,7 @@ process find_db_to_export {
   output:
   path('dbs.txt')
 
-  when: { params.export?.sequence_search?.run }
+  when: params.export?.sequence_search?.run
 
   script:
   """

@@ -4,7 +4,7 @@ process mgnify_fetch {
   output:
     path('*.json')
 
-  when: { params.databases.mgnify?.run }
+  when: params.databases.mgnify?.run
 
   script:
   """

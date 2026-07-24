@@ -9,7 +9,7 @@ process build_ranges {
   output:
   path('ranges.csv')
 
-  when: { params.tcode?.run }
+  when: params.tcode?.run
 
   script:
   def chunk_size = params.tcode.db_chunk_size
@@ -25,7 +25,7 @@ process find_sequences {
   output:
   path('sequences/*.fasta'), optional: true
 
-  when: { params.tcode?.run }
+  when: params.tcode?.run
 
   script:
   """
@@ -71,7 +71,7 @@ process store_results {
   path('results*.csv')
   path(result_ctl)
 
-  when: { params.tcode?.load }
+  when: params.tcode?.load
 
   script:
   """

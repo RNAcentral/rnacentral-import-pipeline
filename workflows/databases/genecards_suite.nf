@@ -9,7 +9,7 @@ process fetch {
   output:
   tuple val(name), path('data.tsv'), val(column_name)
 
-  when: { params.databases[name]?.run }
+  when: params.databases[name]?.run
 
   script:
   if (data.getExtension() == "gz")

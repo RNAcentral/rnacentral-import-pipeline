@@ -39,7 +39,7 @@ process synchronize_cache {
   output:
     val('cache synchronized')
 
-  when: { params.databases.expressionatlas?.run }
+  when: params.databases.expressionatlas?.run
 
   script:
   """

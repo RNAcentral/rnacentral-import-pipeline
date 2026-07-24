@@ -11,7 +11,7 @@ process find_models {
   path('CPAT-3.0.4/dat/*_Hexamer.tsv'), emit: hexamers
   path('cutoffs.csv'), emit: cutoffs
 
-  when: { params.cpat?.run }
+  when: params.cpat?.run
 
   script:
   """

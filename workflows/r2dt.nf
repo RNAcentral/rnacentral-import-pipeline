@@ -12,7 +12,7 @@ process fetch_model_mapping {
   output:
   path('mapping.json')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """
@@ -28,7 +28,7 @@ process get_partitions {
   output:
   path('databases.csv')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """
@@ -47,7 +47,7 @@ process fetch_xrefs {
   output:
   path('urs_xref.csv')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """
@@ -67,7 +67,7 @@ process fetch_tracked {
   output:
   path('urs_tracked.csv')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """
@@ -90,7 +90,7 @@ process extract_sequences {
   output:
   path('raw.json')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """

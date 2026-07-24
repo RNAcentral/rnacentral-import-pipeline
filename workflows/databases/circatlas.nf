@@ -5,7 +5,7 @@ process fetch {
   output:
   path('circatlas.json')
 
-  when: { params.databases.circatlas?.run }
+  when: params.databases.circatlas?.run
 
   script:
   """
@@ -22,7 +22,7 @@ process parse {
   output:
   path('*.csv')
 
-  when: { params.databases.circatlas?.run }
+  when: params.databases.circatlas?.run
 
   script:
   """

@@ -24,7 +24,7 @@ process fetch_compara {
   output:
   path('*.nt.fasta.gz')
 
-  when: { params.databases.ensembl?.vertebrates?.run }
+  when: params.databases.ensembl?.vertebrates?.run
 
   script:
   """
@@ -56,7 +56,7 @@ process proteins {
   output:
   path('proteins.csv')
 
-  when: { params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run }
+  when: params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run
 
   script:
   """
@@ -75,7 +75,7 @@ process coordinate_systems {
   output:
   path('coordinate_systems.csv')
 
-  when: { params.databases.ensembl?.vertebrates?.run }
+  when: params.databases.ensembl?.vertebrates?.run
 
   script:
   """
@@ -90,7 +90,7 @@ process karyotypes {
   output:
   path('karyotypes.csv')
 
-  when: { params.databases.ensembl?.vertebrates?.run }
+  when: params.databases.ensembl?.vertebrates?.run
 
   script:
   """

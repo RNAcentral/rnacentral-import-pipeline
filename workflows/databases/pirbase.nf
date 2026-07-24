@@ -4,7 +4,7 @@ process find_urls {
   output:
   path("urls.txt")
 
-  when: { params.databases.pirbase?.run }
+  when: params.databases.pirbase?.run
 
   script:
   """
@@ -19,7 +19,7 @@ process find_known {
   output:
   path('known')
 
-  when: { params.databases.pirbase?.run }
+  when: params.databases.pirbase?.run
 
   script:
   """

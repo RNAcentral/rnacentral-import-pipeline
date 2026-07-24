@@ -5,7 +5,7 @@ process quickgo_get {
   output:
   path('data.gpa')
 
-  when: { params.databases.quickgo?.run }
+  when: params.databases.quickgo?.run
 
   script:
   """

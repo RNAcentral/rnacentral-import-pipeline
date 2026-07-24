@@ -10,7 +10,7 @@ process list_subdirs {
   output:
   tuple val(name), path("${name}-dirs.txt")
 
-  when: { params.databases.ena.run }
+  when: params.databases.ena.run
 
   script:
   """
@@ -30,7 +30,7 @@ process fetch_directory {
   output:
   path("${name}-chunks/*.ncr"), optional: true
 
-  when: { params.databases.ena?.run }
+  when: params.databases.ena?.run
 
   script:
   """
@@ -67,7 +67,7 @@ process fetch_metadata {
   output:
   tuple path('tpa.tsv'), path('model-lengths.csv')
 
-  when: { params.databases.ena?.run }
+  when: params.databases.ena?.run
 
   script:
   """

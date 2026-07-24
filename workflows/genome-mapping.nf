@@ -10,7 +10,7 @@ process setup {
   output:
   path('species.csv')
 
-  when: { params.genome_mapping?.run }
+  when: params.genome_mapping?.run
 
   script:
   """

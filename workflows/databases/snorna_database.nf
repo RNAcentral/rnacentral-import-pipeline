@@ -2,7 +2,7 @@ process snorna_database {
   output:
   path('*.csv')
 
-  when: { params.databases.snorna_database?.run }
+  when: params.databases.snorna_database?.run
 
   script:
   """

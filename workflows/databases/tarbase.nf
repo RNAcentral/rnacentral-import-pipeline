@@ -15,7 +15,7 @@ process fetch {
   output:
   path('*.tsv')
 
-  when: { params.databases.tarbase?.run }
+  when: params.databases.tarbase?.run
 
   script:
   """
@@ -34,7 +34,7 @@ process parse {
   output:
   path('*.csv')
 
-  when: { params.databases.tarbase?.run }
+  when: params.databases.tarbase?.run
 
   script:
   """

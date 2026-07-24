@@ -2,7 +2,7 @@ process pombase {
   output:
   path('*.csv')
 
-  when: { params.databases.pombase?.run }
+  when: params.databases.pombase?.run
 
   script:
   """

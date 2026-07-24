@@ -5,7 +5,7 @@ process fetch_families {
   output:
   path('families.tsv')
 
-  when: { params.databases.rfam?.run }
+  when: params.databases.rfam?.run
 
   script:
   """
@@ -25,7 +25,7 @@ process fetch_families_info {
   output:
   path("info.tsv")
 
-  when: { params.databases.rfam?.run }
+  when: params.databases.rfam?.run
 
   script:
   """

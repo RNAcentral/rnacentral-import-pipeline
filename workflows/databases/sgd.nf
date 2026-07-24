@@ -2,7 +2,7 @@ process sgd {
   output:
   path('*.csv')
 
-  when: { params.databases.sgd?.run }
+  when: params.databases.sgd?.run
 
   script:
   """

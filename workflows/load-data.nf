@@ -50,7 +50,7 @@ process release {
   output:
   val('done')
 
-  when: { params.get('should_release', false) }
+  when: params.get('should_release', false)
 
   script:
   def should_release = params.should_release

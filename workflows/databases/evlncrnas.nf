@@ -2,7 +2,7 @@ process fetch {
   output:
   path('EVLncRNAs3_alldata')
 
-  when: { params.databases.evlncrnas?.run }
+  when: params.databases.evlncrnas?.run
 
   script:
   """
@@ -21,7 +21,7 @@ process rnc_dump {
   output:
   path('*.csv')
 
-  when: { params.databases.evlncrnas?.run }
+  when: params.databases.evlncrnas?.run
 
   script:
   """

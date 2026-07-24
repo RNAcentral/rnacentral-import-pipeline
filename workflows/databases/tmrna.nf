@@ -2,7 +2,7 @@ process tmrna {
   output:
   path('*.csv')
 
-  when: { params.databases.tmrna?.run }
+  when: params.databases.tmrna?.run
 
   script:
   """

@@ -2,7 +2,7 @@ process slack_message {
   input:
   val(message)
 
-  when: { params.get('notify', false) }
+  when: params.get('notify', false)
 
   script:
   params.notify ? """
@@ -15,7 +15,7 @@ process slack_file {
   input:
   path(message)
 
-  when: { params.get('notify', false) }
+  when: params.get('notify', false)
 
   script:
   params.notify ? """

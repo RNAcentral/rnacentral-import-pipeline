@@ -9,7 +9,7 @@ process build_ranges {
   output:
   path('ranges.csv')
 
-  when: { params.stopfree?.run }
+  when: params.stopfree?.run
 
   script:
   def chunk_size = params.stopfree.db_chunk_size
@@ -27,7 +27,7 @@ process find_sequences {
   output:
   path('sequences/*.fasta'), optional: true
 
-  when: { params.stopfree?.run }
+  when: params.stopfree?.run
 
   script:
   """
@@ -60,7 +60,7 @@ process store_results {
   path('results*.csv')
   path(result_ctl)
 
-  when: { params.stopfree?.load }
+  when: params.stopfree?.load
 
   script:
   """

@@ -9,7 +9,7 @@ process fetch_model_stats {
   path('info.csv'), emit: info
   path '*.tsv', emit: metadata
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """

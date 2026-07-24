@@ -8,7 +8,7 @@ process generate_files {
   path 'rfam', emit: cm_files
   path 'version_file', emit: version_info
 
-  when: { params.rfam?.run }
+  when: params.rfam?.run
 
   script:
   def base = params.rfam.files

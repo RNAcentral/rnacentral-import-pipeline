@@ -2,7 +2,7 @@ process hgnc {
   output:
   path('*.csv')
 
-  when: { params.databases.hgnc?.run }
+  when: params.databases.hgnc?.run
 
   script:
   """

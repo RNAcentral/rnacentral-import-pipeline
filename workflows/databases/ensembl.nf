@@ -5,7 +5,7 @@ process fetch_metadata {
   output:
   path('families.tsv')
 
-  when: { params.databases.ensembl?._any?.run }
+  when: params.databases.ensembl?._any?.run
 
   script:
   """
@@ -26,7 +26,7 @@ process find_urls {
   output:
   path('species.txt')
 
-  when: { params.databases.ensembl[division]?.run }
+  when: params.databases.ensembl[division]?.run
 
   script:
     """

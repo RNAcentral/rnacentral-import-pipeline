@@ -5,7 +5,7 @@ process fetch_ribocentre {
   output:
   path("ribocentre.json")
 
-  when: { params.databases.ribocentre?.run }
+  when: params.databases.ribocentre?.run
 
   script:
   """
@@ -22,7 +22,7 @@ process parse_ribocentre {
   output:
   path("*.csv")
 
-  when: { params.databases.ribocentre?.run }
+  when: params.databases.ribocentre?.run
 
   script:
   """
