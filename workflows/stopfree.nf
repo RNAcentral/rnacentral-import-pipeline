@@ -91,7 +91,7 @@ workflow stopfree {
     stopfree_scan.out | collect | set { data }
 
     store_results(data, load_ctl)
-    data | map { _v -> 'stopfree done' } | first | set { done }
+    data | map { _v -> 'stopfree done' } | set { done }
     }
   emit: done
 }
