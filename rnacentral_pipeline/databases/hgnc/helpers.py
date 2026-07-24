@@ -195,8 +195,13 @@ def _fetch_batch(batch: ty.List[str]) -> ty.List[dict]:
         )
         response.raise_for_status()
     except requests.exceptions.RequestException as err:
-        LOGGER.error("Gave up on a batch, losing %i genes: %s", len(batch), err)
-        return []
+        # The session has already retried 429/5xx and connection errors, so this
+        # is a persistent failure. Returning [] here would drop up to 50 genes
+        # from the parse output, and an incremental load retires by absence --
+        # a flaky Ensembl would silently retire live xrefs. Fail loudly instead.
+        raise RuntimeError(
+            "Ensembl cdna lookup failed for a batch of %i genes" % len(batch)
+        ) from err
     return response.json()
 
 
