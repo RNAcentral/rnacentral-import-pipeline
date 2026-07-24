@@ -27,7 +27,7 @@ workflow {
       def msg = workflow?.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
       slack_closure(msg)
     } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
+      log.warn "Could not send Slack notification: ${e}"
     }
   }
 
@@ -35,7 +35,7 @@ workflow {
     try {
       slack_closure("Analyze workflow hit an error and crashed")
     } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
+      log.warn "Could not send Slack notification: ${e}"
     }
   }
 }

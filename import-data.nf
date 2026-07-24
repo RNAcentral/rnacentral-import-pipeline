@@ -47,7 +47,7 @@ workflow {
     try {
       slack_closure("Import pipeline encountered an error and failed")
     } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
+      log.warn "Could not send Slack notification: ${e}"
     }
   }
 
@@ -55,7 +55,7 @@ workflow {
     try {
       slack_closure("Workflow completed ${workflow?.success ? 'Ok' : 'with errors'}")
     } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
+      log.warn "Could not send Slack notification: ${e}"
     }
   }
 }
