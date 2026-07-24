@@ -50,7 +50,7 @@ process store_model_info {
 workflow model_info {
   take: ready
   main:
-    Channel.fromPath('files/r2dt/load-models.ctl') | set { load }
+    channel.fromPath('files/r2dt/load-models.ctl') | set { load }
 
     fetch_model_stats(ready)
 
@@ -67,5 +67,5 @@ workflow model_info {
 }
 
 workflow {
-  model_info(Channel.of('ready'))
+  model_info(channel.of('ready'))
 }

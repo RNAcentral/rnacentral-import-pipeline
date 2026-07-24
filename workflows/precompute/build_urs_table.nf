@@ -133,8 +133,8 @@ process precompute_releases {
 workflow using_release {
     take: flag
     main:
-      Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_sql }
-      Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { pre_sql }
+      channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_sql }
+      channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { pre_sql }
 
       precompute_releases(flag, pre_sql) | set { precompute_info }
       xref_releases(flag, xref_sql) | set { xref_info }
@@ -157,7 +157,7 @@ workflow using_query {
 workflow using_all {
   take: flag
   main:
-    Channel.fromPath("files/precompute/methods/all.sql") | set { to_select }
+    channel.fromPath("files/precompute/methods/all.sql") | set { to_select }
 
     run_query(flag, to_select) | set { selected }
   emit: selected
@@ -178,10 +178,10 @@ workflow using_ids {
 workflow build_urs_table {
     take: method
     main:
-      Channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
-      Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
-      Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
-      Channel.fromPath('files/precompute/get-urs-count.sql') | set { count_sql }
+      channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
+      channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
+      channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
+      channel.fromPath('files/precompute/get-urs-count.sql') | set { count_sql }
 
       fetch_all_urs_taxid(active_sql) | set { active_urs }
 
@@ -201,7 +201,7 @@ workflow build_urs_table {
       to_build.all | using_all | set { from_all }
       to_build.ids | using_ids | set { from_ids }
 
-      Channel.empty() \
+      channel.empty() \
       | mix(from_release, from_query, from_all, from_ids) \
       | collect \
       | combine(load_sql) \

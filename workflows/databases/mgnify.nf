@@ -33,7 +33,7 @@ workflow mgnify {
       mgnify_fetch | flatten | mgnify_parse | set { data }
     }
     else {
-      Channel.empty() | set { data }
+      channel.empty() | set { data }
     }
 
   emit: data

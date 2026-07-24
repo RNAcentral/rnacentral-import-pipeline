@@ -151,24 +151,24 @@ workflow precompute {
   take: _flag
   main:
 
-    Channel.of("Starting precompute pipeline") | slack_message
+    channel.of("Starting precompute pipeline") | slack_message
 
-    Channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
-    Channel.fromPath('files/precompute/load.ctl') | set { data_ctl }
-    Channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
-    Channel.fromPath('files/precompute/post-load.sql') | set { post_load }
+    channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
+    channel.fromPath('files/precompute/load.ctl') | set { data_ctl }
+    channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
+    channel.fromPath('files/precompute/post-load.sql') | set { post_load }
 
-    Channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
-    Channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
-    Channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
-    Channel.fromPath('files/precompute/queries/r2dt-hits.sql') | set { r2dt_sql }
-    Channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
-    Channel.fromPath('files/precompute/queries/orfs.sql') | set { orf_sql }
-    Channel.fromPath('files/precompute/queries/stopfree.sql') | set { stopfree_sql }
-    Channel.fromPath('files/precompute/queries/tcode.sql') | set { tcode_sql }
+    channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
+    channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
+    channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
+    channel.fromPath('files/precompute/queries/r2dt-hits.sql') | set { r2dt_sql }
+    channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
+    channel.fromPath('files/precompute/queries/orfs.sql') | set { orf_sql }
+    channel.fromPath('files/precompute/queries/stopfree.sql') | set { stopfree_sql }
+    channel.fromPath('files/precompute/queries/tcode.sql') | set { tcode_sql }
 
     // repeats | build_precompute_context | set { context }
-    Channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
+    channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
     urs_counts | build_precompute_accessions | set { accessions_ready }
 
     build_metadata(
@@ -210,7 +210,7 @@ workflow precompute {
 }
 
 workflow {
-  precompute(Channel.of(true))
+  precompute(channel.of(true))
 
   workflow.onComplete {
     try {

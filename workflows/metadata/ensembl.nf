@@ -106,16 +106,16 @@ workflow compara {
 
 workflow ensembl {
   main:
-    Channel.fromPath('config/databases.json') | set { conn }
+    channel.fromPath('config/databases.json') | set { conn }
 
-    Channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
-    Channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
+    channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
+    channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
 
-    Channel.fromPath('files/import-data/ensembl/assemblies.sql') | set { assemblies_sql }
-    Channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
-    Channel.fromPath('files/import-data/ensembl/known-assemblies.sql') | set { known }
+    channel.fromPath('files/import-data/ensembl/assemblies.sql') | set { assemblies_sql }
+    channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
+    channel.fromPath('files/import-data/ensembl/known-assemblies.sql') | set { known }
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       assemblies(conn, assemblies_sql, examples, known),
       coordinate_systems(conn, coordinate_systems_sql),

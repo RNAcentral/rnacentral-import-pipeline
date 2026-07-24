@@ -33,7 +33,7 @@ include { analyze } from './analyze'
 include { export } from './export'
 
 workflow {
-  Channel.of('ready') \
+  channel.of('ready') \
   | import_data \
   | ifEmpty('no import') \
   | analyze \

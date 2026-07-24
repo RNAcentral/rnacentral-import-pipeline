@@ -133,15 +133,15 @@ workflow ftp {
   take: _flag
   main:
     if (params.export.ftp.run) {
-      Channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
-      Channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
+      channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
+      channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
       md5(md5_query, md5_template)
 
-      Channel.fromPath('files/ftp-export/release_note.txt') | release_note
-      Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
+      channel.fromPath('files/ftp-export/release_note.txt') | release_note
+      channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
 
-      Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
-      Channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
+      channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
+      channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
       rfam_annotations(rfam_annotation_query, rfam_readme)
 
       gpi()
@@ -156,5 +156,5 @@ workflow ftp {
 }
 
 workflow {
-  ftp(Channel.of('ready'))
+  ftp(channel.of('ready'))
 }

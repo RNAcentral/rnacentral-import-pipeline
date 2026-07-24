@@ -88,12 +88,12 @@ workflow cpat {
   take: flag
   main:
     if (!params.cpat.run) {
-      Channel.of('cpat skipped') | set { done }
+      channel.of('cpat skipped') | set { done }
     } else {
 
-    Channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
-    Channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
-    Channel.fromPath('files/cpat/query.sql') | set { query }
+    channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
+    channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
+    channel.fromPath('files/cpat/query.sql') | set { query }
 
     flag | find_models
 
@@ -128,5 +128,5 @@ workflow cpat {
 }
 
 workflow {
-  cpat(Channel.of('ready'))
+  cpat(channel.of('ready'))
 }

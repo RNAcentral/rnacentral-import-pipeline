@@ -103,10 +103,10 @@ process atomic_publish {
 workflow sequence_search {
   take: _flag
   main:
-    Channel.fromPath('files/ftp-export/sequences/databases.sql') | set { db_query }
-    Channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
+    channel.fromPath('files/ftp-export/sequences/databases.sql') | set { db_query }
+    channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
 
-    Channel.fromPath('files/sequence-search-export/*.sql') \
+    channel.fromPath('files/sequence-search-export/*.sql') \
     | filter { params.export.sequence_search.run } \
     | map { fn -> [file(fn).baseName, fn, ''] } \
     | set { simple_queries }
@@ -130,5 +130,5 @@ workflow sequence_search {
 }
 
 workflow {
-  sequence_search(Channel.of('ready'))
+  sequence_search(channel.of('ready'))
 }

@@ -51,7 +51,7 @@ process merge_json {
 workflow genome_mapping {
   take: ready
   main:
-    Channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
+    channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
 
     setup(ready, find_species) \
     | splitCsv \
@@ -62,5 +62,5 @@ workflow genome_mapping {
 }
 
 workflow {
-  genome_mapping(Channel.from('ready'))
+  genome_mapping(channel.from('ready'))
 }

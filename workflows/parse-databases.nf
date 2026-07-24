@@ -65,10 +65,10 @@ workflow parse_databases {
       build_context | set { context }
     }
     else {
-      Channel.empty() | set { context }
+      channel.empty() | set { context }
     }
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       circatlas(),
       circpedia(),

@@ -87,9 +87,9 @@ process parse_data {
 
 workflow ensembl {
   main:
-    Channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
+    channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
 
-    Channel.fromList([
+    channel.fromList([
       'plants',
       'fungi',
       'protists',

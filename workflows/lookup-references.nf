@@ -61,7 +61,7 @@ workflow lookup_ref_ids {
       | lookup_publications \
       | set { publications }
     } else {
-      Channel.empty() | set { publications }
+      channel.empty() | set { publications }
     }
 
   emit: publications

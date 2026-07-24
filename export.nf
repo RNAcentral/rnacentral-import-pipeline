@@ -14,5 +14,5 @@ workflow export {
 }
 
 workflow {
-  export(Channel.of('ready'))
+  export(channel.of('ready'))
 }

@@ -56,7 +56,7 @@ workflow genes {
     sequence_json
     so_tree
   main:
-    Channel.fromPath('files/search-export/genes/region-info.sql') | set { locus_sql }
+    channel.fromPath('files/search-export/genes/region-info.sql') | set { locus_sql }
 
     locus_query(max_count, locus_sql) | set { locus_info }
     fetch_schema()

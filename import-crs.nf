@@ -2,7 +2,7 @@
 
 process fetch_crs_bed {
   input:
-  val(remote) from Channel.from(params.crs.path)
+  val(remote) from channel.from(params.crs.path)
 
   output:
   file('*.bed') into raw_crs mode flatten
@@ -28,7 +28,7 @@ pre_fetch
   .into { for_rfam_fetch; for_rnacentral_fetch }
 
 for_rfam_fetch
-  .combine(Channel.fromPath("files/crs/fetch-rfam.sql"))
+  .combine(channel.fromPath("files/crs/fetch-rfam.sql"))
   .set { rfam_to_fetch }
 
 process fetch_rfam_locations {
@@ -49,7 +49,7 @@ process fetch_rfam_locations {
 }
 
 for_rnacentral_fetch
-  .combine(Channel.fromPath("files/crs/fetch-rnacentral.sql"))
+  .combine(channel.fromPath("files/crs/fetch-rnacentral.sql"))
   .set { rnacentral_assemblies_to_fetch }
 
 process fetch_rnacentral_bed {
@@ -92,7 +92,7 @@ process find_rnacentral_crs_features {
 process import_crs {
   input:
   file('complete_features*.csv') from processed_crs.collect()
-  file(ctl) from Channel.fromPath('files/crs/load.ctl')
+  file(ctl) from channel.fromPath('files/crs/load.ctl')
 
   script:
   """

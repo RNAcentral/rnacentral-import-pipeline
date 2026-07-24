@@ -42,7 +42,7 @@ process process {
 
 workflow genecards_suite {
   main:
-    Channel.fromList([
+    channel.fromList([
       ['genecards', params.databases.genecards.remote, params.databases.genecards.column],
       ['malacards', params.databases.malacards.remote, params.databases.malacards.column],
     ]) \

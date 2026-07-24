@@ -82,8 +82,8 @@ process release {
 workflow load_data {
   take: parsed
   main:
-    Channel.fromPath('files/import-data/limits.json') | set { limits }
-    Channel.fromPath('files/schema/create_load.sql') | set { schema }
+    channel.fromPath('files/import-data/limits.json') | set { limits }
+    channel.fromPath('files/schema/create_load.sql') | set { schema }
 
     parsed \
     | filter { f -> !f.isEmpty() } \
@@ -115,7 +115,7 @@ workflow load_data {
     imported_names
       .flatMap { n -> file("files/import-data/post-release/*__${n.replace('_', '-')}.sql") }
       .mix(
-        Channel.fromPath([
+        channel.fromPath([
           'files/import-data/post-release/000__populate_precompute.sql',
           'files/import-data/post-release/999__cleanup.sql',
         ])

@@ -72,13 +72,13 @@ workflow stopfree {
   take: flag
   main:
     if( !params.stopfree.run ) {
-      Channel.of('stopfree skipped') | set { done }
+      channel.of('stopfree skipped') | set { done }
     } else {
 
     def query = file(params.stopfree.query)
     def load_ctl = file('files/stopfree/stopfree.ctl')
 
-    def fasta_ch = Channel.of('ready') \
+    def fasta_ch = channel.of('ready') \
       | build_ranges \
       | splitCsv \
       | map { _table, min, max -> [min, max, query] } \
@@ -97,5 +97,5 @@ workflow stopfree {
 }
 
 workflow {
-  stopfree(Channel.of('ready'))
+  stopfree(channel.of('ready'))
 }

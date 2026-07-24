@@ -59,13 +59,13 @@ process import_manually_annotated_articles {
 workflow find_manually_annotated {
     take: ready
     main:
-      query = Channel.fromPath('workflows/litscan/manually_annotated/query.sql')
+      query = channel.fromPath('workflows/litscan/manually_annotated/query.sql')
       get_expert_db_articles(ready, query) \
       | sort_expert_db_articles \
       | find_manually_annotated_articles \
       | set{ manually_annotated_articles }
 
-      load_ctl = Channel.of("$baseDir/workflows/litscan/manually_annotated/save-manually-annotated.ctl")
+      load_ctl = channel.of("$baseDir/workflows/litscan/manually_annotated/save-manually-annotated.ctl")
       import_manually_annotated_articles(manually_annotated_articles, load_ctl) | set{ done }
     emit: done
 }

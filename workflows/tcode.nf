@@ -83,13 +83,13 @@ workflow tcode {
   take: flag
   main:
     if( !params.tcode.run ) {
-      Channel.of('tcode skipped') | set { done }
+      channel.of('tcode skipped') | set { done }
     } else {
 
     def query = file(params.tcode.query)
     def load_ctl = file('files/tcode/tcode.ctl')
 
-    def fasta_ch = Channel.of('ready') \
+    def fasta_ch = channel.of('ready') \
       | build_ranges \
       | splitCsv \
       | map { _table, min, max -> [min, max, query] } \
@@ -109,5 +109,5 @@ workflow tcode {
 }
 
 workflow {
-  tcode(Channel.of('ready'))
+  tcode(channel.of('ready'))
 }

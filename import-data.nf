@@ -13,9 +13,9 @@ include { slack_closure } from './workflows/utils/slack'
 workflow import_data {
   take: _flag
   main:
-    Channel.of("Starting data import pipeline") | slack_message
+    channel.of("Starting data import pipeline") | slack_message
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       parse_databases(),
       parse_metadata(),
@@ -41,7 +41,7 @@ workflow import_data {
 }
 
 workflow {
-  import_data(Channel.of('ready'))
+  import_data(channel.of('ready'))
 
   workflow.onError {
     try {

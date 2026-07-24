@@ -64,7 +64,7 @@ process parse_data {
 
 workflow circpedia {
   main:
-    Channel.fromList(params.databases.circpedia.species)
+    channel.fromList(params.databases.circpedia.species)
     | fetch_annotation
     | fetch_fasta
     | parse_data

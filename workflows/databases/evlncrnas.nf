@@ -48,7 +48,7 @@ process parse {
 
 workflow evlncrnas {
   main:
-  Channel.fromPath('files/import-data/evlncrnas/dump-lookup.sql') | set { dump_sql }
+  channel.fromPath('files/import-data/evlncrnas/dump-lookup.sql') | set { dump_sql }
     fetch | set {ev_data}
     dump_sql | rnc_dump | set {rnc_data}
 

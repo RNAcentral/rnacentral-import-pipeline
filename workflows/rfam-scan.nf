@@ -105,11 +105,11 @@ workflow rfam_scan {
   take: ready
   main:
     if (params.rfam.run) {
-      Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
-      Channel.fromPath("files/qa/computed.sql").set { computed_sql }
-      Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
-      Channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
-      Channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
+      channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
+      channel.fromPath("files/qa/computed.sql").set { computed_sql }
+      channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
+      channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
+      channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
 
       generate_files(ready)
 
@@ -130,7 +130,7 @@ workflow rfam_scan {
 
       import_data(hits, ctl, attempted, attempted_ctl) | set { done }
     } else {
-      Channel.of('rfam skipped') | set { done }
+      channel.of('rfam skipped') | set { done }
     }
   emit: done
 }

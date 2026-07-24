@@ -58,11 +58,11 @@ process fetch_ensembl_data {
 
 workflow repeats {
   main:
-    Channel.fromPath('files/repeats/find-assemblies.sql') \
-    | combine(Channel.fromPath('config/databases.json')) \
+    channel.fromPath('files/repeats/find-assemblies.sql') \
+    | combine(channel.fromPath('config/databases.json')) \
     | find_genomes_with_repeats \
     | splitCsv \
-    | combine(Channel.fromPath('files/repeats/extract-repeats.sql')) \
+    | combine(channel.fromPath('files/repeats/extract-repeats.sql')) \
     | query_ensembl \
     | fetch_ensembl_data
 

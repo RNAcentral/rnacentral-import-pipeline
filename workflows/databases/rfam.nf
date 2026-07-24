@@ -116,10 +116,10 @@ process parse {
 
 workflow rfam {
   main:
-    Channel.fromPath('files/import-data/rfam/select-families.sql') | set { family_sql }
-    Channel.fromPath('files/import-data/rfam/families.sql') | set { info_sql }
-    Channel.fromPath('files/import-data/rfam/sequences_family.sql') | set { sequence_family_sql }
-    Channel.fromPath('files/import-data/rfam/sequences_seed.sql') | set { sequence_seed_sql }
+    channel.fromPath('files/import-data/rfam/select-families.sql') | set { family_sql }
+    channel.fromPath('files/import-data/rfam/families.sql') | set { info_sql }
+    channel.fromPath('files/import-data/rfam/sequences_family.sql') | set { sequence_family_sql }
+    channel.fromPath('files/import-data/rfam/sequences_seed.sql') | set { sequence_seed_sql }
 
     info_sql | fetch_families_info | set { info }
 

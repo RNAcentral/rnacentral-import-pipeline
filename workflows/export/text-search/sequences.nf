@@ -208,28 +208,28 @@ process as_xml {
 
 workflow sequences {
   main:
-    Channel.fromPath('files/search-export/setup.sql') | set { setup_sql }
+    channel.fromPath('files/search-export/setup.sql') | set { setup_sql }
 
-    Channel.fromPath('files/search-export/parts/base.sql') | set { base_sql }
-    Channel.fromPath('files/search-export/parts/crs.sql') | set { crs_sql }
-    Channel.fromPath('files/search-export/parts/feedback.sql') | set { feeback_sql }
-    Channel.fromPath('files/search-export/parts/go-annotations.sql') | set { go_sql }
-    Channel.fromPath('files/search-export/parts/interacting-proteins.sql') | set { prot_sql }
-    Channel.fromPath('files/search-export/parts/interacting-rnas.sql') | set { rnas_sql }
-    Channel.fromPath('files/search-export/parts/precompute.sql') | set { precompute_sql }
-    Channel.fromPath('files/search-export/parts/qa-status.sql') | set { qa_sql }
-    Channel.fromPath('files/search-export/parts/r2dt.sql') | set { r2dt_sql }
-    Channel.fromPath('files/search-export/parts/rfam-hits.sql') | set { rfam_sql }
-    Channel.fromPath('files/search-export/parts/orfs.sql') | set { orf_sql }
-    Channel.fromPath('files/search-export/parts/text-mining.sql') | set { text_sql }
-    Channel.fromPath('files/search-export/parts/litsumm.sql') | set { litsumm_sql }
-    Channel.fromPath('files/search-export/parts/editing-events.sql') | set { editing_events_sql }
-    Channel.fromPath('files/search-export/parts/goflow.sql') | set { goflow_sql }
-    Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
+    channel.fromPath('files/search-export/parts/base.sql') | set { base_sql }
+    channel.fromPath('files/search-export/parts/crs.sql') | set { crs_sql }
+    channel.fromPath('files/search-export/parts/feedback.sql') | set { feeback_sql }
+    channel.fromPath('files/search-export/parts/go-annotations.sql') | set { go_sql }
+    channel.fromPath('files/search-export/parts/interacting-proteins.sql') | set { prot_sql }
+    channel.fromPath('files/search-export/parts/interacting-rnas.sql') | set { rnas_sql }
+    channel.fromPath('files/search-export/parts/precompute.sql') | set { precompute_sql }
+    channel.fromPath('files/search-export/parts/qa-status.sql') | set { qa_sql }
+    channel.fromPath('files/search-export/parts/r2dt.sql') | set { r2dt_sql }
+    channel.fromPath('files/search-export/parts/rfam-hits.sql') | set { rfam_sql }
+    channel.fromPath('files/search-export/parts/orfs.sql') | set { orf_sql }
+    channel.fromPath('files/search-export/parts/text-mining.sql') | set { text_sql }
+    channel.fromPath('files/search-export/parts/litsumm.sql') | set { litsumm_sql }
+    channel.fromPath('files/search-export/parts/editing-events.sql') | set { editing_events_sql }
+    channel.fromPath('files/search-export/parts/goflow.sql') | set { goflow_sql }
+    channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
-    Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
+    channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
 
-    Channel.fromPath('files/search-export/get-counts.sql') | set { counts_sql }
+    channel.fromPath('files/search-export/get-counts.sql') | set { counts_sql }
 
     setup(setup_sql, counts_sql)
     | splitCsv \

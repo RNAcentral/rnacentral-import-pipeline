@@ -4,11 +4,11 @@ include { taxonomy } from './metadata/taxonomy'
 
 workflow parse_metadata {
   main:
-    Channel.empty() \
+    channel.empty() \
     | mix(
       rfam(),
-      params.databases.ensembl._any.run ? ensembl() : Channel.empty(),
-      params.needs_taxonomy ? taxonomy() : Channel.empty(),
+      params.databases.ensembl._any.run ? ensembl() : channel.empty(),
+      params.needs_taxonomy ? taxonomy() : channel.empty(),
     ) \
     | flatten \
     | set { data }

@@ -48,7 +48,7 @@ process parse_data {
 
 workflow pirbase {
   main:
-    Channel.fromPath('files/import-data/pirbase/known-md5.sql') | set { query }
+    channel.fromPath('files/import-data/pirbase/known-md5.sql') | set { query }
 
     find_urls \
     | splitCsv \

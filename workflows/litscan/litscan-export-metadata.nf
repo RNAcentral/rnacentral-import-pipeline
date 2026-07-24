@@ -112,18 +112,18 @@ process save_statistics {
 workflow export_metadata {
     take: ready
     main:
-      database = Channel.fromPath('workflows/litscan/results/*.txt')
+      database = channel.fromPath('workflows/litscan/results/*.txt')
       database | combine(ready) | create_metadata | collect | merge_metadata | set{ metadata }
 
       create_xml(metadata) | create_release_file
 
-      load = Channel.of("$baseDir/workflows/litscan/metadata/load-metadata.ctl")
+      load = channel.of("$baseDir/workflows/litscan/metadata/load-metadata.ctl")
       load_database_table(metadata, load) | get_statistics | set{ statistics }
 
-      load_statistics = Channel.of("$baseDir/workflows/litscan/metadata/load-statistics.ctl")
+      load_statistics = channel.of("$baseDir/workflows/litscan/metadata/load-statistics.ctl")
       save_statistics(statistics, load_statistics)
 }
 
 workflow {
-  export_metadata(Channel.of('ready'))
+  export_metadata(channel.of('ready'))
 }

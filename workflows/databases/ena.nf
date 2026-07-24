@@ -104,10 +104,10 @@ process process_file {
 
 workflow ena {
   main:
-    Channel.fromPath('files/import-data/ena/tpa-urls.txt') | set { urls }
+    channel.fromPath('files/import-data/ena/tpa-urls.txt') | set { urls }
     fetch_metadata(urls) | set { metadata }
 
-    Channel.fromList([
+    channel.fromList([
       ['wgs', "$params.databases.ena.remote/wgs/"],
       ['tls', "$params.databases.ena.remote/tls/"],
       ['tsa', "$params.databases.ena.remote/tsa/"],
@@ -121,7 +121,7 @@ workflow ena {
       } \
     | set { subdir_batches }
 
-    Channel.fromList([
+    channel.fromList([
       ['con', ["$params.databases.ena.remote/con/"]],
       ['std', ["$params.databases.ena.remote/std/"]],
     ]) \

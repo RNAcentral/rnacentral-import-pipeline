@@ -33,6 +33,6 @@ process get_job {
 
 
 workflow {
-    Channel.fromPath('workflows/references/results/*.txt') | get_urs
-    Channel.fromPath('workflows/references/results/*.txt') | get_job
+    channel.fromPath('workflows/references/results/*.txt') | get_urs
+    channel.fromPath('workflows/references/results/*.txt') | get_job
 }

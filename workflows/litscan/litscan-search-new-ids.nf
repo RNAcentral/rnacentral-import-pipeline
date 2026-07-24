@@ -142,9 +142,9 @@ process submit_urs {
 
 workflow search_new_ids {
     main:
-      Channel.of("Starting LitScan pipeline") | slack_message
+      channel.of("Starting LitScan pipeline") | slack_message
 
-      Channel.fromPath('workflows/litscan/queries/*.sql') \
+      channel.fromPath('workflows/litscan/queries/*.sql') \
       | get_ids \
       | check_ids \
       | sort_ids \

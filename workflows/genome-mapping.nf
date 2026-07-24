@@ -251,12 +251,12 @@ process load_mapping {
 workflow genome_mapping {
   take: ready
   main:
-    Channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
-    Channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
-    Channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
-    Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
-    Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
-    Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
+    channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
+    channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
+    channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
+    channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
+    channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
+    channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
 
     if (params.genome_mapping.run) {
       setup(ready, find_species) \
@@ -298,11 +298,11 @@ workflow genome_mapping {
 
       load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
     } else {
-      Channel.of('genome-mapping skipped') | set { done }
+      channel.of('genome-mapping skipped') | set { done }
     }
   emit: done
 }
 
 workflow {
-  genome_mapping(Channel.from('ready'))
+  genome_mapping(channel.from('ready'))
 }

@@ -24,7 +24,7 @@ process generic {
 
 workflow rfam {
   main:
-    Channel.fromPath('files/import-data/rfam/{clans,families}.sql') \
+    channel.fromPath('files/import-data/rfam/{clans,families}.sql') \
     | map { fn -> [fn.baseName, fn] } \
     | generic \
     | flatten \

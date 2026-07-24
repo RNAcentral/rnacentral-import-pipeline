@@ -51,7 +51,7 @@ process update_tracker_table {
 
 workflow select {
 
-  Channel.fromPath(params.import_selection_remotes) \
+  channel.fromPath(params.import_selection_remotes) \
   | splitCsv
   | map { row -> tuple(row[0], row[1])}
   | check_db_md5

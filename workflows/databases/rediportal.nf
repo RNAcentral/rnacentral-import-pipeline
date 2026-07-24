@@ -77,9 +77,9 @@ workflow rediportal {
   take: ready
   main:
     if( params.databases.rediportal?.run ) {
-      Channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
-      Channel.fromPath("files/rediportal/load.ctl") | set { load_query }
-      Channel
+      channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
+      channel.fromPath("files/rediportal/load.ctl") | set { load_query }
+      channel
         .fromList(params.databases.rediportal.inputs)
         .map { input -> tuple(input.assembly_id, input.genome_build, input.remote) }
         | set { redi_inputs }
@@ -108,7 +108,7 @@ workflow rediportal {
 
     }
     else {
-      Channel.of('rediportal not run') | set { done }
+      channel.of('rediportal not run') | set { done }
     }
 
   emit: done
@@ -116,5 +116,5 @@ workflow rediportal {
 
 
 workflow {
-  rediportal(Channel.of('ready'))
+  rediportal(channel.of('ready'))
 }

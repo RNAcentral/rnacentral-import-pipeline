@@ -137,10 +137,10 @@ process index_gff3 {
 }
 
 workflow export_coordinates {
-  Channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql') | set { known }
-  Channel.fromPath('files/ftp-export/genome_coordinates/query.sql') | set { query }
+  channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql') | set { known }
+  channel.fromPath('files/ftp-export/genome_coordinates/query.sql') | set { query }
 
-  readme(Channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd'))
+  readme(channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd'))
 
   known \
   | find_jobs \

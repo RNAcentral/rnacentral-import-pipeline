@@ -21,5 +21,5 @@ workflow rescan_ids_by_date {
 }
 
 workflow {
-    rescan_ids_by_date(Channel.from('ready'))
+    rescan_ids_by_date(channel.from('ready'))
 }
