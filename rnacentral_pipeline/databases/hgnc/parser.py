@@ -26,6 +26,18 @@ from rnacentral_pipeline.databases.hgnc.data import Context, HgncEntry
 
 LOGGER = logging.getLogger(__name__)
 
+# HGNC's Solr export carries bookkeeping fields that change on every reindex with no
+# biological change: _version_ is Solr's optimistic-concurrency token, uuid/date_modified
+# likewise churn. Excluding them from the record signature stops a plain reindex from
+# re-classing every record as "changed" -- which would otherwise re-map all records
+# through the Ensembl/DB lookups, where a transient failure silently drops entries that
+# then get retired by absence.
+_VOLATILE_FIELDS = frozenset({"_version_", "uuid", "date_modified"})
+
+
+def _biological_view(raw: ty.Mapping[str, ty.Any]) -> ty.Dict[str, ty.Any]:
+    return {k: v for k, v in raw.items() if k not in _VOLATILE_FIELDS}
+
 
 @attr.s(frozen=True)
 class ParseResult:
@@ -81,7 +93,9 @@ def parse(
     from the stored manifest; an empty/None manifest parses everything (bootstrap).
     """
     raws = {raw["hgnc_id"]: raw for raw in helpers.load_raw(path)}
-    new_signatures = {acc: manifest.record_signature(raw) for acc, raw in raws.items()}
+    new_signatures = {
+        acc: manifest.record_signature(_biological_view(raw)) for acc, raw in raws.items()
+    }
     diff = manifest.compute_diff(new_signatures, previous_signatures or {})
 
     LOGGER.info(
@@ -115,7 +129,9 @@ def as_entries(
     for raw_entry in raw_entries:
         urs = rnacentral_id(ctx, raw_entry)
         if not urs:
-            LOGGER.debug("Cannot map %s", raw_entry.hgnc_id)
+            # Under an incremental load absence retires the existing xref, so an
+            # unmapped record is a silent retirement. Warn rather than debug.
+            LOGGER.warning("Dropped %s: could not resolve an RNAcentral id", raw_entry.hgnc_id)
             continue
 
         entry = as_entry(ctx, raw_entry, urs)
