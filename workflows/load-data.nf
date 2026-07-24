@@ -107,13 +107,13 @@ workflow load_data {
     | set { imported_names }
 
     imported_names
-      .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
+      .flatMap { n -> files("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
       .filter { f -> f.exists() }
       .toList()
       .set { pre_scripts }
 
     imported_names
-      .flatMap { n -> file("files/import-data/post-release/*__${n.replace('_', '-')}.sql") }
+      .flatMap { n -> files("files/import-data/post-release/*__${n.replace('_', '-')}.sql") }
       .mix(
         channel.fromPath([
           'files/import-data/post-release/000__populate_precompute.sql',
