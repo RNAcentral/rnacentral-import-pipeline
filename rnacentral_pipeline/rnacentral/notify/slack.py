@@ -22,9 +22,14 @@ ORDER BY display_name
 """
 
 
-def send_notification(title, message):
+def send_notification(title, message, username=None):
     """
     Send a notification to the configured slack webhook.
+
+    If username is given the message is posted under that name instead of the
+    app's default name, so each pipeline stage can have its own identity. This
+    only takes effect if the Slack app has the chat:write.customize scope;
+    otherwise Slack silently keeps the app's default name.
     """
     SLACK_WEBHOOK = os.getenv("SLACK_CLIENT_TOKEN")
     if SLACK_WEBHOOK is None:
@@ -41,8 +46,11 @@ def send_notification(title, message):
             "text": {"type": "mrkdwn", "text": message},
         },
     ]
+    kwargs = {"channel": channel, "text": title, "blocks": blocks}
+    if username:
+        kwargs["username"] = username
     try:
-        response = client.chat_postMessage(channel=channel, text=title, blocks=blocks)
+        response = client.chat_postMessage(**kwargs)
 
         print(response)
     except SlackApiError as e:

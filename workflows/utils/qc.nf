@@ -82,7 +82,7 @@ process qc_report {
     cat "\$report"
     echo '${fence}'
   } > slack-report.txt
-  rnac notify file slack-report.txt || echo "Slack QC notification failed (non-fatal)"
+  rnac notify file slack-report.txt --username "RNAcentral ${stage}" || echo "Slack QC notification failed (non-fatal)"
   """ : "true"
   """
   report="${stage}-qc-report.txt"
@@ -123,7 +123,7 @@ process qc_import_report {
     cat "\$report"
     echo '${fence}'
   } > slack-report.txt
-  rnac notify file slack-report.txt || echo "Slack QC notification failed (non-fatal)"
+  rnac notify file slack-report.txt --username "RNAcentral import" || echo "Slack QC notification failed (non-fatal)"
   """ : "true"
   """
   report="import-qc-report.txt"
@@ -196,7 +196,7 @@ process qc_analyze_after {
     cat "\$report"
     echo '${fence}'
   } > slack-report.txt
-  rnac notify file slack-report.txt || echo "Slack QC notification failed (non-fatal)"
+  rnac notify file slack-report.txt --username "RNAcentral analyze" || echo "Slack QC notification failed (non-fatal)"
   """ : "true"
   """
   report="analyze-qc-report.txt"
@@ -277,7 +277,7 @@ process qc_export_report {
     cat "\$report"
     echo '${fence}'
   } > slack-report.txt
-  rnac notify file slack-report.txt || echo "Slack QC notification failed (non-fatal)"
+  rnac notify file slack-report.txt --username "RNAcentral export" || echo "Slack QC notification failed (non-fatal)"
   """ : "true"
   """
   report="export-qc-report.txt"
