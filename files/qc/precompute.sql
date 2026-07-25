@@ -24,7 +24,6 @@ SELECT count(*) AS total, count(*) FILTER (WHERE has_issue) AS with_issue
 FROM qa_status;
 
 \echo
-\echo '### Precompute — this run'
 SELECT metric, value, status
 FROM (
   SELECT 1 AS ord, 'active_sequences' AS metric, active_sequences::text AS value, 'ok' AS status
