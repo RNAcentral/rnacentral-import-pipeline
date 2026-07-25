@@ -289,7 +289,6 @@ process qc_export_report {
     ${qc_header('export stage')}
     echo " Publish dir: \$pubdir"
     echo
-    echo '### Exported files'
     had_problem=0
     for f in \\
       release_notes.txt \\

@@ -13,7 +13,6 @@ SELECT
 FROM rnc_genes;
 
 \echo
-\echo '### Genes — this run'
 SELECT metric, value, status
 FROM (
   SELECT 1 AS ord, 'active_genes' AS metric, active_genes::text AS value, 'ok' AS status FROM g
