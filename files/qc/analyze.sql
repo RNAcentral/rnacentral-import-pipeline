@@ -29,7 +29,7 @@ CREATE TEMP TABLE before_counts (analysis text, before_count bigint);
 WITH tracked AS (
   SELECT 'rfam scan' AS analysis, 1 AS ord,
          count(*) FILTER (WHERE last_run >= NULLIF(:'run_start', '')::timestamptz) AS sequences_run,
-         count(*) AS total
+         count(*) AS running_total
   FROM pipeline_tracking_qa_scan
   UNION ALL
   SELECT 'r2dt', 2,
@@ -43,7 +43,7 @@ WITH tracked AS (
 untracked AS (
   SELECT ac.analysis, ac.ord,
          ac.after_count - coalesce(bc.before_count, 0) AS sequences_run,
-         ac.after_count AS total
+         ac.after_count AS running_total
   FROM (
     SELECT 'cpat'     AS analysis, 4 AS ord, count(*) AS after_count FROM cpat_results
     UNION ALL SELECT 'tcode',    5, count(*) FROM tcode_results
@@ -51,16 +51,16 @@ untracked AS (
   ) ac
   LEFT JOIN before_counts bc ON bc.analysis = ac.analysis
 )
-SELECT analysis, sequences_run, total,
+SELECT analysis, sequences_run, running_total,
        CASE
          WHEN NULLIF(:'run_start', '') IS NOT NULL AND sequences_run <= 0
            THEN 'CHECK: nothing processed (step skipped/failed?)'
          ELSE 'ok'
        END AS status
 FROM (
-  SELECT analysis, ord, sequences_run, total FROM tracked
+  SELECT analysis, ord, sequences_run, running_total FROM tracked
   UNION ALL
-  SELECT analysis, ord, sequences_run, total FROM untracked
+  SELECT analysis, ord, sequences_run, running_total FROM untracked
 ) x
 ORDER BY ord;
 
