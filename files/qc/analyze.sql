@@ -26,10 +26,9 @@ CREATE TEMP TABLE before_counts (analysis text, before_count bigint);
 \copy before_counts FROM 'analyze-before.csv' WITH (FORMAT csv)
 
 \echo
-\echo '### Analyze — sequences processed this run'
 WITH tracked AS (
   SELECT 'rfam scan' AS analysis, 1 AS ord,
-         count(*) FILTER (WHERE last_run >= NULLIF(:'run_start', '')::timestamptz) AS processed_this_run,
+         count(*) FILTER (WHERE last_run >= NULLIF(:'run_start', '')::timestamptz) AS sequences_run,
          count(*) AS total
   FROM pipeline_tracking_qa_scan
   UNION ALL
@@ -43,7 +42,7 @@ WITH tracked AS (
 ),
 untracked AS (
   SELECT ac.analysis, ac.ord,
-         ac.after_count - coalesce(bc.before_count, 0) AS processed_this_run,
+         ac.after_count - coalesce(bc.before_count, 0) AS sequences_run,
          ac.after_count AS total
   FROM (
     SELECT 'cpat'     AS analysis, 4 AS ord, count(*) AS after_count FROM cpat_results
@@ -52,16 +51,16 @@ untracked AS (
   ) ac
   LEFT JOIN before_counts bc ON bc.analysis = ac.analysis
 )
-SELECT analysis, processed_this_run, total,
+SELECT analysis, sequences_run, total,
        CASE
-         WHEN NULLIF(:'run_start', '') IS NOT NULL AND processed_this_run <= 0
+         WHEN NULLIF(:'run_start', '') IS NOT NULL AND sequences_run <= 0
            THEN 'CHECK: nothing processed (step skipped/failed?)'
          ELSE 'ok'
        END AS status
 FROM (
-  SELECT analysis, ord, processed_this_run, total FROM tracked
+  SELECT analysis, ord, sequences_run, total FROM tracked
   UNION ALL
-  SELECT analysis, ord, processed_this_run, total FROM untracked
+  SELECT analysis, ord, sequences_run, total FROM untracked
 ) x
 ORDER BY ord;
 
