@@ -16,7 +16,6 @@ docs/incremental-parsing.md.
 
 import csv
 import hashlib
-import io
 import json
 from pathlib import Path
 import typing as ty
@@ -219,6 +218,40 @@ def apply_artifacts(
         )
 
 
+class _CopySource:
+    """
+    A read-only file object that serialises ``(accession, signature)`` tuples to CSV
+    lazily, one row at a time, for ``copy_expert``. At ENA scale the full signature
+    set is multiple GB, so buffering it into a single StringIO before COPY is what
+    OOM-killed the diff; this pulls rows from the iterator only as psycopg2 reads.
+    """
+
+    def __init__(self, rows: ty.Iterable[ty.Tuple[str, str]]):
+        self._writer = csv.writer(self)
+        self._rows = iter(rows)
+        self._buf = ""
+        self._out = ""
+
+    def write(self, text: str) -> int:
+        # csv.writer writes here; stash the rendered row for read() to hand out.
+        self._out += text
+        return len(text)
+
+    def read(self, size: int = -1) -> str:
+        while size < 0 or len(self._buf) < size:
+            try:
+                self._writer.writerow(next(self._rows))
+            except StopIteration:
+                break
+            self._buf += self._out
+            self._out = ""
+        if size < 0:
+            chunk, self._buf = self._buf, ""
+            return chunk
+        chunk, self._buf = self._buf[:size], self._buf[size:]
+        return chunk
+
+
 @attr.s(frozen=True)
 class DbDiff:
     """Result of a database-side diff (see :func:`diff_via_db`)."""
@@ -253,13 +286,9 @@ def diff_via_db(
             "CREATE TEMP TABLE _new_manifest (accession text PRIMARY KEY, signature text NOT NULL) ON COMMIT DROP"
         )
 
-        buffer = io.StringIO()
-        writer = csv.writer(buffer)
-        for accession, signature in signatures:
-            writer.writerow([accession, signature])
-        buffer.seek(0)
         cur.copy_expert(
-            "COPY _new_manifest (accession, signature) FROM STDIN WITH CSV", buffer
+            "COPY _new_manifest (accession, signature) FROM STDIN WITH CSV",
+            _CopySource(signatures),
         )
 
         cur.execute(
