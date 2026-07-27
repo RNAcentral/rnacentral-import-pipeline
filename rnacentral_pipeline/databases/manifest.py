@@ -282,13 +282,26 @@ def diff_via_db(
     """
     ensure_table(conn)
     with conn.cursor() as cur:
+        # Stream into an unconstrained staging table first: ENA can emit the same
+        # location-based accession twice within one snapshot, which would abort a
+        # COPY straight into a PRIMARY KEY table. Collapse the duplicates on the way
+        # in, the same last-wins way store_signatures/apply_artifacts already do.
         cur.execute(
-            "CREATE TEMP TABLE _new_manifest (accession text PRIMARY KEY, signature text NOT NULL) ON COMMIT DROP"
+            "CREATE TEMP TABLE _new_manifest_raw (accession text NOT NULL, signature text NOT NULL) ON COMMIT DROP"
         )
 
         cur.copy_expert(
-            "COPY _new_manifest (accession, signature) FROM STDIN WITH CSV",
+            "COPY _new_manifest_raw (accession, signature) FROM STDIN WITH CSV",
             _CopySource(signatures),
+        )
+
+        cur.execute(
+            "CREATE TEMP TABLE _new_manifest (accession text PRIMARY KEY, signature text NOT NULL) ON COMMIT DROP"
+        )
+        cur.execute(
+            "INSERT INTO _new_manifest (accession, signature) "
+            "SELECT DISTINCT ON (accession) accession, signature "
+            "FROM _new_manifest_raw ORDER BY accession"
         )
 
         cur.execute(
