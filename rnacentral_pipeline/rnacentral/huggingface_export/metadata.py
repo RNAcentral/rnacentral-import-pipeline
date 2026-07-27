@@ -24,10 +24,10 @@ def get_active_sequence_count(cur):
     # Must match the predicate in files/ftp-export/sequences/active.sql (the query
     # that actually produces the uploaded parquet): is_active AND taxid IS NULL.
     query = """select
-  count(pc.upi)
+  count(distinct pc.upi)
   from rnc_rna_precomputed pc
   join rna on rna.upi = pc.upi
-    where is_active and taxid is NULL
+    where is_active 
     """
     cur.execute(query)
     active_seq_count = cur.fetchone()[0]
