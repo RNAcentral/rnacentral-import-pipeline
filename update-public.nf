@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 process dump_data {
-  container ''
+  
   time '2d'
 
   output:
@@ -48,7 +48,7 @@ process dump_data {
 }
 
 process populate_public {
-  container ''
+  
   time '4d'
 
   input:
