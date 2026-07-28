@@ -1,9 +1,39 @@
-*
-!requirements.txt
-!Cargo.toml
-!Cargo.lock
-!utils
-!openssl
-!poetry.lock
-!pyproject.toml
-!Makefile
+# Exclude build and development files
+.git/
+.github/
+*.nf
+workflows/
+tests/
+containers/
+Dockerfile.old
+.dockerignore
+.gitignore
+.pre-commit-config.yaml
+pytest.ini
+.python-version
+RELEASE.rst
+LICENSE
+README.md
+*.md
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

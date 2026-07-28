@@ -15,8 +15,8 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 import rnacentral_pipeline.rnacentral.precompute.qa.contamination as cont
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 
 from .. import helpers
 
@@ -49,9 +49,9 @@ def test_can_detect_possible_contamination(rna_id: str, rna_type: str, flag: boo
             "URS00002C6CD1_6239",
             "rRNA",
             (
-                u"This <i>Caenorhabditis elegans</i> sequence matches a Bacteria "
-                u'Rfam model (<a href="http://rfam.org/family/RF00177">SSU_rRNA_bacteria</a>). '
-                u'<a href="/help/rfam-annotations">Learn more &rarr;</a>'
+                "This <i>Caenorhabditis elegans</i> sequence matches a Bacteria "
+                'Rfam model (<a href="http://rfam.org/family/RF00177">SSU_rRNA_bacteria</a>). '
+                '<a href="/help/qc">Learn more &rarr;</a>'
             ),
         )
     ],

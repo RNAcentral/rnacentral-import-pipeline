@@ -1,8 +1,28 @@
-process build_id_mapping {
+process build_id_mapping_chunk {
+  tag { chunk }
+  maxForks 4
+
+  input:
+  tuple val(chunk), path(query)
+
+  output:
+  path("chunk_${chunk}.tsv")
+
+  script:
+  """
+  set -euo pipefail
+
+  export PYTHONIOENCODING=utf8
+  psql -v ON_ERROR_STOP=1 -v chunk=${chunk} -f "$query" "\$PGDATABASE" > raw_${chunk}.json
+  rnac ftp-export id-mapping raw_${chunk}.json - | sort -T . -u > chunk_${chunk}.tsv
+  """
+}
+
+process merge_id_mapping {
   publishDir "${params.export.ftp.publish}/id_mapping/", mode: 'copy'
 
   input:
-  path(query)
+  path('chunk*.tsv')
   path('template.txt')
 
   output:
@@ -10,11 +30,11 @@ process build_id_mapping {
   path("example.txt"), emit: 'example'
   path("readme.txt"), emit: 'readme'
 
+  script:
   """
   set -euo pipefail
 
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw_id_mapping.tsv
-  rnac ftp-export id-mapping raw_id_mapping.tsv - | sort -u > id_mapping.tsv
+  sort -T . -m -u chunk*.tsv > id_mapping.tsv
   head id_mapping.tsv > example.txt
   gzip id_mapping.tsv
   cat template.txt > readme.txt
@@ -31,6 +51,7 @@ process database_mapping {
   output:
   path('*.tsv')
 
+  script:
   """
   set -euo pipefail
 
@@ -42,7 +63,13 @@ workflow id_mapping {
   Channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql') | set { id_query }
   Channel.fromPath('files/ftp-export/id-mapping/readme.txt') | set { readme_template }
 
-  build_id_mapping(id_query, readme_template)
+  Channel.of('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f') \
+  | combine(id_query) \
+  | build_id_mapping_chunk \
+  | collect \
+  | set { chunks }
 
-  build_id_mapping.out.mapping | database_mapping
+  merge_id_mapping(chunks, readme_template)
+
+  merge_id_mapping.out.mapping | database_mapping
 }

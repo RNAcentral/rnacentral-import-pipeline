@@ -13,16 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pytest
-
-from rnacentral_pipeline.databases.rgd.helpers import indexed
 from rnacentral_pipeline.databases.rgd import parser as rgd
-
-
-@pytest.fixture
-def sequences():
-    with indexed("data/rgd/sequences.fa.gz") as sequences:
-        yield sequences
+from rnacentral_pipeline.databases import rgd as rgd_db
 
 
 def test_can_find_version():
@@ -30,8 +22,11 @@ def test_can_find_version():
         assert rgd.get_version(raw) == "genes-version-2.2.5"
 
 
-@pytest.mark.xfail()
-def test_can_parse_data(sequences):
+def test_can_parse_data(monkeypatch):
+    monkeypatch.setattr(rgd_db.helpers.phy, "lineage", lambda _: "lineage")
+    monkeypatch.setattr(rgd_db.helpers.phy, "common_name", lambda _: "Norway rat")
+    monkeypatch.setattr(rgd_db.helpers.phy, "species", lambda _: "Rattus norvegicus")
+
     with open("data/rgd/rat_genes.txt", "r") as raw:
-        entries = list(rgd.parse(raw, sequences))
+        entries = list(rgd.parse(raw, "data/rgd/sequences.fa.gz"))
     assert len(entries) == 14

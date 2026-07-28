@@ -51,6 +51,17 @@ gene = op.itemgetter("SYMBOL")
 locus_tag = op.itemgetter("SYMBOL")
 
 
+PREFERRED_ASSEMBLIES = ["Rnor_6.0", "mRatBN7.2", "GRCr8", "Rnor_5.0"]
+
+
+def _assembly_suffix(entry):
+    available = {key[len("CHROMOSOME_"):] for key in entry if key.startswith("CHROMOSOME_")}
+    for assembly in PREFERRED_ASSEMBLIES:
+        if assembly in available:
+            return assembly
+    raise ValueError("Cannot find a known chromosome column in entry: %s" % list(entry.keys()))
+
+
 def known_organisms():
     """
     Get the names of organisms that RGD annotates. This will only return 'rat'
@@ -105,13 +116,14 @@ class RgdLocation(object):
 
     @classmethod
     def from_dict(cls, entry):
-        if not entry["CHROMOSOME_6.0"]:
+        suffix = _assembly_suffix(entry)
+        if not entry[f"CHROMOSOME_{suffix}"]:
             return None
 
-        chromosomes = entry["CHROMOSOME_6.0"].split(";")
-        starts = [int(p) for p in entry["START_POS_6.0"].split(";")]
-        stops = [int(p) for p in entry["STOP_POS_6.0"].split(";")]
-        strands = entry["STRAND_6.0"].split(";")
+        chromosomes = entry[f"CHROMOSOME_{suffix}"].split(";")
+        starts = [int(p) for p in entry[f"START_POS_{suffix}"].split(";")]
+        stops = [int(p) for p in entry[f"STOP_POS_{suffix}"].split(";")]
+        strands = entry[f"STRAND_{suffix}"].split(";")
         assert len(chromosomes) == len(starts) == len(stops) == len(strands)
 
         return cls(
@@ -180,8 +192,8 @@ def indexed(filename):
     sequences.
     """
 
-    with tempfile.NamedTemporaryFile() as tmp:
-        with gzip.open(filename, "r") as raw:
+    with tempfile.NamedTemporaryFile(mode="w+") as tmp:
+        with gzip.open(filename, "rt") as raw:
             SeqIO.write(corrected_records(raw), tmp, "fasta")
 
         tmp.flush()
@@ -251,24 +263,25 @@ def seq_xref_ids(entry):
     """
 
     xref_ids = []
-    exon_data = exons(entry)
+    region_data = regions(entry)
     for ids in xref_data(entry).values():
-        for exon in exon_data:
+        for region in region_data:
+            exon = region.exons[0]
             for xref_id in ids:
                 key = "{xref_id}-{gene_id}-{chr}:{start}..{stop}".format(
                     xref_id=xref_id,
                     gene_id=primary_id(entry),
-                    chr=exon.chromosome_name,
-                    start=exon.primary_start,
-                    stop=exon.primary_end,
+                    chr=f"chr{region.chromosome}",
+                    start=exon.start,
+                    stop=exon.stop,
                 )
                 xref_ids.append((key, exon))
 
     return xref_ids
 
 
-def transcripts(genes, seqs):
-    return []
+def transcripts(entry, seqs):
+    return [sequence for sequence, _ in sequences_for(entry, seqs)]
 
 
 def sequences_for(entry, sequences):
@@ -293,13 +306,14 @@ def as_region(chromosomes, starts, stops, strands, index):
 
 
 def regions(entry):
-    if not entry["CHROMOSOME_6.0"]:
+    suffix = _assembly_suffix(entry)
+    if not entry[f"CHROMOSOME_{suffix}"]:
         return []
 
-    chromosomes = entry["CHROMOSOME_6.0"].split(";")
-    starts = [int(p) for p in entry["START_POS_6.0"].split(";")]
-    stops = [int(p) for p in entry["STOP_POS_6.0"].split(";")]
-    strands = entry["STRAND_6.0"].split(";")
+    chromosomes = entry[f"CHROMOSOME_{suffix}"].split(";")
+    starts = [int(p) for p in entry[f"START_POS_{suffix}"].split(";")]
+    stops = [int(p) for p in entry[f"STOP_POS_{suffix}"].split(";")]
+    strands = entry[f"STRAND_{suffix}"].split(";")
     assert len(chromosomes) == len(starts) == len(stops) == len(strands)
 
     total = range(len(chromosomes))
@@ -350,42 +364,39 @@ def gene_synonyms(entry):
     return []
 
 
-def as_entries(genes, seqs):
-    # sequences = sequences_for(data, seqs)
-    for gene in genes:
-        ncrnas = []
+def as_entries(entry, seqs):
+    ncrnas = []
 
-        sequences = transcripts(genes, seqs)
-        for index, sequence in enumerate(sequences):
-            acc_index = index + 1
-            if len(sequences) == 1:
-                acc_index = None
+    sequences = transcripts(entry, seqs)
+    for index, sequence in enumerate(sequences):
+        acc_index = index + 1
+        if len(sequences) == 1:
+            acc_index = None
 
-            ncrnas.append(
-                data.Entry(
-                    primary_id=primary_id(gene),
-                    accession=accession(gene, acc_index),
-                    ncbi_tax_id=taxid(gene),
-                    database="RGD",
-                    sequence=sequence,
-                    regions=regions(gene, sequence),
-                    rna_type=rna_type(gene),
-                    url=url(gene),
-                    seq_version=seq_version(gene),
-                    xref_data=xref_data(gene),
-                    common_name=common_name(gene),
-                    species=species(gene),
-                    lineage=lineage(gene),
-                    gene=gene(gene),
-                    locus_tag=locus_tag(gene),
-                    gene_synonyms=gene_synonyms(gene),
-                    description=description(gene),
-                    references=references(gene),
-                )
+        ncrnas.append(
+            data.Entry(
+                primary_id=primary_id(entry),
+                accession=accession(entry, acc_index),
+                ncbi_tax_id=taxid(entry),
+                database="RGD",
+                sequence=sequence,
+                regions=regions(entry),
+                rna_type=rna_type(entry),
+                url=url(entry),
+                seq_version=seq_version(entry),
+                xref_data=xref_data(entry),
+                common_name=common_name(entry),
+                species=species(entry),
+                lineage=lineage(entry),
+                gene=gene(entry),
+                locus_tag=locus_tag(entry),
+                gene_synonyms=gene_synonyms(entry),
+                description=description(entry),
+                references=references(entry),
             )
+        )
 
-        for entry in data.generate_related(ncrnas):
-            yield entry
+    return list(data.related_isoforms(ncrnas))
 
     # for index, (sequence, _) in enumerate(sequences):
     # acc_index = index + 1

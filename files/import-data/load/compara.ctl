@@ -14,14 +14,14 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
+AFTER LOAD DO
 $$
-drop table if exists load_compara;
+ALTER TABLE rnacen.load_compara SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
 $$,
 $$
-CREATE TABLE load_compara (
-  homology_group text not null,
-  ensembl_transcript text not null
-);
+ANALYZE rnacen.load_compara;
 $$
 ;

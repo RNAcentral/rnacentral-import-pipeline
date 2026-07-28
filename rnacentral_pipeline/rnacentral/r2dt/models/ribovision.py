@@ -14,9 +14,20 @@ limitations under the License.
 """
 
 import csv
+import typing as ty
 
 from rnacentral_pipeline.databases.helpers.phylogeny import FailedTaxonId, taxid
 from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
+
+
+def load_stats(handle) -> dict:
+    stats = {}
+    if handle is None:
+        return stats
+    for row in csv.reader(handle):
+        if row:
+            stats[row[0]] = {"length": int(row[1]), "basepairs": int(row[2])}
+    return stats
 
 
 def lookup_taxid(species):
@@ -89,21 +100,22 @@ def so_term(row):
 
 
 def parse(handle, extra=None):
+    stats = load_stats(extra)
     for row in csv.DictReader(handle, delimiter="\t"):
         so_term_id = so_term(row)
 
         if not row.get("taxid", None):
-            taxid = lookup_taxid(row["species"])
+            tid = lookup_taxid(row["species"])
         else:
-            taxid = int(row["taxid"])
+            tid = int(row["taxid"])
 
-        # location = as_location(row["cellular_location"])
+        model_stats = stats.get(row["model_name"], {})
         yield ModelInfo(
             model_name=row["model_name"],
             so_rna_type=so_term_id,
-            taxid=taxid,
+            taxid=tid,
             source=Source.ribovision,
             cell_location=None,
-            length=None,
-            basepairs=None,
+            length=model_stats.get("length"),
+            basepairs=model_stats.get("basepairs"),
         )

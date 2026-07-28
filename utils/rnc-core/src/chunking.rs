@@ -50,13 +50,13 @@ pub struct ChunkSpec {
 
 impl From<RawChunk> for SingleChunk {
     fn from(raw: RawChunk) -> SingleChunk {
-        return Self {
+        Self {
             endpoints: Range {
                 start: raw.start,
                 end: raw.stop + 1,
             },
             filename: raw.filename,
-        };
+        }
     }
 }
 

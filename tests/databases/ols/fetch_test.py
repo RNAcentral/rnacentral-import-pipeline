@@ -13,7 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import asyncio
+
 import pytest
+import requests
 from furl import furl
 
 from rnacentral_pipeline.databases.data import OntologyTerm
@@ -108,3 +111,130 @@ def test_caching_works_as_expected():
         assert ols.term("SO:0000276").insdc_qualifier == "miRNA"
         assert ols.term.cache_info().hits == count + 1
         assert ols.term.cache_info().misses == 1
+
+
+def test_retries_transient_ols_errors(monkeypatch):
+    calls = {"count": 0}
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self.payload = payload
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise requests.HTTPError(response=self)
+
+        def json(self):
+            return self.payload
+
+    def fake_get(url, timeout=30):
+        calls["count"] += 1
+        if calls["count"] < 3:
+            return FakeResponse(503, {})
+        return FakeResponse(200, {"label": "term"})
+
+    monkeypatch.setattr(ols.requests, "get", fake_get)
+    sleep_calls = []
+
+    async def fake_sleep(delay):
+        sleep_calls.append(delay)
+
+    monkeypatch.setattr(ols.asyncio, "sleep", fake_sleep)
+
+    result = asyncio.run(ols.query_ols("https://example.org/term"))
+
+    assert result == {"label": "term"}
+    assert calls["count"] == 3
+    assert sleep_calls == [1, 2]
+
+
+def test_does_not_retry_non_transient_ols_errors(monkeypatch):
+    calls = {"count": 0}
+
+    class FakeResponse:
+        status_code = 404
+
+        def raise_for_status(self):
+            raise requests.HTTPError(response=self)
+
+    def fake_get(url, timeout=30):
+        calls["count"] += 1
+        return FakeResponse()
+
+    monkeypatch.setattr(ols.requests, "get", fake_get)
+
+    async def fake_sleep(delay):
+        return None
+
+    monkeypatch.setattr(ols.asyncio, "sleep", fake_sleep)
+
+    with pytest.raises(requests.HTTPError):
+        asyncio.run(ols.query_ols("https://example.org/term"))
+
+    assert calls["count"] == 1
+
+
+def test_retries_404s_for_ols_term_endpoints(monkeypatch):
+    calls = {"count": 0}
+
+    class FakeResponse:
+        def __init__(self, status_code, url, payload):
+            self.status_code = status_code
+            self.url = url
+            self.payload = payload
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise requests.HTTPError(response=self)
+
+        def json(self):
+            return self.payload
+
+    def fake_get(url, timeout=30):
+        calls["count"] += 1
+        if calls["count"] < 3:
+            return FakeResponse(404, url, {})
+        return FakeResponse(200, url, {"label": "term"})
+
+    monkeypatch.setattr(ols.requests, "get", fake_get)
+    sleep_calls = []
+
+    async def fake_sleep(delay):
+        sleep_calls.append(delay)
+
+    monkeypatch.setattr(ols.asyncio, "sleep", fake_sleep)
+
+    result = asyncio.run(ols.query_ols("https://example.org/ols4/api/ontologies/SO/terms/x"))
+
+    assert result == {"label": "term"}
+    assert calls["count"] == 3
+    assert sleep_calls == [1, 2]
+
+
+def test_does_not_retry_404s_for_non_term_ols_endpoints(monkeypatch):
+    calls = {"count": 0}
+
+    class FakeResponse:
+        def __init__(self, url):
+            self.status_code = 404
+            self.url = url
+
+        def raise_for_status(self):
+            raise requests.HTTPError(response=self)
+
+    def fake_get(url, timeout=30):
+        calls["count"] += 1
+        return FakeResponse(url)
+
+    monkeypatch.setattr(ols.requests, "get", fake_get)
+
+    async def fake_sleep(delay):
+        return None
+
+    monkeypatch.setattr(ols.asyncio, "sleep", fake_sleep)
+
+    with pytest.raises(requests.HTTPError):
+        asyncio.run(ols.query_ols("https://example.org/ols4/api/ontologies/SO"))
+
+    assert calls["count"] == 1

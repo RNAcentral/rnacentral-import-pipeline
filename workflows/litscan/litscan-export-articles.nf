@@ -19,9 +19,9 @@ process create_xml_files {
 
 workflow export_articles {
     take: ready
-    emit: done
     main:
       create_xml_files(ready) | set{ done }
+    emit: done
 }
 
 workflow {

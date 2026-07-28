@@ -6,7 +6,20 @@ COPY(
   FROM rnc_accessions
   JOIN xref
   ON xref.ac = rnc_accessions.accession
+  JOIN rnc_database
+  ON rnc_database.id = xref.dbid
   WHERE xref.deleted = 'N'
-  AND xref.dbid in (15,16,18,20,24,25,33,40,41,51)
+  AND upper(rnc_database.descr) IN (
+    'INTACT',
+    'LNCBASE',
+    'LNCIPEDIA',
+    'MALACARDS',
+    'MODOMICS',
+    'NONCODE',
+    'SGD',
+    'TARBASE',
+    'TMRNA_WEB',
+    'EXPRESSION_ATLAS'
+  )
 
   ) TO STDOUT CSV HEADER

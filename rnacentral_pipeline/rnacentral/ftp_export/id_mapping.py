@@ -59,6 +59,9 @@ class IdMapping:
                 acc = re.sub(r"\.\d\d+$", "", acc_range)
                 start, stop = endpoints.split("..", 1)
                 gene = f"{acc}/{start}-{stop}"
+        elif self.database == "TAIR":
+            accession = self.gene
+            gene = self.external_id
 
         return [
             self.upi,

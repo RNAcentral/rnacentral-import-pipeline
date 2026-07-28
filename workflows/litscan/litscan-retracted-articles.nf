@@ -15,9 +15,9 @@ process check_articles {
 
 workflow find_retracted_articles {
     take: ready
-    emit: done
     main:
       check_articles(ready) | set{ done }
+    emit: done
 }
 
 workflow {

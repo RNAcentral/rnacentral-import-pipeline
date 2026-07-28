@@ -1,9 +1,10 @@
 process intact {
-  when { params.databases.intact.run }
-
   output:
   path('*.csv')
 
+  when: { params.databases.intact?.run }
+
+  script:
   """
   mkdir fetched
   pushd fetched

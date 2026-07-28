@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime
 import json
 import logging
 import typing as ty
@@ -22,8 +23,6 @@ import psycopg2
 import psycopg2.extras
 from attr.validators import instance_of as is_a
 from pypika import Order, Query, Table
-from pypika import analytics as an
-from pypika import functions as fn
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +36,27 @@ WHERE
     and xref.deleted = 'N'
 """
 
+SEQUENCE_STATS_QUERY = """
+WITH joined AS MATERIALIZED (
+    SELECT rna.len AS length, xref.taxid
+    FROM rna
+    JOIN xref_p{dbid}_not_deleted xref ON xref.upi = rna.upi
+),
+by_length AS (
+    SELECT length, count(*) AS count
+    FROM joined
+    GROUP BY length
+    ORDER BY length
+)
+SELECT
+    (SELECT min(length) FROM joined) AS min_length,
+    (SELECT max(length) FROM joined) AS max_length,
+    (SELECT avg(length) FROM joined) AS avg_length,
+    (SELECT count(*) FROM joined) AS num_sequences,
+    (SELECT count(distinct taxid) FROM joined) AS num_organisms,
+    (SELECT coalesce(json_agg(by_length), '[]') FROM by_length) AS length_counts
+"""
+
 
 @attr.s()
 class DatabaseStats:
@@ -48,6 +68,9 @@ class DatabaseStats:
     num_organisms = attr.ib(validator=is_a(int))
     lineage = attr.ib(validator=is_a(str))
     length_counts = attr.ib(validator=is_a(str))
+    last_import_date = attr.ib(
+        validator=attr.validators.optional(is_a(datetime.datetime)), default=None
+    )
 
 
 def json_lineage_tree(xrefs) -> str:
@@ -148,70 +171,47 @@ def lineage(conn, db_id: int):
         return json_lineage_tree(data)
 
 
-def lengths(conn, db_id: int) -> ty.Dict[str, ty.Any]:
-    rna = Table("rna")
-    xref = Table(f"xref_p{db_id}_not_deleted")
-    min_length = an.Min(rna.len).as_("min_length")
-    max_length = an.Max(rna.len).as_("max_length")
-    avg_length = an.Avg(rna.len).as_("avg_length")
-    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-        query = (
-            Query.from_(rna)
-            .select(min_length, max_length, avg_length)
-            .join(xref)
-            .on(xref.upi == rna.upi)
-        )
-        cursor.execute(str(query))
-        r = {k: v if v is not None else 0 for k, v in dict(cursor.fetchone()).items()}
-
-        return r
+def sequence_stats(conn, db_id: int) -> ty.Dict[str, ty.Any]:
+    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+        cur.execute(SEQUENCE_STATS_QUERY.format(dbid=db_id))
+        row = dict(cur.fetchone())
+    row["min_length"] = row["min_length"] or 0
+    row["max_length"] = row["max_length"] or 0
+    row["avg_length"] = float(row["avg_length"] or 0)
+    row["length_counts"] = json.dumps(row["length_counts"] or [])
+    return row
 
 
-def count_sequences(conn, db_id: int) -> int:
-    xref = Table(f"xref_p{db_id}_not_deleted")
-    with conn.cursor() as cursor:
-        query = Query.from_(xref).select(fn.Count(xref.upi).distinct())
-        cursor.execute(str(query))
-        return cursor.fetchone()[0]
-
-
-def count_organisms(conn, db_id: int) -> int:
-    xref = Table(f"xref_p{db_id}_not_deleted")
-    with conn.cursor() as cursor:
-        query = Query.from_(xref).select(fn.Count(xref.taxid).distinct())
-        cursor.execute(str(query))
-        return cursor.fetchone()[0]
-
-
-def length_counts(conn, db_id: int) -> str:
-    rna = Table("rna")
-    xref = Table(f"xref_p{db_id}_not_deleted")
+def last_import_date(conn, db_id: int) -> ty.Optional[datetime.datetime]:
+    rnc_rel = Table("rnc_release")
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         query = (
-            Query.from_(rna)
-            .select(rna.len.as_("length"), fn.Count(rna.upi).as_("count"))
-            .join(xref)
-            .on(xref.upi == rna.upi)
-            .groupby(rna.len)
-            .orderby(rna.len, order=Order.asc)
+            Query.from_(rnc_rel)
+            .select(rnc_rel.release_date)
+            .where(rnc_rel.dbid == db_id)
+            .orderby(rnc_rel.release_date, order=Order.desc)
+            .limit(1)
         )
         cur.execute(str(query))
-        data = [dict(row) for row in cur]
-        return json.dumps(data)
+        row = cur.fetchone()
+    if row is None:
+        return None
+    return row["release_date"]
 
 
 def update(conn, descr: str, db_id: int) -> DatabaseStats:
     LOGGER.info("Updating data for %s", descr)
-    length_info = lengths(conn, db_id)
+    stats = sequence_stats(conn, db_id)
     return DatabaseStats(
         name=descr,
-        min_length=length_info["min_length"],
-        max_length=length_info["max_length"],
-        avg_length=float(length_info["avg_length"]),
-        num_sequences=count_sequences(conn, db_id),
-        num_organisms=count_organisms(conn, db_id),
+        min_length=stats["min_length"],
+        max_length=stats["max_length"],
+        avg_length=stats["avg_length"],
+        num_sequences=stats["num_sequences"],
+        num_organisms=stats["num_organisms"],
         lineage=lineage(conn, db_id),
-        length_counts=length_counts(conn, db_id),
+        length_counts=stats["length_counts"],
+        last_import_date=last_import_date(conn, db_id),
     )
 
 
@@ -238,6 +238,7 @@ def insert(conn, stats: DatabaseStats):
             "avg_length",
             "num_sequences",
             "num_organisms",
+            "last_import_date",
         ]
         for name in fields:
             update = (

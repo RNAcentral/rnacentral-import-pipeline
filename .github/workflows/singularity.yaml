@@ -2,6 +2,11 @@
 # ghcr so we can pull it easier
 
 name: Singularity Build
+
+permissions:
+  contents: read
+  packages: write
+
 on: workflow_call
 
 

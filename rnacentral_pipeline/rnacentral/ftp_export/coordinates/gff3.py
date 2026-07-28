@@ -30,6 +30,10 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
     """
 
     for raw_region in regions:
+        if raw_region.start is None or raw_region.stop is None or raw_region.stop <= raw_region.start:
+            LOGGER.warning("Skipping region %s: invalid coordinates start=%s stop=%s",
+                           raw_region.region_id, raw_region.start, raw_region.stop)
+            continue
         region = raw_region.as_one_based()
         attributes = OrderedDict(
             [
@@ -48,10 +52,16 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
         if region.source == "alignment" and region.identity:
             attributes["identity"] = ["%.2f" % region.identity]
 
+        if region.source == "genes-prediction":
+            attributes["provider"] = region.metadata["providing_databases"]
+
+        if not region.is_gene and region.metadata.get("parent_gene", None) is not None:
+            attributes["Parent"] = [region.metadata["parent_gene"]]
+
         yield Feature(
             seqid=region.chromosome,
             source="RNAcentral",
-            featuretype="transcript",
+            featuretype="predicted_gene" if region.is_gene else "transcript",
             start=region.start,
             end=region.stop,
             strand=region.string_strand(),
@@ -98,7 +108,7 @@ def write_gff_text(features, output, allow_no_features=False, header=True) -> bo
     if first_feature is None:
         if not allow_no_features:
             raise ValueError("No features written to GFF3 file")
-        LOGGER.warn("No features written to GFF3 file")
+        LOGGER.warning("No features written to GFF3 file")
         return False
 
     if header:

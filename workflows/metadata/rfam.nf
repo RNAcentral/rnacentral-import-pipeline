@@ -1,6 +1,7 @@
 process generic {
   tag { "$name" }
-  when { params.databases.ensembl.vertebrates.run || params.databases.rfam.run }
+
+  when: { params.databases.ensembl?.vertebrates?.run || params.databases.rfam?.run }
 
   input:
   tuple val(name), path(query)
