@@ -11,7 +11,7 @@ json_build_object(
 FROM search_export_urs todo
 JOIN go_term_annotations anno
 ON
-  anno.rna_id = todo.urs_taxid
+  anno.urs_taxid = todo.urs_taxid
 JOIN ontology_terms ont 
 ON ont.ontology_term_id = anno.ontology_term_id
 ORDER BY todo.id

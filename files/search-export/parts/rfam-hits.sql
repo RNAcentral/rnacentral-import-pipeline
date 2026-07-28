@@ -10,7 +10,7 @@ COPY (
   FROM search_export_urs todo
   JOIN rfam_model_hits hits 
   ON
-    todo.urs = hits.upi
+    todo.urs = hits.urs
   JOIN rfam_models models 
   ON 
     hits.rfam_model_id = models.rfam_model_id
