@@ -27,7 +27,7 @@ SELECT
 FROM only xref
 JOIN precompute_urs_taxid todo
 ON
-    xref.upi = todo.urs AND xref.taxid = todo.taxid
+    xref.urs = todo.urs AND xref.taxid = todo.taxid
 );
 
 INSERT INTO precompute_urs_accession

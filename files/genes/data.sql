@@ -2,7 +2,7 @@ COPY (
   select
   json_build_object(
     'taxid', max(pre.taxid),
-    'urs_taxid', max(pre.id),
+    'urs_taxid', max(pre.urs_taxid),
     'assembly_id', :'assembly_id',
     'region_id', max(regions.id),
     'region_name', max(regions.region_name),
@@ -27,13 +27,13 @@ COPY (
 FROM rnc_rna_precomputed pre
 JOIN rnc_sequence_regions regions
 ON
-  regions.urs_taxid = pre.id
+  regions.urs_taxid = pre.urs_taxid
 JOIN rnc_sequence_exons exons
 ON
   exons.region_id = regions.id
 JOIN qa_status qa
 ON
-  qa.rna_id = pre.id
+  qa.urs_taxid = pre.urs_taxid
 JOIN ontology_terms ont
 ON
   ont.ontology_term_id = pre.so_rna_type

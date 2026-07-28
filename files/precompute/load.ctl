@@ -37,8 +37,8 @@ WITH
 AFTER LOAD DO
 $$
 insert into rnc_rna_precomputed (
-  id,
-  upi,
+  urs_taxid,
+  urs,
   taxid,
   is_active,
   rna_type,
@@ -63,7 +63,7 @@ SELECT DISTINCT ON (id)
   so_rna_type
 FROM load_precomputed
 )
-ON CONFLICT (id) DO UPDATE
+ON CONFLICT (urs_taxid) DO UPDATE
 SET
   is_active = EXCLUDED.is_active,
   rna_type = EXCLUDED.rna_type,

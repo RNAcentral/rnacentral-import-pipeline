@@ -13,7 +13,7 @@ SET
   urs_taxid = t.urs_taxid
 FROM (
   select
-     xref.upi || '_' || xref.taxid as urs_taxid,
+     xref.urs || '_' || xref.taxid as urs_taxid,
      acc.external_id as transcript
   from xref
   join rnc_accessions acc on acc.accession = xref.ac

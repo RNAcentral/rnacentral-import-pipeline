@@ -7,24 +7,24 @@ CREATE TABLE :tablename (
 -- Select Skipped somehow
 INSERT INTO :tablename (urs) (
 SELECT DISTINCT
-  xref.upi
+  xref.urs
 FROM xref
 LEFT JOIN rnc_rna_precomputed pre
 ON
-  pre.upi = xref.upi
+  pre.urs = xref.urs
   AND pre.taxid = xref.taxid
 WHERE
-  pre.id IS NULL
+  pre.urs_taxid IS NULL
 );
 
 -- Select novel
 INSERT INTO :tablename (urs) (
 SELECT distinct
-  xref.upi
+  xref.urs
 FROM xref
 LEFT JOIN rnc_rna_precomputed pre
 ON
-  pre.upi = xref.upi
+  pre.urs = xref.urs
   AND pre.taxid = xref.taxid
 WHERE
   pre.last_release is null
@@ -33,11 +33,11 @@ WHERE
 -- Select outdataed
 INSERT INTO :tablename (urs) (
 SELECT distinct
-  xref.upi
+  xref.urs
 FROM xref
 JOIN rnc_rna_precomputed pre
 ON
-  pre.upi = xref.upi
+  pre.urs = xref.urs
   and pre.taxid = xref.taxid
 WHERE
   xref.last > pre.last_release
@@ -54,6 +54,6 @@ WHERE id IN
         WHERE t.row_num > 1 );
 
 ALTER TABLE :tablename
-  ADD CONSTRAINT un_to_precompute_upi UNIQUE (upi),
-  ADD CONSTRAINT fk_to_precompute__upi FOREIGN KEY (upi) REFERENCES rna(upi),
+  ADD CONSTRAINT un_to_precompute_upi UNIQUE (urs),
+  ADD CONSTRAINT fk_to_precompute__upi FOREIGN KEY (urs) REFERENCES rna(urs),
 ;

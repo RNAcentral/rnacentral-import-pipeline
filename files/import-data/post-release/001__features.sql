@@ -18,7 +18,7 @@ INSERT INTO rnc_sequence_features (
   metadata
 ) (
 select distinct
-  xref.upi,
+  xref.urs,
   load.taxid,
   load.accession,
   load.start,

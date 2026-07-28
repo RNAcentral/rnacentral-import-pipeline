@@ -1,3 +1,3 @@
 COPY (
-  select upi from rna
+  select urs from rna
 ) TO STDOUT

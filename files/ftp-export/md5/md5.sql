@@ -1,6 +1,6 @@
 COPY (
 SELECT
-  upi,
+  urs,
   md5
 FROM rna
 ORDER BY id ASC

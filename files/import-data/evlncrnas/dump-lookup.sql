@@ -1,6 +1,6 @@
 COPY(
   SELECT
-    xref.upi as urs,
+    xref.urs as urs,
     xref.taxid as taxid,
     gene || '|' || external_id || '|' || gene_synonym || '|' || optional_id  as external_id
   FROM rnc_accessions

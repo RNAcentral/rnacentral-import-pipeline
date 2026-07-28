@@ -10,6 +10,6 @@ SELECT
   )
 FROM r2dt_results layout
 JOIN r2dt_models models ON models.id = layout.model_id
-JOIN rna ON rna.upi = layout.urs
+JOIN rna ON rna.urs = layout.urs
 LEFT JOIN rfam_models rfam ON rfam.rfam_model_id = models.model_name
 ) TO STDOUT

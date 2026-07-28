@@ -1,5 +1,5 @@
 COPY(
-select upi from xref
+select urs from xref
 
 where deleted = 'N'
 and EXTRACT (DAY FROM (CURRENT_TIMESTAMP - timestamp)) < 7

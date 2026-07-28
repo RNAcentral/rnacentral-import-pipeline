@@ -24,7 +24,7 @@ from loaded_urs
 
 ALTER TABLE precompute_urs
   ADD CONSTRAINT un_precompute_urs__urs UNIQUE (urs),
-  ADD CONSTRAINT fk_precompute_urs__urs FOREIGN KEY (urs) REFERENCES rna(upi)
+  ADD CONSTRAINT fk_precompute_urs__urs FOREIGN KEY (urs) REFERENCES rna(urs)
 ;
 
 INSERT INTO precompute_urs_taxid (urs_taxid, precompute_urs_id, urs, taxid) (
@@ -50,7 +50,7 @@ ALTER TABLE precompute_urs_taxid
 ALTER TABLE precompute_urs_taxid
   ADD CONSTRAINT un_precompute_urs_taxid__urs_taxid UNIQUE (urs_taxid),
   ADD CONSTRAINT un_precompute_urs_taxid__urs__taxid UNIQUE (urs, taxid),
-  ADD CONSTRAINT fk_precompute_urs_taxid__urs FOREIGN KEY (urs) REFERENCES rna(upi),
+  ADD CONSTRAINT fk_precompute_urs_taxid__urs FOREIGN KEY (urs) REFERENCES rna(urs),
   ADD CONSTRAINT fk_precompute_urs_taxid__urs_id FOREIGN KEY(precompute_urs_id) REFERENCES precompute_urs(id)
 ;
 

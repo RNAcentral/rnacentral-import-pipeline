@@ -23,7 +23,7 @@ COPY (
     join rnc_sequence_exons ex on
       ex.region_id = regions.id
     join rnc_rna_precomputed pc on
-      pc.upi = xref.upi
+      pc.urs = xref.urs
     where
       xref.deleted = 'N'
     and 

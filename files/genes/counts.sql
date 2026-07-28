@@ -10,7 +10,7 @@ COPY (
 FROM rnc_rna_precomputed pre
 JOIN rnc_sequence_regions regions
 ON
-  regions.urs_taxid = pre.id
+  regions.urs_taxid = pre.urs_taxid
 WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'

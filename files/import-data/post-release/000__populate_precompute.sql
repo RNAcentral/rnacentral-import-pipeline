@@ -103,14 +103,14 @@ BEGIN
 
     sql_stmt := format($q$
         CREATE UNLOGGED TABLE tmp_new_precompute AS
-        SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.upi, xref.taxid
+        SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.urs, xref.taxid
         FROM xref
         WHERE
           xref.deleted = 'N'
           AND xref.dbid = ANY(%L::int[])
           AND xref.ac IN (SELECT accession FROM tmp_load_accessions)
           AND NOT EXISTS (
-            SELECT 1 FROM rnc_rna_precomputed p WHERE p.id = xref.urs_taxid
+            SELECT 1 FROM rnc_rna_precomputed p WHERE p.urs_taxid = xref.urs_taxid
           )
     $q$, v_dbids);
     EXECUTE sql_stmt;
@@ -142,8 +142,8 @@ BEGIN
     lo := 1;
     WHILE lo <= v_total LOOP
         sql_stmt := format($q$
-            INSERT INTO rnc_rna_precomputed (id, upi, taxid, is_active) (
-            SELECT id, upi, taxid, true
+            INSERT INTO rnc_rna_precomputed (urs_taxid, urs, taxid, is_active) (
+            SELECT id, urs, taxid, true
             FROM tmp_new_precompute
             WHERE rn >= %s AND rn < %s
             ) ON CONFLICT DO NOTHING
@@ -166,9 +166,9 @@ DROP TABLE tmp_load_dbids;
 DROP TABLE tmp_new_precompute;
 
 -- Recreate indexes
-CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
+CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (urs);
 CREATE INDEX rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
-CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (upi, taxid);
+CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (urs, taxid);
 CREATE INDEX ix_rnc_rna_precomputed_assigned_rna ON rnacen.rnc_rna_precomputed USING btree (assigned_so_rna_type);
 CREATE INDEX rnc_rna_precomputed_rna_type_idx ON rnacen.rnc_rna_precomputed USING btree (rna_type);
 

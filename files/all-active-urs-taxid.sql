@@ -1,6 +1,6 @@
 COPY (
   SELECT
-    upi || '_' || taxid
+    urs || '_' || taxid
   from xref
   where
     deleted = 'N'
