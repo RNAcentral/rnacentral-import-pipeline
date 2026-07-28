@@ -56,13 +56,24 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=24.4.2",
-    "isort>=5.13.2",
     "pytest>=7.2.0",
     "maturin>=1.10",
     "line-profiler>=5.0.0",
     "mypy>=1.20.2",
     "crcmod>=1.7",
+    "ruff>=0.9.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort
 ]
 
 [tool.pytest.ini_options]
@@ -72,3 +83,4 @@ markers = [
     "slow: Tests that take a long time",
     "db: Test that require access to our database",
 ]
+
