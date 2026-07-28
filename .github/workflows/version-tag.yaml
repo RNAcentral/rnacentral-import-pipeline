@@ -10,7 +10,7 @@ on:
     types:
       - closed
     branches:
-      - main
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest
