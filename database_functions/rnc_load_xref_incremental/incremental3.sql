@@ -21,7 +21,7 @@ BEGIN
         dbid,
         version,
         version_i,
-        upi,
+        urs,
         created,
         last,
         deleted,
@@ -34,7 +34,7 @@ BEGIN
       T.IN_VERSION,
       CASE T.COMPARABLE_PROT_UPI
         WHEN (
-            SELECT DISTINCT (PREVIOUS_XREF.UPI)
+            SELECT DISTINCT (PREVIOUS_XREF.urs)
             FROM
               RNACEN.XREF PREVIOUS_XREF
             WHERE

@@ -8,7 +8,7 @@ DECLARE
     v_count bigint;
 
 BEGIN
-    select count(distinct upi) INTO v_count
+    select count(distinct urs) INTO v_count
     FROM rnc_reference_map t2
 RIGHT OUTER JOIN xref t1 ON (t2.ACCESSION = t1.ac)
 WHERE t2.accession is null and deleted = 'N';

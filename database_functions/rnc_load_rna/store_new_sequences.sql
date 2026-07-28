@@ -7,7 +7,7 @@ BEGIN
 
     INSERT INTO rna(
         id,
-        upi,
+        urs,
         crc64,
         LEN,
         seq_short,

@@ -12,7 +12,7 @@ DECLARE
 
 BEGIN
 
-    SELECT count(DISTINCT upi) INTO v_distinct_upi FROM rna;
+    SELECT count(DISTINCT urs) INTO v_distinct_upi FROM rna;
     SELECT count(DISTINCT md5) INTO v_distinct_md5 FROM rna;
     SELECT count(*)            INTO v_all_rna_seq  FROM rna;
 

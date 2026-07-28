@@ -133,7 +133,7 @@ BEGIN
     execute 'create index xref_p' || p_in_db_id || '_deleted$ac on xref_p' || p_in_db_id || '_deleted (ac)';
     execute 'create index xref_p' || p_in_db_id || '_deleted$created on xref_p' || p_in_db_id || '_deleted (created)';
     execute 'create index xref_p' || p_in_db_id || '_deleted$last on xref_p' || p_in_db_id || '_deleted (last)';
-    execute 'create index xref_p' || p_in_db_id || '_deleted$upi on xref_p' || p_in_db_id || '_deleted (upi)';
+    execute 'create index xref_p' || p_in_db_id || '_deleted$upi on xref_p' || p_in_db_id || '_deleted (urs)';
     execute 'create index xref_p' || p_in_db_id || '_deleted$taxid on xref_p' || p_in_db_id || '_deleted (taxid)';
 
     --------------------------------------------------------
@@ -151,7 +151,7 @@ BEGIN
     -- dominates the per-database load. run() runs VALIDATE CONSTRAINT after the load loop
     -- (ShareUpdateExclusive, off the critical path) to mark it valid and catch any violation.
     execute 'alter table xref_p' || p_in_db_id || '_deleted add constraint xref_p' || p_in_db_id || '_deleted_fk4' ||
-            ' foreign key(upi) references rna (upi) not valid';
+            ' foreign key(urs) references rna (urs) not valid';
 
     --------------------------------------------------------
     --  Creating indexes on NOT deleted partition
@@ -161,7 +161,7 @@ BEGIN
     execute 'create index xref_p' || p_in_db_id || '_not_deleted$ac on xref_p' || p_in_db_id || '_not_deleted (ac)';
     execute 'create index xref_p' || p_in_db_id || '_not_deleted$created on xref_p' || p_in_db_id || '_not_deleted (created)';
     execute 'create index xref_p' || p_in_db_id || '_not_deleted$last on xref_p' || p_in_db_id || '_not_deleted (last)';
-    execute 'create index xref_p' || p_in_db_id || '_not_deleted$upi on xref_p' || p_in_db_id || '_not_deleted (upi)';
+    execute 'create index xref_p' || p_in_db_id || '_not_deleted$upi on xref_p' || p_in_db_id || '_not_deleted (urs)';
     execute 'create index xref_p' || p_in_db_id || '_not_deleted$taxid on xref_p' || p_in_db_id || '_not_deleted (taxid)';
 
     --------------------------------------------------------
@@ -175,7 +175,7 @@ BEGIN
             ' foreign key(last) references rnc_release (id)';
     -- See note on _deleted_fk4 above: NOT VALID here, validated off the critical path in run().
     execute 'alter table xref_p' || p_in_db_id || '_not_deleted add constraint xref_p' || p_in_db_id || '_not_deleted_fk4' ||
-            ' foreign key(upi) references rna (upi) not valid';
+            ' foreign key(urs) references rna (urs) not valid';
 
     --------------------------------------------------------
     --  attach fresh partitions back to the correct parent

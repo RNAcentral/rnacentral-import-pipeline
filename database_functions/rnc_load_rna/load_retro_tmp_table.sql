@@ -175,7 +175,7 @@ BEGIN
         p.seq_short prot_seq_short,
         p.seq_long prot_seq_long,
         p.len prot_len,
-        p.upi prot_upi
+        p.urs prot_upi
       from rna p right outer join distinct_loaded_rows_tmp l on (p.md5 = l.md5) ) alias1;
 
     --COMMIT;

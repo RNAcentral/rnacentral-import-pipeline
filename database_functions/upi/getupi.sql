@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION upi.getupi(p_in_id bigint)
  IMMUTABLE SECURITY DEFINER
 AS $function$
 DECLARE
-  v_upi RNACEN.xref.upi%TYPE := upper (to_hex ( p_in_id ) );
+  v_upi RNACEN.xref.urs%TYPE := upper (to_hex ( p_in_id ) );
 BEGIN
 
   ASSERT length (v_upi) <= 13, 'Can not generate upi: id ' || p_in_id || ' is too large';
