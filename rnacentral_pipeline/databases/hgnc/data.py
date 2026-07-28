@@ -132,11 +132,11 @@ def ensembl_mapping(conn):
     acc = Table("rnc_accessions")
     query = (
         Query.from_(xref)
-        .select(xref.upi, acc.optional_id, rna.len)
+        .select(xref.urs, acc.optional_id, rna.len)
         .join(acc)
         .on(acc.accession == xref.ac)
         .join(rna)
-        .on(rna.upi == xref.upi)
+        .on(rna.urs == xref.urs)
         # dbid 21 == NONCODE
         .where((xref.dbid == 21) & (xref.taxid == 9606) & (xref.deleted == "N"))
     )

@@ -40,15 +40,15 @@ tqdm.pandas()
 
 QUERY = """
 select
-    pre.id as id,
+    pre.urs_taxid as id,
     pre.rna_type,
     COALESCE(rna.seq_short, rna.seq_long) as sequence,
     pre.description
 
 from rnc_rna_precomputed pre
-join rna on rna.upi = pre.upi
+join rna on rna.urs = pre.urs
 where
-    pre.id in %s
+    pre.urs_taxid in %s
 """
 
 base_url = furl(

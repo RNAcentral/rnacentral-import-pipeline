@@ -72,7 +72,7 @@ ORDER BY id
 COUNT_QUERY = """
 SELECT
     db.descr,
-    count(distinct xref.upi)
+    count(distinct xref.urs)
 from xref
 join rnc_database db
 on

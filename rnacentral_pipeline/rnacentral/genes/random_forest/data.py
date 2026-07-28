@@ -56,7 +56,7 @@ so_rna_type as so_type
 
 from rnc_sequence_regions_active sr
 join rnc_sequence_exons ex on ex.region_id = sr.id
-join rnc_rna_precomputed pc on pc.id = sr.urs_taxid
+join rnc_rna_precomputed pc on pc.urs_taxid = sr.urs_taxid
 
 where pc.taxid = %s
 """

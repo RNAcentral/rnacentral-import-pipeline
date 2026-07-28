@@ -40,7 +40,7 @@ SEQUENCE_STATS_QUERY = """
 WITH joined AS MATERIALIZED (
     SELECT rna.len AS length, xref.taxid
     FROM rna
-    JOIN xref_p{dbid}_not_deleted xref ON xref.upi = rna.upi
+    JOIN xref_p{dbid}_not_deleted xref ON xref.urs = rna.urs
 ),
 by_length AS (
     SELECT length, count(*) AS count

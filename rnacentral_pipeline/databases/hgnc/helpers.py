@@ -59,11 +59,11 @@ def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
     acc = Table("rnc_accessions")
     query = (
         Query.from_(xref)
-        .select(rna.upi)
+        .select(rna.urs)
         .join(acc)
         .on(xref.ac == acc.accession)
         .join(rna)
-        .on(rna.upi == xref.upi)
+        .on(rna.urs == xref.urs)
         .where(
             (xref.taxid == 9606)
             & (xref.deleted == "N")
@@ -92,11 +92,11 @@ def refseq_id_to_urs(context: Context, refseq_id: str) -> ty.Optional[str]:
     acc = Table("rnc_accessions")
     query = (
         Query.from_(xref)
-        .select(rna.upi, rna.len)
+        .select(rna.urs, rna.len)
         .join(acc)
         .on(xref.ac == acc.accession)
         .join(rna)
-        .on(rna.upi == xref.upi)
+        .on(rna.urs == xref.urs)
         .where(
             (xref.taxid == 9606)
             & (xref.deleted == "N")
@@ -131,7 +131,7 @@ def ensembl_sequence(context: Context, ensembl_id: str) -> ty.Optional[str]:
 
 def md5_to_urs(context: Context, md5: str) -> ty.Optional[str]:
     rna = Table("rna")
-    query = Query.from_(rna).select(rna.upi).where(rna.md5 == md5)
+    query = Query.from_(rna).select(rna.urs).where(rna.md5 == md5)
     found = context.query_one(query)
     if found:
         return found[0]
@@ -147,7 +147,7 @@ def urs_to_sequence(context: Context, urs: str) -> str:
     query = (
         Query.from_(rna)
         .select(fn.Coalesce(rna.seq_short, rna.seq_long))
-        .where(rna.upi == urs)
+        .where(rna.urs == urs)
     )
     return context.query_one(query)[0]
 
