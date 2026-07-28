@@ -4,6 +4,10 @@
 
 name: Building Pipeline Containers
 
+permissions:
+  contents: read
+  packages: write
+
 on:
  push:
   branches: ['master', 'dev','python-update']
