@@ -48,7 +48,8 @@ where
 ;
 
 -- drop indices before doing further updates/deletes
-DROP INDEX IF EXISTS idx_rnc_sequence_regions_id;
+-- NB: idx_rnc_sequence_regions_id (id) was an exact duplicate of the pkey (also on
+-- id) - removed here and below; the always-present pkey serves every id lookup.
 DROP INDEX IF EXISTS idx_rnc_accession_sequence_region_region_id;
 
 -- Make a copy of the data I will delete from rnc_accession_sequence_region into a backup table
@@ -251,7 +252,6 @@ CREATE INDEX ix_rnc_sequence_regions_active__assembly_id
 
 ANALYZE rnc_sequence_regions_active;
 
-CREATE INDEX idx_rnc_sequence_regions_id ON rnc_sequence_regions(id);
 CREATE INDEX idx_rnc_accession_sequence_region_region_id ON rnc_accession_sequence_region(region_id);
 
 COMMIT;

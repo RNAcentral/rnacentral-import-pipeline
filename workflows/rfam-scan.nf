@@ -1,6 +1,4 @@
 process generate_files {
-  when: { params.rfam?.run }
-
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -9,6 +7,8 @@ process generate_files {
   output:
   path 'rfam', emit: cm_files
   path 'version_file', emit: version_info
+
+  when: { params.rfam?.run }
 
   script:
   def base = params.rfam.files

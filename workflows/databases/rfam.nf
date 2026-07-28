@@ -89,6 +89,10 @@ process parse {
   tag { "$family" }
   queue 'datamover'
   containerOptions "${params.common_container} --bind /nfs:/nfs"
+  memory { 4.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 10
+
 
   input:
   tuple val(family), path(sequence_info), path(families_info)
@@ -98,10 +102,14 @@ process parse {
 
   script:
   """
-  cp '/hps/nobackup/agb/rfam/test-fasta-export/release/results/ftp/fasta_files/${family}.fa.gz' sequences.fa.gz
+  mkdir tmp
+  export TMPDIR=`pwd`/tmp
+  cp '/nfs/ftp/public/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz' sequences.fa.gz
   gzip -d sequences.fa.gz
 
   rnac rfam parse $families_info $sequence_info sequences.fa .
+
+  rm -rf ./tmp
   """
 }
 
