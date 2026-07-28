@@ -22,7 +22,6 @@ import click
 
 from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.ensembl import parser, pseudogenes, urls
-from rnacentral_pipeline.databases.ensembl.data import Division
 from rnacentral_pipeline.databases.ensembl.metadata import (
     assemblies,
     compara,
@@ -44,17 +43,15 @@ def cli():
 
 @cli.command("urls-for")
 @click.option("--kind", default=None)
-@click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
-@click.argument("ftp")
+@click.option("--location", default=urls.DEFAULT_JSON_URL)
 @click.argument("output", default="-", type=click.File("w"))
-def vert_url(division, ftp, output, kind=None):
+def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
     """
-    This is a command to generate a CSV file of urls to fetch to get Ensembl
-    data from. The urls may be globs suitable for fetching with wget.
+    Generate a CSV of (species, taxid, embl_url, gff_url) rows to fetch, one per
+    species, from the unified Ensembl organisms species JSON.
     """
-    division = Division.from_name(division)
     writer = csv.writer(output, lineterminator="\n")
-    rows = urls.urls_for(division, ftp)
+    rows = urls.urls_for(location)
     writer.writerows(row.writeable(kind=kind) for row in rows)
 
 
@@ -64,7 +61,6 @@ def vert_url(division, ftp, output, kind=None):
     default=None,
     type=click.Path(file_okay=True, dir_okay=False, readable=True),
 )
-@click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
 @click.argument("embl_file", type=click.File("r"))
 @click.argument("gff_file", type=click.Path())
 @click.argument(
@@ -77,15 +73,14 @@ def vert_url(division, ftp, output, kind=None):
     ),
 )
 @format_option
-def parse_data(division, embl_file, gff_file, output, family_file=None):
+def parse_data(embl_file, gff_file, output, family_file=None):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
-    division = Division.from_name(division)
     gff_file = Path(gff_file)
     if family_file:
         family_file = Path(family_file)
-    entries = parser.parse(division, embl_file, gff_file, family_file=family_file)
+    entries = parser.parse(embl_file, gff_file, family_file=family_file)
     ## Send warning to slack with details about empty parse
     try:
         with entry_writer(Path(output)) as writer:
@@ -98,7 +93,6 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
             + ", but you should check the legitimacy of this result.\n"
         )
         message += "For reference, the other parameters to the parser were:\n"
-        message += f"division: {division}\n"
         message += f"embl_file: {embl_file.name}\n"
         message += f"gff_file: {gff_file.name}\n"
         message += f"family_file: {family_file.name}\n"
@@ -166,13 +160,11 @@ def ensembl_compara(fasta, output):
 
 
 @cli.command("pseudogenes")
-@click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
 @click.argument("embl_file", type=click.File("r"))
 @click.argument("output", default="ensembl-pseudogenes.csv", type=click.Path())
 @format_option
-def ensembl_pseudogenes(division, embl_file, output):
-    division = Division.from_name(division)
-    genes = pseudogenes.parse(division, embl_file)
+def ensembl_pseudogenes(embl_file, output):
+    genes = pseudogenes.parse(embl_file)
     genes = it.chain.from_iterable(g.writeable() for g in genes)
     with row_writer(Path(output), schemas.ENSEMBL_PSEUDOGENES) as writer:
         writer.writerows(genes)

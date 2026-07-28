@@ -13,28 +13,64 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import typing as ty
+from pathlib import Path
 
-from rnacentral_pipeline.databases.ensembl import fungi
-from rnacentral_pipeline.databases.ensembl import metazoa
-from rnacentral_pipeline.databases.ensembl import plants
-from rnacentral_pipeline.databases.ensembl import protists
-from rnacentral_pipeline.databases.ensembl import vertebrates
+import attr
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.ensembl.data import Division
+from rnacentral_pipeline.databases.ensembl.vertebrates import parser as vertebrates
+
+# Ensembl now serves every organism (all former divisions plus bacteria) in one
+# uniform EMBL/GFF3 format, so a single parser handles them all and every entry
+# is imported as the ENSEMBL database. A couple of per-organism corrections from
+# the old per-division parsers are preserved below.
 
 
-def parse(division: Division, *args, **kwargs) -> ty.Iterable[Entry]:
-    if division == Division.fungi:
-        yield from fungi.parse(*args, **kwargs)
-    elif division == Division.metazoa:
-        yield from metazoa.parse(*args, **kwargs)
-    elif division == Division.plants:
-        yield from plants.parse(*args, **kwargs)
-    elif division == Division.protists:
-        yield from protists.parse(*args, **kwargs)
-    elif division == Division.vertebrates:
-        yield from vertebrates.parse(*args, **kwargs)
-    else:
-        raise ValueError(f"Unknown division {division}")
+def correct_protist_rna_type(entry: Entry) -> Entry:
+    """
+    Leishmania sno/snRNA genes are mislabelled in the source; fix them by gene
+    name and description. A no-op for every other organism.
+    """
+    if re.match(r"^LMJF_\d+_snoRNA_?\d+$", entry.gene):
+        return attr.evolve(entry, rna_type="snoRNA")
+    if re.match(r"^LMJF_\d+_snRNA_\d+$", entry.gene):
+        return attr.evolve(entry, rna_type="snRNA")
+    if entry.rna_type == "snRNA" and "snoRNA" in entry.description:
+        return attr.evolve(entry, rna_type="snoRNA")
+    return entry
+
+
+def as_tair_entry(entry: Entry) -> Entry:
+    database = "TAIR"
+    xrefs = dict(entry.xref_data)
+    xrefs.pop(database, None)
+    return attr.evolve(
+        entry,
+        accession="%s:%s" % (database, entry.primary_id),
+        database=database,
+        xref_data=xrefs,
+    )
+
+
+def tair_entries(entry: Entry) -> ty.Iterable[Entry]:
+    """
+    Arabidopsis thaliana ncRNAs are additionally attributed to TAIR, which
+    RNAcentral tracks as its own database. This mirrors the old Ensembl Plants
+    behaviour (the species JSON labels the provider only as "community").
+    """
+    if entry.ncbi_tax_id == 3702 and entry.primary_id.startswith("AT"):
+        yield as_tair_entry(entry)
+
+
+def parse(
+    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None
+) -> ty.Iterable[Entry]:
+    entries = vertebrates.parse(
+        raw, gff_file, family_file=family_file, excluded_file=excluded_file
+    )
+    for entry in entries:
+        entry = correct_protist_rna_type(entry)
+        yield entry
+        yield from tair_entries(entry)

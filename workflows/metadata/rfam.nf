@@ -7,7 +7,7 @@ process generic {
   output:
   path('*.{csv,parquet}')
 
-  when: params.databases.ensembl?.vertebrates?.run || params.databases.rfam?.run
+  when: params.databases.ensembl?.run || params.databases.rfam?.run
 
   script:
   def conn = params.connections.rfam

@@ -8,8 +8,10 @@ process assemblies {
   output:
   path('*.{csv,parquet}')
 
+  // MySQL-backed metadata is deferred under the new FTP structure; opt in with
+  // params.databases.ensembl.metadata.run.
   when:
-  params.databases.ensembl?.vertebrates?.run
+  params.databases.ensembl?.metadata?.run
 
   script:
   """
@@ -24,7 +26,7 @@ process fetch_compara {
   output:
   path('*.nt.fasta.gz')
 
-  when: params.databases.ensembl?.vertebrates?.run
+  when: params.databases.ensembl?.metadata?.run
 
   script:
   """
@@ -57,7 +59,7 @@ process proteins {
   output:
   path("proteins.${params.writer_format}")
 
-  when: params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run
+  when: params.databases.ensembl?.metadata?.run || params.databases.tarbase?.run || params.databases.lncbase?.run
 
   script:
   """
@@ -76,7 +78,7 @@ process coordinate_systems {
   output:
   path("coordinate_systems.${params.writer_format}")
 
-  when: params.databases.ensembl?.vertebrates?.run
+  when: params.databases.ensembl?.metadata?.run
 
   script:
   """
