@@ -45,6 +45,25 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from rnacentral_pipeline.schemas import ENTRY_WRITER_LOAD_TABLES
 
 
+def parquet_columns(con: duckdb.DuckDBPyConnection, parquet_glob: str) -> list[str]:
+    """
+    Column names produced by ``parquet_glob``, each appearing exactly once.
+
+    DESCRIBE, not parquet_schema(): the latter returns one row per column per
+    *file*, so a multi-file glob (the normal case -- 'raw*.parquet') would
+    repeat every column and the INSERT would fail with "column specified more
+    than once". DESCRIBE ... union_by_name = true returns each unioned column
+    once, matching the SELECT we run against it.
+    """
+    return [
+        row[0]
+        for row in con.execute(
+            "DESCRIBE SELECT * FROM read_parquet(?, union_by_name = true)",
+            [parquet_glob],
+        ).fetchall()
+    ]
+
+
 def _connect(pg_url: str) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
     con.execute("INSTALL postgres")
@@ -136,13 +155,7 @@ def main() -> int:
     # Read column names from the parquet schema so we insert only the columns
     # the parser actually produces, leaving other columns in the staging table
     # (legacy/unused fields) at their defaults. Mirrors pgloader's TARGET COLUMNS.
-    columns = [
-        row[0]
-        for row in con.execute(
-            "SELECT name FROM parquet_schema(?) WHERE num_children IS NULL",
-            [args.parquet_glob],
-        ).fetchall()
-    ]
+    columns = parquet_columns(con, args.parquet_glob)
     col_list = ", ".join(f'"{col}"' for col in columns)
     sys.stderr.write(
         f"copying {len(columns)} column(s) into pg.{qualified}: {col_list}\n"
