@@ -3,7 +3,7 @@ process taxonomy {
   errorStrategy 'retry'
 
   output:
-  path('taxonomy.${params.writer_format}')
+  path("taxonomy.${params.writer_format}")
 
   script:
   """
