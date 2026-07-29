@@ -5,7 +5,7 @@ process generic {
   tuple val(name), path(query)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.ensembl?.vertebrates?.run || params.databases.rfam?.run
 

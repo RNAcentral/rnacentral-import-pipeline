@@ -126,7 +126,7 @@ def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
     return ena_data
 
 
-@lru_cache()
+@lru_cache(maxsize=None)
 def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
     """
     Call the EBI taxonomy API to get the phylogenetic information for the given
@@ -198,7 +198,7 @@ def division(taxon_id: int) -> str:
     return data["division"]
 
 
-@lru_cache
+@lru_cache(maxsize=None)
 def taxid(species: str) -> int:
     """
     Get the taxid for a given species

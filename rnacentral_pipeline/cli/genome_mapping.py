@@ -16,6 +16,7 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
 from rnacentral_pipeline.rnacentral.genome_mapping import blat, urls, igv, update_assemblies
 
@@ -52,11 +53,13 @@ def hits_json(assembly_id, hits, output):
 
 @hits.command("as-importable")
 @click.argument("hits", default="-", type=click.File("rb"))
-@click.argument("output", default="-", type=click.File("w", lazy=False))
+@click.argument("output", type=click.Path())
+@format_option
 def as_importable(hits, output):
     """
-    Convert a json-line file into a CSV that can be used for import by pgloader.
-    This is lossy as it only keeps the things needed for the database.
+    Convert a json-line file into a CSV/Parquet file that can be loaded into
+    Postgres. Format is governed by ``--format``/``RNAC_OUTPUT_FORMAT``
+    (CSV by default). Lossy: only keeps the columns the loader needs.
     """
     blat.write_importable(hits, output)
 
@@ -105,7 +108,7 @@ def find_remote_urls(filename, output):
 @cli.command("create-attempted")
 @click.argument("filename", type=click.File("r"))
 @click.argument("assembly_id")
-@click.argument("output", type=click.File("w"))
+@click.argument("output", type=click.Path())
 def parse_attempted_sequences(filename, assembly_id, output):
     attempted.genome_mapping(filename, assembly_id, output)
 

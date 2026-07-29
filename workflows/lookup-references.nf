@@ -1,6 +1,9 @@
 process merge_and_split_all_publications {
   input:
-  path("ref_ids*.csv")
+  // Inputs may arrive as either CSV (legacy) or Parquet (writer_format=parquet),
+  // depending on what the upstream parsers emitted. The downstream lookup
+  // stays text-based, so we decode any parquet inputs to CSV before merging.
+  path("ref_ids*.{csv,parquet}")
 
   output:
   path('split-refs/*.csv')
@@ -10,7 +13,13 @@ process merge_and_split_all_publications {
   set -o pipefail
 
   mkdir split-refs
-  find . -name 'ref_ids*.csv' | xargs cat > all-ids
+  : > all-ids
+  for f in ref_ids*.csv; do
+    [ -e "\$f" ] && cat "\$f" >> all-ids
+  done
+  for f in ref_ids*.parquet; do
+    [ -e "\$f" ] && parquet-to-csv "\$f" >> all-ids
+  done
   split --additional-suffix=".csv" --number l/${params.lookup_publications.maxForks} all-ids split-refs/refs
   """
 }
@@ -40,11 +49,12 @@ process lookup_publications {
   tuple path(refs), path(pubs)
 
   output:
-  path("references.csv")
+  path("references.${params.writer_format}")
 
   script:
+  def out = "references.${params.writer_format}"
   """
-  rnac europepmc stream-lookup --ignore-missing --allow-fallback $pubs $refs references.csv
+  rnac europepmc stream-lookup --ignore-missing --allow-fallback $pubs $refs $out
   """
 }
 

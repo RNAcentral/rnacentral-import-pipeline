@@ -1,6 +1,6 @@
 process sgd {
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.sgd?.run
 

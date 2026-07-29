@@ -57,10 +57,12 @@ process scan {
   tuple path(version), path('sequences.fasta'), path(cm_files)
 
   output:
-  path 'hits.csv', emit: hits
-  path 'attempted.csv', emit: attempted
+  path "hits.${params.writer_format}", emit: hits
+  path "attempted.${params.writer_format}", emit: attempted
 
   script:
+  def hits_out = "hits.${params.writer_format}"
+  def attempted_out = "attempted.${params.writer_format}"
   """
   cmscan \
     -o output.inf \
@@ -77,8 +79,8 @@ process scan {
     "$cm_files/Rfam.cm" \
     sequences.fasta
 
-  rnac qa rfam results.tblout hits.csv
-  rnac qa create-attempted sequences.fasta rfam $version attempted.csv
+  rnac qa rfam results.tblout $hits_out
+  rnac qa create-attempted sequences.fasta rfam $version $attempted_out
   """
 }
 
@@ -86,19 +88,34 @@ process import_data {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory 6.GB
   input:
-  path('raw*.csv')
+  // Both hits and attempted land as either CSV (legacy pgloader path) or
+  // Parquet, depending on params.writer_format.
+  path("raw*.${params.writer_format}")
   path(ctl)
-  path('attempted*.csv')
-  path('attempted.ctl')
+  path(post_load)
+  path("attempted*.${params.writer_format}")
+  path(attempted_ctl)
+  path(attempted_post_load)
 
   output:
   val('rfam done')
 
   script:
-  """
-  split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} rfam
-  split-and-load attempted.ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam
-  """
+  if (params.writer_format == 'parquet') {
+    """
+    load-parquet load_rfam_model_hits 'raw*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    load-parquet load_qa_rfam_attempted 'attempted*.parquet' \\
+      --truncate \\
+      --post-load $attempted_post_load
+    """
+  } else {
+    """
+    split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} rfam
+    split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam
+    """
+  }
 }
 
 workflow rfam_scan {

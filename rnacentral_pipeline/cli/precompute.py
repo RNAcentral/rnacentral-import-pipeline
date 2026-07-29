@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline import writers
+from rnacentral_pipeline.output_format import format_option, is_parquet
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 from rnacentral_pipeline.rnacentral.precompute import ranges as pre_ranges
 
@@ -42,13 +43,19 @@ def cli():
         file_okay=False,
     ),
 )
+@format_option
 def precompute_from_file(context, json_file, output):
     """
     This command will take the output produced by the precompute query and
     process the results into a CSV that can be loaded into the database.
     """
     updates = pre.parse(Path(context), Path(json_file))
-    with writers.build(pre.Writer, Path(output)) as writer:
+    out_path = Path(output)
+    if is_parquet():
+        opener = pre.parquet_writer(out_path)
+    else:
+        opener = writers.build(pre.Writer, out_path)
+    with opener as writer:
         writer.write(updates)
 
 

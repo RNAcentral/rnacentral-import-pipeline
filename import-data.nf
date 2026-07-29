@@ -21,8 +21,8 @@ workflow import_data {
       parse_metadata(),
     ) \
     | branch { r ->
-      terms: r.name == "terms.csv"
-      ref_ids: r.name == "ref_ids.csv"
+      terms: r.name == "terms.csv" || r.name == "terms.parquet"
+      ref_ids: r.name == "ref_ids.csv" || r.name == "ref_ids.parquet"
       csv: true
     } \
     | set { results }

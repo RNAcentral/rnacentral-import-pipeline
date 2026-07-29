@@ -31,7 +31,7 @@ process process {
   tuple val(name), path(data), val(column_name)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """
