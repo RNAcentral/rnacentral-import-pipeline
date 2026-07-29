@@ -2,7 +2,7 @@ process intact {
   output:
   path('*.{csv,parquet}')
 
-  when: { params.databases.intact?.run }
+  when: params.databases.intact?.run
 
   script:
   """

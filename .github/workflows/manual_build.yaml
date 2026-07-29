@@ -4,6 +4,10 @@
 
 name: Manually Building Pipeline Containers
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   workflow_dispatch:
     inputs:

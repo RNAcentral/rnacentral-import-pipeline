@@ -5,7 +5,7 @@ process fetch {
   output:
   path('all.tsv')
 
-  when: { params.databases.mirtrondb?.run }
+  when: params.databases.mirtrondb?.run
 
   script:
   """
@@ -20,7 +20,7 @@ process parse {
   output:
   path('*.{csv,parquet}')
 
-  when: { params.databases.mirtrondb?.run }
+  when: params.databases.mirtrondb?.run
 
   script:
   """
@@ -29,7 +29,8 @@ process parse {
 }
 
 workflow mirtrondb {
-  emit: data
   main:
   fetch | parse | set { data }
+
+  emit: data
 }

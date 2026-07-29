@@ -2,7 +2,7 @@ process mirbase {
   output:
   path('*.{csv,parquet}')
 
-  when: { params.databases.mirbase?.run }
+  when: params.databases.mirbase?.run
 
   script:
   """

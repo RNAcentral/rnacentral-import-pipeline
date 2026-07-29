@@ -2,7 +2,7 @@ process fetch {
   output:
   path('EVLncRNAs3_alldata')
 
-  when: { params.databases.evlncrnas?.run }
+  when: params.databases.evlncrnas?.run
 
   script:
   """
@@ -21,7 +21,7 @@ process rnc_dump {
   output:
   path('*.{csv,parquet}')
 
-  when: { params.databases.evlncrnas?.run }
+  when: params.databases.evlncrnas?.run
 
   script:
   """
@@ -47,11 +47,11 @@ process parse {
 
 
 workflow evlncrnas {
-  emit: data
   main:
-  Channel.fromPath('files/import-data/evlncrnas/dump-lookup.sql') | set { dump_sql }
+  channel.fromPath('files/import-data/evlncrnas/dump-lookup.sql') | set { dump_sql }
     fetch | set {ev_data}
     dump_sql | rnc_dump | set {rnc_data}
 
     ev_data.combine(rnc_data) | parse | set {data}
+  emit: data
 }

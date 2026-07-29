@@ -3,14 +3,14 @@
 nextflow.enable.dsl = 2
 
 process setup {
-  when: { params.genome_mapping?.run }
-
   input:
   val(_flag)
   path(query)
 
   output:
   path('species.csv')
+
+  when: params.genome_mapping?.run
 
   script:
   """
@@ -174,7 +174,7 @@ process index_genome_for_browser {
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
   memory { params.genome_mapping.blat.directives.memory }
-  errorStrategy =  { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
+  errorStrategy { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
   time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 24.h }
   maxRetries 3
 
@@ -266,19 +266,19 @@ process load_mapping {
 workflow genome_mapping {
   take: ready
   main:
-    Channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
-    Channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
-    Channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
-    Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
-    Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
-    Channel.fromPath('files/genome-mapping/post-load.sql').set { post_load }
-    Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
-    Channel.fromPath('files/genome-mapping/attempted-post-load.sql').set { attempted_post_load }
+    channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
+    channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
+    channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
+    channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
+    channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
+    channel.fromPath('files/genome-mapping/post-load.sql').set { post_load }
+    channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
+    channel.fromPath('files/genome-mapping/attempted-post-load.sql').set { attempted_post_load }
 
     if (params.genome_mapping.run) {
       setup(ready, find_species) \
       | splitCsv \
-      | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+      | filter { s, _a, _t, _d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
       | set { genome_info }
 
       genome_info \
@@ -307,7 +307,7 @@ workflow genome_mapping {
           .combinations()
           .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
       } \
-      | filter { s, a, g, o, chunk -> !chunk.isEmpty() } \
+      | filter { _s, _a, _g, _o, chunk -> !chunk.isEmpty() } \
       | blat
 
       blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
@@ -315,11 +315,11 @@ workflow genome_mapping {
 
       load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
     } else {
-      Channel.of('genome-mapping skipped') | set { done }
+      channel.of('genome-mapping skipped') | set { done }
     }
   emit: done
 }
 
 workflow {
-  genome_mapping(Channel.from('ready'))
+  genome_mapping(channel.from('ready'))
 }

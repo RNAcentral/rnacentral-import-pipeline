@@ -3,6 +3,10 @@
 
 name: Build Rust Utilities Container
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: ['master', 'dev']

@@ -3,6 +3,10 @@
 
 name: Build and Push Tool Containers
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: ['master', 'dev']

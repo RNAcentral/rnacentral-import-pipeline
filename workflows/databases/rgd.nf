@@ -2,7 +2,7 @@ process rgd {
   output:
   path('*.{csv,parquet}')
 
-  when: { params.databases.rgd?.run }
+  when: params.databases.rgd?.run
 
   script:
   """

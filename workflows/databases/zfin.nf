@@ -5,7 +5,7 @@ process zfin {
   output:
   path('*.{csv,parquet}')
 
-  when: { params.databases.zfin?.run }
+  when: params.databases.zfin?.run
 
   script:
   """

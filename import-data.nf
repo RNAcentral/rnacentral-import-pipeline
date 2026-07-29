@@ -13,20 +13,16 @@ include { slack_closure } from './workflows/utils/slack'
 workflow import_data {
   take: _flag
   main:
-    Channel.of("Starting data import pipeline") | slack_message
+    channel.of("Starting data import pipeline") | slack_message
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       parse_databases(),
       parse_metadata(),
     ) \
-    | branch {
-      // Match either CSV or Parquet emissions of these auxiliary tables —
-      // parsers pick one format based on params.writer_format. Both branches
-      // route to bespoke processing (ontology lookup / publication lookup);
-      // their outputs feed back into the load stream.
-      terms: it.name == "terms.csv" || it.name == "terms.parquet"
-      ref_ids: it.name == "ref_ids.csv" || it.name == "ref_ids.parquet"
+    | branch { r ->
+      terms: r.name == "terms.csv" || r.name == "terms.parquet"
+      ref_ids: r.name == "ref_ids.csv" || r.name == "ref_ids.parquet"
       csv: true
     } \
     | set { results }
@@ -45,21 +41,20 @@ workflow import_data {
 }
 
 workflow {
-  import_data(Channel.of('ready'))
+  main:
+    import_data(channel.of('ready'))
 
-  workflow.onError {
+  onComplete:
+    try {
+      slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
+
+  onError:
     try {
       slack_closure("Import pipeline encountered an error and failed")
     } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
+      log.warn "Could not send Slack notification: ${e}"
     }
-  }
-
-  workflow.onComplete {
-    try {
-      slack_closure("Workflow completed ${workflow?.success ? 'Ok' : 'with errors'}")
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
-    }
-  }
 }

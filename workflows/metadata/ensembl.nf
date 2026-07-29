@@ -1,7 +1,4 @@
 process assemblies {
-  when:
-  params.databases.ensembl?.vertebrates?.run
-
   input:
   path(connections)
   path(query)
@@ -11,6 +8,9 @@ process assemblies {
   output:
   path('*.{csv,parquet}')
 
+  when:
+  params.databases.ensembl?.vertebrates?.run
+
   script:
   """
   rnac ensembl assemblies $connections $query $examples $known
@@ -18,13 +18,13 @@ process assemblies {
 }
 
 process fetch_compara {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
   output:
   path('*.nt.fasta.gz')
+
+  when: params.databases.ensembl?.vertebrates?.run
 
   script:
   """
@@ -50,14 +50,14 @@ process process_compara {
 }
 
 process proteins {
-  when: { params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run }
-
   input:
   path(connections)
   path(query)
 
   output:
   path('proteins.csv')
+
+  when: params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run
 
   script:
   """
@@ -66,8 +66,6 @@ process proteins {
 }
 
 process coordinate_systems {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
@@ -78,6 +76,8 @@ process coordinate_systems {
   output:
   path('coordinate_systems.csv')
 
+  when: params.databases.ensembl?.vertebrates?.run
+
   script:
   """
   rnac ensembl coordinate-systems $connections $query coordinate_systems.csv
@@ -85,13 +85,13 @@ process coordinate_systems {
 }
 
 process karyotypes {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
   output:
   path("karyotypes.${params.writer_format}")
+
+  when: params.databases.ensembl?.vertebrates?.run
 
   script:
   def out = "karyotypes.${params.writer_format}"
@@ -101,24 +101,23 @@ process karyotypes {
 }
 
 workflow compara {
-  emit: data
   main:
     fetch_compara | flatten | process_compara | set { data }
+  emit: data
 }
 
 workflow ensembl {
-  emit: data
   main:
-    Channel.fromPath('config/databases.json') | set { conn }
+    channel.fromPath('config/databases.json') | set { conn }
 
-    Channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
-    Channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
+    channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
+    channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
 
-    Channel.fromPath('files/import-data/ensembl/assemblies.sql') | set { assemblies_sql }
-    Channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
-    Channel.fromPath('files/import-data/ensembl/known-assemblies.sql') | set { known }
+    channel.fromPath('files/import-data/ensembl/assemblies.sql') | set { assemblies_sql }
+    channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
+    channel.fromPath('files/import-data/ensembl/known-assemblies.sql') | set { known }
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       assemblies(conn, assemblies_sql, examples, known),
       coordinate_systems(conn, coordinate_systems_sql),
@@ -128,4 +127,5 @@ workflow ensembl {
     ) \
     | flatten \
     | set { data }
+  emit: data
 }

@@ -1,8 +1,8 @@
 process ribovision {
-  when: params.databases.ribovision?.run
-
   output:
   path("*.csv")
+
+  when: params.databases.ribovision?.run
 
   script:
   """

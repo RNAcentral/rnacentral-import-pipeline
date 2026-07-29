@@ -3,13 +3,13 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
-  when: { params.stopfree?.run }
-
   input:
   val(_flag)
 
   output:
   path('ranges.csv')
+
+  when: params.stopfree?.run
 
   script:
   def chunk_size = params.stopfree.db_chunk_size
@@ -19,8 +19,6 @@ process build_ranges {
 }
 
 process find_sequences {
-  when: { params.stopfree?.run }
-
   maxForks params.stopfree.query_max_forks
 
   input:
@@ -28,6 +26,8 @@ process find_sequences {
 
   output:
   path('sequences/*.fasta'), optional: true
+
+  when: params.stopfree?.run
 
   script:
   """
@@ -54,14 +54,14 @@ process stopfree_scan {
 }
 
 process store_results {
-  when: { params.stopfree?.load }
-
   memory 9.GB
 
   input:
   path("results*.${params.writer_format}")
   path(result_ctl)
   path(post_load)
+
+  when: params.stopfree?.load
 
   script:
   if (params.writer_format == 'parquet')
@@ -77,17 +77,17 @@ process store_results {
 }
 
 workflow stopfree {
-  take: flag
+  take: _flag
   main:
     if( !params.stopfree.run ) {
-      Channel.of('stopfree skipped') | set { done }
+      channel.of('stopfree skipped') | set { done }
     } else {
 
     def query = file(params.stopfree.query)
     def load_ctl = file('files/stopfree/stopfree.ctl')
     def post_load = file('files/stopfree/post-load.sql')
 
-    def fasta_ch = Channel.of('ready') \
+    def fasta_ch = channel.of('ready') \
       | build_ranges \
       | splitCsv \
       | map { _table, min, max -> [min, max, query] } \
@@ -100,11 +100,11 @@ workflow stopfree {
     stopfree_scan.out | collect | set { data }
 
     store_results(data, load_ctl, post_load)
-    data | map { _ -> 'stopfree done' } | first | set { done }
+    data | map { _v -> 'stopfree done' } | set { done }
     }
   emit: done
 }
 
 workflow {
-  stopfree(Channel.of('ready'))
+  stopfree(channel.of('ready'))
 }
