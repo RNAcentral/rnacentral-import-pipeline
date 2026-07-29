@@ -149,11 +149,17 @@ def upload_hf_dataset(release: str, dataset_path: str):
 
 
 @cli.command("publish")
-@click.argument("release")
-def publish__hf_release(release):
+@click.argument(
+    "slug_file",
+    default="collection_slug",
+    type=click.Path(exists=True, dir_okay=False),
+)
+def publish__hf_release(slug_file):
     """
-    Gets the release collection slug and uses it to find all the datasets in it and make them public
-    then makes the collection public.
+    Reads the collection slug written by create-collection, uses it to find all the
+    datasets in that collection and makes them public, then makes the collection public.
+
+    Deliberately does not re-derive the slug: create_or_find_collection would happily
+    create a fresh, empty collection and publish nothing.
     """
-    collection_slug = create_or_find_collection(release)
-    publish(collection_slug)
+    publish(Path(slug_file).read_text().strip())
