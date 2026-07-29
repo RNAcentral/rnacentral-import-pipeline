@@ -27,7 +27,8 @@ def main(argv: list[str]) -> int:
         return 2
 
     out = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", newline="")
-    writer = csv.writer(out)
+
+    writer = csv.writer(out, quoting=csv.QUOTE_ALL)
     for path in argv[1:]:
         pf = pq.ParquetFile(path)
         for batch in pf.iter_batches():
