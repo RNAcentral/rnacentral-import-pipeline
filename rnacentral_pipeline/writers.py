@@ -90,7 +90,7 @@ class EntryWriter:
 
         LOGGER.info("Wrote %i entries", total)
         if invalid:
-            LOGGER.warn("Did not write %i of %i total entries", invalid, total)
+            LOGGER.warning("Did not write %i of %i total entries", invalid, total)
             if invalid == total:
                 raise ValueError("No valid entries to write")
 
@@ -249,7 +249,7 @@ class ParquetEntryWriter:
 
         LOGGER.info("Wrote %i entries", total)
         if invalid:
-            LOGGER.warn("Did not write %i of %i total entries", invalid, total)
+            LOGGER.warning("Did not write %i of %i total entries", invalid, total)
             if invalid == total:
                 raise ValueError("No valid entries to write")
 
