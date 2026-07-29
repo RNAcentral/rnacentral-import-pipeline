@@ -4,8 +4,7 @@ process lncipedia {
   output:
   path('*.csv')
 
-  when:
-  params.databases.lncipedia?.run == true
+  when: params.databases.lncipedia?.run
 
   script:
   """

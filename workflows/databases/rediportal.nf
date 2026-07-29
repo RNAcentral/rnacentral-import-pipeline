@@ -7,8 +7,6 @@ process build_rnc_bedfile {
   output:
     tuple val(assembly_id), path("rnc_regions.bed")
 
-  when: params.databases.rediportal?.run
-
   script:
   """
   set -euo pipefail
@@ -28,8 +26,6 @@ process fetch_rediportal_inputs {
 
   output:
     tuple val(assembly_id), val(genome_build), path("rediportal.txt"), path("rediportal.bed")
-
-  when: params.databases.rediportal?.run
 
   script:
   """
