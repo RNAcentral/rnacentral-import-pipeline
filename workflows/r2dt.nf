@@ -148,7 +148,7 @@ process layout_sequences {
 
 process publish_layout {
   maxForks 50
-  errorStrategy { task.attempt < 5 ? "retry" : "terminate" }
+  errorStrategy { task.attempt < 5 ? "retry" : "finish" }
   maxRetries 5
   queue 'datamover'
   memory { 1.GB * task.attempt }
