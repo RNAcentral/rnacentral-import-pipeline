@@ -3,8 +3,6 @@
 nextflow.enable.dsl=2
 
 process find_models {
-  when: { params.cpat?.run }
-
   input:
   val(_flag)
 
@@ -12,6 +10,8 @@ process find_models {
   path('CPAT-3.0.4/dat/*_logitModel.RData'), emit: rdata
   path('CPAT-3.0.4/dat/*_Hexamer.tsv'), emit: hexamers
   path('cutoffs.csv'), emit: cutoffs
+
+  when: params.cpat?.run
 
   script:
   """
@@ -88,12 +88,12 @@ workflow cpat {
   take: flag
   main:
     if (!params.cpat.run) {
-      Channel.of('cpat skipped') | set { done }
+      channel.of('cpat skipped') | set { done }
     } else {
 
-    Channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
-    Channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
-    Channel.fromPath('files/cpat/query.sql') | set { query }
+    channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
+    channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
+    channel.fromPath('files/cpat/query.sql') | set { query }
 
     flag | find_models
 
@@ -112,7 +112,7 @@ workflow cpat {
     | map { model_name, rd, hexamer -> [model_name, rd, hexamer, params.cpat.taxid_mapping[model_name]] } \
     | combine(query) \
     | find_sequences \
-    | flatMap { model_name, rd, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { [model_name, rd, hexamer, it] } : [[model_name, rd, hexamer, seqs]] } \
+    | flatMap { model_name, rd, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { s -> [model_name, rd, hexamer, s] } : [[model_name, rd, hexamer, seqs]] } \
     | cpat_scan \
     | filter { _model, f -> f.exists() } \
     | combine(find_models.out.cutoffs) \
@@ -122,11 +122,11 @@ workflow cpat {
     parse_results.out.orfs | collect | set { orfs }
 
     store_results(data, orfs, load_ctl, orf_ctl)
-    data | map { _ -> 'cpat done' } | first | set { done }
+    data | map { _v -> 'cpat done' } | set { done }
     }
   emit: done
 }
 
 workflow {
-  cpat(Channel.of('ready'))
+  cpat(channel.of('ready'))
 }

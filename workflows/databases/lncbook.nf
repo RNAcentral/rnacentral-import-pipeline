@@ -1,8 +1,8 @@
 process lncbook {
-  when: { params.databases.lncbook?.run }
-
   output:
   path('*.csv')
+
+  when: params.databases.lncbook?.run
 
   script:
   """

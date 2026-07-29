@@ -3,13 +3,13 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
-  when: { params.tcode?.run }
-
   input:
   val(_flag)
 
   output:
   path('ranges.csv')
+
+  when: params.tcode?.run
 
   script:
   def chunk_size = params.tcode.db_chunk_size
@@ -19,13 +19,13 @@ process build_ranges {
 }
 
 process find_sequences {
-  when: { params.tcode?.run }
-
   input:
   tuple val(min), val(max), path(query)
 
   output:
   path('sequences/*.fasta'), optional: true
+
+  when: params.tcode?.run
 
   script:
   """
@@ -71,7 +71,7 @@ process store_results {
   path('results*.csv')
   path(result_ctl)
 
-  when: { params.tcode?.load }
+  when: params.tcode?.load
 
   script:
   """
@@ -80,16 +80,16 @@ process store_results {
 }
 
 workflow tcode {
-  take: flag
+  take: _flag
   main:
     if( !params.tcode.run ) {
-      Channel.of('tcode skipped') | set { done }
+      channel.of('tcode skipped') | set { done }
     } else {
 
     def query = file(params.tcode.query)
     def load_ctl = file('files/tcode/tcode.ctl')
 
-    def fasta_ch = Channel.of('ready') \
+    def fasta_ch = channel.of('ready') \
       | build_ranges \
       | splitCsv \
       | map { _table, min, max -> [min, max, query] } \
@@ -103,11 +103,11 @@ workflow tcode {
     parse_results.out | collect | set { data }
 
     store_results(data, load_ctl)
-    data | map { _ -> 'tcode done' } | first | set { done }
+    data | map { _v -> 'tcode done' } | set { done }
     }
   emit: done
 }
 
 workflow {
-  tcode(Channel.of('ready'))
+  tcode(channel.of('ready'))
 }

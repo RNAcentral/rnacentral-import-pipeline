@@ -9,7 +9,7 @@ process fetch_annotation {
   output:
   tuple val(species), path("${species.annotation}.txt")
 
-  when: { params.databases.circpedia?.run }
+  when: params.databases.circpedia?.run
 
   script:
   """
@@ -31,7 +31,7 @@ process fetch_fasta {
   output:
   tuple val(species), path(annotation_file), path("${species.fasta}.fa")
 
-  when: { params.databases.circpedia?.run }
+  when: params.databases.circpedia?.run
 
   script:
   """
@@ -63,12 +63,12 @@ process parse_data {
 }
 
 workflow circpedia {
-  emit: data
-
   main:
-    Channel.fromList(params.databases.circpedia.species)
+    channel.fromList(params.databases.circpedia.species)
     | fetch_annotation
     | fetch_fasta
     | parse_data
     | set { data }
+
+  emit: data
 }

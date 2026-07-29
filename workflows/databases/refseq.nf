@@ -2,7 +2,7 @@ process fetch {
   output:
   path('*.gbff')
 
-  when: { params.databases.refseq?.run }
+  when: params.databases.refseq?.run
 
   script:
   """
@@ -28,7 +28,7 @@ process parse {
 
 
 workflow refseq {
-  emit: data
   main:
     fetch | flatten | parse | set { data }
+  emit: data
 }

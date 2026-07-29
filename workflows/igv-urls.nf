@@ -51,16 +51,16 @@ process merge_json {
 workflow genome_mapping {
   take: ready
   main:
-    Channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
+    channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
 
     setup(ready, find_species) \
     | splitCsv \
-    | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+    | filter { s, _a, _t, _d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
     | set { genome_info }
 
     genome_info | create_json | collect | merge_json
 }
 
 workflow {
-  genome_mapping(Channel.from('ready'))
+  genome_mapping(channel.from('ready'))
 }

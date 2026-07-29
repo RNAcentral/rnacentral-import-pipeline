@@ -23,7 +23,7 @@ process fetch_publications {
   output:
   path('out')
 
-  when: { params.get('needs_publications', false) }
+  when: params.get('needs_publications', false)
 
   script:
   """
@@ -61,7 +61,7 @@ workflow lookup_ref_ids {
       | lookup_publications \
       | set { publications }
     } else {
-      Channel.empty() | set { publications }
+      channel.empty() | set { publications }
     }
 
   emit: publications
