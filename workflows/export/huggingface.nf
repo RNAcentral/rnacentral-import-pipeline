@@ -12,6 +12,7 @@ process create_collection {
   output:
     val true, emit: collection_ready
 
+  script:
   """
   rnac huggingface create-collection $release
   """
@@ -26,6 +27,7 @@ process create_active_sequences {
   output:
     path "active_sequences.parquet", emit: parquet
 
+  script:
   """
   rnac ftp-export sequences parquet-from-json $active_json active_sequences.parquet
   """
@@ -40,6 +42,7 @@ process create_dataset {
   output:
     val true, emit: dataset_ready
 
+  script:
   """
   rnac huggingface create-dataset $release_num
   """
@@ -52,6 +55,7 @@ process upload_active_sequences {
     val release_num
     val ready_signal
 
+  script:
   """
   rnac huggingface upload-data $release_num $parquet_file
   """
@@ -63,6 +67,7 @@ process upload_readme {
     path update_specs
     val ready_signal
 
+  script:
   """
   rnac huggingface create-readme $release_num $update_specs
   rnac huggingface upload-data $release_num README.md
@@ -77,7 +82,12 @@ workflow huggingface {
   main:
     if (params.export.huggingface.run) {
 
-      update_specs = Channel.fromPath(params.export.huggingface.update_specs)
+      // The README embeds the hand-written per-database version breakdown; without it
+      // the dataset card is missing the release context, so fail rather than publish.
+      if (!params.export.huggingface.update_specs) {
+        error "export.huggingface.update_specs must point to the release notes file"
+      }
+      update_specs = Channel.fromPath(params.export.huggingface.update_specs, checkIfExists: true)
       release = Channel.value(params.release)
 
       create_collection(release)
@@ -98,6 +108,8 @@ workflow huggingface {
 }
 
 
+// Escape hatch for re-running HuggingFace on its own. The normal path is export/ftp.nf,
+// which shares its dump; running this directly repeats the slow active-sequences query.
 workflow {
   huggingface(Channel.of('ready'), active_sequences())
 }

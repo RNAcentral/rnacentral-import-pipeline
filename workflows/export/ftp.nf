@@ -8,6 +8,7 @@ include { ensembl_export } from './ftp/ensembl'
 include { fasta_export } from './ftp/sequences'
 include { rediportal } from './ftp/rediportal.nf'
 include { active_sequences } from './active-sequences'
+include { huggingface } from './huggingface'
 
 process release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -155,6 +156,8 @@ workflow ftp {
       ensembl_export()
       fasta_export(active_json)
       rediportal()
+      // Shares this run's dump so the (very slow) active-sequences query runs once.
+      huggingface(channel.of('ready'), active_json)
     }
 }
 
