@@ -245,6 +245,7 @@ workflow r2dt {
       channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
       channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
       channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+      channel.fromPath('files/r2dt/attempted-post-load.sql') | set { attempted_post_load }
 
       model_info(ready) | set { models_ready }
 
@@ -277,7 +278,7 @@ workflow r2dt {
 
       publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
 
-      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, uploaded) | set { done }
     } else {
       channel.of('r2dt skipped') | set { done }
     }

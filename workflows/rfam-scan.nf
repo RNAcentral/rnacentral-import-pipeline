@@ -126,7 +126,9 @@ workflow rfam_scan {
       channel.fromPath("files/qa/computed.sql").set { computed_sql }
       channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
       channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
+      channel.fromPath("files/rfam-scan/post-load.sql").set { post_load }
       channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
+      channel.fromPath("files/rfam-scan/attempted-post-load.sql").set { attempted_post_load }
 
       generate_files(ready)
 
@@ -145,7 +147,7 @@ workflow rfam_scan {
       scan.out.hits | collect | set { hits }
       scan.out.attempted | collect | set { attempted }
 
-      import_data(hits, ctl, attempted, attempted_ctl) | set { done }
+      import_data(hits, ctl, post_load, attempted, attempted_ctl, attempted_post_load) | set { done }
     } else {
       channel.of('rfam skipped') | set { done }
     }
