@@ -63,7 +63,10 @@ def create_dataset(release: str) -> str | None:
             collection_slug=collection_slug, item_id=repo_name, item_type="dataset"
         )
 
-    except HfHubHTTPError:
+    except HfHubHTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else None
+        if status != 409:
+            raise
         LOGGER.error(f"Repo with name {repo_name} already exists, can't overwrite it")
         repo_url = None
 
