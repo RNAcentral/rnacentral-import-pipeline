@@ -13,21 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.db import connection
-
 
 def get_active_sequence_count(cur):
     """
     Uses a similar query to the one that gets active sequences to count the number of
     sequences that should be in the parquet file.
     """
-    # Must match the predicate in files/ftp-export/sequences/active.sql (the query
-    # that actually produces the uploaded parquet): is_active AND taxid IS NULL.
+    # Must match the predicate in files/ftp-export/sequences/active.sql (the query that
+    # actually produces the uploaded parquet): is_active, one row per upi.
     query = """select
   count(distinct pc.upi)
   from rnc_rna_precomputed pc
   join rna on rna.upi = pc.upi
-    where is_active 
+    where is_active
     """
     cur.execute(query)
     active_seq_count = cur.fetchone()[0]
