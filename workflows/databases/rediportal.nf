@@ -7,8 +7,6 @@ process build_rnc_bedfile {
   output:
     tuple val(assembly_id), path("rnc_regions.bed")
 
-  when: { params.databases.rediportal?.run }
-
   script:
   """
   set -euo pipefail
@@ -28,8 +26,6 @@ process fetch_rediportal_inputs {
 
   output:
     tuple val(assembly_id), val(genome_build), path("rediportal.txt"), path("rediportal.bed")
-
-  when: { params.databases.rediportal?.run }
 
   script:
   """
@@ -74,12 +70,12 @@ process load_rediportal {
 }
 
 workflow rediportal {
-  take: ready
+  take: _ready
   main:
     if( params.databases.rediportal?.run ) {
-      Channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
-      Channel.fromPath("files/rediportal/load.ctl") | set { load_query }
-      Channel
+      channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
+      channel.fromPath("files/rediportal/load.ctl") | set { load_query }
+      channel
         .fromList(params.databases.rediportal.inputs)
         .map { input -> tuple(input.assembly_id, input.genome_build, input.remote) }
         | set { redi_inputs }
@@ -108,7 +104,7 @@ workflow rediportal {
 
     }
     else {
-      Channel.of('rediportal not run') | set { done }
+      channel.of('rediportal not run') | set { done }
     }
 
   emit: done
@@ -116,5 +112,5 @@ workflow rediportal {
 
 
 workflow {
-  rediportal(Channel.of('ready'))
+  rediportal(channel.of('ready'))
 }

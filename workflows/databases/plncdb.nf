@@ -4,7 +4,7 @@ process fetch_data {
   output:
   path("data")
 
-  when: { !params.databases.plncdb?.prefetch && params.databases.plncdb?.run }
+  when: !params.databases.plncdb?.prefetch && params.databases.plncdb?.run
 
   script:
   """
@@ -25,7 +25,7 @@ process parse_data {
   output:
   path('*.csv')
 
-  when: { params.databases.plncdb?.run }
+  when: params.databases.plncdb?.run
 
   script:
   """
@@ -35,19 +35,17 @@ process parse_data {
 }
 
 workflow plncdb {
-  emit: data_files
-
   main:
   if( params.databases.plncdb?.run ) {
-    Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
+    channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
     | parse_data \
     | flatten
     | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
     | set { data_files }
   }
   else {
-  Channel.empty() | set { data_files }
+  channel.empty() | set { data_files }
   }
 
-
+  emit: data_files
 }

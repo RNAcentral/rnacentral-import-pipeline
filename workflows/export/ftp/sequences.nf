@@ -261,23 +261,24 @@ workflow fasta_export {
     active_json
   main:
   Channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
+  channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
   active(active_json, readme)
 
-  Channel.fromPath('files/ftp-export/sequences/inactive.sql') | inactive
-  Channel.fromPath('files/ftp-export/sequences/species-specific.sql') \
+  channel.fromPath('files/ftp-export/sequences/inactive.sql') | inactive
+  channel.fromPath('files/ftp-export/sequences/species-specific.sql') \
   | species_specific \
   | (compress_species_fasta & create_ssi)
 
-  Channel.fromPath('files/ftp-export/sequences/databases.sql') \
+  channel.fromPath('files/ftp-export/sequences/databases.sql') \
   | find_dbs \
   | splitCsv \
-  | combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql')) \
+  | combine(channel.fromPath('files/ftp-export/sequences/database-specific.sql')) \
   | database_specific
 
-  Channel.fromPath('files/ftp-export/sequences/species.sql') \
+  channel.fromPath('files/ftp-export/sequences/species.sql') \
   | find_species \
   | combine(species_specific.out) \
   | split_by_species
 
-  Channel.fromPath('files/ftp-export/sequences/by-species-readme.txt') | by_species_readme
+  channel.fromPath('files/ftp-export/sequences/by-species-readme.txt') | by_species_readme
 }

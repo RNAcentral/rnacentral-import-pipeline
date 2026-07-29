@@ -61,8 +61,8 @@ process finalize_accession_table {
 workflow build_search_accessions {
   take: ready
   main:
-    Channel.fromPath('files/search-export/build-accessions/insert.sql') | set { chunk_sql }
-    Channel.fromPath('files/search-export/build-accessions/post-insert.sql') | set { post_sql }
+    channel.fromPath('files/search-export/build-accessions/insert.sql') | set { chunk_sql }
+    channel.fromPath('files/search-export/build-accessions/post-insert.sql') | set { post_sql }
 
     find_partitions | splitCsv | set { partitions }
 
@@ -73,7 +73,7 @@ workflow build_search_accessions {
     | build_accession_table \
     | collect \
     | combine(post_sql) \
-    | map { it[-1] } \
+    | map { row -> row[-1] } \
     | finalize_accession_table \
     | set { built }
   emit: built

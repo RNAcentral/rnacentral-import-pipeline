@@ -15,27 +15,26 @@ include { slack_message } from './workflows/utils/slack'
 workflow analyze {
   take: ready
   main:
-    Channel.of("Starting analyze pipeline") | slack_message
+    channel.of("Starting analyze pipeline") | slack_message
     ready | (genome_mapping & rfam_scan & r2dt & cpat & tcode & stopfree )
 }
 
 workflow {
-  analyze(Channel.of('ready'))
+  main:
+    analyze(channel.of('ready'))
 
-  workflow.onComplete {
+  onComplete:
     try {
-      def msg = workflow?.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
+      def msg = workflow.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
       slack_closure(msg)
     } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
+      log.warn "Could not send Slack notification: ${e}"
     }
-  }
 
-  workflow.onError {
+  onError:
     try {
       slack_closure("Analyze workflow hit an error and crashed")
     } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
+      log.warn "Could not send Slack notification: ${e}"
     }
-  }
 }

@@ -12,7 +12,7 @@ process fetch_model_mapping {
   output:
   path('mapping.json')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """
@@ -21,14 +21,14 @@ process fetch_model_mapping {
 }
 
 process get_partitions {
-  when: { params.r2dt?.run }
-
   input:
   val(_flag)
   path(query)
 
   output:
   path('databases.csv')
+
+  when: params.r2dt?.run
 
   script:
   """
@@ -41,13 +41,13 @@ process get_partitions {
 
 
 process fetch_xrefs {
-  when: { params.r2dt?.run }
-
   input:
   tuple val(partition), path(query)
 
   output:
   path('urs_xref.csv')
+
+  when: params.r2dt?.run
 
   script:
   """
@@ -60,14 +60,14 @@ process fetch_xrefs {
 }
 
 process fetch_tracked {
-  when: { params.r2dt?.run }
-
   input:
   val(_flag)
   path(query)
 
   output:
   path('urs_tracked.csv')
+
+  when: params.r2dt?.run
 
   script:
   """
@@ -90,7 +90,7 @@ process extract_sequences {
   output:
   path('raw.json')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """
@@ -215,7 +215,7 @@ process store_secondary_structures {
 workflow common {
   take: ready
   main:
-    Channel.fromPath('files/r2dt/model_mapping.sql') | set { query }
+    channel.fromPath('files/r2dt/model_mapping.sql') | set { query }
 
     fetch_model_mapping(ready, query) | set { mapping }
   emit: mapping
@@ -225,15 +225,15 @@ workflow r2dt {
   take: ready
   main:
     if (params.r2dt.run) {
-      Channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
-      Channel.fromPath("files/r2dt/fetch-partition-xref.sql") | set { xref_sql }
-      Channel.fromPath("files/r2dt/fetch-tracked.sql") | set { tracked_sql }
-      Channel.fromPath("files/r2dt/fetch-partitions.sql") | set { partitions_sql }
-      Channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
-      Channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
-      Channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
-      Channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
-      Channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+      channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
+      channel.fromPath("files/r2dt/fetch-partition-xref.sql") | set { xref_sql }
+      channel.fromPath("files/r2dt/fetch-tracked.sql") | set { tracked_sql }
+      channel.fromPath("files/r2dt/fetch-partitions.sql") | set { partitions_sql }
+      channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
+      channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
+      channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
+      channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
+      channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
 
       model_info(ready) | set { models_ready }
 
@@ -268,11 +268,11 @@ workflow r2dt {
 
       store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
     } else {
-      Channel.of('r2dt skipped') | set { done }
+      channel.of('r2dt skipped') | set { done }
     }
   emit: done
 }
 
 workflow {
-  r2dt(Channel.from('ready'))
+  r2dt(channel.from('ready'))
 }

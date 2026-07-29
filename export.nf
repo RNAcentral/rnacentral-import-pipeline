@@ -2,8 +2,8 @@
 
 nextflow.enable.dsl=2
 
-include { text_search } from './workflows/export/text-search'
-include { ftp } from './workflows/export/ftp'
+include { text_search } from './workflows/export/text-search.nf'
+include { ftp } from './workflows/export/ftp.nf'
 include { sequence_search } from './workflows/export/sequence-search'
 
 workflow export {
@@ -14,5 +14,5 @@ workflow export {
 }
 
 workflow {
-  export(Channel.of('ready'))
+  export(channel.of('ready'))
 }

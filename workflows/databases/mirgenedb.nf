@@ -5,7 +5,7 @@ process mirgenedb {
   output:
   path('*.csv')
 
-  when: { params.databases.mirgenedb?.run }
+  when: params.databases.mirgenedb?.run
 
   script:
   """
