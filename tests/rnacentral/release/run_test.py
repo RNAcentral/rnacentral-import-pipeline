@@ -88,10 +88,11 @@ def test_run_patches_functions_and_checks_once(monkeypatch):
     assert "x.dbid = v_dbid" in pp2
     assert "PREVIOUS_XREF.DBID = p_in_dbid" in lumv
 
-    # log_release_end_atx is patched so its correlated EXISTS subqueries prune
-    # (p.dbid = l_dbid instead of the un-prunable correlated p.dbid = x.dbid).
+    # log_release_end_atx is patched to run its stats query through EXECUTE
+    # format(), so the dbid arrives as a literal and the xref partitions prune.
+    # The old correlated EXISTS subqueries (p.dbid = x.dbid) are gone entirely.
     lrea = next(s for s in sql_calls if "FUNCTION rnc_logging.log_release_end_atx" in s)
-    assert "p.dbid    = l_dbid" in lrea
+    assert "x.dbid = %1$s" in lrea
     assert "p.dbid    = x.dbid" not in lrea
 
     # The load_md5_new_sequences index is created to support set_comparable_prot_upi.

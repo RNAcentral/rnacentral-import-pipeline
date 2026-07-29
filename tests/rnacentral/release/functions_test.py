@@ -165,7 +165,11 @@ def test_apply_reads_the_tracking_table_it_never_creates(fake_db):
     _, cursor = fake_db
     functions.apply("postgresql://ignored")
 
-    assert not any("CREATE TABLE" in sql for sql, _ in cursor.executed)
+    # Scoped to the tracking table: some deployed function bodies legitimately
+    # contain their own CREATE TABLE (prepare_pel_tables, update_rnc_accessions).
+    assert not any(
+        "CREATE TABLE" in sql and TRACKING in sql for sql, _ in cursor.executed
+    )
     assert any(
         sql.startswith(f"SELECT") and TRACKING in sql for sql, _ in cursor.executed
     )
