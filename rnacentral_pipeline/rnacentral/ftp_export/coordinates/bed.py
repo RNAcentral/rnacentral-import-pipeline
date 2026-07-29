@@ -101,6 +101,6 @@ def from_json(handle, out):
     Transform raw coordinate data into bed format.
     """
 
-    data = coord.from_file(handle)
+    data = coord.from_file(handle, genes=False)
     data = map(BedEntry.from_coordinate, data)
     write_bed_text(data, out)

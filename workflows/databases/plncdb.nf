@@ -1,21 +1,18 @@
 nextflow.enable.dsl = 2
 
 process fetch_data {
-  when { !params.databases.plncdb.prefetch and params.databases.plncdb.run }
-
-  containerOptions "--contain --bind $baseDir"
-
   output:
   path("data")
 
+  when: !params.databases.plncdb?.prefetch && params.databases.plncdb?.run
+
+  script:
   """
   rnac plncdb fetch-data $params.databases.plncdb.urls data
   """
 }
 
 process parse_data {
-  when { params.databases.plncdb.run }
-
   queue 'short'
   memory { 8.GB * task.attempt }
 
@@ -28,6 +25,9 @@ process parse_data {
   output:
   path('*.csv')
 
+  when: params.databases.plncdb?.run
+
+  script:
   """
   # rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data
   rnac plncdb parse $params.databases.plncdb.data_path$data
@@ -35,19 +35,17 @@ process parse_data {
 }
 
 workflow plncdb {
-  emit: data_files
-
   main:
-  if( params.databases.plncdb.run ) {
-    Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
+  if( params.databases.plncdb?.run ) {
+    channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
     | parse_data \
     | flatten
     | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
     | set { data_files }
   }
   else {
-  Channel.empty() | set { data_files }
+  channel.empty() | set { data_files }
   }
 
-
+  emit: data_files
 }

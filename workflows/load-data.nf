@@ -1,5 +1,6 @@
 process create_load_tables {
-  time '2d'
+  time '1h'
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -8,8 +9,9 @@ process create_load_tables {
   output:
   val('done')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $create "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f $create "\$PGDATABASE"
   """
 }
 
@@ -17,6 +19,8 @@ process merge_and_import {
   tag { name }
   memory 9.GB
   maxForks 2
+  cpus 4
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -25,6 +29,7 @@ process merge_and_import {
   output:
   val(name)
 
+  script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
   """
@@ -33,7 +38,7 @@ process merge_and_import {
 process release {
   time '5d'
   maxForks 1
-  when { params.should_release }
+  cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory  4.GB
 
@@ -44,6 +49,8 @@ process release {
 
   output:
   val('done')
+
+  when: params.get('should_release', false)
 
   script:
   def should_release = params.should_release
@@ -58,7 +65,7 @@ process release {
       while IFS='' read -r "script" || [[ -n "\$script" ]]; do
         if [[ ! -z "\$script" ]]; then
           echo "Running: \$fn/\$script"
-          psql -v ON_ERROR_STOP=1 -f \$script "$PGDATABASE"
+          psql -v ON_ERROR_STOP=1 -f \$script "\$PGDATABASE"
         fi
       done < "\$fn"
     fi
@@ -74,10 +81,9 @@ process release {
 
 workflow load_data {
   take: parsed
-  emit: released
   main:
-    Channel.fromPath('files/import-data/limits.json') | set { limits }
-    Channel.fromPath('files/schema/create_load.sql') | set { schema }
+    channel.fromPath('files/import-data/limits.json') | set { limits }
+    channel.fromPath('files/schema/create_load.sql') | set { schema }
 
     parsed \
     | filter { f -> !f.isEmpty() } \
@@ -86,30 +92,30 @@ workflow load_data {
       def ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
       [[name, ctl], f]
     } \
-    | filter {
-      def status = it[0][1].exists()
+    | filter { entry ->
+      def status = entry[0][1].exists()
       if (!status) {
-        log.info "Skipping data ${it[0][1].getBaseName()}"
+        log.info "Skipping data ${entry[0][1].getBaseName()}"
       }
       status
     } \
     | groupTuple \
-    | map { [it[0][0], it[0][1], it[1]] } \
+    | map { t -> [t[0][0], t[0][1], t[1]] } \
     | combine(create_load_tables(schema)) \
-    | map { n, ctl, fs, _ -> [n, ctl, fs] } \
+    | map { n, ctl, fs, _ready -> [n, ctl, fs] } \
     | merge_and_import \
     | set { imported_names }
 
     imported_names
-      .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
+      .flatMap { n -> files("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
       .filter { f -> f.exists() }
       .toList()
       .set { pre_scripts }
 
     imported_names
-      .flatMap { n -> file("files/import-data/post-release/*__${n.replace('_', '-')}.sql") }
+      .flatMap { n -> files("files/import-data/post-release/*__${n.replace('_', '-')}.sql") }
       .mix(
-        Channel.fromPath([
+        channel.fromPath([
           'files/import-data/post-release/000__populate_precompute.sql',
           'files/import-data/post-release/999__cleanup.sql',
         ])
@@ -121,4 +127,5 @@ workflow load_data {
     release(pre_scripts, post_scripts, limits) \
     | ifEmpty('no release') \
     | set { released }
+  emit: released
 }

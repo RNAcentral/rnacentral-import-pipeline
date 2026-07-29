@@ -17,12 +17,11 @@ import pytest
 
 from rnacentral_pipeline.databases.data import RnaType, SoTermInfo
 from rnacentral_pipeline.databases.sequence_ontology import tree
-from tests.helpers import SO_ONTOLOGY_PATH
 
 
 @pytest.fixture(scope="module")
 def so_tree():
-    return tree.load_ontology(SO_ONTOLOGY_PATH)
+    return tree.load_ontology(tree.REMOTE_ONTOLOGY)
 
 
 @pytest.mark.parametrize(

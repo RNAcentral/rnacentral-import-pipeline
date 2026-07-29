@@ -3,8 +3,6 @@
 nextflow.enable.dsl = 2
 
 process setup {
-  when { params.genome_mapping.run }
-
   input:
   val(_flag)
   path(query)
@@ -12,8 +10,12 @@ process setup {
   output:
   path('species.csv')
 
+  when: params.genome_mapping?.run
+
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > species.csv
+  rnac genome-mapping update-assemblies
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > species.csv
   """
 }
 
@@ -28,6 +30,7 @@ process fetch_unmapped_sequences {
   output:
   tuple val(species), path('parts/*.fasta')
 
+  script:
   """
   set -euo pipefail
 
@@ -37,19 +40,19 @@ process fetch_unmapped_sequences {
     -v min_length=${params.genome_mapping.min_length} \
     -v max_length=${params.genome_mapping.max_length} \
     -f "$possible_query" \
-    "$PGDATABASE" | sort > possible
+    "\$PGDATABASE" | sort -T . > possible
 
   psql \
     -v ON_ERROR_STOP=1 \
     -v assembly_id=$assembly_id \
     -f "$mapped_query" \
-    "$PGDATABASE" | sort -u > mapped
+    "\$PGDATABASE" | sort -T . -u > mapped
 
   mkdir parts
 
   comm -23 possible mapped | awk 'BEGIN { FS="_"; OFS="," } { print \$1, \$0 }' > urs-to-compute
   if [[ -s urs-to-compute ]]; then
-    psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+    psql -q -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
     json2fasta raw.json rnacentral.fasta
     seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
 
@@ -75,6 +78,7 @@ process get_browser_coordinates {
   output:
   path("${species}.${assembly}.ensembl.gff3.gz")
 
+  script:
   """
   set -o pipefail
 
@@ -83,7 +87,7 @@ process get_browser_coordinates {
   gzip -d "${species}.${assembly}.gff3.gz"
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
-    sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
+    sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n) |\
     bgzip > "${species}.${assembly}".ensembl.gff3.gz
 
   rm "${species}.${assembly}.gff3"
@@ -98,6 +102,7 @@ process index_gff3 {
 
   output:
   path("${gff.baseName}.gz.{tbi,csi}"), optional: true
+  script:
   """
   tabix -p gff $gff || tabix -C -p gff $gff
   """
@@ -114,10 +119,11 @@ process download_genome {
   output:
   tuple val(species), val(assembly), path("${species}.${assembly}.fa")
 
+  script:
   """
   set -o pipefail
 
-  psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" $PGDATABASE
+  psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" \$PGDATABASE
 
   rnac genome-mapping url-for --host=$division $species $assembly - |\
     xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
@@ -137,6 +143,7 @@ process blat_index {
   output:
   tuple val(species), val(assembly), path("${species}_${assembly}.{2bit,ooc}")
 
+  script:
   """
   faToTwoBit -noMask ${species}_${assembly}.fa ${species}_${assembly}.2bit
   blat \
@@ -157,16 +164,19 @@ process index_genome_for_browser {
   output:
   tuple path("${genome}"), path("${genome.baseName}.fa.fai")
 
+  script:
   """
   samtools faidx $genome
-  psql -c "UPDATE ensembl_assembly SET selected_genome=true WHERE assembly_id='${assembly}';" $PGDATABASE
+  psql -c "UPDATE ensembl_assembly SET selected_genome=true WHERE assembly_id='${assembly}';" \$PGDATABASE
   """
 }
 
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
   memory { params.genome_mapping.blat.directives.memory }
-  errorStrategy 'ignore'
+  errorStrategy { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
+  time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 24.h }
+  maxRetries 3
 
   input:
   tuple val(species), val(assembly), path(genome), path(ooc), path(chunk)
@@ -175,6 +185,7 @@ process blat {
   tuple val(species), path('selected.json'), emit: hits
   path 'attempted.csv', emit: attempted
 
+  script:
   """
   set -o pipefail
 
@@ -206,6 +217,7 @@ process select_mapped_locations {
   output:
   path('locations.csv')
 
+  script:
   """
   set -o pipefail
 
@@ -217,6 +229,7 @@ process select_mapped_locations {
 }
 
 process load_mapping {
+  memory 6.GB
   maxForks 1
 
   input:
@@ -228,6 +241,7 @@ process load_mapping {
   output:
   val('done')
 
+  script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
   split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
@@ -236,54 +250,59 @@ process load_mapping {
 
 workflow genome_mapping {
   take: ready
-  emit: done
   main:
-    Channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
-    Channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
-    Channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
-    Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
-    Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
-    Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
+    channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
+    channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
+    channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
+    channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
+    channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
+    channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
 
-    setup(ready, find_species) \
-    | splitCsv \
-    | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
-    | set { genome_info }
+    if (params.genome_mapping.run) {
+      setup(ready, find_species) \
+      | splitCsv \
+      | filter { s, _a, _t, _d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+      | set { genome_info }
 
-    genome_info \
-    | combine(possible_sql) \
-    | combine(mapped_sql) \
-    | combine(unmapped_sql) \
-    | fetch_unmapped_sequences \
-    | set { split_sequences }
+      genome_info \
+      | combine(possible_sql) \
+      | combine(mapped_sql) \
+      | combine(unmapped_sql) \
+      | fetch_unmapped_sequences \
+      | set { split_sequences }
 
-    genome_info \
-    | download_genome \
-    | set { genomes }
+      genome_info \
+      | download_genome \
+      | set { genomes }
 
-    genome_info | get_browser_coordinates | index_gff3
+      genome_info | get_browser_coordinates | index_gff3
 
-    genomes \
-    | map { _s, _a, genome -> [_a, genome] } \
-    | index_genome_for_browser
+      genomes \
+      | map { _s, _a, genome -> [_a, genome] } \
+      | index_genome_for_browser
 
-    genomes
-    | blat_index \
-    | join(split_sequences) \
-    | flatMap { species, assembly, genome_chunks, chunks ->
-      [genome_chunks.collate(2), chunks]
-        .combinations()
-        .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
-    } \
-    | filter { s, a, g, o, chunk -> !chunk.isEmpty() } \
-    | blat
+      genomes
+      | blat_index \
+      | join(split_sequences) \
+      | flatMap { species, assembly, genome_chunks, chunks ->
+        def chunkList = chunks instanceof List ? chunks : [chunks]
+        [genome_chunks.collate(2), chunkList]
+          .combinations()
+          .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
+      } \
+      | filter { _s, _a, _g, _o, chunk -> !chunk.isEmpty() } \
+      | blat
 
-    blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
-    blat.out.attempted | collect | set { attempted }
+      blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
+      blat.out.attempted | collect | set { attempted }
 
-    load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
+      load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
+    } else {
+      channel.of('genome-mapping skipped') | set { done }
+    }
+  emit: done
 }
 
 workflow {
-  genome_mapping(Channel.from('ready'))
+  genome_mapping(channel.from('ready'))
 }

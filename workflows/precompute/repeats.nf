@@ -1,14 +1,13 @@
 process find_genomes_with_repeats {
-  when { params.precompute.run }
-
   input:
   tuple path(query), path(connections)
 
   output:
   path("info.csv")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > assemblies.csv
+  psql -v ON_ERROR_STOP=1 -f $query "\$PGDATABASE" > assemblies.csv
   rnac repeats find-databases $connections assemblies.csv info.csv
   """
 }
@@ -58,15 +57,15 @@ process fetch_ensembl_data {
 }
 
 workflow repeats {
-  emit: repeats
   main:
-    Channel.fromPath('files/repeats/find-assemblies.sql') \
-    | combine(Channel.fromPath('config/databases.json')) \
+    channel.fromPath('files/repeats/find-assemblies.sql') \
+    | combine(channel.fromPath('config/databases.json')) \
     | find_genomes_with_repeats \
     | splitCsv \
-    | combine(Channel.fromPath('files/repeats/extract-repeats.sql')) \
+    | combine(channel.fromPath('files/repeats/extract-repeats.sql')) \
     | query_ensembl \
     | fetch_ensembl_data
 
     fetch_ensembl_data.out.repeats | collect | set { repeats }
+  emit: repeats
 }

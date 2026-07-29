@@ -116,16 +116,16 @@ def write_gtrnadb(handle, output):
     return write_model(gtrnadb.parse, handle, output)
 
 
-def write_ribovision(handle, output):
-    return write_model(ribovision.parse, handle, output)
+def write_ribovision(handle, output, extra=None):
+    return write_model(ribovision.parse, handle, output, extra=extra)
 
 
-def write_crw(handle, db_url, output):
-    return write_model(crw.parse, handle, output, extra=db_url)
+def write_crw(handle, output, extra=None):
+    return write_model(crw.parse, handle, output, extra=extra)
 
 
-def write_rnase_p(handle, output):
-    return write_model(rnase_p.parse, handle, output)
+def write_rnase_p(handle, output, extra=None):
+    return write_model(rnase_p.parse, handle, output, extra=extra)
 
 
 def write_rfam(handle, db_url, output):
@@ -159,9 +159,7 @@ def prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences):
         .rename({"column_1": "urs"})
     )
 
-    raw_tracked = pl.scan_csv(
-        tracked_urs.name, low_memory=True
-    ).unique() 
+    raw_tracked = pl.scan_csv(tracked_urs.name, low_memory=True).unique()
 
     to_fetch = raw_xref.join(raw_tracked, on="urs", how="anti")
 

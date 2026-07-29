@@ -30,7 +30,6 @@ from rnacentral_pipeline.cli import pdb
         ("generate", "pdb.json"),
     ],
 )
-@pytest.mark.network
 def test_can_fetch_expected_data(command, output):
     runner = CliRunner()
     with runner.isolated_filesystem():

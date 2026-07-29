@@ -8,6 +8,7 @@ process fetch_taxids {
   output:
     path('taxids_to_fetch')
 
+  script:
   """
   rnac expressionatlas get-taxids ${experiments_path} taxids_to_fetch
   """
@@ -22,6 +23,7 @@ process find_experiments {
   output:
     path('experiment_list')
 
+  script:
   """
   find `readlink ${experiments_path}`/ -maxdepth 1 -name 'E*' -type d ! -empty > experiment_list
   """
@@ -36,6 +38,8 @@ process synchronize_cache {
     tuple path(experiments_path), path(ea_cache_path)
   output:
     val('cache synchronized')
+
+  when: params.databases.expressionatlas?.run
 
   script:
   """
@@ -62,8 +66,9 @@ process fetch_lookup {
   output:
     path("lookup_dump.csv")
 
+    script:
     """
-    psql -f $query $PGDATABASE > lookup_dump.csv
+    psql -f $query \$PGDATABASE | grep -Ev '^(CREATE TABLE|COPY [0-9]+)\$' > lookup_dump.csv
     """
 }
 
@@ -80,6 +85,7 @@ process parse_tsvs {
   output:
   path('genes_hit.ndjson')
 
+  script:
   """
   rnac expressionatlas parse-dir ${tsvs} ${lookup} genes_hit.ndjson
   """
@@ -97,6 +103,7 @@ process group_and_convert {
   output:
     path('*.csv')
 
+  script:
   """
   rnac expressionatlas parse ${genes} ${lookup} .
 
@@ -106,13 +113,12 @@ process group_and_convert {
 
 workflow expressionatlas {
 
-  emit: data
   main:
 
-  if( params.databases.expressionatlas.run ) {
-    Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
-    Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
-    Channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
+  if( params.databases.expressionatlas?.run ) {
+    channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
+    channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
+    channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
 
     tsv_path.combine(ea_cache) | synchronize_cache |  set { cache_syncd }
 
@@ -133,9 +139,10 @@ workflow expressionatlas {
 
   }
   else {
-    Channel.empty() | set { data }
+    channel.empty() | set { data }
   }
 
+  emit: data
 }
 
 

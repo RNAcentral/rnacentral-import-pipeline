@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import itertools as it
+from itertools import filterfalse
 
 from . import helpers
 
@@ -69,6 +70,6 @@ def parse(tsv_handle, fasta_handle):
 
     version = get_version(tsv_handle)
     with helpers.indexed(fasta_handle) as indexed:
-        if version == "genes-version-2.2.5":
+        if version.startswith("genes"):
             return parse_v_2_2_5(tsv_handle, indexed)
     raise ValueError("Unparsable RGD format version %s" % version)

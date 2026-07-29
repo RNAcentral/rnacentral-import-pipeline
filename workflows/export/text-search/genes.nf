@@ -3,6 +3,7 @@
 nextflow.enable.dsl=2
 
 include { query as locus_query } from './utils'
+include { fetch_schema } from './utils'
 
 process merge_and_split {
   memory { 2.GB * task.attempt }
@@ -14,6 +15,7 @@ process merge_and_split {
   output:
   path('by-assembly/*.json')
 
+  script:
   """
   search-export genes select-and-split $locus $sequence by-assembly
   if [[ ! -e by-assembly/*.json ]]; then
@@ -24,11 +26,13 @@ process merge_and_split {
 
 process as_xml {
   tag { "$assembly" }
-  memory 10.GB
+  memory { params.export.search.memory * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
+  maxRetries 3
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly), path('raw*.json')
+  tuple val(assembly), path('raw*.json'), path('so_tree.json'), path('schema.xsd')
 
   output:
   path "${xml}.gz", emit: xml
@@ -38,9 +42,9 @@ process as_xml {
   xml = "genes_${assembly}_xml.xml"
   """
   cat raw*.json > members.json
-  search-export genes merge-assembly members.json merged.json
+  search-export genes merge-assembly so_tree.json members.json merged.json
   search-export genes as-xml merged.json $xml count
-  xmllint $xml --schema ${params.export.search.schema} --stream
+  xmllint $xml --schema schema.xsd --stream
   gzip $xml
   touch ${xml}.gz
   """
@@ -50,13 +54,12 @@ workflow genes {
   take:
     max_count
     sequence_json
-  emit:
-    xml
-    counts
+    so_tree
   main:
-    Channel.fromPath('files/search-export/genes/region-info.sql') | set { locus_sql }
+    channel.fromPath('files/search-export/genes/region-info.sql') | set { locus_sql }
 
     locus_query(max_count, locus_sql) | set { locus_info }
+    fetch_schema()
 
     sequence_json \
     | combine(locus_info) \
@@ -65,8 +68,13 @@ workflow genes {
     | filter { f -> !f.isEmpty() } \
     | map { fn -> [fn.name, fn] } \
     | groupTuple \
+    | combine(so_tree) \
+    | combine(fetch_schema.out) \
     | as_xml
 
     as_xml.out.xml | set { xml }
     as_xml.out.counts | set { counts }
+  emit:
+    xml
+    counts
 }

@@ -9,10 +9,11 @@ process find_partitions {
   output:
   path('partitions.csv')
 
+  script:
   """
   psql \
     -c 'COPY (SELECT id, descr from rnc_database) TO STDOUT (FORMAT CSV)' \
-  "$PGDATABASE" | \
+  "\$PGDATABASE" | \
   awk -F, '{
     print "xref_p"\$1"_not_deleted,"\$2
   }' > partitions.csv
@@ -30,13 +31,14 @@ process build_accession_table {
   output:
   val('done')
 
+  script:
   """
   psql \
   -v ON_ERROR_STOP=1 \
   -v "db_name=$db" \
   -v "partition=$partition" \
   -f $sql \
-  "$PGDATABASE"
+  "\$PGDATABASE"
   """
 }
 
@@ -49,18 +51,18 @@ process finalize_accession_table {
   output:
   val('done')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $sql $PGDATABASE
+  psql -v ON_ERROR_STOP=1 -f $sql \$PGDATABASE
   """
 }
 
 
 workflow build_search_accessions {
   take: ready
-  emit: built
   main:
-    Channel.fromPath('files/search-export/build-accessions/insert.sql') | set { chunk_sql }
-    Channel.fromPath('files/search-export/build-accessions/post-insert.sql') | set { post_sql }
+    channel.fromPath('files/search-export/build-accessions/insert.sql') | set { chunk_sql }
+    channel.fromPath('files/search-export/build-accessions/post-insert.sql') | set { post_sql }
 
     find_partitions | splitCsv | set { partitions }
 
@@ -71,7 +73,8 @@ workflow build_search_accessions {
     | build_accession_table \
     | collect \
     | combine(post_sql) \
-    | map { it[-1] } \
+    | map { row -> row[-1] } \
     | finalize_accession_table \
     | set { built }
+  emit: built
 }

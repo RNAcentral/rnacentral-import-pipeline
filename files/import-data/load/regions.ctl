@@ -26,4 +26,15 @@ WITH truncate,
   skip header = 0,
   fields escaped by double-quote,
   fields terminated by ','
+
+AFTER LOAD DO
+$$
+ALTER TABLE rnacen.load_rnc_sequence_regions SET (
+    autovacuum_enabled = true,
+    toast.autovacuum_enabled = true
+);
+$$,
+$$
+ANALYZE rnacen.load_rnc_sequence_regions;
+$$
 ;

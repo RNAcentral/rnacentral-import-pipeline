@@ -15,28 +15,45 @@ limitations under the License.
 
 import asyncio
 from functools import lru_cache
+from typing import Optional
 
 import requests
 import six
 from furl import furl
-from retry import retry
-from retry.api import retry_call
 from throttler import throttle
 
 from rnacentral_pipeline.databases.data import OntologyTerm
 
 BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
 OLS4_BASE = "https://www.ebi.ac.uk/ols4/api/ontologies"
+TRANSIENT_STATUS_CODES = {429, 500, 502, 503, 504}
+MAX_RETRIES = 5
 
 
-@retry(requests.HTTPError, tries=5, delay=1)
+def is_transient_error(err: requests.RequestException) -> bool:
+    status_code: Optional[int] = getattr(getattr(err, "response", None), "status_code", None)
+    request_url = getattr(getattr(err, "response", None), "url", "") or ""
+    if status_code == 404 and "/terms/" in request_url:
+        return True
+    if status_code in TRANSIENT_STATUS_CODES:
+        return True
+    return isinstance(err, (requests.ConnectionError, requests.Timeout))
+
+
 @throttle(rate_limit=10, period=1.0)
 async def query_ols(url):
     if isinstance(url, furl):
         url = url.url
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as err:
+            if attempt == MAX_RETRIES or not is_transient_error(err):
+                raise
+            await asyncio.sleep(attempt)
 
 
 def ontology_url(ontology):

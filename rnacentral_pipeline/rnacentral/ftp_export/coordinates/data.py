@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import itertools as it
 import json
+import sys
 import operator as op
 import typing as ty
 
@@ -47,6 +49,9 @@ class Region(object):
     rna_id = attr.ib(validator=is_a(str), converter=str)
     region = attr.ib(validator=is_a(regions.SequenceRegion))
     was_mapped = attr.ib(validator=is_a(bool))
+    is_gene = attr.ib(validator=is_a(bool))
+    gene_start = attr.ib(validator=optional(is_a(int)), default=None, cmp=False)
+    gene_end = attr.ib(validator=optional(is_a(int)), default=None, cmp=False)
     identity = attr.ib(
         validator=optional(is_a(float)),
         default=None,
@@ -56,29 +61,59 @@ class Region(object):
 
     @classmethod
     def build(cls, index, raw):
+        is_gene = False
         identity = None
-        if raw["identity"] is not None:
-            identity = float(raw["identity"])
-
         exons = []
-        for exon in raw["exons"]:
-            exons.append(
-                regions.Exon(
-                    start=exon["exon_start"],
-                    stop=exon["exon_stop"],
+        metadata = {}
+        rna_id = None
+        gene_start = None
+        gene_end = None
+
+        if raw["rna_id"] is None:
+            is_gene = True
+
+        ## Treat genes and transcripts separately
+        if is_gene:
+            region_id = raw["gene_name"]
+
+            metadata["description"] = raw["description"]
+            metadata["rna_type"] = raw["rna_type"]
+            metadata["providing_databases"] = []
+            metadata["databases"] = raw["databases"]
+
+            gene_start = raw["gene_start"]
+            gene_end = raw["gene_end"]
+
+            rna_id = raw["gene_name"]
+        else:
+            if raw["identity"] is not None:
+                identity = float(raw["identity"])
+
+            for exon in raw["exons"]:
+                exons.append(
+                    regions.Exon(
+                        start=exon["exon_start"],
+                        stop=exon["exon_stop"],
+                    )
                 )
+
+            region_id = "{rna_id}.{index}".format(rna_id=raw["rna_id"], index=index)
+
+            metadata["description"] = raw["description"]
+            metadata["rna_type"] = raw["rna_type"]
+            metadata["providing_databases"] = lookup_databases(
+                raw["providing_databases"]
             )
+            metadata["databases"] = clean_databases(raw["databases"])
+            rna_id = raw["rna_id"]
 
-        region_id = "{rna_id}.{index}".format(rna_id=raw["rna_id"], index=index)
+            if raw["gene_name"] is not None:
+                metadata["parent_gene"] = raw["gene_name"]
 
-        metadata = {
-            "description": raw["description"],
-            "rna_type": raw["rna_type"],
-            "providing_databases": lookup_databases(raw["providing_databases"]),
-            "databases": clean_databases(raw["databases"]),
-        }
+        ## End separate treatment, should be able to be unified now
+
         if not metadata["providing_databases"]:
-            if not raw["was_mapped"]:
+            if not raw["was_mapped"] and not is_gene:
                 raise ValueError(
                     f"No providing database for an unmapped region!\n{raw}"
                 )
@@ -86,7 +121,7 @@ class Region(object):
 
         return cls(
             region_id=region_id,
-            rna_id=raw["rna_id"],
+            rna_id=rna_id,
             region=regions.SequenceRegion(
                 assembly_id=raw["assembly_id"],
                 chromosome=raw["chromosome"],
@@ -96,15 +131,22 @@ class Region(object):
             ),
             identity=identity,
             was_mapped=raw["was_mapped"],
+            is_gene=is_gene,
             metadata=metadata,
+            gene_start=gene_start,
+            gene_end=gene_end,
         )
 
     @property
     def start(self):
+        if self.is_gene:
+            return self.gene_start
         return self.region.start
 
     @property
     def stop(self):
+        if self.is_gene:
+            return self.gene_end
         return self.region.stop
 
     @property
@@ -119,6 +161,8 @@ class Region(object):
     def source(self):
         if self.was_mapped:
             return "alignment"
+        if self.is_gene:
+            return "gene-prediction"
         return "expert-database"
 
     def string_strand(self):
@@ -136,7 +180,14 @@ def parse(regions) -> ty.Iterable[Region]:
         yield Region.build(index, region)
 
 
-def from_file(handle) -> ty.Iterable[Region]:
-    data = map(json.loads, handle)
+def from_file(handle, genes=True) -> ty.Iterable[Region]:
+    # The query exports each record as a single CSV-quoted JSON field (COPY ... CSV).
+    # CSV avoids COPY text format's backslash-escaping, which corrupts JSON whose
+    # data contains a " or \.
+    csv.field_size_limit(sys.maxsize)  # records with many exons exceed the default limit
+    rows = csv.reader(handle)
+    data = (json.loads(row[0]) for row in rows)
     data = filter(lambda d: d["rna_type"] != "NULL", data)
+    if not genes:
+        data = filter(lambda d: d['rna_id'] != None, data)
     yield from parse(data)

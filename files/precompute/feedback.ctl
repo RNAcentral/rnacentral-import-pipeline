@@ -17,19 +17,6 @@ TARGET COLUMNS (
 WITH
     fields terminated by ' '
 
-BEFORE LOAD DO
-$$
-drop table if exists load_overlaps;
-$$,
-$$
-create table load_overlaps (
-    upi_taxid text,
-    status text,
-    result text,
-    assembly_id text
-);
-$$
-
 AFTER LOAD DO
 $$
 insert into rnc_feedback_overlap (

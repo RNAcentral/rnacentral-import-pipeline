@@ -409,11 +409,15 @@ class R2DTResult(object):
             seq_dot = str(record.seq)
             ## Use indices instead, assert that the string is even length
             ## If not, then the two parts are not the same length
-            assert len(seq_dot) % 2 == 0, f"Odd length sequence {len(seq_dot)}"
+            if len(seq_dot) % 2 != 0:
+                raise ValueError(f"Odd length sequence {len(seq_dot)}")
             seq_dot_len = len(seq_dot)
             sequence = seq_dot[0 : seq_dot_len // 2]
             dot_bracket = seq_dot[(seq_dot_len // 2) :]
-            assert len(sequence) == len(dot_bracket)
+            if len(sequence) != len(dot_bracket):
+                raise ValueError(
+                    f"Sequence and dot bracket lengths do not match: {len(sequence)} != {len(dot_bracket)}"
+                )
             return dot_bracket
 
     def basepair_count(self):

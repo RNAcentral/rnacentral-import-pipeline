@@ -9,6 +9,8 @@ process fetch {
   output:
   tuple val(name), path('data.tsv'), val(column_name)
 
+  when: params.databases[name]?.run
+
   script:
   if (data.getExtension() == "gz")
     """
@@ -39,14 +41,15 @@ process process {
 }
 
 workflow genecards_suite {
-  emit: data
   main:
-    Channel.fromList([
+    channel.fromList([
       ['genecards', params.databases.genecards.remote, params.databases.genecards.column],
       ['malacards', params.databases.malacards.remote, params.databases.malacards.column],
     ]) \
-    | filter { name, r, c -> params.databases[name].run } \
+    | filter { name, _r, _c -> params.databases[name]?.run } \
     | fetch \
     | process \
     | set { data }
+
+  emit: data
 }

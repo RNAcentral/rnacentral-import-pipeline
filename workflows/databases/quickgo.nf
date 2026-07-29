@@ -5,6 +5,7 @@ process quickgo_get {
   output:
   path('data.gpa')
 
+  script:
   """
   scp $params.databases.quickgo.remote data.gpa.gz
   gzip -d data.gpa.gz
@@ -22,6 +23,7 @@ process quickgo_parse {
   output:
   path('*.csv')
 
+  script:
   """
   rnac quickgo parse $data .
   """
@@ -31,15 +33,14 @@ process quickgo_parse {
 
 workflow quickgo {
 
-  emit: data
-
   main:
-    if ( params.databases.quickgo.run ) {
+    if ( params.databases.quickgo?.run ) {
       quickgo_get | quickgo_parse | set { data }
     }
     else {
-      Channel.empty() | set { data }
+      channel.empty() | set { data }
     }
 
+  emit: data
 
 }

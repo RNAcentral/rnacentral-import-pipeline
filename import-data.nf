@@ -12,18 +12,17 @@ include { slack_closure } from './workflows/utils/slack'
 
 workflow import_data {
   take: _flag
-  emit: post_release
   main:
-    Channel.of("Starting data import pipeline") | slack_message
+    channel.of("Starting data import pipeline") | slack_message
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       parse_databases(),
       parse_metadata(),
     ) \
-    | branch {
-      terms: it.name == "terms.csv"
-      ref_ids: it.name == "ref_ids.csv"
+    | branch { r ->
+      terms: r.name == "terms.csv"
+      ref_ids: r.name == "ref_ids.csv"
       csv: true
     } \
     | set { results }
@@ -38,16 +37,24 @@ workflow import_data {
 
 
 
+  emit: post_release
 }
 
 workflow {
-  import_data(Channel.of('ready'))
-}
+  main:
+    import_data(channel.of('ready'))
 
-workflow.onError {
-  slack_closure("Import pipeline encountered an error and failed")
-}
+  onComplete:
+    try {
+      slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
 
-workflow.onComplete {
-  slack_closure("Workflow completed ${$workflow.status ? 'Ok' : 'with errors'} ")
+  onError:
+    try {
+      slack_closure("Import pipeline encountered an error and failed")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
 }

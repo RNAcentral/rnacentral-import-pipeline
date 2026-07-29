@@ -48,7 +48,7 @@ class TooManyPublications(Exception):
 
 ## Split the actualy async request bit away from the other
 ## bits to facilitate caching with coroutines
-@retry(requests.HTTPError, tries=5, delay=1)
+@retry(requests.HTTPError, tries=8, delay=10, backoff=2, max_delay=120)
 @throttle(rate_limit=5, period=1.0)
 @lru_cache()
 @cacheable

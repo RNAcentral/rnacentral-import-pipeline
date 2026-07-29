@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/Users/begley/Documents/RNAcentral/nf-core-rnastructurome/modules/local/ensembl/transcriptome/tests"
+    ]
+  }
+}

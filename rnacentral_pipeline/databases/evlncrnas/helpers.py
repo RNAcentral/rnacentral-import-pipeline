@@ -1,6 +1,4 @@
-import numpy as np
-
-from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
+from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 
@@ -21,13 +19,11 @@ def sequence(record):
 
 
 def aliases(record):
-    print(f'Name: {record["external_id"]}, aliases: {record["Aliases"]}')
-
     if record["Aliases"] is None:
         return [str(record["external_id"])]
 
     aliases = [str(record["external_id"])]
-    aliases.extend(str(record["Aliases"]).split(","))
+    aliases.extend(a.strip() for a in str(record["Aliases"]).split(",") if a.strip())
 
     return aliases
 
@@ -41,10 +37,7 @@ def rna_type(record):
 
 
 def url(record):
-    return (
-        "https://www.sdklab-biophysics-dzu.net/EVLncRNAs2/index.php/Home/Browsc/rna.html?id="
-        + record["ID"]
-    )
+    return f"https://www.sdklab-biophysics-dzu.net/EVLncRNAs3/#/detail?id={record['ID']}"
 
 
 def description(record):

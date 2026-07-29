@@ -15,13 +15,32 @@ limitations under the License.
 
 import gzip
 import json
+from time import sleep
+import urllib.error as error
 import urllib.request as request
 from contextlib import closing
 
+TRANSIENT_HTTP_STATUS_CODES = {429, 500, 502, 503, 504}
+MAX_RETRIES = 5
+
 
 def fetch(url):
-    with closing(request.urlopen(url)) as raw:
-            data = json.load(raw)
+    data = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            with closing(request.urlopen(url, timeout=30)) as raw:
+                data = json.load(raw)
+            break
+        except error.HTTPError as err:
+            if attempt == MAX_RETRIES or err.code not in TRANSIENT_HTTP_STATUS_CODES:
+                raise
+        except error.URLError:
+            if attempt == MAX_RETRIES:
+                raise
+        sleep(attempt)
+
+    if data is None:
+        raise ValueError(f"Unable to load ZFIN data from {url}")
 
     # Fix weird PMID formatting
     pubs = []

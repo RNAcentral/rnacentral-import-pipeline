@@ -13,17 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import typing as ty
 import logging
+import typing as ty
 from pathlib import Path
 
 from Bio import SeqIO
 
 import rnacentral_pipeline.databases.helpers.embl as embl
 from rnacentral_pipeline.databases.data import Entry
-
-from rnacentral_pipeline.databases.ena import context, dr, helpers, ribovore
+from rnacentral_pipeline.databases.ena import context, dr, helpers
 from rnacentral_pipeline.databases.ena import mapping as tpa
+from rnacentral_pipeline.databases.ena import ribovore
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def parse(ctx: context.Context, path: Path) -> ty.Iterable[Entry]:
             ctx.add_skipped_pseudogene()
             continue
 
-        if record.id not in ctx.dr:
+        if record.id not in ctx.dr_ids:
             raise InvalidEnaFile("Somehow parsed DR refs are for wrong record")
 
         entry = helpers.as_entry(ctx, record, feature)

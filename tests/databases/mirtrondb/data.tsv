@@ -1,0 +1,6 @@
+##mirtronDB tabular format
+specie	id	name	paper	type	hairpin arm	host gene	chromosome	start	end	strand	sequence
+H. sapiens 	218 	hsa-mirtron-1230 	26325366 	precursor 	- 	ANKRD24(14) 	19 	4215919 	4215974 	+ 	GACACACGGGGGCTGAGAGCAGAACCCCGAGCTGGACTCTGCTCCCTCCCCCCAG
+H. sapiens 	1501 	hsa-mirtron-1230-3p 	26325366 	mature 	3p 	ANKRD24(14) 	19 	 	 	? 	ACTCTGCTCCCTCCCCCCAG
+H. sapiens 	2689 	hsa-mirtron-1230-5p 	26325366 	mature 	5p 	ANKRD24(14) 	19 	 	 	? 	ACGGGGGCTGAGAGCAGAACC
+R. norvegicus 	3858 	rno-mirtron-1224 	17964270 	precursor 	- 	- 	11 	5223437 	5223521 	? 	GTGAGGACTGGGGAGGTGGAGGGTAGTACCATTAGAGCCAGAGCTCTGTCTCAGCTCCCTCTCCCCCCACCTCTTCTCTCCTCAG

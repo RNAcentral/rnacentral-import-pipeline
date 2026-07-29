@@ -1,0 +1,101 @@
+#!/usr/bin/env nextflow
+
+nextflow.enable.dsl=2
+
+process build_ranges {
+  input:
+  val(_flag)
+
+  output:
+  path('ranges.csv')
+
+  when: params.stopfree?.run
+
+  script:
+  def chunk_size = params.stopfree.db_chunk_size
+  """
+  rnac upi-ranges --table-name rna $chunk_size ranges.csv
+  """
+}
+
+process find_sequences {
+  maxForks params.stopfree.query_max_forks
+
+  input:
+  tuple val(min), val(max), path(query)
+
+  output:
+  path('sequences/*.fasta'), optional: true
+
+  when: params.stopfree?.run
+
+  script:
+  """
+  PGOPTIONS='-c max_parallel_workers_per_gather=0' psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -f "$query" "\$PGDATABASE" > raw.json
+  mkdir sequences
+  split --lines=${params.stopfree.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
+  """
+}
+
+process stopfree_scan {
+  tag { "$sequences" }
+  maxForks params.stopfree.max_forks
+
+  input:
+  path(sequences)
+
+  output:
+  path("results.csv")
+
+  script:
+  """
+  PYTHONPATH="${workflow.launchDir}" python "${workflow.launchDir}/rnacentral_pipeline/stopfree/scan.py" "$sequences" . --max-probability ${params.stopfree.max_probability}
+  """
+}
+
+process store_results {
+  memory 9.GB
+
+  input:
+  path('results*.csv')
+  path(result_ctl)
+
+  when: params.stopfree?.load
+
+  script:
+  """
+  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} stopfree-results
+  """
+}
+
+workflow stopfree {
+  take: _flag
+  main:
+    if( !params.stopfree.run ) {
+      channel.of('stopfree skipped') | set { done }
+    } else {
+
+    def query = file(params.stopfree.query)
+    def load_ctl = file('files/stopfree/stopfree.ctl')
+
+    def fasta_ch = channel.of('ready') \
+      | build_ranges \
+      | splitCsv \
+      | map { _table, min, max -> [min, max, query] } \
+      | find_sequences \
+      | flatMap { seqs -> (seqs instanceof ArrayList) ? seqs : [seqs] }
+
+    fasta_ch \
+      | stopfree_scan
+
+    stopfree_scan.out | collect | set { data }
+
+    store_results(data, load_ctl)
+    data | map { _v -> 'stopfree done' } | set { done }
+    }
+  emit: done
+}
+
+workflow {
+  stopfree(channel.of('ready'))
+}

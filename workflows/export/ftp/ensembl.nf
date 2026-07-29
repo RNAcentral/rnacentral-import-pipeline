@@ -4,6 +4,7 @@ process find_chunks {
   output:
   path('chunks')
 
+  script:
   """
   rnac upi-ranges ${params.export.ftp.ensembl.chunk_size} > chunks
   """
@@ -18,28 +19,30 @@ process query_chunk {
   output:
   tuple val(min), val(max), path('raw_xrefs.json')
 
+  script:
   """
-  psql -f $query --variable min=$min --variable max=$max "$PGDATABASE" > raw_xrefs.json
+  psql -f $query --variable min=$min --variable max=$max "\$PGDATABASE" > raw_xrefs.json
   """
 }
 
 process process_chunk {
   publishDir "${params.export.ftp.publish}/json/", mode: 'copy'
-
+  memory '2GB'
   input:
   tuple val(min), val(max), file(raw), path(schema)
 
   output:
-  path("ensembl-xref-$min-${max}.json")
+  path("ensembl-xref-$min-${max}.json"), optional: true
 
+  script:
   """
   rnac ftp-export ensembl --schema=$schema $raw ensembl-xref-$min-${max}.json
   """
 }
 
 workflow ensembl_export {
-  Channel.fromPath('files/ftp-export/ensembl/schema.json') | set { schema }
-  Channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql') | set { query }
+  channel.fromPath('files/ftp-export/ensembl/schema.json') | set { schema }
+  channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql') | set { query }
 
   find_chunks \
   | splitCsv \

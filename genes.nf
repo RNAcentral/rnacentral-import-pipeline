@@ -1,94 +1,295 @@
+#!/usr/bin/env nextflow
+
 nextflow.enable.dsl=2
 
-process get_species {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+process fetch_taxids {
 
   input:
-  tuple path(query), path(setup)
+    path(taxa_query)
 
   output:
-  path('species.csv')
+    path('taxids.csv')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $setup $PGDATABASE
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > species.csv
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -f "${taxa_query}" \
+    "\$PGDATABASE" > taxids.csv
   """
 }
 
-process extract_data {
-  tag { "$assembly_id" }
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  maxForks params.genes.extract_sequences.maxForks
-
+process fetch_rf_model {
   input:
-  tuple val(assembly_id), val(taxid), path(query), path(counts_query), path(genes_query)
+    val(_flag)
 
   output:
-  tuple val(assembly_id), path('sequences.json'), path('counts.json'), path("pseudo.json"), path('repetitive.bed')
+    path("genes_model.pkl")
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $query $PGDATABASE > sequences.json
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $counts_query $PGDATABASE > counts.json
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $genes_query "$PGDATABASE" > pseudo.json
-  touch repetitive.bed
+  wget -O genes_model.pkl ${params.genes.rf_model_url}
   """
 }
 
-process build {
-  tag { "$assembly_id" }
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  errorStrategy 'ignore'
-
+process fetch_so_model{
   input:
-  tuple val(assembly_id), path(data_file), path(counts), path(genes), path(repetative)
+    val(_flag)
 
   output:
-  path 'locus.csv', emit: locus
-  path 'rejected.csv', emit: rejected
+    path("so_embedding_model.emb")
 
+  script:
   """
-  rnac genes build $data_file $counts $genes $repetative .
+  wget -O so_embedding_model.emb ${params.genes.so_model_url}
   """
 }
 
-process load_data {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+
+process fetch_transcripts {
+  memory '32 GB'
+  maxForks 15
+  tag { taxid }
 
   input:
-  path('locus*.csv')
-  path('rejected*.csv')
-  path(load_locus)
-  path(load_status)
-  path(post_load)
+    val(taxid)
 
+  output:
+    tuple val(taxid), path("transcripts.pq")
+
+
+  script:
   """
-  split-and-load $load_locus 'locus*.csv' ${params.import_data.chunk_size} locus-data
-  STATUS='rejected' split-and-load $load_status 'rejected*.csv' ${params.import_data.chunk_size} rejected-data
-  psql -v ON_ERROR_STOP=1 -f $post_load $PGDATABASE
+  rnac genes infer fetch --taxid ${taxid} --output transcripts.pq
   """
 }
+
+
+process preprocess_transcripts {
+  memory '256 GB'
+  tag { taxid }
+
+  input:
+    tuple val(taxid), path(transcripts), path(so_model)
+
+  output:
+    tuple val(taxid), path('features.pq'), path(transcripts)
+
+  script:
+  """
+  rnac genes infer preprocess --transcripts_file ${transcripts} --output features.pq --so_model_path ${so_model}
+  """
+}
+
+
+process classify_transcripts {
+  memory { 64.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 4
+  tag { taxid }
+
+  input:
+    tuple val(taxid), path(features), path(transcripts), path(model)
+
+  output:
+    tuple val(taxid), path("*.json")
+
+  script:
+  """
+  rnac genes infer classify --features_file ${features} --transcripts_file ${transcripts} --model_path ${model} --taxid ${taxid} --output_dir .
+  """
+
+}
+
+
+process fetch_previous_genes {
+  maxForks 15
+  tag { taxid }
+  memory '8 GB'
+
+  input:
+    tuple val(taxid), path(this_release)
+
+  output:
+    tuple val(taxid), path(this_release), path('previous.json'), path('prev_release.txt')
+
+  script:
+  """
+  rnac genes utils fetch-stored --taxid ${taxid} --output previous.json --release_output prev_release.txt
+  """
+}
+
+
+process forward_merge {
+  memory '16 GB'
+  tag { taxid }
+
+  input:
+    tuple val(taxid), path(this_release), path(previous), val(prev_release)
+
+  output:
+    tuple val(taxid), path("merged_${taxid}.json")
+
+  script:
+  """
+  rnac genes utils merge \
+    --previous_genes ${previous} \
+    --next_genes ${this_release} \
+    --output merged_${taxid}.json \
+    --prev_release_number ${prev_release} \
+    --next_release_number ${params.release}
+  """
+}
+
+
+process init_genes {
+
+  tag { taxid }
+
+  input:
+    tuple val(taxid), path(this_release)
+
+  output:
+    tuple val(taxid), path("merged_${taxid}.json")
+
+  script:
+  """
+  rnac genes utils init \
+    --genes ${this_release} \
+    --output merged_${taxid}.json \
+    --release_number ${params.release}
+  """
+}
+
+
+process store_genes {
+
+  tag { taxid }
+  maxForks 1
+  memory { 16.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+
+  input:
+    tuple val(taxid), path(merged)
+
+  output:
+    tuple val(taxid), path(merged)
+
+  script:
+  """
+  rnac genes utils store-genes ${merged} --taxid ${taxid}
+  """
+}
+
+
+process deactivate_discarded {
+  memory 4.GB
+  tag { taxid }
+  maxForks 1
+
+  input:
+    tuple val(taxid), path(merged)
+
+  output:
+    tuple val(taxid), path(merged)
+
+  script:
+  """
+  rnac genes utils deactivate-discarded --merged ${merged} --taxid ${taxid}
+  """
+}
+
+
+process process_metadata {
+  memory '16 GB'
+  tag { taxid }
+
+  input:
+    tuple val(taxid), path(merged)
+
+  output:
+    tuple val(taxid), path("metadata_${taxid}.json")
+
+  script:
+  """
+  rnac genes utils process-metadata ${merged} metadata_${taxid}.json
+  """
+}
+
+
+process store_metadata {
+
+  tag { taxid }
+  maxForks 1
+
+  input:
+    tuple val(taxid), path(metadata)
+
+  output:
+    val(taxid)
+
+  script:
+  """
+  rnac genes utils store-metadata ${metadata}
+  """
+}
+
 
 workflow genes {
-  Channel.fromPath('files/genes/load-status.ctl').set { load_status }
-  Channel.fromPath('files/genes/load.ctl').set { load }
-  Channel.fromPath('files/genes/post-load.sql').set { post_load }
+  // _flag is an ordering trigger so this stage can be chained after upstream
+  // stages in main.nf. It is not otherwise used: the pipeline is driven by
+  // params.genes. Standalone runs pass channel.of(true) (see entry below).
+  take: _flag
 
-  Channel.fromPath('files/genes/species.sql') \
-    | combine(Channel.fromPath('files/genes/schema.sql')) \
-    | get_species \
-    | splitCsv \
-    | combine(Channel.fromPath('files/genes/data.sql')) \
-    | combine(Channel.fromPath('files/genes/counts.sql')) \
-    | combine(Channel.fromPath('files/genes/pseudogenes.sql')) \
-    | extract_data \
-    | build
+  main:
+  channel.of(true) | fetch_so_model | set { so_model }
+  channel.of(true) | fetch_rf_model | set { rf_model }
+  channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
 
-  build.out.locus | collect | set { locus }
-  build.out.rejected | collect | set { rejected }
+  taxa \
+  | splitCsv \
+  | map { row -> row[0] } \
+  | fetch_transcripts \
+  | filter {_taxid, transcripts -> transcripts.size() > 0 } \
+  | combine( so_model ) \
+  | preprocess_transcripts \
+  | combine( rf_model ) \
+  | classify_transcripts \
+  | filter {_taxid, genes -> genes.size() > 2 } \
+  | fetch_previous_genes \
+  | branch { row ->
+      existing:  row[3].text.trim() != ''
+      new_taxon: true
+    } \
+  | set { previous_genes }
 
-  load_data(locus, rejected, load, load_status, post_load)
+  // Existing taxon: forward-merge this release onto the stored genes.
+  previous_genes.existing \
+  | map { taxid, this_release, previous, prev_release ->
+      [taxid, this_release, previous, prev_release.text.trim()]
+    } \
+  | forward_merge \
+  | set { merged_existing }
+
+  // New taxon: nothing to merge, just initialise version tracking.
+  previous_genes.new_taxon \
+  | map { taxid, this_release, _previous, _prev_release -> [taxid, this_release] } \
+  | init_genes \
+  | set { merged_new }
+
+  // Store, then deactivate genes the merge dropped, then metadata.
+  merged_existing.mix( merged_new ) \
+  | store_genes \
+  | deactivate_discarded \
+  | process_metadata \
+  | store_metadata \
+  | set { done }
+
+  emit: done
 }
 
+
 workflow {
-  genes()
+  genes(channel.of(true))
 }

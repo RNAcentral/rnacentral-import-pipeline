@@ -1,3 +1,17 @@
+process fetch_schema {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  errorStrategy 'retry'
+  maxRetries 3
+
+  output:
+  path('schema.xsd')
+
+  script:
+  """
+  curl -fsSL ${params.export.search.schema} -o schema.xsd
+  """
+}
+
 process fetch {
   tag { "${query.baseName}" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -9,8 +23,9 @@ process fetch {
   output:
   tuple val(query.baseName), path("raw.json"), val(max_count)
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f $query "\$PGDATABASE" > raw.json
   """
 }
 
@@ -25,6 +40,7 @@ process group {
   output:
   path("${name}.json")
 
+  script:
   """
   search-export group ${name} raw.json ${max_count} ${name}.json
   """
@@ -34,7 +50,7 @@ workflow query {
   take:
     max_count
     query
-  emit: data
   main:
     fetch(max_count, query) | group | set { data }
+  emit: data
 }

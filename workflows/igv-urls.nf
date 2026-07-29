@@ -3,8 +3,6 @@
 nextflow.enable.dsl = 2
 
 process setup {
-  when { params.genome_mapping.run }
-
   input:
   val(_flag)
   path(query)
@@ -12,8 +10,9 @@ process setup {
   output:
   path('species.csv')
 
+  script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > species.csv
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > species.csv
   """
 }
 
@@ -27,6 +26,7 @@ process create_json {
   output:
   path("${species}.${assembly}.json")
 
+  script:
   """
   set -o pipefail
   rnac genome-mapping igv $species $assembly ${species}.${assembly}.json
@@ -42,6 +42,7 @@ process merge_json {
   output:
   path('igv_files.json')
 
+  script:
   """
   jq -s 'flatten' $json > igv_files.json
   """
@@ -50,16 +51,16 @@ process merge_json {
 workflow genome_mapping {
   take: ready
   main:
-    Channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
+    channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
 
     setup(ready, find_species) \
     | splitCsv \
-    | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+    | filter { s, _a, _t, _d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
     | set { genome_info }
 
     genome_info | create_json | collect | merge_json
 }
 
 workflow {
-  genome_mapping(Channel.from('ready'))
+  genome_mapping(channel.from('ready'))
 }

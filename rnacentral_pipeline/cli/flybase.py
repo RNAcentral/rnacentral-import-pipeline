@@ -24,7 +24,7 @@ from rnacentral_pipeline.writers import entry_writer
 @click.group("flybase")
 def cli():
     """
-    Commands for parsing ENA data.
+    Commands for parsing Flybase data.
     """
 
 

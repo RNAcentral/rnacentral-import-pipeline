@@ -32,16 +32,20 @@ process get_r2dt_data {
 
 workflow prepare_environment {
   main:
-    Channel.of("Starting environment preparation") | slack_message
+    channel.of("Starting environment preparation") | slack_message
 
-    Channel.of("$params.r2dt.cms_path/../")| get_r2dt_data
+    channel.of("$params.r2dt.cms_path/../")| get_r2dt_data
 }
 
 workflow {
-  Channel.of("Starting...") | slack_message
-  prepare_environment()
-}
+  main:
+    channel.of("Starting...") | slack_message
+    prepare_environment()
 
-workflow.onComplete {
-  slack_closure("Environment preparation completed")
+  onComplete:
+    try {
+      slack_closure("Environment preparation completed")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
 }

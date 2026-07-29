@@ -93,8 +93,8 @@ def description(gene, entry) -> str:
         if gene_name.endswith("]"):
             gene_name = re.sub(r"\s*\[.+\]$", "", gene_name)
 
-        gene_name.strip()
-        if not re.search(r"^U\d+", gene_name):
+        gene_name = gene_name.strip()
+        if gene_name and not re.search(r"^U\d+", gene_name):
             gene_name = gene_name[0].lower() + gene_name[1:]
 
         return f"{species} {gene_name}"

@@ -14,4 +14,5 @@ FROM rna
 JOIN urs_to_compute
 ON
   urs_to_compute.urs = rna.upi
+LIMIT :'max_sequences'
 ) TO STDOUT

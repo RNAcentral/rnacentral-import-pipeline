@@ -254,3 +254,23 @@ def test_can_build_expected_rna_type_names(rna_type, ans):
         seq_version="1",
     )
     assert entry.human_rna_type() == ans
+
+
+def test_write_ac_info_truncates_long_description_for_load_table():
+    entry = data.Entry(
+        primary_id="a",
+        accession="b",
+        ncbi_tax_id=1,
+        database="a_database_name",
+        sequence="ACCGGGGGGGGGGGGGGGGGGGGGGGG",
+        regions=[],
+        rna_type="SO:0000655",
+        url="http://www.google.com",
+        seq_version="1",
+        description="x" * 600,
+    )
+
+    written = list(entry.write_ac_info())
+
+    assert len(written) == 1
+    assert written[0][10] == "x" * 500

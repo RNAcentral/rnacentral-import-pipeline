@@ -14,7 +14,15 @@ pub struct QaStatus {
     possible_contamination: bool,
     incomplete_sequence: bool,
     missing_rfam_match: bool,
-    possible_orf: bool,
+    possible_orf: Option<bool>,
+    possible_orf_stopfree: Option<bool>,
+    possible_orf_tcode: Option<bool>,
+}
+
+impl QaStatus {
+    pub fn has_issue(&self) -> bool {
+        self.has_issue
+    }
 }
 
 impl grouper::HasIndex for QaStatus {

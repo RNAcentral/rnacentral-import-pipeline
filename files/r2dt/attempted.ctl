@@ -10,21 +10,21 @@ TARGET COLUMNS (
   r2dt_version
 )
 
-WITH
-  skip header = 0,
-  fields escaped by double-quote,
-  fields terminated by ','
-
 BEFORE LOAD DO
 $$
 DROP TABLE IF EXISTS load_traveler_attempted;
 $$,
 $$
-CREATE TABLE load_traveler_attempted (
+CREATE UNLOGGED TABLE load_traveler_attempted (
   urs text primary key,
   r2dt_version text
 );
 $$
+
+WITH
+  skip header = 0,
+  fields escaped by double-quote,
+  fields terminated by ','
 
 AFTER LOAD DO
 $$

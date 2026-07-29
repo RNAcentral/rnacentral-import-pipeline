@@ -16,6 +16,7 @@ use crate::sequences::{
     editing_events::EditingEvent,
     feedback::Feedback,
     go_annotation::GoAnnotation,
+    go_flow_annotations::GoFlowLLMAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
     litsumm::LitsummSummaries,
@@ -46,6 +47,7 @@ pub struct Raw {
     publication_counts: Option<PublicationCount>,
     litsumm_summaries: Vec<LitsummSummaries>,
     editing_events: Vec<EditingEvent>,
+    go_flow_llm_annotations: Vec<GoFlowLLMAnnotation>,
     so_tree: so_tree::SoTree,
 }
 
@@ -146,6 +148,11 @@ impl Raw {
     /// Get a reference to the raw's editing events.
     pub fn editing_events(&self) -> &[EditingEvent] {
         &self.editing_events
+    }
+
+    /// Get a reference to the raw's GoFlowlLM annotations
+    pub fn go_flow_llm_annotations(&self) -> &[GoFlowLLMAnnotation] {
+        &self.go_flow_llm_annotations
     }
 
     /// Get this raw's publication count.

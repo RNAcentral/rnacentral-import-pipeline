@@ -21,7 +21,7 @@ cp $ctl "$merged/$ctl"
 pushd "$merged"
 if compgen -G "$split_name*.$split_ext" > /dev/null; then
   tmp="pgloader-output"
-  pgloader --on-error-stop $ctl | tee "$tmp"
+  pgloader --dynamic-space-size 4096 --on-error-stop $ctl | tee "$tmp"
   rnac validate-pgloader "$tmp"
 fi
 popd

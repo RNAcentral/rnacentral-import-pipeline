@@ -12,6 +12,8 @@ include { query as r2dt_query} from './workflows/precompute/utils'
 include { query as prev_query} from './workflows/precompute/utils'
 include { query as basic_query} from './workflows/precompute/utils'
 include { query as orf_query} from './workflows/precompute/utils'
+include { query as stopfree_query} from './workflows/precompute/utils'
+include { query as tcode_query} from './workflows/precompute/utils'
 
 include { slack_closure } from './workflows/utils/slack'
 include { slack_message } from './workflows/utils/slack'
@@ -23,6 +25,7 @@ process build_precompute_context {
   output:
   path('context')
 
+  script:
   """
   mkdir repeat-tree
   mv species-repeats* repeat-tree
@@ -42,12 +45,15 @@ process build_metadata {
   path(r2dt_hits)
   path(prev)
   path(orf)
+  path(stopfree)
+  path(tcode)
 
   output:
   path("metadata.json")
 
+  script:
   """
-  precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev $orf metadata.json
+  precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev $orf $stopfree $tcode metadata.json
   """
 }
 
@@ -74,6 +80,7 @@ process find_upi_taxid_ranges {
   output:
   path('urs_taxid.csv')
 
+  script:
   """
   rnac precompute upi-taxid-ranges $ranges urs_taxid.csv
   """
@@ -90,13 +97,14 @@ process query_accession_range {
   output:
   tuple val(min), val(max), path('accessions.json')
 
+  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
     -v min=$min \
     -v max=$max \
     -f $query \
-    "$PGDATABASE" > raw.json
+    "\$PGDATABASE" > raw.json
   precompute group-accessions raw.json $upi_start $upi_stop accessions.json
   """
 }
@@ -113,6 +121,7 @@ process process_range {
   path 'precompute.csv', emit: data
   path 'qa.csv', emit: qa
 
+  script:
   """
   mkdir context
   precompute normalize $accessions $metadata merged.json
@@ -121,6 +130,7 @@ process process_range {
 }
 
 process load_data {
+  memory 9.GB
 
   input:
   path('precompute*.csv')
@@ -133,7 +143,7 @@ process load_data {
   """
   split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
   split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
-  psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f $post "\$PGDATABASE"
   """
 }
 
@@ -141,22 +151,24 @@ workflow precompute {
   take: _flag
   main:
 
-    Channel.of("Starting precompute pipeline") | slack_message
+    channel.of("Starting precompute pipeline") | slack_message
 
-    Channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
-    Channel.fromPath('files/precompute/load.ctl') | set { data_ctl }
-    Channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
-    Channel.fromPath('files/precompute/post-load.sql') | set { post_load }
+    channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
+    channel.fromPath('files/precompute/load.ctl') | set { data_ctl }
+    channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
+    channel.fromPath('files/precompute/post-load.sql') | set { post_load }
 
-    Channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
-    Channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
-    Channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
-    Channel.fromPath('files/precompute/queries/r2dt-hits.sql') | set { r2dt_sql }
-    Channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
-    Channel.fromPath('files/precompute/queries/orfs.sql') | set { orf_sql }
+    channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
+    channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
+    channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
+    channel.fromPath('files/precompute/queries/r2dt-hits.sql') | set { r2dt_sql }
+    channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
+    channel.fromPath('files/precompute/queries/orfs.sql') | set { orf_sql }
+    channel.fromPath('files/precompute/queries/stopfree.sql') | set { stopfree_sql }
+    channel.fromPath('files/precompute/queries/tcode.sql') | set { tcode_sql }
 
     // repeats | build_precompute_context | set { context }
-    Channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
+    channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
     urs_counts | build_precompute_accessions | set { accessions_ready }
 
     build_metadata(
@@ -166,6 +178,8 @@ workflow precompute {
       r2dt_query(urs_counts, r2dt_sql),
       prev_query(urs_counts, prev_sql),
       orf_query(urs_counts, orf_sql),
+      stopfree_query(urs_counts, stopfree_sql),
+      tcode_query(urs_counts, tcode_sql),
     ) \
     | set { metadata }
 
@@ -183,7 +197,7 @@ workflow precompute {
     | splitCsv \
     | combine(accessions_ready) \
     | combine(accession_query) \
-    | map { _tablename, min, max, _flag, sql -> [min, max, sql] } \
+    | map { _tablename, min, max, _accessions_flag, sql -> [min, max, sql] } \
     | join(upi_taxid_ranges) \
     | query_accession_range \
     | combine(metadata) \
@@ -196,15 +210,22 @@ workflow precompute {
 }
 
 workflow {
-  precompute(Channel.of(true))
-}
+  main:
+    precompute(channel.of(true))
 
-workflow.onComplete {
+  onComplete:
+    try {
+      if (workflow.success) {
+        slack_closure("Precompute workflow completed. Data import complete")
+      }
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
 
-  slack_closure("Precompute workflow completed. Data import complete")
-}
-
-workflow.onError {
-
-  slack_closure("Precompute workflow encountered an error and crashed")
+  onError:
+    try {
+      slack_closure("Precompute workflow encountered an error and crashed")
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
 }

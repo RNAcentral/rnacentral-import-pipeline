@@ -19,11 +19,9 @@ import pytest
 
 from rnacentral_pipeline.databases.pdb import fetch
 
-# Apply pdb marker to all tests in this module
-pytestmark = pytest.mark.pdb
 
-
-def test_produces_correct_data(mock_pdbe_api):
+@pytest.mark.network
+def test_produces_correct_data():
     chains = fetch.chains({("1S72", "9")})
     assert len(chains) == 1
     assert chains[0] == fetch.ChainInfo(
@@ -42,6 +40,7 @@ def test_produces_correct_data(mock_pdbe_api):
     )
 
 
+@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chains",
     [
@@ -87,7 +86,6 @@ def test_produces_correct_data(mock_pdbe_api):
         ("7mlw", {"F"}),
     ],
 )
-@pytest.mark.network
 def test_fetches_all_rna_chains_even_mrna(pdb_id, chains):
     entries = fetch.all_chains_in_pdbs([pdb_id])
     assert set(d.chain_id for d in entries) & chains

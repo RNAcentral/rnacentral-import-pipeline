@@ -18,9 +18,6 @@ import pytest
 from rnacentral_pipeline.databases.pdb import fetch, helpers
 from rnacentral_pipeline.databases.pdb.data import ChainInfo
 
-# Apply pdb marker to all tests in this module
-pytestmark = pytest.mark.pdb
-
 
 def load(pdb_id: str, chain_id: str) -> ChainInfo:
     chains = fetch.chains({(pdb_id, chain_id)})
@@ -64,6 +61,7 @@ def test_can_compute_correct_rna_types(product: str, expected):
     assert helpers.compound_rna_type(product) == expected
 
 
+@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb,chain,expected",
     [
@@ -83,7 +81,6 @@ def test_can_compute_correct_rna_types(product: str, expected):
         ("7mlw", "F", True),
     ],
 )
-@pytest.mark.network
 def test_can_detect_if_is_ncrna(pdb, chain, expected):
     info = load(pdb, chain)
     assert helpers.is_ncrna(info) == expected

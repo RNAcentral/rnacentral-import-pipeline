@@ -15,7 +15,8 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.databases.ncbi.gene import fetch, helpers
+from rnacentral_pipeline.databases.ncbi.gene import fetch
+from rnacentral_pipeline.databases.ncbi.gene import helpers
 
 
 @pytest.fixture(scope="module")
@@ -33,7 +34,7 @@ def test_can_get_expected_sequences(simple_sequences):
     "gene_id,sequence_id",
     {
         ("108869573", "NC_024802.2"),
-        ("107303968", "XR_001549991.2"),
+        ("107303968", "XR_001549991.1"),
     },
 )
 def test_can_fetch_correct_sequence_data(simple_sequences, gene_id, sequence_id):

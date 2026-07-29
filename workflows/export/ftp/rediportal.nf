@@ -5,8 +5,9 @@ process dump {
     path query
 
 
+  script:
   """
-  psql -f $query "$PGDATABASE" > rediportal-mapping.csv
+  psql -f $query "\$PGDATABASE" > rediportal-mapping.csv
   """
 
 }
@@ -14,7 +15,7 @@ process dump {
 
 workflow rediportal {
 
-  Channel.fromPath('files/ftp-export/rediportal/editing-locations.sql') | set { query }
+  channel.fromPath('files/ftp-export/rediportal/editing-locations.sql') | set { query }
 
   query | dump
 

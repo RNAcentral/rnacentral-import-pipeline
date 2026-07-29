@@ -14,4 +14,8 @@ pub enum FileType {
     R2dtHits,
     #[strum(serialize = "rfam-hits")]
     RfamHits,
+    #[strum(serialize = "stopfree")]
+    Stopfree,
+    #[strum(serialize = "tcode")]
+    Tcode,
 }

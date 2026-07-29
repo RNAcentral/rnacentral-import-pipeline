@@ -4,19 +4,23 @@ process mgnify_fetch {
   output:
     path('*.json')
 
+  when: params.databases.mgnify?.run
+
+  script:
   """
   cp /nfs/ftp/public/databases/metagenomics/rnacentral/mgnify_genomes/* .
   """
 }
 
 process mgnify_parse {
-  memory { 1.GB * task.attempt }
+  memory { 8.GB * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
   input:
     path(json)
   output:
     path('*.csv')
 
+  script:
   """
   rnac mgnify parse $json .
   """
@@ -24,12 +28,13 @@ process mgnify_parse {
 
 
 workflow mgnify {
-  emit: data
   main:
-    if ( params.databases.mgnify.run ) {
+    if ( params.databases.mgnify?.run ) {
       mgnify_fetch | flatten | mgnify_parse | set { data }
     }
     else {
-      Channel.empty() | set { data }
+      channel.empty() | set { data }
     }
+
+  emit: data
 }

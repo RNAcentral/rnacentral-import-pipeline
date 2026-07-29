@@ -4,9 +4,10 @@ process slack_message {
     input:
     val(message)
 
+    script:
     """
     #!/bin/bash
-    curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' $LITSCAN_SLACK_WEBHOOK
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' \$LITSCAN_SLACK_WEBHOOK
     """
 }
 
@@ -19,7 +20,7 @@ process get_ids {
 
     script:
     """
-    psql -t -A -f $database "$PGDB_EMBASSY_USER" > results
+    psql -t -A -f $database "\$PGDB_EMBASSY_USER" > results
     """
 }
 
@@ -81,7 +82,7 @@ process submit_ids {
     tr A-Z a-z < all_ids.txt | sort -u > all_ids_sorted.txt
 
     # get ids already scanned by LitScan (Expert DB ids only)
-    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id not like 'urs%' ORDER BY job_id) TO STDOUT;" $PGDATABASE > old_ids.txt
+    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id not like 'urs%' ORDER BY job_id) TO STDOUT;" \$PGDATABASE > old_ids.txt
     sort old_ids.txt > old_ids_sorted.txt
 
     # get new ids
@@ -101,7 +102,7 @@ process submit_ids {
       curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new id/gene/synonym submitted"}' \$LITSCAN_SLACK_WEBHOOK
     else
       # new_ids.txt is empty
-      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new id/gene/synonym to submit"}' $LITSCAN_SLACK_WEBHOOK
+      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new id/gene/synonym to submit"}' \$LITSCAN_SLACK_WEBHOOK
     fi
     """
 }
@@ -120,7 +121,7 @@ process submit_urs {
     tr a-z A-Z < output.txt | sort -u > urs.txt
 
     # get URS already scanned by LitScan
-    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id like 'urs%' ORDER BY job_id) TO STDOUT;" $PGDATABASE > urs_lower.txt
+    psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id like 'urs%' ORDER BY job_id) TO STDOUT;" \$PGDATABASE > urs_lower.txt
     tr a-z A-Z < urs_lower.txt > urs_in_db.txt
 
     # get new URS
@@ -134,17 +135,16 @@ process submit_urs {
       curl -X POST -H 'Content-type: application/json' --data '{"text":"'\${count}' new URS submitted"}' \$LITSCAN_SLACK_WEBHOOK
     else
       # new_urs.txt is empty
-      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new URS to submit"}' $LITSCAN_SLACK_WEBHOOK
+      curl -X POST -H 'Content-type: application/json' --data '{"text":"No new URS to submit"}' \$LITSCAN_SLACK_WEBHOOK
     fi
     """
 }
 
 workflow search_new_ids {
-    emit: done
     main:
-      Channel.of("Starting LitScan pipeline") | slack_message
+      channel.of("Starting LitScan pipeline") | slack_message
 
-      Channel.fromPath('workflows/litscan/queries/*.sql') \
+      channel.fromPath('workflows/litscan/queries/*.sql') \
       | get_ids \
       | check_ids \
       | sort_ids \
@@ -153,6 +153,7 @@ workflow search_new_ids {
       | submit_ids \
       | submit_urs \
       | set { done }
+    emit: done
 }
 
 workflow {

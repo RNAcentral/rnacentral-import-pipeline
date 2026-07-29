@@ -1,0 +1,113 @@
+#!/usr/bin/env nextflow
+
+nextflow.enable.dsl=2
+
+process build_ranges {
+  input:
+  val(_flag)
+
+  output:
+  path('ranges.csv')
+
+  when: params.tcode?.run
+
+  script:
+  def chunk_size = params.tcode.db_chunk_size
+  """
+  rnac upi-ranges --table-name rna $chunk_size ranges.csv
+  """
+}
+
+process find_sequences {
+  input:
+  tuple val(min), val(max), path(query)
+
+  output:
+  path('sequences/*.fasta'), optional: true
+
+  when: params.tcode?.run
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -v "min_len=${params.tcode.min_len}" -f "$query" "\$PGDATABASE" > raw.json
+  mkdir sequences
+  split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
+  """
+}
+
+process tcode_scan {
+  tag { "$sequences" }
+  container "${params.tcode.container}"
+
+  input:
+  path(sequences)
+
+  output:
+  path("${sequences.simpleName}.tcode.out")
+
+  script:
+  """
+  tcode -sequence ${sequences} -outfile ${sequences.simpleName}.tcode.out -window ${params.tcode.window}
+  """
+}
+
+process parse_results {
+  input:
+  path(tcode_out)
+
+  output:
+  path("results.csv")
+
+  script:
+  """
+  rnac tcode parse $tcode_out .
+  """
+}
+
+process store_results {
+  memory 9.GB
+
+  input:
+  path('results*.csv')
+  path(result_ctl)
+
+  when: params.tcode?.load
+
+  script:
+  """
+  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} tcode-results
+  """
+}
+
+workflow tcode {
+  take: _flag
+  main:
+    if( !params.tcode.run ) {
+      channel.of('tcode skipped') | set { done }
+    } else {
+
+    def query = file(params.tcode.query)
+    def load_ctl = file('files/tcode/tcode.ctl')
+
+    def fasta_ch = channel.of('ready') \
+      | build_ranges \
+      | splitCsv \
+      | map { _table, min, max -> [min, max, query] } \
+      | find_sequences \
+      | flatMap { seqs -> (seqs instanceof ArrayList) ? seqs : [seqs] }
+
+    fasta_ch \
+      | tcode_scan \
+      | parse_results
+
+    parse_results.out | collect | set { data }
+
+    store_results(data, load_ctl)
+    data | map { _v -> 'tcode done' } | set { done }
+    }
+  emit: done
+}
+
+workflow {
+  tcode(channel.of('ready'))
+}

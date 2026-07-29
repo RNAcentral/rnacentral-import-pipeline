@@ -1,12 +1,13 @@
 process generic {
   tag { "$name" }
-  when { params.databases.ensembl.vertebrates.run || params.databases.rfam.run }
 
   input:
   tuple val(name), path(query)
 
   output:
   path('*.csv')
+
+  when: params.databases.ensembl?.vertebrates?.run || params.databases.rfam?.run
 
   script:
   def conn = params.connections.rfam
@@ -22,11 +23,11 @@ process generic {
 }
 
 workflow rfam {
-  emit: data
   main:
-    Channel.fromPath('files/import-data/rfam/{clans,families}.sql') \
+    channel.fromPath('files/import-data/rfam/{clans,families}.sql') \
     | map { fn -> [fn.baseName, fn] } \
     | generic \
     | flatten \
     | set { data }
+  emit: data
 }
