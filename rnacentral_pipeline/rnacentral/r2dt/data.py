@@ -482,21 +482,6 @@ class ShowInfo:
             modeled_basepairs=raw["modeled_basepairs"],
         )
 
-    @classmethod
-    def from_result(cls, result: R2DTResult) -> ShowInfo:
-        assert result.model_length is not None, "Cannot show without length"
-        assert result.model_basepairs is not None, "Cannot show without bps"
-
-        return cls(
-            urs=result.urs,
-            model_id=result.model_id,
-            model_length=result.model_length,
-            model_basepairs=result.model_basepairs,
-            sequence_length=result.sequence_length,
-            modeled_length=result.modeled_length(),
-            modeled_basepairs=result.basepair_count(),
-        )
-
     def observed_paired(self) -> float:
         return float(self.modeled_basepairs) / self.modeled_length
 

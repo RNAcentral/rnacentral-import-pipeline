@@ -77,4 +77,5 @@ filterwarnings = "ignore::DeprecationWarning"
 markers = [
     "slow: Tests that take a long time",
     "db: Test that require access to our database",
+    "r2dt: Tests for the r2dt secondary structure pipeline",
 ]
