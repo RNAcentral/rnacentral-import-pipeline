@@ -3,7 +3,8 @@ process merge_and_split_all_publications {
   // Inputs may arrive as either CSV (legacy) or Parquet (writer_format=parquet),
   // depending on what the upstream parsers emitted. The downstream lookup
   // stays text-based, so we decode any parquet inputs to CSV before merging.
-  path("ref_ids*.{csv,parquet}")
+  // Staging name, not a glob: see lookup-ontology-info.nf.
+  path("ref_ids*.${params.writer_format}")
 
   output:
   path('split-refs/*.csv')

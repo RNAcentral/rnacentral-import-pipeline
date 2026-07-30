@@ -5,7 +5,10 @@ process lookup {
   input:
   // CSV (legacy) or Parquet (writer_format=parquet) emissions of terms; the
   // ontology lookup is text-based, so decode parquet to CSV before merging.
-  path('terms*.{csv,parquet}')
+  // Brace globs are illegal as *staging* names: nextflow substitutes the index
+  // but leaves {csv,parquet} literal, and the shell expands it into two ln
+  // targets. Use the active format, as everywhere else.
+  path("terms*.${params.writer_format}")
 
   output:
   path('ontology_terms.csv')
