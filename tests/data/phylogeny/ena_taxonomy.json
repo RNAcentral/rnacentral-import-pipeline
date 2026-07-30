@@ -376,6 +376,30 @@
     "submittable": "true",
     "taxId": "4896"
   },
+  "4897": {
+    "authority": "Yukawa & Maki, 1931",
+    "binomial": "true",
+    "division": "FUN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Fungi; Dikarya; Ascomycota; Taphrinomycotina; Schizosaccharomycetes; Schizosaccharomycetales; Schizosaccharomycetaceae; Schizosaccharomyces; ",
+    "merged": "[3016120, 2075544, 58638, 58636]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Hasegawaea japonica (Yukawa & Maki) Y. Yamada & I. Banno, 1987:authority",
+      "Schizosaccharomyces japonicus Yukawa & Maki, 1931:authority",
+      "Schizosaccharomyces japonicus var. versatilis Wick. & Duprat ex Slooff, 1970:authority",
+      "Schizosaccharomyces sp. Af146Hg-6-1:includes",
+      "Schizosaccharomyces japonicus var. versatilis:synonym",
+      "Schizosaccharomyces japonicus var. japonicus:synonym",
+      "Hasegawaea japonica:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Schizosaccharomyces japonicus",
+    "submittable": "true",
+    "taxId": "4897"
+  },
   "562": {
     "lineage": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; ",
     "scientificName": "Escherichia coli"
