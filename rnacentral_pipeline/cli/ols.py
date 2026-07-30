@@ -13,9 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
 import click
 
 from rnacentral_pipeline.databases.ols import helpers as ols
+from rnacentral_pipeline.output_format import format_option
 
 
 @click.group("ols")
@@ -28,6 +31,7 @@ def cli():
 
 @cli.command("lookup-terms")
 @click.argument("terms", type=click.File("r"))
-@click.argument("output", type=click.File("w"))
+@click.argument("output", type=click.Path())
+@format_option
 def ontologies_lookup_terms(terms, output):
-    ols.process_term_file(terms, output)
+    ols.process_term_file(terms, Path(output))

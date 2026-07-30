@@ -1,6 +1,10 @@
 process merge_and_split_all_publications {
   input:
-  path("ref_ids*.csv")
+  // Inputs may arrive as either CSV (legacy) or Parquet (writer_format=parquet),
+  // depending on what the upstream parsers emitted. The downstream lookup
+  // stays text-based, so we decode any parquet inputs to CSV before merging.
+  // Staging name, not a glob: see lookup-ontology-info.nf.
+  path("ref_ids*.${params.writer_format}")
 
   output:
   path('split-refs/*.csv')
@@ -10,7 +14,13 @@ process merge_and_split_all_publications {
   set -o pipefail
 
   mkdir split-refs
-  find . -name 'ref_ids*.csv' | xargs cat > all-ids
+  : > all-ids
+  for f in ref_ids*.csv; do
+    [ -e "\$f" ] && cat "\$f" >> all-ids
+  done
+  for f in ref_ids*.parquet; do
+    [ -e "\$f" ] && parquet-to-csv "\$f" >> all-ids
+  done
   split --additional-suffix=".csv" --number l/${params.lookup_publications.maxForks} all-ids split-refs/refs
   """
 }
@@ -23,10 +33,12 @@ process fetch_publications {
   output:
   path('out')
 
+  when: params.get('needs_publications', false)
+
   script:
   """
-  cp /nfs/ftp/public/databases/pmc/PMCLiteMetadata/PMCLiteMetadata.tgz .
-  tar xvf PMCLiteMetadata.tgz
+  cp /nfs/ftp/public/databases/pmc/PMCOALiteMetadata/PMCOALiteMetadata.tgz .
+  tar xvf PMCOALiteMetadata.tgz
   """
 }
 
@@ -38,11 +50,12 @@ process lookup_publications {
   tuple path(refs), path(pubs)
 
   output:
-  path("references.csv")
+  path("references.${params.writer_format}")
 
   script:
+  def out = "references.${params.writer_format}"
   """
-  rnac europepmc stream-lookup --ignore-missing --allow-fallback $pubs $refs references.csv
+  rnac europepmc stream-lookup --ignore-missing --allow-fallback $pubs $refs $out
   """
 }
 
@@ -50,12 +63,17 @@ workflow lookup_ref_ids {
   take: ref_ids
 
   main:
-    ref_ids \
-    | collect \
-    | merge_and_split_all_publications \
-    | flatten \
-    | combine(fetch_publications()) \
-    | lookup_publications \
-    | set { publications }
+    if (params.get('needs_publications', false)) {
+      ref_ids \
+      | collect \
+      | merge_and_split_all_publications \
+      | flatten \
+      | combine(fetch_publications()) \
+      | lookup_publications \
+      | set { publications }
+    } else {
+      channel.empty() | set { publications }
+    }
+
   emit: publications
 }

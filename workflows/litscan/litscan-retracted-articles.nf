@@ -9,7 +9,7 @@ process check_articles {
 
     script:
     """
-    litscan-retracted-articles.py "$PSYCOPG_CONN" $LITSCAN_SLACK_WEBHOOK
+    litscan-retracted-articles.py "\$PSYCOPG_CONN" \$LITSCAN_SLACK_WEBHOOK
     """
 }
 
@@ -21,5 +21,5 @@ workflow find_retracted_articles {
 }
 
 workflow {
-    find_retracted_articles()
+    find_retracted_articles(channel.of('ready'))
 }

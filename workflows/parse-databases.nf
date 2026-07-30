@@ -59,12 +59,16 @@ process build_context {
 }
 
 workflow parse_databases {
-  emit: data
   main:
 
-    build_context | set { context }
+    if (params.get('needs_taxonomy', false)) {
+      build_context | set { context }
+    }
+    else {
+      channel.empty() | set { context }
+    }
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       circatlas(),
       circpedia(),
@@ -110,4 +114,5 @@ workflow parse_databases {
     ) \
     | flatten \
     | set { data }
+  emit: data
 }

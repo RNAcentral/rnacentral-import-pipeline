@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases.generic import parser as generic
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -35,9 +36,10 @@ def cli():
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
+@format_option
 def process_json_schema(json_file, output):
     """
-    This parses our JSON schema files to produce the importable CSV files.
+    This parses our JSON schema files to produce the importable interchange files.
     """
     entries = generic.parse(json_file)
     with entry_writer(Path(output)) as writer:

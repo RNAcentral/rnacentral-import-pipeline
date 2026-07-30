@@ -5,6 +5,8 @@ process fetch_families {
   output:
   path('families.tsv')
 
+  when: params.databases.rfam?.run
+
   script:
   """
   mysql \
@@ -22,6 +24,8 @@ process fetch_families_info {
 
   output:
   path("info.tsv")
+
+  when: params.databases.rfam?.run
 
   script:
   """
@@ -85,30 +89,37 @@ process parse {
   tag { "$family" }
   queue 'datamover'
   containerOptions "${params.common_container} --bind /nfs:/nfs"
+  memory { 4.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 10
+
 
   input:
   tuple val(family), path(sequence_info), path(families_info)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """
-  cp '/hps/nobackup/agb/rfam/test-fasta-export/release/results/ftp/fasta_files/${family}.fa.gz' sequences.fa.gz
+  mkdir tmp
+  export TMPDIR=`pwd`/tmp
+  cp '/nfs/ftp/public/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz' sequences.fa.gz
   gzip -d sequences.fa.gz
 
   rnac rfam parse $families_info $sequence_info sequences.fa .
+
+  rm -rf ./tmp
   """
 }
 
 
 workflow rfam {
-  emit: data
   main:
-    Channel.fromPath('files/import-data/rfam/select-families.sql') | set { family_sql }
-    Channel.fromPath('files/import-data/rfam/families.sql') | set { info_sql }
-    Channel.fromPath('files/import-data/rfam/sequences_family.sql') | set { sequence_family_sql }
-    Channel.fromPath('files/import-data/rfam/sequences_seed.sql') | set { sequence_seed_sql }
+    channel.fromPath('files/import-data/rfam/select-families.sql') | set { family_sql }
+    channel.fromPath('files/import-data/rfam/families.sql') | set { info_sql }
+    channel.fromPath('files/import-data/rfam/sequences_family.sql') | set { sequence_family_sql }
+    channel.fromPath('files/import-data/rfam/sequences_seed.sql') | set { sequence_seed_sql }
 
     info_sql | fetch_families_info | set { info }
 
@@ -122,4 +133,5 @@ workflow rfam {
     | combine(info) \
     | parse \
     | set { data }
+  emit: data
 }

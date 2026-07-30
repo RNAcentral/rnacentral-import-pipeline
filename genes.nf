@@ -2,6 +2,8 @@
 
 nextflow.enable.dsl=2
 
+include { qc_genes } from './workflows/utils/qc'
+
 process fetch_taxids {
 
   input:
@@ -48,6 +50,7 @@ process fetch_so_model{
 
 
 process fetch_transcripts {
+  memory '32 GB'
   maxForks 15
   tag { taxid }
 
@@ -66,7 +69,7 @@ process fetch_transcripts {
 
 
 process preprocess_transcripts {
-  memory '64 GB'
+  memory '256 GB'
   tag { taxid }
 
   input:
@@ -83,7 +86,9 @@ process preprocess_transcripts {
 
 
 process classify_transcripts {
-  memory '64 GB'
+  memory { 64.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 4
   tag { taxid }
 
   input:
@@ -103,6 +108,7 @@ process classify_transcripts {
 process fetch_previous_genes {
   maxForks 15
   tag { taxid }
+  memory '8 GB'
 
   input:
     tuple val(taxid), path(this_release)
@@ -163,6 +169,8 @@ process store_genes {
 
   tag { taxid }
   maxForks 1
+  memory { 16.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
   input:
     tuple val(taxid), path(merged)
@@ -178,7 +186,7 @@ process store_genes {
 
 
 process deactivate_discarded {
-
+  memory 4.GB
   tag { taxid }
   maxForks 1
 
@@ -196,7 +204,7 @@ process deactivate_discarded {
 
 
 process process_metadata {
-
+  memory '16 GB'
   tag { taxid }
 
   input:
@@ -233,13 +241,13 @@ process store_metadata {
 workflow genes {
   // _flag is an ordering trigger so this stage can be chained after upstream
   // stages in main.nf. It is not otherwise used: the pipeline is driven by
-  // params.genes. Standalone runs pass Channel.of(true) (see entry below).
+  // params.genes. Standalone runs pass channel.of(true) (see entry below).
   take: _flag
 
   main:
-  Channel.of(true) | fetch_so_model | set { so_model }
-  Channel.of(true) | fetch_rf_model | set { rf_model }
-  Channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
+  channel.of(true) | fetch_so_model | set { so_model }
+  channel.of(true) | fetch_rf_model | set { rf_model }
+  channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
 
   taxa \
   | splitCsv \
@@ -250,6 +258,7 @@ workflow genes {
   | preprocess_transcripts \
   | combine( rf_model ) \
   | classify_transcripts \
+  | filter {_taxid, genes -> genes.size() > 2 } \
   | fetch_previous_genes \
   | branch { row ->
       existing:  row[3].text.trim() != ''
@@ -279,10 +288,13 @@ workflow genes {
   | store_metadata \
   | set { done }
 
+  // QC: summarise genes created/updated this run once every taxon is stored.
+  done | qc_genes
+
   emit: done
 }
 
 
 workflow {
-  genes(Channel.of(true))
+  genes(channel.of(true))
 }

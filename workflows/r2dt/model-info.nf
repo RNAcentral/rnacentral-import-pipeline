@@ -1,6 +1,6 @@
 process fetch_model_stats {
   container params.r2dt.container
-  containerOptions "${params.common_container}"
+  containerOptions "${params.r2dt_container}"
 
   input:
   val(_flag)
@@ -8,6 +8,8 @@ process fetch_model_stats {
   output:
   path('info.csv'), emit: info
   path '*.tsv', emit: metadata
+
+  when: params.r2dt?.run
 
   script:
   """
@@ -48,7 +50,7 @@ process store_model_info {
 workflow model_info {
   take: ready
   main:
-    Channel.fromPath('files/r2dt/load-models.ctl') | set { load }
+    channel.fromPath('files/r2dt/load-models.ctl') | set { load }
 
     fetch_model_stats(ready)
 
@@ -65,5 +67,5 @@ workflow model_info {
 }
 
 workflow {
-  model_info(Channel.of('ready'))
+  model_info(channel.of('ready'))
 }

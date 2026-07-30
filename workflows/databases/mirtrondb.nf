@@ -5,6 +5,8 @@ process fetch {
   output:
   path('all.tsv')
 
+  when: params.databases.mirtrondb?.run
+
   script:
   """
   cp ${params.databases.mirtrondb.remote} all.tsv
@@ -16,7 +18,9 @@ process parse {
   path(data)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
+
+  when: params.databases.mirtrondb?.run
 
   script:
   """
@@ -25,7 +29,8 @@ process parse {
 }
 
 workflow mirtrondb {
-  emit: data
   main:
   fetch | parse | set { data }
+
+  emit: data
 }

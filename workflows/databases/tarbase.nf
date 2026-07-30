@@ -1,21 +1,21 @@
 workflow tarbase {
-  emit: data
-
   main:
   remotes = channel.fromList( params.databases.tarbase.remotes )
   remotes | fetch | parse | set { data }
+
+  emit: data
 }
 
 process fetch {
   errorStrategy 'retry'
   maxRetries 10
 
-  when: { params.databases.tarbase.run }
-
   input:
   val remote
   output:
   path('*.tsv')
+
+  when: params.databases.tarbase?.run
 
   script:
   """
@@ -28,13 +28,13 @@ process parse {
   memory { 8.GB * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
-  when: { params.databases.tarbase.run }
-
   input:
   path tsv_file
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
+
+  when: params.databases.tarbase?.run
 
   script:
   """

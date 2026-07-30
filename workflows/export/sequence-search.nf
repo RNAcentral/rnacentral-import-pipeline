@@ -2,14 +2,14 @@
 
 nextflow.enable.dsl=2
 
-create_memory = params.export.sequence_search.create_fasta.memory_table
-
 process find_db_to_export {
   input:
   path(query)
 
   output:
   path('dbs.txt')
+
+  when: params.export?.sequence_search?.run
 
   script:
   """
@@ -39,26 +39,33 @@ process query_database {
 
 process create_fasta {
   tag { name }
-  memory { create_memory.get(name.replaceAll("-", "_"), create_memory.__default) }
+  memory { def cm = params.export.sequence_search.create_fasta.memory_table; cm.get(name.replaceAll("-", "_"), cm.__default) }
 
   input:
   tuple val(name), path(json)
 
   output:
-  path "splits/$name*.fasta", emit: sequences
+  path "splits/$name*.fasta", emit: sequences, optional: true
   path "${name}.hash", emit: hashes
   path "${name}.seqstat", emit: stats
 
   script:
   def ordered = "${name}-ordered.fasta"
   """
+  set -o pipefail
   json2fasta.py ${json} - | rnac ftp-export sequences valid-nhmmer - ${ordered}
   md5sum ${ordered} > ${name}.hash
   cp ${ordered} ${name}.fasta
-  esl-seqstat --dna ${name}.fasta > ${name}.seqstat
-  split-sequences \
-    --max-file-size ${params.export.sequence_search.max_file_size} \
-    ${name}.fasta splits/
+  mkdir -p splits
+  if [ -s ${name}.fasta ]; then
+    esl-seqstat --dna ${name}.fasta > ${name}.seqstat
+    split-sequences \
+      --max-file-size ${params.export.sequence_search.max_file_size} \
+      ${name}.fasta splits/
+  else
+    echo "WARNING: ${name}.fasta is empty - no nhmmer-valid sequences matched; skipping seqstat/split" >&2
+    : > ${name}.seqstat
+  fi
   """
 }
 
@@ -96,10 +103,10 @@ process atomic_publish {
 workflow sequence_search {
   take: _flag
   main:
-    Channel.fromPath('files/ftp-export/sequences/databases.sql') | set { db_query }
-    Channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
+    channel.fromPath('files/ftp-export/sequences/databases.sql') | set { db_query }
+    channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
 
-    Channel.fromPath('files/sequence-search-export/*.sql') \
+    channel.fromPath('files/sequence-search-export/*.sql') \
     | filter { params.export.sequence_search.run } \
     | map { fn -> [file(fn).baseName, fn, ''] } \
     | set { simple_queries }
@@ -107,7 +114,7 @@ workflow sequence_search {
     find_db_to_export(db_query) \
     | splitCsv \
     | combine(db_specific_query) \
-    | map { db, query -> [db, query, "-v db='%${db}%'"] } \
+    | map { db, full_descr, query -> [db, query, "-v db='%${full_descr}%'"] } \
     | mix(simple_queries) \
     | map { db, query, param -> [db.toLowerCase().replace(' ', '_').replace('/', '_'), query, param] } \
     | map { db, q, p -> [(db == "tmrna_website" ? "tmrna_web" : db), q, p] } \
@@ -123,5 +130,5 @@ workflow sequence_search {
 }
 
 workflow {
-  sequence_search(Channel.of('ready'))
+  sequence_search(channel.of('ready'))
 }

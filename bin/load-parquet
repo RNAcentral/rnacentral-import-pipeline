@@ -1,0 +1,245 @@
+#!/usr/bin/env python3
+"""
+Load Parquet files into a Postgres staging table via DuckDB.
+
+Phase 0 spike: a minimal analogue of ``bin/split-and-load`` that reads one or
+more Parquet files (a "data lake" glob across per-database outputs) and COPYs
+them into a single Postgres table using DuckDB's ``postgres`` extension.
+
+Usage:
+    bin/load-parquet <table> <parquet_glob> [--truncate] [--pg-url <dsn>]
+                     [--post-load <sql_path>] [--allow-empty]
+
+Examples:
+    # Load every accessions.parquet under results/ into the staging table:
+    bin/load-parquet load_rnc_accessions 'results/**/accessions.parquet' --truncate
+
+    # Load + run a merge step after, all-or-nothing in one transaction:
+    bin/load-parquet load_rfam_model_hits 'raw*.parquet' --truncate \\
+        --post-load files/rfam-scan/post-load.sql
+
+The Postgres DSN is taken from the ``PGDATABASE`` env var unless ``--pg-url``
+is given. Expected form:
+    postgresql://user:pass@host:port/dbname
+
+If ``--post-load`` is given, the script runs the SQL file via psycopg2 after
+the COPY succeeds, in a single transaction. The post-load step is skipped if
+zero rows were loaded (replacing pgloader's implicit "AFTER LOAD DO only runs
+on a successful load" behaviour) — pass ``--allow-empty`` to force it.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+import duckdb
+import psycopg2
+
+# Make the top-level package importable regardless of cwd (the package is not
+# installed into the venv; pyproject has package-mode = false).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from rnacentral_pipeline.schemas import ENTRY_WRITER_LOAD_TABLES
+
+
+def parquet_columns(con: duckdb.DuckDBPyConnection, parquet_glob: str) -> list[str]:
+    """
+    Column names produced by ``parquet_glob``, each appearing exactly once.
+
+    DESCRIBE, not parquet_schema(): the latter returns one row per column per
+    *file*, so a multi-file glob (the normal case -- 'raw*.parquet') would
+    repeat every column and the INSERT would fail with "column specified more
+    than once". DESCRIBE ... union_by_name = true returns each unioned column
+    once, matching the SELECT we run against it.
+    """
+    return [
+        row[0]
+        for row in con.execute(
+            "DESCRIBE SELECT * FROM read_parquet(?, union_by_name = true)",
+            [parquet_glob],
+        ).fetchall()
+    ]
+
+
+def _extension_home() -> Path:
+    """
+    Directory DuckDB may use for its extension cache (``<home>/.duckdb``).
+
+    The load processes run the container with ``--contain``, which isolates
+    $HOME, so DuckDB's default home ('/homes/rnaprod' on the cluster) does not
+    exist inside the task and ``INSTALL`` fails before it can do anything.
+    DUCKDB_HOME points at a writable, bind-mounted directory shared by every
+    task, so the extension is downloaded once rather than per task; the cwd
+    fallback keeps a bare `bin/load-parquet` run working outside Nextflow.
+    """
+    home = Path(os.environ.get("DUCKDB_HOME") or Path.cwd())
+    home.mkdir(parents=True, exist_ok=True)
+    return home
+
+
+def _connect(pg_url: str) -> duckdb.DuckDBPyConnection:
+    con = duckdb.connect()
+    con.execute(f"SET home_directory = '{_extension_home()}'")
+    con.execute("INSTALL postgres")
+    con.execute("LOAD postgres")
+    con.execute(f"ATTACH '{pg_url}' AS pg (TYPE postgres)")
+    return con
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("table", help="Target Postgres table (schema-qualified OK).")
+    parser.add_argument(
+        "parquet_glob",
+        help="Glob pattern for input parquet files, e.g. '**/accessions.parquet'.",
+    )
+    parser.add_argument(
+        "--truncate",
+        action="store_true",
+        help="TRUNCATE the target table before loading.",
+    )
+    parser.add_argument(
+        "--pg-url",
+        default=os.environ.get("PGDATABASE"),
+        help="Postgres DSN. Defaults to $PGDATABASE.",
+    )
+    parser.add_argument(
+        "--schema",
+        default=os.environ.get("PGSCHEMA", "rnacen"),
+        help="Postgres schema holding the target table. Defaults to $PGSCHEMA or 'rnacen'.",
+    )
+    parser.add_argument(
+        "--post-load",
+        type=Path,
+        default=None,
+        help=(
+            "Optional SQL file to run after the COPY completes. Runs via "
+            "psycopg2 in a single transaction; rolls back on any error. "
+            "Skipped when zero rows were loaded unless --allow-empty is set."
+        ),
+    )
+    parser.add_argument(
+        "--allow-empty",
+        action="store_true",
+        help=(
+            "Run --post-load even if zero rows were loaded. Default behaviour "
+            "skips it to avoid e.g. wiping production rows from a "
+            "DELETE-then-INSERT merge against an empty staging table."
+        ),
+    )
+    args = parser.parse_args()
+
+    if not args.pg_url:
+        parser.error("Postgres DSN required via --pg-url or $PGDATABASE")
+
+    # Resolve logical parser-output names (keys of ENTRY_WRITER_LOAD_TABLES,
+    # e.g. 'accessions') to their Postgres staging table; a None value means
+    # the output has no load target today, so exit cleanly rather than error.
+    target = args.table
+    if target in ENTRY_WRITER_LOAD_TABLES:
+        mapped = ENTRY_WRITER_LOAD_TABLES[target]
+        if mapped is None:
+            sys.stderr.write(
+                f"'{target}' has no pgloader target today; skipping load\n"
+            )
+            return 0
+        sys.stderr.write(f"resolved logical name '{target}' -> {mapped}\n")
+        target = mapped
+
+    # Allow the user to pass schema.table directly; otherwise prepend --schema.
+    qualified = target if "." in target else f"{args.schema}.{target}"
+    quoted_qualified = ".".join(f'"{p}"' for p in qualified.split("."))
+
+    con = _connect(args.pg_url)
+
+    # Quick sanity check that the glob matches at least one file before we
+    # touch Postgres, so a typo doesn't accidentally truncate a populated table.
+    matched = con.execute(
+        "SELECT count(*) FROM glob(?)", [args.parquet_glob]
+    ).fetchone()[0]
+    if matched == 0:
+        sys.stderr.write(f"error: no files match '{args.parquet_glob}'\n")
+        return 1
+    sys.stderr.write(f"matched {matched} parquet file(s)\n")
+
+    if args.truncate:
+        sys.stderr.write(f"truncating pg.{quoted_qualified}\n")
+        con.execute(f"TRUNCATE pg.{quoted_qualified}")
+
+    # Read column names from the parquet schema so we insert only the columns
+    # the parser actually produces, leaving other columns in the staging table
+    # (legacy/unused fields) at their defaults. Mirrors pgloader's TARGET COLUMNS.
+    columns = parquet_columns(con, args.parquet_glob)
+    col_list = ", ".join(f'"{col}"' for col in columns)
+    sys.stderr.write(
+        f"copying {len(columns)} column(s) into pg.{qualified}: {col_list}\n"
+    )
+    # Count rows in the parquet input up front so we can report how much we
+    # actually loaded (vs. the post-INSERT table count, which conflates with
+    # any rows already present when --truncate isn't passed).
+    inserted = con.execute(
+        "SELECT count(*) FROM read_parquet(?, union_by_name = true)",
+        [args.parquet_glob],
+    ).fetchone()[0]
+
+    con.execute(
+        f"INSERT INTO pg.{quoted_qualified} ({col_list}) "
+        f"SELECT {col_list} FROM read_parquet(?, union_by_name = true)",
+        [args.parquet_glob],
+    )
+
+    total = con.execute(f"SELECT count(*) FROM pg.{quoted_qualified}").fetchone()[0]
+    sys.stderr.write(
+        f"loaded {inserted} row(s); pg.{quoted_qualified} now has {total} row(s)\n"
+    )
+
+    if args.post_load is not None:
+        return _run_post_load(args.pg_url, args.post_load, inserted, args.allow_empty)
+    return 0
+
+
+def _run_post_load(
+    pg_url: str, sql_path: Path, inserted: int, allow_empty: bool
+) -> int:
+    """
+    Execute ``sql_path`` against Postgres in a single transaction. Skipped
+    when ``inserted == 0`` unless ``allow_empty`` is set — most post-load
+    scripts do a DELETE-then-INSERT merge against the staging table, which
+    would silently wipe production rows if run on an empty load.
+    """
+    if inserted == 0 and not allow_empty:
+        sys.stderr.write(
+            f"skipping post-load {sql_path}: 0 rows loaded "
+            "(pass --allow-empty to override)\n"
+        )
+        return 0
+
+    if not sql_path.is_file():
+        sys.stderr.write(f"error: post-load file not found: {sql_path}\n")
+        return 1
+
+    sql = sql_path.read_text()
+    sys.stderr.write(f"running post-load {sql_path} ({len(sql)} bytes)\n")
+
+    conn = psycopg2.connect(pg_url)
+    try:
+        conn.set_session(autocommit=False)
+        with conn.cursor() as cur:
+            cur.execute(sql)
+        conn.commit()
+    except Exception as exc:
+        conn.rollback()
+        sys.stderr.write(f"error: post-load failed, transaction rolled back: {exc}\n")
+        return 1
+    finally:
+        conn.close()
+
+    sys.stderr.write(f"post-load {sql_path} committed\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

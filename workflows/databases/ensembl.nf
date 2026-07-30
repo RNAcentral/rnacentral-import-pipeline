@@ -5,6 +5,8 @@ process fetch_metadata {
   output:
   path('families.tsv')
 
+  when: params.databases.ensembl?._any?.run
+
   script:
   """
   mysql \
@@ -23,6 +25,8 @@ process find_urls {
 
   output:
   path('species.txt')
+
+  when: params.databases.ensembl[division]?.run
 
   script:
     """
@@ -72,7 +76,7 @@ process parse_data {
   tuple val(division), path(embl), path(gff), path(rfam)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """
@@ -82,28 +86,29 @@ process parse_data {
 }
 
 workflow ensembl {
-  emit: data
   main:
-    Channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
+    channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
 
-    Channel.fromList([
+    channel.fromList([
       'plants',
       'fungi',
       'protists',
       'metazoa',
       'vertebrates',
     ]) \
-    | filter { division -> params.databases.ensembl[division].run } \
+    | filter { division -> params.databases.ensembl[division]?.run } \
     | find_urls \
     | splitCsv \
-    | filter { division, species, dat_url, gff_url ->
+    | filter { division, species, _dat_url, _gff_url ->
       !params.databases.ensembl[division].exclude.any { p -> species.toLowerCase() =~ p }
     } \
     | fetch_species_data \
     | flatMap { division, dat_files, gff_file ->
-      (dat_files instanceof ArrayList) ? dat_files.collect { [division, it, gff_file] } : [[division, dat_files, gff_file]]
+      (dat_files instanceof ArrayList) ? dat_files.collect { f -> [division, f, gff_file] } : [[division, dat_files, gff_file]]
     } \
     | combine(fetch_metadata(rfam)) \
     | parse_data \
     | set { data }
+
+  emit: data
 }

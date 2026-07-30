@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import re
+from functools import lru_cache
 
 import attr
 from attr.validators import instance_of as is_a
@@ -183,6 +184,7 @@ def matches_pattern(pattern):
     return fn
 
 
+@lru_cache(maxsize=None)
 def as_so_term(rna_type: str) -> str:
     if re.match(SO_PATTERN, rna_type):
         return rna_type

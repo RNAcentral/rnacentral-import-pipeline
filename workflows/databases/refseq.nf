@@ -2,6 +2,8 @@ process fetch {
   output:
   path('*.gbff')
 
+  when: params.databases.refseq?.run
+
   script:
   """
   wget "$params.databases.refseq.remote"
@@ -16,7 +18,7 @@ process parse {
   path(data)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """
@@ -26,7 +28,7 @@ process parse {
 
 
 workflow refseq {
-  emit: data
   main:
     fetch | flatten | parse | set { data }
+  emit: data
 }

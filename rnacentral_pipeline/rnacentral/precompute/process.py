@@ -14,11 +14,13 @@ limitations under the License.
 """
 
 import typing as ty
+from contextlib import contextmanager
 from pathlib import Path
 
 import attr
 
-from rnacentral_pipeline import psql
+from rnacentral_pipeline import psql, schemas, writers
+from rnacentral_pipeline.parquet_writers import TypedParquetWrapper
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.data.update import SequenceUpdate
@@ -35,6 +37,36 @@ class Writer:
         for update in updates:
             self.precompute.writerows(update.as_writeables())
             self.qa.writerows(update.writeable_statuses())
+
+
+# ---------------------------------------------------------------------------
+# Parquet path
+#
+# ``as_writeables`` / ``writeable_statuses`` emit string rows (ints and bools
+# stringified for csv.writer). The parquet schemas in
+# :mod:`rnacentral_pipeline.schemas` are typed, so each column needs a
+# str -> typed conversion before the row hits ``ParquetTable.writerow``. That
+# bridging is the shared :class:`TypedParquetWrapper`; we wrap the underlying
+# parquet table rather than touching the writeable producers (the CSV path
+# stays bit-identical that way).
+
+_FIELD_SCHEMAS = {
+    "precompute": schemas.PRECOMPUTE_DATA,
+    "qa": schemas.PRECOMPUTE_QA,
+}
+
+
+@contextmanager
+def parquet_writer(path: Path) -> ty.Iterator[Writer]:
+    """
+    Open a precompute :class:`Writer` whose ``precompute`` and ``qa`` tables
+    write to streaming Parquet files under ``path``.
+    """
+    with writers.build_parquet(Writer, path, _FIELD_SCHEMAS) as raw:
+        yield Writer(
+            precompute=TypedParquetWrapper(raw.precompute, schemas.PRECOMPUTE_DATA),
+            qa=TypedParquetWrapper(raw.qa, schemas.PRECOMPUTE_QA),
+        )
 
 
 def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:

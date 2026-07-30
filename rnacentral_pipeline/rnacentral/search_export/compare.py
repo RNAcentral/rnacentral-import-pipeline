@@ -34,26 +34,40 @@ def search(index, query, facet):
     return results
 
 
+def facet_counts(results):
+    """
+    Pull {value: count} from a search response, tolerating a failed request
+    (None) or a query that matched nothing (empty facets list). New expert
+    databases that aren't in the index yet return no facets, which is expected
+    rather than an error.
+    """
+    if not results or not results.get("facets"):
+        return {}
+    return {r["value"]: r["count"] for r in results["facets"][0]["facetValues"]}
+
+
 def compare(output, results1, results2, facet):
     """
     TODO: check that keys from both facets are checked.
     """
-    data1 = {}
-    data2 = {}
-    try:
-        for result in results1["facets"][0]["facetValues"]:
-            data1[result["value"]] = result["count"]
-        for result in results2["facets"][0]["facetValues"]:
-            data2[result["value"]] = result["count"]
-    except Exception as e:
-        print(e)
-        # import pdb; pdb.set_trace();
+    # A failed request would otherwise read as zero counts, flagging every row
+    # as an infinite change; the EBI search endpoints do fail intermittently.
+    failed = [n for n, r in (("production", results1), ("dev", results2)) if r is None]
+    if failed:
+        output.write("Search request failed (%s) — no comparison\n" % ", ".join(failed))
+        return
 
-    for facet, count in data1.items():
-        before = count
-        after = data2[facet] if facet in data2 else 0
+    data1 = facet_counts(results1)
+    data2 = facet_counts(results2)
+    if not data1 and not data2:
+        output.write("No facet data for this query on either index\n")
+        return
+
+    for facet in sorted(set(data1) | set(data2)):
+        before = data1.get(facet, 0)
+        after = data2.get(facet, 0)
         change = after - before
-        percent_change = change * 100 / before
+        percent_change = change * 100 / before if before else float("inf")
         if abs(percent_change) > 10:
             flag = "Change > 10%"
         else:

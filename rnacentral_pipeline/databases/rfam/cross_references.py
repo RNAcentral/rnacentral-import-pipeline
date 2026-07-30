@@ -14,15 +14,15 @@ limitations under the License.
 """
 
 import csv
-from pathlib import Path
 import typing as ty
+from pathlib import Path
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
-from rnacentral_pipeline import writers
-
+from rnacentral_pipeline import schemas, writers
+from rnacentral_pipeline.output_format import is_parquet
 
 EXCLUDED_TERMS = {
     "GO:0008049",
@@ -171,6 +171,16 @@ def ontology_references(handle) -> ty.Iterable[RfamDatabaseLink]:
         yield reference
 
 
+_PARQUET_SCHEMAS = {
+    "terms": schemas.TERMS,
+    "rfam_ontology_mappings": schemas.RFAM_GO_TERMS,
+}
+
+
 def from_file(handle: ty.IO, output: Path):
+    if is_parquet():
+        with writers.build_parquet(Writer, output, _PARQUET_SCHEMAS) as writer:
+            writer.write(ontology_references(handle))
+        return
     with writers.build(Writer, output) as writer:
         writer.write(ontology_references(handle))

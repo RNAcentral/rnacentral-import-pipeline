@@ -3,7 +3,9 @@ process fetch_and_process {
   path(metadata_query)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
+
+  when: params.databases.crw?.run
 
   script:
   """
@@ -15,9 +17,9 @@ process fetch_and_process {
 }
 
 workflow crw {
-  emit: data
   main:
-    Channel.fromPath('files/import-data/crw/metadata.sql') \
+    channel.fromPath('files/import-data/crw/metadata.sql') \
     | fetch_and_process \
     | set { data }
+  emit: data
 }

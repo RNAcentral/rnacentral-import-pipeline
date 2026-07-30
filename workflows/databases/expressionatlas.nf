@@ -39,6 +39,8 @@ process synchronize_cache {
   output:
     val('cache synchronized')
 
+  when: params.databases.expressionatlas?.run
+
   script:
   """
   find `readlink ${experiments_path}`/ -maxdepth 1 -type d ! -readable -o -type d ! -executable | sort -u >> exclude_dirs
@@ -66,7 +68,7 @@ process fetch_lookup {
 
     script:
     """
-    psql -f $query \$PGDATABASE > lookup_dump.csv
+    psql -f $query \$PGDATABASE | grep -Ev '^(CREATE TABLE|COPY [0-9]+)\$' > lookup_dump.csv
     """
 }
 
@@ -99,7 +101,7 @@ process group_and_convert {
     tuple path(genes), path(lookup)
 
   output:
-    path('*.csv')
+    path('*.{csv,parquet}')
 
   script:
   """
@@ -111,13 +113,12 @@ process group_and_convert {
 
 workflow expressionatlas {
 
-  emit: data
   main:
 
-  if( params.databases.expressionatlas.run ) {
-    Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
-    Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
-    Channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
+  if( params.databases.expressionatlas?.run ) {
+    channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
+    channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
+    channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
 
     tsv_path.combine(ea_cache) | synchronize_cache |  set { cache_syncd }
 
@@ -138,9 +139,10 @@ workflow expressionatlas {
 
   }
   else {
-    Channel.empty() | set { data }
+    channel.empty() | set { data }
   }
 
+  emit: data
 }
 
 

@@ -34,8 +34,10 @@ process find_jobs {
 process fetch {
   tag { "${assembly}-${species}" }
   maxForks 2
-  time '20m'
+  time { 20.m * (2 ** (task.attempt - 1)) }
   memory '512 MB'
+  errorStrategy 'retry'
+  maxRetries 5
 
   input:
   tuple val(assembly), val(species), val(taxid), path(query)
@@ -67,7 +69,7 @@ process generate_bed {
   set -euo pipefail
 
   rnac ftp-export coordinates as-bed $raw_data |\
-  sort -k1,1 -k2,2n |\
+  sort -T . -k1,1 -k2,2n |\
   gzip > ${species}.${assembly}.bed.gz
   """
 }
@@ -90,7 +92,7 @@ process generate_gff3 {
   set -euo pipefail
 
   rnac ftp-export coordinates as-gff3 $raw_data - |\
-  sort -t"`printf '\\t'`" -k1,1 -k4,4n |\
+  sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n |\
   gzip > "${species}.${assembly}.gff3.gz"
   """
 }
@@ -113,7 +115,7 @@ process generate_gff3_for_igv {
   set -euo pipefail
 
   rnac ftp-export coordinates as-gff3 $raw_data - |\
-  sort -t"`printf '\\t'`" -k1,1 -k4,4n |\
+  sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n |\
   sed s/noncoding_exon/exon/g |\
   bgzip > "${species}.${assembly}.rnacentral.gff3.gz"
   """
@@ -135,10 +137,10 @@ process index_gff3 {
 }
 
 workflow export_coordinates {
-  Channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql') | set { known }
-  Channel.fromPath('files/ftp-export/genome_coordinates/query.sql') | set { query }
+  channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql') | set { known }
+  channel.fromPath('files/ftp-export/genome_coordinates/query.sql') | set { query }
 
-  readme(Channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd'))
+  readme(channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd'))
 
   known \
   | find_jobs \

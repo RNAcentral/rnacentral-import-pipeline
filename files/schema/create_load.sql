@@ -359,27 +359,18 @@ CREATE UNLOGGED TABLE load_qa_status (
   messages jsonb
 );
 
+DROP TABLE IF EXISTS load_traveler_attempted;
+CREATE TABLE load_traveler_attempted (
+  urs text PRIMARY KEY,
+  r2dt_version text
+);
+
 DROP TABLE IF EXISTS load_qa_rfam_attempted;
 CREATE UNLOGGED TABLE load_qa_rfam_attempted (
   urs text NOT NULL,
   model_source text NOT NULL,
   source_version text NOT NULL,
   last_run timestamp default CURRENT_TIMESTAMP
-);
-
-DROP TABLE IF EXISTS load_rfam_model_hits;
-CREATE UNLOGGED TABLE load_rfam_model_hits (
-  sequence_start integer NOT NULL,
-  sequence_stop integer NOT NULL,
-  sequence_completeness double precision,
-  model_start integer NOT NULL,
-  model_stop integer NOT NULL,
-  model_completeness double precision,
-  overlap character varying(30) COLLATE pg_catalog."default" NOT NULL,
-  e_value double precision NOT NULL,
-  score double precision NOT NULL,
-  rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-  upi character varying(13) COLLATE pg_catalog."default" NOT NULL
 );
 
 DROP TABLE IF EXISTS load_rnc_text_mining;

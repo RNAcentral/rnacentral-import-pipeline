@@ -32,7 +32,7 @@ process process_chunk {
   tuple val(min), val(max), file(raw), path(schema)
 
   output:
-  path("ensembl-xref-$min-${max}.json")
+  path("ensembl-xref-$min-${max}.json"), optional: true
 
   script:
   """
@@ -41,8 +41,8 @@ process process_chunk {
 }
 
 workflow ensembl_export {
-  Channel.fromPath('files/ftp-export/ensembl/schema.json') | set { schema }
-  Channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql') | set { query }
+  channel.fromPath('files/ftp-export/ensembl/schema.json') | set { schema }
+  channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql') | set { query }
 
   find_chunks \
   | splitCsv \

@@ -9,6 +9,8 @@ process build_ranges {
   output:
   path('ranges.csv')
 
+  when: params.tcode?.run
+
   script:
   def chunk_size = params.tcode.db_chunk_size
   """
@@ -22,6 +24,8 @@ process find_sequences {
 
   output:
   path('sequences/*.fasta'), optional: true
+
+  when: params.tcode?.run
 
   script:
   """
@@ -52,7 +56,7 @@ process parse_results {
   path(tcode_out)
 
   output:
-  path("results.csv")
+  path("results.${params.writer_format}")
 
   script:
   """
@@ -64,26 +68,37 @@ process store_results {
   memory 9.GB
 
   input:
-  path('results*.csv')
+  path("results*.${params.writer_format}")
   path(result_ctl)
+  path(post_load)
+
+  when: params.tcode?.load
 
   script:
-  """
-  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} tcode-results
-  """
+  if (params.writer_format == 'parquet')
+    """
+    load-parquet load_tcode 'results*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    """
+  else
+    """
+    split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} tcode-results
+    """
 }
 
 workflow tcode {
-  take: flag
+  take: _flag
   main:
     if( !params.tcode.run ) {
-      Channel.of('tcode skipped') | set { done }
+      channel.of('tcode skipped') | set { done }
     } else {
 
     def query = file(params.tcode.query)
     def load_ctl = file('files/tcode/tcode.ctl')
+    def post_load = file('files/tcode/post-load.sql')
 
-    def fasta_ch = Channel.of('ready') \
+    def fasta_ch = channel.of('ready') \
       | build_ranges \
       | splitCsv \
       | map { _table, min, max -> [min, max, query] } \
@@ -96,11 +111,12 @@ workflow tcode {
 
     parse_results.out | collect | set { data }
 
-    store_results(data, load_ctl) | set { done }
+    store_results(data, load_ctl, post_load)
+    data | map { _v -> 'tcode done' } | set { done }
     }
   emit: done
 }
 
 workflow {
-  tcode(Channel.of('ready'))
+  tcode(channel.of('ready'))
 }
