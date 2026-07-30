@@ -112,6 +112,30 @@ def _to_bool_or_none(value):
     return _to_bool(value)
 
 
+def _to_string_list(value):
+    """
+    Accept either a real list or the Postgres array literal the CSV-era
+    ``writeable()`` methods emit ('{}', '{"a","b"}') and return a list.
+
+    pgloader parsed those literals into arrays on its way into text[] columns.
+    DuckDB does not: it refuses to cast VARCHAR '{}' to VARCHAR[], so the
+    parquet file has to carry a real list. Parsing here keeps that knowledge
+    in one place instead of branching on the output format inside every
+    writeable() that has an array column.
+    """
+    if value is None or value == "":
+        return None
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    if not (value.startswith("{") and value.endswith("}")):
+        raise ValueError(f"Cannot interpret {value!r} as an array")
+    inner = value[1:-1]
+    if not inner:
+        return []
+    # csv handles the quoting rules of the literal ('{"a,b","c"}') for us.
+    return next(csv.reader([inner]))
+
+
 def converter_for(field: pa.Field) -> ty.Callable[[ty.Any], ty.Any]:
     """
     Return a callable that converts a CSV-string row value into the typed
@@ -126,6 +150,10 @@ def converter_for(field: pa.Field) -> ty.Callable[[ty.Any], ty.Any]:
         return _to_int_or_none if field.nullable else (lambda v: int(v))
     if pa.types.is_floating(t):
         return _to_float_or_none if field.nullable else (lambda v: float(v))
+    if pa.types.is_list(t):
+        return (
+            _to_string_list if field.nullable else (lambda v: _to_string_list(v) or [])
+        )
     return lambda v: v
 
 

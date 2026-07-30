@@ -181,7 +181,9 @@ RELATED_SEQUENCES = pa.schema(
         pa.field("source_accession", pa.string(), nullable=False),
         pa.field("target_accession", pa.string(), nullable=False),
         pa.field("relationship_type", pa.string(), nullable=False),
-        pa.field("methods", pa.string()),
+        # text[] on load_rnc_related_sequences. RelatedSequence.writeable()
+        # emits the pg array literal; the typed writer parses it to a list.
+        pa.field("methods", pa.list_(pa.string())),
     ]
 )
 

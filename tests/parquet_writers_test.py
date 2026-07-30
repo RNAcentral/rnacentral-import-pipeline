@@ -194,6 +194,9 @@ def _stringly_value(field: pa.Field, blank: bool):
         return "42"
     if pa.types.is_floating(t):
         return "1.5"
+    if pa.types.is_list(t):
+        # Array columns arrive as the pg array literal writeable() emits.
+        return '{"a","b"}'
     return 'some,text with "quotes"'
 
 

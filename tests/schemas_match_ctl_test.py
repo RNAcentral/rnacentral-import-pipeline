@@ -1,0 +1,114 @@
+# -*- coding: utf-8 -*-
+
+"""
+The parquet load path (``bin/load-parquet``) inserts a parquet file's columns
+into the staging table pgloader used to target, by name. So a schema whose
+field names drift from its ctl's TARGET COLUMNS silently loads the wrong
+columns -- or fails at 3am mid-release.
+
+This pins each schema to the ctl it was lifted from.
+"""
+
+import re
+from pathlib import Path
+
+import pyarrow as pa
+import pytest
+
+from rnacentral_pipeline import schemas
+
+CTL_DIR = Path(__file__).resolve().parents[1] / "files" / "import-data" / "load"
+
+# schema name -> ctl file stem. Only the metadata parsers converted alongside
+# the entry writers; the entry-writer schemas are covered by ENTRY_WRITER_*.
+CASES = [
+    ("ASSEMBLIES", "assemblies"),
+    ("COORDINATE_SYSTEMS", "coordinate-systems"),
+    ("PROTEINS", "proteins"),
+    ("ENSEMBL_PSEUDOGENES", "ensembl-pseudogenes"),
+    ("RFAM_FAMILIES", "rfam-families"),
+    ("RFAM_CLANS", "rfam-clans"),
+    ("ONTOLOGY_TERMS", "ontology-terms"),
+]
+
+
+def target_columns(stem: str) -> list:
+    """The TARGET COLUMNS list of a pgloader ctl, in order."""
+    text = (CTL_DIR / f"{stem}.ctl").read_text()
+    body = re.search(r"TARGET COLUMNS\s*\((.*?)\)", text, re.S)
+    assert body, f"no TARGET COLUMNS in {stem}.ctl"
+    return [c.strip() for c in body.group(1).split(",") if c.strip()]
+
+
+@pytest.mark.parametrize("schema_name,ctl_stem", CASES, ids=[c[1] for c in CASES])
+def test_schema_columns_match_ctl(schema_name, ctl_stem):
+    schema = getattr(schemas, schema_name)
+    assert list(schema.names) == target_columns(ctl_stem)
+
+
+SCHEMA_SQL = (
+    Path(__file__).resolve().parents[1] / "files" / "schema" / "create_load.sql"
+).read_text()
+
+
+def array_columns(table: str) -> set:
+    """Columns create_load.sql declares as a Postgres array on ``table``."""
+    # The table name is sometimes on its own line after CREATE UNLOGGED TABLE.
+    body = re.search(
+        rf"CREATE\s+UNLOGGED\s+TABLE\s+{table}\s*\((.*?)\n\s*\);",
+        SCHEMA_SQL,
+        re.S | re.I,
+    )
+    assert body, f"{table} not found in create_load.sql"
+    return {
+        m.group(1)
+        for m in re.finditer(
+            r"^\s*(\w+)\s+(?:text|varchar\(\d+\)|character varying\(\d+\))\[\]",
+            body.group(1),
+            re.M | re.I,
+        )
+    }
+
+
+ALL_MAPPED = sorted(
+    (name, table)
+    for name, table in schemas.ENTRY_WRITER_LOAD_TABLES.items()
+    if table is not None and hasattr(schemas, name.upper().replace("-", "_"))
+)
+
+
+@pytest.mark.parametrize("name,table", ALL_MAPPED, ids=[n for n, _ in ALL_MAPPED])
+def test_array_columns_are_list_typed(name, table):
+    """
+    A Postgres array column must be a list in the parquet schema.
+
+    pgloader parsed the '{"a","b"}' literals the writeable() methods emit;
+    DuckDB refuses ("Type VARCHAR with value '{}' can't be cast to VARCHAR[]")
+    and the load dies mid-release. A string field here is that bug.
+    """
+    schema = getattr(schemas, name.upper().replace("-", "_"))
+    for column in array_columns(table):
+        if column not in schema.names:
+            continue  # not every staging column is written by the parser
+        assert pa.types.is_list(
+            schema.field(column).type
+        ), f"{name}.{column} targets {table}.{column} (array) but is not a list"
+
+
+@pytest.mark.parametrize("schema_name,ctl_stem", CASES, ids=[c[1] for c in CASES])
+def test_schema_is_mapped_to_a_load_table(schema_name, ctl_stem):
+    """
+    load-data.nf passes the output file's basename to load-parquet, which
+    resolves it via ENTRY_WRITER_LOAD_TABLES. An unmapped name means the file
+    is treated as a literal table name and the load fails.
+    """
+    text = (CTL_DIR / f"{ctl_stem}.ctl").read_text()
+    into = re.search(r"INTO\s+\{\{PGDATABASE\}\}\?(\w+)", text)
+    assert into, f"no INTO clause in {ctl_stem}.ctl"
+
+    logical = [
+        name
+        for name, table in schemas.ENTRY_WRITER_LOAD_TABLES.items()
+        if table == into.group(1)
+    ]
+    assert logical, f"{into.group(1)} missing from ENTRY_WRITER_LOAD_TABLES"
