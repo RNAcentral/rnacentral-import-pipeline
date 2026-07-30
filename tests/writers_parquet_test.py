@@ -138,15 +138,29 @@ def test_entry_writer_output_matches_declared_schemas(tmp_path, case):
         assert table.schema.equals(expected), f"{name} schema drifted"
 
 
-def test_entry_writer_emits_a_file_per_declared_schema(tmp_path):
+def test_entry_writer_drops_tables_that_got_no_rows(tmp_path):
     """
-    Every schema must get a file, even an empty one. A load step pointed at a
-    missing file fails the whole workflow.
+    A table with no rows must leave no file behind.
+
+    Nothing reads these by a fixed name -- every consumer globs, and
+    load-data.nf builds its channel from the files that exist -- so an empty
+    parquet file only buys a merge_and_import task that loads nothing. The CSV
+    path gets this for free: an unused table is a 0-byte file, which
+    load-data.nf's `filter { f -> !f.isEmpty() }` already drops. A zero-row
+    parquet file is a few hundred bytes of header and footer, so it does not.
     """
     with writers.parquet_entry_writer(tmp_path) as writer:
         writer.write([_entry()])
 
-    assert set(_written_tables(tmp_path)) == set(schemas.ENTRY_WRITER_SCHEMAS)
+    written = _written_tables(tmp_path)
+    assert written, "writer produced no parquet files"
+    assert set(written) <= set(schemas.ENTRY_WRITER_SCHEMAS)
+    for name, table in written.items():
+        assert table.num_rows, f"{name}.parquet was written with no rows"
+
+    # The entry fixture populates some tables and not others; if that ever
+    # stops being true this test is no longer testing anything.
+    assert set(written) != set(schemas.ENTRY_WRITER_SCHEMAS)
 
 
 def test_entry_writer_round_trips_awkward_text(tmp_path):

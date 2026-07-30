@@ -46,6 +46,7 @@ class ParquetTable:
         self._schema = schema
         self._batch_size = batch_size
         self._buffer: ty.List[ty.Sequence] = []
+        self._rows = 0
 
     def writerow(self, row: ty.Sequence) -> None:
         if len(row) != len(self._schema):
@@ -53,6 +54,7 @@ class ParquetTable:
                 f"Row length ({len(row)}) does not match schema length ({len(self._schema)})"
             )
         self._buffer.append(tuple(row))
+        self._rows += 1
         if len(self._buffer) >= self._batch_size:
             self._flush()
 
@@ -66,6 +68,7 @@ class ParquetTable:
                     f"Row length ({len(row)}) does not match schema length ({len(self._schema)})"
                 )
             buf.append(tuple(row))
+            self._rows += 1
             if len(buf) >= batch_size:
                 self._flush()
 
@@ -80,6 +83,11 @@ class ParquetTable:
         batch = pa.RecordBatch.from_arrays(arrays, schema=self._schema)
         self._writer.write_batch(batch)
         self._buffer.clear()
+
+    @property
+    def rows(self) -> int:
+        """Rows written so far, buffered or flushed."""
+        return self._rows
 
     def close(self) -> None:
         self._flush()

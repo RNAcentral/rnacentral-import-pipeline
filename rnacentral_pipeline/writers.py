@@ -254,6 +254,22 @@ class ParquetEntryWriter:
                 raise ValueError("No valid entries to write")
 
 
+def _drop_empty(paths: ty.Mapping[_ParquetTable, Path]) -> None:
+    """
+    Delete the parquet files that got no rows.
+
+    A parquet file with zero rows is still a few hundred bytes of magic,
+    schema and footer, so load-data.nf's ``filter { f -> !f.isEmpty() }``
+    keeps it and spins up a merge_and_import task to load nothing. The CSV
+    path never had this problem: an unused table is a genuinely 0-byte file.
+    Every consumer of these files globs, so a missing one is simply not
+    staged.
+    """
+    for table, out in paths.items():
+        if not table.rows:
+            out.unlink(missing_ok=True)
+
+
 @contextmanager
 def parquet_entry_writer(
     path: Path,
@@ -270,6 +286,7 @@ def parquet_entry_writer(
     path.mkdir(parents=True, exist_ok=True)
 
     tables: ty.Dict[str, _ParquetTable] = {}
+    paths: ty.Dict[_ParquetTable, Path] = {}
     writers_list = []
     try:
         for name, schema in schemas.ENTRY_WRITER_SCHEMAS.items():
@@ -277,12 +294,14 @@ def parquet_entry_writer(
             pq_writer = pq.ParquetWriter(out, schema, compression=compression)
             table = _ParquetTable(pq_writer, schema, batch_size)
             tables[name] = table
+            paths[table] = out
             writers_list.append((table, pq_writer))
 
         yield ParquetEntryWriter(**tables)
 
         for table, _ in writers_list:
             table.close()
+        _drop_empty(paths)
     except Exception:
         for _, pq_writer in writers_list:
             try:
