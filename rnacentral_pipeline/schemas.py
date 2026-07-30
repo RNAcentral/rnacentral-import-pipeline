@@ -361,6 +361,9 @@ TAXONOMY = pa.schema(
         pa.field("lineage", pa.string(), nullable=False),
         pa.field("aliases", pa.string(), nullable=False),
         pa.field("replaced_by", pa.int64()),
+        pa.field("rank", pa.string(), nullable=False),
+        pa.field("reference_proteome", pa.bool_(), nullable=False),
+        pa.field("is_deleted", pa.bool_(), nullable=False),
     ]
 )
 
