@@ -143,9 +143,10 @@ type_scores = {
 
 @lru_cache()
 def get_so_graph():
-    # Loaded lazily and cached: fetching the ontology hits the network, so we
-    # must not do it at import time or a transient failure takes down every
-    # `rnac` command (the CLI eagerly imports this module).
+    # Loaded lazily and cached because every `rnac` command imports this module
+    # (cli/__init__ -> cli/genes -> random_forest.classify -> here), so fetching
+    # at import time let an ontology hiccup break commands that never touch the
+    # ontology -- notably the `rnac notify` calls the QC stages shell out to.
     return obo.read_obo(SO_ONTOLOGY_URL)
 
 
