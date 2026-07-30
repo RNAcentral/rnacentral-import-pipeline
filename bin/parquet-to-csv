@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run python3
+#!/usr/bin/env python3
 """
 Stream-decode one or more Parquet files into a single CSV on stdout.
 
