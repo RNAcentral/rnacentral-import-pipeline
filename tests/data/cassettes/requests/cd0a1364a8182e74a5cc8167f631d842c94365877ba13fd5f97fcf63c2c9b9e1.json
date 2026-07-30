@@ -1,0 +1,19 @@
+{
+  "content_b64": "eyJ2ZXJzaW9uIjoiNi45IiwiaGl0Q291bnQiOjEsInJlcXVlc3QiOnsicXVlcnlTdHJpbmciOiJET0k6XCIxMC4xMTc3LzIwNTA2NDA2MTU2MDE2MTFcIiIsInJlc3VsdFR5cGUiOiJsaXRlIiwiY3Vyc29yTWFyayI6IioiLCJwYWdlU2l6ZSI6MTAwMCwic29ydCI6IiIsInN5bm9ueW0iOmZhbHNlfSwicmVzdWx0TGlzdCI6eyJyZXN1bHQiOlt7ImlkIjoiUE1DNDY2OTk5MCIsInNvdXJjZSI6IlBNQyIsInBtY2lkIjoiUE1DNDY2OTk5MCIsImZ1bGxUZXh0SWRMaXN0Ijp7ImZ1bGxUZXh0SWQiOlsiUE1DNDY2OTk5MCJdfSwidGl0bGUiOiJVRUcgV2VlayAyMDE1IE9yYWwgUHJlc2VudGF0aW9ucyIsImpvdXJuYWxUaXRsZSI6IlVuaXRlZCBFdXJvcGVhbiBHYXN0cm9lbnRlcm9sIEoiLCJpc3N1ZSI6IjUgc3VwcGwiLCJqb3VybmFsVm9sdW1lIjoiMyIsInB1YlllYXIiOiIyMDE1Iiwiam91cm5hbElzc24iOiIyMDUwLTY0MDY7IDIwNTAtNjQxNDsgIiwicGFnZUluZm8iOiIxLTE0NSIsInB1YlR5cGUiOiJyZXNlYXJjaC1hcnRpY2xlOyBqb3VybmFsIGFydGljbGUiLCJpc09wZW5BY2Nlc3MiOiJZIiwiaW5FUE1DIjoiWSIsImluUE1DIjoiWSIsImhhc1BERiI6IlkiLCJoYXNCb29rIjoiTiIsImhhc1N1cHBsIjoiTiIsImNpdGVkQnlDb3VudCI6MSwiaGFzUmVmZXJlbmNlcyI6Ik4iLCJoYXNUZXh0TWluZWRUZXJtcyI6IlkiLCJoYXNEYkNyb3NzUmVmZXJlbmNlcyI6Ik4iLCJoYXNMYWJzTGlua3MiOiJZIiwiaGFzVE1BY2Nlc3Npb25OdW1iZXJzIjoiWSIsInRtQWNjZXNzaW9uVHlwZUxpc3QiOnsiYWNjZXNzaW9uVHlwZSI6WyJyZWZzbnAiLCJuY3QiXX0sImZpcnN0SW5kZXhEYXRlIjoiMjAxNS0xMi0xNiIsImZpcnN0UHVibGljYXRpb25EYXRlIjoiMjAxNS0xMC0wMSJ9XX19",
+  "encoding": "UTF-8",
+  "headers": {
+    "Access-Control-Allow-Headers": "Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Max-Age": "3600",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 10 Jun 2026 13:45:08 GMT",
+    "Set-Cookie": "JSESSIONID=2F9A1E60305E1B9478BC139BE93CFF91; Path=/europepmc/webservices/; HttpOnly",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked"
+  },
+  "reason": "OK",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1000&query=DOI%3A%2210.1177%2F2050640615601611%22"
+}

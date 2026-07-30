@@ -1,0 +1,19 @@
+{
+  "content_b64": "eyJ2ZXJzaW9uIjoiNi45IiwiaGl0Q291bnQiOjEsInJlcXVlc3QiOnsicXVlcnlTdHJpbmciOiIxNzI1NDM1NSBBTkQgU1JDOk1FRCIsInJlc3VsdFR5cGUiOiJsaXRlIiwiY3Vyc29yTWFyayI6IioiLCJwYWdlU2l6ZSI6MTAwMCwic29ydCI6IiIsInN5bm9ueW0iOmZhbHNlfSwicmVzdWx0TGlzdCI6eyJyZXN1bHQiOlt7ImlkIjoiMTc0NDIwOTYiLCJzb3VyY2UiOiJNRUQiLCJwbWlkIjoiMTc0NDIwOTYiLCJwbWNpZCI6IlBNQzE3OTQ1MzciLCJmdWxsVGV4dElkTGlzdCI6eyJmdWxsVGV4dElkIjpbIlBNQzE3OTQ1MzciXX0sImRvaSI6IjEwLjExODYvMTc0Mi00NjkwLTQtNSIsInRpdGxlIjoiUmV0cm92aXJhbCBhY3RpdmF0aW9uIG9mIHRoZSBtaXItMTA2YSBtaWNyb1JOQSBjaXN0cm9uIGluIFQgbHltcGhvbWEuIiwiYXV0aG9yU3RyaW5nIjoiTHVtIEFNLCBXYW5nIEJCLCBMaSBMLCBDaGFubmEgTiwgQmFydGhhIEcsIFdhYmwgTS4iLCJqb3VybmFsVGl0bGUiOiJSZXRyb3Zpcm9sb2d5Iiwiam91cm5hbFZvbHVtZSI6IjQiLCJwdWJZZWFyIjoiMjAwNyIsImpvdXJuYWxJc3NuIjoiMTc0Mi00NjkwIiwicGFnZUluZm8iOiI1IiwicHViVHlwZSI6InJlc2VhcmNoIHN1cHBvcnQsIG5vbi11LnMuIGdvdid0OyByZXNlYXJjaC1hcnRpY2xlOyBqb3VybmFsIGFydGljbGU7IHJlc2VhcmNoIHN1cHBvcnQsIG4uaS5oLiwgZXh0cmFtdXJhbCIsImlzT3BlbkFjY2VzcyI6IlkiLCJpbkVQTUMiOiJZIiwiaW5QTUMiOiJZIiwiaGFzUERGIjoiWSIsImhhc0Jvb2siOiJOIiwiaGFzU3VwcGwiOiJOIiwiY2l0ZWRCeUNvdW50Ijo1MSwiaGFzUmVmZXJlbmNlcyI6IlkiLCJoYXNUZXh0TWluZWRUZXJtcyI6IlkiLCJoYXNEYkNyb3NzUmVmZXJlbmNlcyI6Ik4iLCJoYXNMYWJzTGlua3MiOiJZIiwiaGFzVE1BY2Nlc3Npb25OdW1iZXJzIjoiWSIsInRtQWNjZXNzaW9uVHlwZUxpc3QiOnsiYWNjZXNzaW9uVHlwZSI6WyJnZW4iXX0sImZpcnN0SW5kZXhEYXRlIjoiMjAwOS0xMi0yNCIsImZpcnN0UHVibGljYXRpb25EYXRlIjoiMjAwNy0wMS0yNSJ9XX19",
+  "encoding": "UTF-8",
+  "headers": {
+    "Access-Control-Allow-Headers": "Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Max-Age": "3600",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 10 Jun 2026 13:45:09 GMT",
+    "Set-Cookie": "JSESSIONID=1D7FC5A2E5ECACE72E333E4248A6E1CC; Path=/europepmc/webservices/; HttpOnly",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked"
+  },
+  "reason": "OK",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1000&query=17254355+AND+SRC%3AMED"
+}

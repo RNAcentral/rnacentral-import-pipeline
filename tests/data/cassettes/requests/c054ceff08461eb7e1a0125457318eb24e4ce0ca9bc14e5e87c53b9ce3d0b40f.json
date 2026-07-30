@@ -1,0 +1,19 @@
+{
+  "content_b64": "eyJ2ZXJzaW9uIjoiNi45IiwiaGl0Q291bnQiOjEsInJlcXVlc3QiOnsicXVlcnlTdHJpbmciOiJET0k6XCIxMC4xMDkzL2RhdGFiYXNlL2JhdzEzOFwiIiwicmVzdWx0VHlwZSI6ImxpdGUiLCJjdXJzb3JNYXJrIjoiKiIsInBhZ2VTaXplIjoxMDAwLCJzb3J0IjoiIiwic3lub255bSI6ZmFsc2V9LCJyZXN1bHRMaXN0Ijp7InJlc3VsdCI6W3siaWQiOiIzMTQxNDcwMiIsInNvdXJjZSI6Ik1FRCIsInBtaWQiOiIzMTQxNDcwMiIsInBtY2lkIjoiUE1DNTA5MTMzNSIsImZ1bGxUZXh0SWRMaXN0Ijp7ImZ1bGxUZXh0SWQiOlsiUE1DNTA5MTMzNSJdfSwiZG9pIjoiMTAuMTA5My9kYXRhYmFzZS9iYXcxMzgiLCJ0aXRsZSI6IklSTmRiOiB0aGUgZGF0YWJhc2Ugb2YgaW1tdW5vbG9naWNhbGx5IHJlbGV2YW50IG5vbi1jb2RpbmcgUk5Bcy4iLCJhdXRob3JTdHJpbmciOiJEZW5pc2Vua28gRSwgSG8gRCwgVGFtZ3VlIE8sIE96dHVyayBNLCBTdXp1a2kgSCwgQnJvbWJhY2hlciBGLCBHdWxlciBSLCBTY2htZWllciBTLiIsImpvdXJuYWxUaXRsZSI6IkRhdGFiYXNlIChPeGZvcmQpIiwiam91cm5hbFZvbHVtZSI6IjIwMTYiLCJwdWJZZWFyIjoiMjAxNiIsImpvdXJuYWxJc3NuIjoiMTc1OC0wNDYzIiwicGFnZUluZm8iOiJiYXcxMzgiLCJwdWJUeXBlIjoicmVzZWFyY2gtYXJ0aWNsZTsgam91cm5hbCBhcnRpY2xlIiwiaXNPcGVuQWNjZXNzIjoiWSIsImluRVBNQyI6IlkiLCJpblBNQyI6IlkiLCJoYXNQREYiOiJZIiwiaGFzQm9vayI6Ik4iLCJoYXNTdXBwbCI6Ik4iLCJjaXRlZEJ5Q291bnQiOjYsImhhc1JlZmVyZW5jZXMiOiJZIiwiaGFzVGV4dE1pbmVkVGVybXMiOiJZIiwiaGFzRGJDcm9zc1JlZmVyZW5jZXMiOiJOIiwiaGFzTGFic0xpbmtzIjoiTiIsImhhc1RNQWNjZXNzaW9uTnVtYmVycyI6Ik4iLCJmaXJzdEluZGV4RGF0ZSI6IjIwMTktMDgtMTYiLCJmaXJzdFB1YmxpY2F0aW9uRGF0ZSI6IjIwMTYtMTAtMjUifV19fQ==",
+  "encoding": "UTF-8",
+  "headers": {
+    "Access-Control-Allow-Headers": "Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Max-Age": "3600",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 10 Jun 2026 13:45:06 GMT",
+    "Set-Cookie": "JSESSIONID=A966D89AD9A1B0BDBADE47A40D60065E; Path=/europepmc/webservices/; HttpOnly",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked"
+  },
+  "reason": "OK",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1000&query=DOI%3A%2210.1093%2Fdatabase%2Fbaw138%22"
+}

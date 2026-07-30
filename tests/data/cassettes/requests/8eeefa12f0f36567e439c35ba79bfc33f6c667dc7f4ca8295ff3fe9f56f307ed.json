@@ -1,0 +1,19 @@
+{
+  "content_b64": "eyJ2ZXJzaW9uIjoiNi45IiwiaGl0Q291bnQiOjEsInJlcXVlc3QiOnsicXVlcnlTdHJpbmciOiJET0k6XCIxMC4xMDkzL3NjaGJ1bC9zYnkwMTQuMDkyXCIiLCJyZXN1bHRUeXBlIjoibGl0ZSIsImN1cnNvck1hcmsiOiIqIiwicGFnZVNpemUiOjEwMDAsInNvcnQiOiIiLCJzeW5vbnltIjpmYWxzZX0sInJlc3VsdExpc3QiOnsicmVzdWx0IjpbeyJpZCI6IlBNQzU4ODcyODQiLCJzb3VyY2UiOiJQTUMiLCJwbWNpZCI6IlBNQzU4ODcyODQiLCJmdWxsVGV4dElkTGlzdCI6eyJmdWxsVGV4dElkIjpbIlBNQzU4ODcyODQiXX0sInRpdGxlIjoiMjMuMiBORVRSSU4tMSBSRUNFUFRPUlMgQ09OVFJPTCBNRVNPQ09SVElDQUwgRE9QQU1JTkUgQ09OTkVDVElWSVRZIElOIEFET0xFU0NFTkNFIiwiYXV0aG9yU3RyaW5nIjoiRmxvcmVzIEMuIiwiam91cm5hbFRpdGxlIjoiU2NoaXpvcGhyIEJ1bGwiLCJpc3N1ZSI6InN1cHBsIDEiLCJqb3VybmFsVm9sdW1lIjoiNDQiLCJwdWJZZWFyIjoiMjAxOCIsImpvdXJuYWxJc3NuIjoiMTc4Ny05OTY1OyAxNzQ1LTE3MDE7IDA1ODYtNzYxNDsgIiwicGFnZUluZm8iOiJTMzctUzM4IiwicHViVHlwZSI6ImFic3RyYWN0IiwiaXNPcGVuQWNjZXNzIjoiWSIsImluRVBNQyI6IlkiLCJpblBNQyI6IlkiLCJoYXNQREYiOiJZIiwiaGFzQm9vayI6Ik4iLCJoYXNTdXBwbCI6Ik4iLCJjaXRlZEJ5Q291bnQiOjAsImhhc1JlZmVyZW5jZXMiOiJOIiwiaGFzVGV4dE1pbmVkVGVybXMiOiJZIiwiaGFzRGJDcm9zc1JlZmVyZW5jZXMiOiJOIiwiaGFzTGFic0xpbmtzIjoiTiIsImhhc1RNQWNjZXNzaW9uTnVtYmVycyI6Ik4iLCJmaXJzdEluZGV4RGF0ZSI6IjIwMTgtMDUtMDEiLCJmaXJzdFB1YmxpY2F0aW9uRGF0ZSI6IjIwMTgtMDQtMDEifV19fQ==",
+  "encoding": "UTF-8",
+  "headers": {
+    "Access-Control-Allow-Headers": "Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Max-Age": "3600",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 10 Jun 2026 13:45:07 GMT",
+    "Set-Cookie": "JSESSIONID=4F3433138687F4F7CA244E21F8D0B7BD; Path=/europepmc/webservices/; HttpOnly",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked"
+  },
+  "reason": "OK",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1000&query=DOI%3A%2210.1093%2Fschbul%2Fsby014.092%22"
+}

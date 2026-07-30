@@ -1,0 +1,36 @@
+# Runs the offline unit-test subset on every push to any branch.
+#
+# The job runs inside the prebuilt pipeline container
+# (rnacentral/rnacentral-import-pipeline:latest), which already has every Python
+# dependency installed (the Dockerfile runs `poetry install` into the system
+# Python). We only check out the current code and run pytest against it - no
+# dependency resolution happens in CI. This sidesteps the repo being mid-migration
+# from poetry to uv; once the uv changes land on dev this can switch to `uv sync`.
+#
+# The tests run with no network access: tests/conftest.py blocks outbound sockets
+# and serves external services from recorded fixtures (tests/data/cassettes). The
+# exact set of files run is listed in tests/ci_offline_files.txt - add a file
+# there once it passes offline. Run the same thing locally with:
+#
+#   python -m pytest $(grep -vE '^\s*#|^\s*$' tests/ci_offline_files.txt)
+
+name: Unit tests (offline)
+
+on:
+  push:
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: rnacentral/rnacentral-import-pipeline:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run offline unit tests
+        run: |
+          files=$(grep -vE '^\s*#|^\s*$' tests/ci_offline_files.txt)
+          echo "Running offline tests:"
+          echo "$files"
+          python -m pytest -p no:cacheprovider --tb=short $files

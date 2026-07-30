@@ -15,12 +15,19 @@ limitations under the License.
 
 
 import os
-import tempfile
 import subprocess
-
+import tempfile
 from io import StringIO
 
 from rnacentral_pipeline import psql
+
+# Vendored copy of the Sequence Ontology (so-simple.obo) so the test suite can
+# build the SO tree without downloading it from GitHub. Refresh with:
+#   curl -sSL -o tests/data/sequence_ontology/so-simple.obo \
+#     https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/so-simple.obo
+SO_ONTOLOGY_PATH = os.path.join(
+    os.path.dirname(__file__), "data", "sequence_ontology", "so-simple.obo"
+)
 
 
 def run_with_buffer(path, *replacements):

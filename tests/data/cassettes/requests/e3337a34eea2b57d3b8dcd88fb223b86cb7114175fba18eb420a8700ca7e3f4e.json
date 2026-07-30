@@ -1,0 +1,19 @@
+{
+  "content_b64": "eyJ2ZXJzaW9uIjoiNi45IiwiaGl0Q291bnQiOjEsInJlcXVlc3QiOnsicXVlcnlTdHJpbmciOiJET0k6XCIxMC4xMDA3L2JmMDAyNzE2NjlcIiIsInJlc3VsdFR5cGUiOiJsaXRlIiwiY3Vyc29yTWFyayI6IioiLCJwYWdlU2l6ZSI6MTAwMCwic29ydCI6IiIsInN5bm9ueW0iOmZhbHNlfSwicmVzdWx0TGlzdCI6eyJyZXN1bHQiOlt7ImlkIjoiMzc1MDA2Iiwic291cmNlIjoiTUVEIiwicG1pZCI6IjM3NTAwNiIsImRvaSI6IjEwLjEwMDcvYmYwMDI3MTY2OSIsInRpdGxlIjoiQXNzZW1ibHkgb2YgdGhlIG1pdG9jaG9uZHJpYWwgbWVtYnJhbmUgc3lzdGVtOiB0d28gc2VwYXJhdGUgZ2VuZXMgY29kaW5nIGZvciB0aHJlb255bC10Uk5BIGluIHRoZSBtaXRvY2hvbmRyaWFsIEROQSBvZiBTYWNjaGFyb215Y2VzIGNlcmV2aXNpYWUuIiwiYXV0aG9yU3RyaW5nIjoiTWFjaW5vIEcsIFR6YWdvbG9mZiBBLiIsImpvdXJuYWxUaXRsZSI6Ik1vbCBHZW4gR2VuZXQiLCJpc3N1ZSI6IjIiLCJqb3VybmFsVm9sdW1lIjoiMTY5IiwicHViWWVhciI6IjE5NzkiLCJqb3VybmFsSXNzbiI6IjAwMjYtODkyNSIsInBhZ2VJbmZvIjoiMTgzLTE4OCIsInB1YlR5cGUiOiJyZXNlYXJjaCBzdXBwb3J0LCB1LnMuIGdvdid0LCBub24tcC5oLnMuOyBqb3VybmFsIGFydGljbGUiLCJpc09wZW5BY2Nlc3MiOiJOIiwiaW5FUE1DIjoiTiIsImluUE1DIjoiTiIsImhhc1BERiI6Ik4iLCJoYXNCb29rIjoiTiIsImhhc1N1cHBsIjoiTiIsImNpdGVkQnlDb3VudCI6MjAsImhhc1JlZmVyZW5jZXMiOiJZIiwiaGFzVGV4dE1pbmVkVGVybXMiOiJZIiwiaGFzRGJDcm9zc1JlZmVyZW5jZXMiOiJOIiwiaGFzTGFic0xpbmtzIjoiWSIsImhhc1RNQWNjZXNzaW9uTnVtYmVycyI6Ik4iLCJmaXJzdEluZGV4RGF0ZSI6IjIwMDgtMDEtMjkiLCJmaXJzdFB1YmxpY2F0aW9uRGF0ZSI6IjE5NzktMDEtMDEifV19fQ==",
+  "encoding": "UTF-8",
+  "headers": {
+    "Access-Control-Allow-Headers": "Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Max-Age": "3600",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Date": "Wed, 10 Jun 2026 13:45:03 GMT",
+    "Set-Cookie": "JSESSIONID=4494DD5FA235B3A77A505D31AAFAF815; Path=/europepmc/webservices/; HttpOnly",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked"
+  },
+  "reason": "OK",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1000&query=DOI%3A%2210.1007%2Fbf00271669%22"
+}
