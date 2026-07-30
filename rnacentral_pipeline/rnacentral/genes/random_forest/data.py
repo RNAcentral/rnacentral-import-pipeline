@@ -143,10 +143,8 @@ type_scores = {
 
 @lru_cache()
 def get_so_graph():
-    # Loaded lazily and cached because every `rnac` command imports this module
-    # (cli/__init__ -> cli/genes -> random_forest.classify -> here), so fetching
-    # at import time let an ontology hiccup break commands that never touch the
-    # ontology -- notably the `rnac notify` calls the QC stages shell out to.
+    # Lazy: every `rnac` command imports this module (cli/genes -> classify ->
+    # here), so an import-time fetch broke commands that never use the ontology.
     return obo.read_obo(SO_ONTOLOGY_URL)
 
 

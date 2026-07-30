@@ -1,7 +1,5 @@
 -- Import QC: per-database rows imported / created / retired this release, from
--- release_stats (correct for ENA). Flags NOT IMPORTED (import_date < run start)
--- and "data disappeared" (>retired_pct retired AND carried_over dropped).
--- Vars: run_dbs, run_start, retired_pct (default 0.05).
+-- release_stats. Vars: run_dbs, run_start, retired_pct (default 0.05).
 \pset pager off
 \timing off
 SET statement_timeout = '60s';

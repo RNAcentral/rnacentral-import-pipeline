@@ -32,11 +32,8 @@ def print_report(report) {
   report.view { f -> "\n— QC report — also written to ${dir}/${f.name}\n${f.text}" }
 }
 
-// Shared report header for every stage: title, UTC timestamp, target database
-// (profile label pro/dev/tst + the live host:port/db it actually connected to,
-// so a wrong-DB mix-up is visible), and wall-clock elapsed since pipeline start.
-// Returns bash that sets \$target/\$elapsed then echoes the lines — drop the
-// interpolation inside the report's { ... } block.
+// Shared report header (stage, timestamp, the live host:port/db it connected to
+// so a wrong-DB mix-up shows, elapsed). Returns bash, not the finished text.
 def qc_header(stage) {
   def env_label = (workflow.profile ?: '').tokenize(',')*.trim().find { it in ['pro', 'dev', 'tst'] } ?: ''
   def prefix = env_label ? env_label + ' — ' : ''

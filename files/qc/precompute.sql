@@ -1,6 +1,5 @@
 -- Precompute QC: active-sequence counts + flags, from rnc_rna_precomputed and
--- qa_status. active = is_active AND taxid IS NOT NULL; precomputed this run =
--- update_date >= run start. Vars: run_start, qa_issue_pct_max (default 50).
+-- qa_status. Vars: run_start, qa_issue_pct_max (default 50).
 SET statement_timeout = '240s';
 \pset border 0
 \pset footer off

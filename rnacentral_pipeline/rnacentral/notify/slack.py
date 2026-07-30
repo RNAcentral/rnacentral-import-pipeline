@@ -26,10 +26,8 @@ def send_notification(title, message, username=None):
     """
     Send a notification to the configured slack webhook.
 
-    If username is given the message is posted under that name instead of the
-    app's default name, so each pipeline stage can have its own identity. This
-    only takes effect if the Slack app has the chat:write.customize scope;
-    otherwise Slack silently keeps the app's default name.
+    username posts under that name instead of the app's default, and needs the
+    app to have the chat:write.customize scope or Slack silently ignores it.
     """
     SLACK_WEBHOOK = os.getenv("SLACK_CLIENT_TOKEN")
     if SLACK_WEBHOOK is None:

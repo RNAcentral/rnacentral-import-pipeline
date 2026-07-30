@@ -14,13 +14,8 @@ limitations under the License.
 """
 
 """
-Static checks on the QC report wiring.
-
-The QC steps run at the tail of a release, hours into a pipeline run, and their
-psql invocations are only exercised there. A variable the SQL needs but the
-process does not pass fails with `unrecognized variable`, and a database that
-qc.nf does not know how to name is silently missing from the report rather than
-erroring. Both are cheap to catch by reading the files.
+Static checks on the QC report wiring, which otherwise only runs hours into a
+release: a missing psql var fails there, and a missing database just goes quiet.
 """
 
 import re
@@ -66,10 +61,8 @@ def qc_nf():
 @pytest.fixture(scope="module")
 def invocations(qc_nf):
     """
-    Every (process, sql file) pair the QC workflows actually run.
-
-    Each qc_* workflow body names the SQL file it runs and the process(es) that
-    run it, so the pairs are read off the wiring rather than hard-coded here.
+    Every (process, sql file) pair the QC workflows run, read off the wiring
+    rather than hard-coded, so a new stage is covered without touching this.
     """
     processes = blocks(qc_nf, PROCESS_RE)
     pairs = []
@@ -89,11 +82,8 @@ def passed_vars(qc_nf, process):
 
 def required_vars(sql_text, defined):
     """
-    Variables the SQL needs from the caller, given which ones are defined.
-
-    Walks psql's `\\if :{?var}` / `\\else` / `\\endif` conditionals so a branch
-    that cannot run does not count, and treats a var the file `\\set`s itself as
-    already satisfied (the `\\if :{?x} \\else \\set x <default>` idiom).
+    Variables the SQL needs from the caller: skips `\\if :{?var}` branches that
+    cannot run, and counts a var the file `\\set`s itself as already satisfied.
     """
     defined = set(defined)
     required = set()
@@ -167,8 +157,8 @@ def test_optional_variables_are_guarded_rather_than_required(qc_nf, invocations)
 
 def test_analyze_snapshot_does_not_need_the_run_start_variable():
     """
-    The before-snapshot runs the same file with only -v snapshot=1, so anything
-    outside the snapshot branch must stay out of its way.
+    The before-snapshot passes only -v snapshot=1, so nothing outside that
+    branch may demand a variable it does not have.
     """
     text = (QC_SQL_DIR / "analyze.sql").read_text()
     assert required_vars(text, {"snapshot"}) == set()
@@ -178,9 +168,8 @@ def test_analyze_snapshot_does_not_need_the_run_start_variable():
 
 def test_qc_knows_every_ensembl_division_main_runs(qc_nf):
     """
-    qc.nf keeps its own division -> rnc_database.descr map. If main.nf gains a
-    division and this map does not, that division is silently absent from the
-    import report.
+    qc.nf keeps its own division -> rnc_database.descr map, so a division added
+    to main.nf but not here goes missing from the import report without error.
     """
     qc_divisions = set(ENSEMBL_DIVISION_RE.findall(qc_nf))
     main_lists = MAIN_DIVISION_LIST_RE.findall(MAIN_WORKFLOW.read_text())

@@ -1,7 +1,5 @@
--- Analyze QC. -v snapshot=1: emit before-snapshot CSV (cpat/stopfree/tcode
--- counts). Default: report sequences processed this run per analysis + flag
--- (tracked via pipeline_tracking last_run; untracked via before/after diff).
--- Vars: snapshot, run_start.
+-- Analyze QC. -v snapshot=1 emits the before-snapshot CSV; otherwise reports
+-- sequences run per analysis. Vars: snapshot, run_start.
 SET statement_timeout = '180s';
 
 \if :{?snapshot}
