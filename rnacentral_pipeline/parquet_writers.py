@@ -12,12 +12,15 @@ keeps the two callers in lockstep — fix a bug once, fix it everywhere.
 
 from __future__ import annotations
 
+import csv
 import typing as ty
 from contextlib import contextmanager
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+
+from rnacentral_pipeline.output_format import is_parquet
 
 # Default rows-per-row-group. Trades memory for row-group overhead; matches
 # the value originally chosen for ``ParquetEntryWriter``.
@@ -184,3 +187,29 @@ def parquet_writer(
         yield table
     finally:
         table.close()
+
+
+@contextmanager
+def row_writer(
+    path: Path,
+    schema: pa.Schema,
+    csv_options: ty.Optional[ty.Mapping[str, ty.Any]] = None,
+) -> ty.Iterator[ty.Any]:
+    """
+    Open ``path`` as either a CSV or a Parquet file, per the shared
+    ``RNAC_OUTPUT_FORMAT`` switch, and yield a writer exposing the
+    ``csv.writer`` API (``writerow``/``writerows``) in both cases.
+
+    For the many small metadata parsers (ensembl assemblies, rfam clans, ols
+    terms, ...) that emit stringly-typed rows straight from a query result,
+    this is the whole format branch: ``with row_writer(path, SCHEMA) as w``.
+    """
+    if is_parquet():
+        with typed_parquet_writer(path, schema) as writer:
+            yield writer
+        return
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w") as handle:
+        yield csv.writer(handle, **(csv_options or {}))

@@ -555,6 +555,126 @@ TCODE_RESULTS = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# Metadata parsers that predate the parquet migration. Column order follows
+# the HAVING FIELDS clause of the matching ctl (that is the order the CSV
+# writers emit), and types follow files/schema/create_load.sql.
+
+# rnac ensembl assemblies -> assemblies.parquet
+# Source: files/import-data/load/assemblies.ctl
+ASSEMBLIES = pa.schema(
+    [
+        pa.field("assembly_id", pa.string(), nullable=False),
+        pa.field("assembly_full_name", pa.string(), nullable=False),
+        pa.field("gca_accession", pa.string()),
+        pa.field("assembly_ucsc", pa.string()),
+        pa.field("common_name", pa.string()),
+        pa.field("taxid", pa.int32(), nullable=False),
+        pa.field("ensembl_url", pa.string()),
+        pa.field("division", pa.string()),
+        pa.field("subdomain", pa.string(), nullable=False),
+        pa.field("example_chromosome", pa.string()),
+        pa.field("example_start", pa.int32()),
+        pa.field("example_end", pa.int32()),
+        pa.field("blat_mapping", pa.int32()),
+    ]
+)
+
+
+# rnac ensembl coordinate-systems -> coordinate_systems.parquet
+# Source: files/import-data/load/coordinate-systems.ctl
+COORDINATE_SYSTEMS = pa.schema(
+    [
+        pa.field("chromosome", pa.string(), nullable=False),
+        pa.field("coordinate_system", pa.string(), nullable=False),
+        pa.field("assembly_id", pa.string()),
+        pa.field("is_reference", pa.bool_()),
+        pa.field("karyotype_rank", pa.int32()),
+    ]
+)
+
+
+# rnac ensembl proteins -> proteins.parquet
+# Source: files/import-data/load/proteins.ctl
+#
+# synonyms is text[] in load_protein_info. The CSV path emits a Postgres array
+# literal ('{"a","b"}') for pgloader to parse; parquet carries a real list so
+# DuckDB inserts into the array column directly.
+PROTEINS = pa.schema(
+    [
+        pa.field("protein_accession", pa.string(), nullable=False),
+        pa.field("description", pa.string()),
+        pa.field("label", pa.string()),
+        # Always written (possibly empty); never null, so blank handling in the
+        # typed writer never has to invent an empty list.
+        pa.field("synonyms", pa.list_(pa.string()), nullable=False),
+    ]
+)
+
+
+# rnac ensembl pseudogenes -> ensembl-pseudogenes.parquet
+# Source: files/import-data/load/ensembl-pseudogenes.ctl
+ENSEMBL_PSEUDOGENES = pa.schema(
+    [
+        pa.field("gene", pa.string(), nullable=False),
+        pa.field("region_name", pa.string(), nullable=False),
+        pa.field("chromosome", pa.string(), nullable=False),
+        pa.field("strand", pa.int32(), nullable=False),
+        pa.field("assembly_id", pa.string(), nullable=False),
+        pa.field("exon_count", pa.int32(), nullable=False),
+        pa.field("exon_start", pa.int64(), nullable=False),
+        pa.field("exon_stop", pa.int64(), nullable=False),
+    ]
+)
+
+
+# rnac rfam families -> rfam-families.parquet
+# Source: files/import-data/load/rfam-families.ctl
+RFAM_FAMILIES = pa.schema(
+    [
+        pa.field("rfam_model_id", pa.string(), nullable=False),
+        pa.field("short_name", pa.string()),
+        pa.field("long_name", pa.string(), nullable=False),
+        pa.field("description", pa.string()),
+        pa.field("rfam_clan_id", pa.string()),
+        pa.field("seed_count", pa.int32(), nullable=False),
+        pa.field("full_count", pa.int32(), nullable=False),
+        pa.field("length", pa.int32(), nullable=False),
+        pa.field("domain", pa.string()),
+        pa.field("is_suppressed", pa.bool_(), nullable=False),
+        pa.field("rna_type", pa.string()),
+        pa.field("rfam_rna_type", pa.string()),
+        pa.field("so_rna_type", pa.string()),
+    ]
+)
+
+
+# rnac rfam clans -> rfam-clans.parquet
+# Source: files/import-data/load/rfam-clans.ctl
+RFAM_CLANS = pa.schema(
+    [
+        pa.field("rfam_clan_id", pa.string(), nullable=False),
+        pa.field("name", pa.string(), nullable=False),
+        pa.field("description", pa.string(), nullable=False),
+        pa.field("family_count", pa.int32(), nullable=False),
+    ]
+)
+
+
+# rnac ols lookup-terms -> ontology_terms.parquet
+# Source: files/import-data/load/ontology-terms.ctl
+#
+# Distinct from TERMS above: that is the 1-column list of referenced term ids
+# produced by the entry writers; this is the looked-up term metadata.
+ONTOLOGY_TERMS = pa.schema(
+    [
+        pa.field("ontology_term_id", pa.string()),
+        pa.field("ontology", pa.string()),
+        pa.field("name", pa.string()),
+        pa.field("definition", pa.string()),
+    ]
+)
+
+# ---------------------------------------------------------------------------
 # Logical name -> Postgres staging table name. Lifted from the INTO clauses
 # of files/import-data/load/*.ctl so the Parquet load path mirrors pgloader's
 # table targets exactly. Used by bin/load-parquet when it receives a logical
@@ -582,6 +702,13 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "compara": "load_compara",
     "taxonomy": "load_taxonomy",
     "rfam_ontology_mappings": "load_rfam_go_terms",
+    "assemblies": "load_assemblies",
+    "coordinate_systems": "load_coordinate_info",
+    "proteins": "load_protein_info",
+    "ensembl-pseudogenes": "load_ensembl_pseudogenes",
+    "rfam-families": "load_rfam_models",
+    "rfam-clans": "load_rfam_clans",
+    "ontology_terms": "load_ontology_terms",
 }
 
 

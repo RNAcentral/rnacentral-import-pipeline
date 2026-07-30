@@ -13,10 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import csv
-import operator as op
 import itertools as it
+import operator as op
+import re
+from pathlib import Path
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
+from rnacentral_pipeline.parquet_writers import row_writer
 
 from . import databases as db
 
@@ -50,13 +55,11 @@ def parse(data):
             if value and value != "NULL":
                 synonyms.add(value.replace('"', ""))
 
-        synonyms = ",".join('"%s"' % s for s in synonyms)
-        synonyms = "{%s}" % synonyms
         yield [
             "ENSEMBL:%s" % gene_id,
             description,
             symbol,
-            synonyms,
+            sorted(synonyms),
         ]
 
 
@@ -67,6 +70,18 @@ def fetch(connections, query_handle):
             yield protein
 
 
+def pg_array(values: list) -> str:
+    """
+    Render a list as the Postgres array literal pgloader expects, e.g.
+    ``{"a","b"}``. Only the CSV path needs this: parquet carries a real list
+    and DuckDB inserts it into load_protein_info.synonyms (text[]) directly.
+    """
+    return "{%s}" % ",".join('"%s"' % v for v in values)
+
+
 def write(connections, query, output):
     data = fetch(connections, query)
-    csv.writer(output).writerows(data)
+    if not is_parquet():
+        data = ([acc, desc, label, pg_array(syn)] for acc, desc, label, syn in data)
+    with row_writer(Path(output), schemas.PROTEINS) as writer:
+        writer.writerows(data)

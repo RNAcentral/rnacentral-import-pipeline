@@ -20,6 +20,7 @@ from pathlib import Path
 
 import click
 
+from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.ensembl import parser, pseudogenes, urls
 from rnacentral_pipeline.databases.ensembl.data import Division
 from rnacentral_pipeline.databases.ensembl.metadata import (
@@ -30,6 +31,7 @@ from rnacentral_pipeline.databases.ensembl.metadata import (
     proteins,
 )
 from rnacentral_pipeline.output_format import format_option
+from rnacentral_pipeline.parquet_writers import row_writer
 from rnacentral_pipeline.rnacentral.notify import slack
 from rnacentral_pipeline.writers import entry_writer
 
@@ -111,7 +113,8 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
 @click.argument("query", default="query.sql", type=click.File("r"))
 @click.argument("example_file", default="example-locations.json", type=click.File("r"))
 @click.argument("known_file", default="known-assemblies.sql", type=click.File("r"))
-@click.argument("output", default="assemblies.csv", type=click.File("w"))
+@click.argument("output", default="assemblies.csv", type=click.Path())
+@format_option
 def ensembl_write_assemblies(
     connections, query, example_file, known_file, output, db_url=None
 ):
@@ -120,20 +123,21 @@ def ensembl_write_assemblies(
     output to the given file.
     """
     assemblies.write(
-        connections, query, example_file, known_file, output, db_url=db_url
+        connections, query, example_file, known_file, Path(output), db_url=db_url
     )
 
 
 @cli.command("coordinate-systems")
 @click.argument("connections", default="databases.json", type=click.File("r"))
 @click.argument("query", default="query.sql", type=click.File("r"))
-@click.argument("output", default="coordinate_systems.csv", type=click.File("w"))
+@click.argument("output", default="coordinate_systems.csv", type=click.Path())
+@format_option
 def ensembl_coordinates(connections, query, output):
     """
     Turn the tsv from the ensembl query into a csv that can be imported into
     the database.
     """
-    coordinate_systems.write(connections, query, output)
+    coordinate_systems.write(connections, query, Path(output))
 
 
 @cli.command("karyotypes")
@@ -155,13 +159,14 @@ def ensembl_write_karyotypes(output, species):
 @cli.command("proteins")
 @click.argument("connections", default="databases.json", type=click.File("r"))
 @click.argument("query", default="query.sql", type=click.File("r"))
-@click.argument("output", default="proteins.csv", type=click.File("w"))
+@click.argument("output", default="proteins.csv", type=click.Path())
+@format_option
 def ensembl_proteins_cmd(connections, query, output):
     """
     This will process the ensembl protein information files. This assumes the
     file is sorted.
     """
-    proteins.write(connections, query, output)
+    proteins.write(connections, query, Path(output))
 
 
 @cli.command("compara")
@@ -180,10 +185,11 @@ def ensembl_compara(fasta, output):
 @cli.command("pseudogenes")
 @click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
 @click.argument("embl_file", type=click.File("r"))
-@click.argument("output", default="ensembl-pseudogenes.csv", type=click.File("w"))
+@click.argument("output", default="ensembl-pseudogenes.csv", type=click.Path())
+@format_option
 def ensembl_pseudogenes(division, embl_file, output):
     division = Division.from_name(division)
     genes = pseudogenes.parse(division, embl_file)
     genes = it.chain.from_iterable(g.writeable() for g in genes)
-    writer = csv.writer(output)
-    writer.writerows(genes)
+    with row_writer(Path(output), schemas.ENSEMBL_PSEUDOGENES) as writer:
+        writer.writerows(genes)

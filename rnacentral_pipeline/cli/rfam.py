@@ -51,16 +51,18 @@ def process_rfam(mapping_file, sequence_info, sequence_fasta, output):
 
 @cli.command("families")
 @click.argument("filename", default="data.tsv", type=click.File("r"))
-@click.argument("output", default="rfam-families.csv", type=click.File("w"))
+@click.argument("output", default="rfam-families.csv", type=click.Path())
+@format_option
 def rfam_group_families(filename, output):
-    rfam.families.from_file(filename, output)
+    rfam.families.from_file(filename, Path(output))
 
 
 @cli.command("clans")
 @click.argument("filename", default="data.tsv", type=click.File("r"))
-@click.argument("output", default="rfam-clans.csv", type=click.File("w"))
+@click.argument("output", default="rfam-clans.csv", type=click.Path())
+@format_option
 def rfam_group_clans(filename, output):
-    rfam.clans.from_file(filename, output)
+    rfam.clans.from_file(filename, Path(output))
 
 
 @cli.command("ontology-terms")
