@@ -18,7 +18,7 @@ process generic {
     --user $conn.user \
     --port $conn.port \
     < $query > raw.tsv
-  rnac rfam $name raw.tsv
+  rnac rfam $name raw.tsv rfam-${name}.${params.writer_format}
   """
 }
 

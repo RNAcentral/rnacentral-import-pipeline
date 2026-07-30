@@ -11,7 +11,7 @@ process lookup {
   path("terms*.${params.writer_format}")
 
   output:
-  path('ontology_terms.csv')
+  path("ontology_terms.${params.writer_format}")
 
   script:
   """
@@ -25,7 +25,7 @@ process lookup {
     [ -e "\$f" ] && parquet-to-csv "\$f" >> merged-terms.csv
   done
   sort -u merged-terms.csv >> unique-terms.txt
-  rnac ols lookup-terms unique-terms.txt ontology_terms.csv
+  rnac ols lookup-terms unique-terms.txt ontology_terms.${params.writer_format}
   """
 }
 

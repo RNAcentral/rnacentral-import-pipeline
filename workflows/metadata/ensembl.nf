@@ -13,7 +13,7 @@ process assemblies {
 
   script:
   """
-  rnac ensembl assemblies $connections $query $examples $known
+  rnac ensembl assemblies $connections $query $examples $known assemblies.${params.writer_format}
   """
 }
 
@@ -55,13 +55,13 @@ process proteins {
   path(query)
 
   output:
-  path('proteins.csv')
+  path("proteins.${params.writer_format}")
 
   when: params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run
 
   script:
   """
-  rnac ensembl proteins $connections $query proteins.csv
+  rnac ensembl proteins $connections $query proteins.${params.writer_format}
   """
 }
 
@@ -74,13 +74,13 @@ process coordinate_systems {
   path(query)
 
   output:
-  path('coordinate_systems.csv')
+  path("coordinate_systems.${params.writer_format}")
 
   when: params.databases.ensembl?.vertebrates?.run
 
   script:
   """
-  rnac ensembl coordinate-systems $connections $query coordinate_systems.csv
+  rnac ensembl coordinate-systems $connections $query coordinate_systems.${params.writer_format}
   """
 }
 
