@@ -24,6 +24,8 @@ import psycopg2.extras
 from attr.validators import instance_of as is_a
 from pypika import Order, Query, Table
 
+from rnacentral_pipeline.db import connect
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -267,7 +269,7 @@ def insert(conn, stats: DatabaseStats):
 
 def update_stats(db_url: str):
     db = Table("rnc_database")
-    with psycopg2.connect(db_url) as conn:
+    with connect(db_url) as conn:
         query = Query.from_(db).select(db.id, db.descr).where(db.alive == "Y")
         with conn.cursor() as cur:
             cur.execute(str(query))

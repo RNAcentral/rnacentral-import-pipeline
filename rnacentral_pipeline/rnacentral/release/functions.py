@@ -29,10 +29,12 @@ resolved against other objects until run time), so files are applied in plain
 import dataclasses as dc
 import hashlib
 import logging
-from pathlib import Path
 import typing as ty
+from pathlib import Path
 
 import psycopg2
+
+from rnacentral_pipeline import db
 
 LOGGER = logging.getLogger(__name__)
 
@@ -94,9 +96,7 @@ def discover(
 
 
 def _applied_shas(cur) -> ty.Dict[ty.Tuple[str, str], str]:
-    cur.execute(
-        f"SELECT schema_name, function_name, sha256 FROM {TRACKING_TABLE}"
-    )
+    cur.execute(f"SELECT schema_name, function_name, sha256 FROM {TRACKING_TABLE}")
     return {(s, n): sha for (s, n, sha) in cur.fetchall()}
 
 
@@ -115,7 +115,7 @@ def apply(db_url: str, dry_run: bool = False) -> ty.List[Function]:
     applied.
     """
     functions = discover(exclude_schemas=DEPLOY_EXCLUDE_SCHEMAS)
-    with psycopg2.connect(db_url) as conn:
+    with db.connect(db_url) as conn:
         with conn.cursor() as cur:
             todo = pending(cur, functions)
             if not todo:
@@ -149,7 +149,5 @@ def apply(db_url: str, dry_run: bool = False) -> ty.List[Function]:
         else:
             conn.commit()
 
-    LOGGER.info(
-        "%s %d function(s)", "Would apply" if dry_run else "Applied", len(todo)
-    )
+    LOGGER.info("%s %d function(s)", "Would apply" if dry_run else "Applied", len(todo))
     return todo

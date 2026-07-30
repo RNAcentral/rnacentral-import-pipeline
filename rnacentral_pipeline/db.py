@@ -16,6 +16,23 @@ limitations under the License.
 from contextlib import contextmanager
 
 import psycopg2
+from retry import retry
+
+
+@retry(
+    psycopg2.OperationalError, tries=6, delay=5, backoff=2, max_delay=120, jitter=(0, 5)
+)
+def connect(config, **options):
+    """
+    Open a connection, retrying transient refusals.
+
+    A busy server rejects connections before a backend exists ("too many
+    clients", "starting up"), which libpq reports as an OperationalError --
+    often the confusing "server sent an error response during SSL exchange".
+    Those clear on their own, so back off and try again.
+    """
+
+    return psycopg2.connect(config, **options)
 
 
 @contextmanager
@@ -24,7 +41,7 @@ def connection(config, commit_on_leave=True):
     Opens a connection to the datbase.
     """
 
-    conn = psycopg2.connect(config)
+    conn = connect(config)
     conn.set_session(autocommit=False)
     try:
         yield conn
@@ -70,7 +87,7 @@ def get_db_connection(config, **options):
     that is likely to crash.
     """
 
-    conn = psycopg2.connect(config, **options)
+    conn = connect(config, **options)
     conn.set_session(autocommit=False)
     conn.set_isolation_level(0)
     return conn
