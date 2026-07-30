@@ -1,0 +1,16 @@
+{
+  "content_b64": "ewogICJ0YXhJZCIgOiAiNDg5NyIsCiAgInNjaWVudGlmaWNOYW1lIiA6ICJTY2hpem9zYWNjaGFyb215Y2VzIGphcG9uaWN1cyIsCiAgImZvcm1hbE5hbWUiIDogInRydWUiLAogICJyYW5rIiA6ICJzcGVjaWVzIiwKICAiZGl2aXNpb24iIDogIkZVTiIsCiAgImxpbmVhZ2UiIDogIkV1a2FyeW90YTsgRnVuZ2k7IERpa2FyeWE7IEFzY29teWNvdGE7IFRhcGhyaW5vbXljb3RpbmE7IFNjaGl6b3NhY2NoYXJvbXljZXRlczsgU2NoaXpvc2FjY2hhcm9teWNldGFsZXM7IFNjaGl6b3NhY2NoYXJvbXljZXRhY2VhZTsgU2NoaXpvc2FjY2hhcm9teWNlczsgIiwKICAiZ2VuZXRpY0NvZGUiIDogIjEiLAogICJtaXRvY2hvbmRyaWFsR2VuZXRpY0NvZGUiIDogIjQiLAogICJzdWJtaXR0YWJsZSIgOiAidHJ1ZSIsCiAgImJpbm9taWFsIiA6ICJ0cnVlIiwKICAibWVyZ2VkIiA6ICJbMzAxNjEyMCwgMjA3NTU0NCwgNTg2MzgsIDU4NjM2XSIsCiAgImF1dGhvcml0eSIgOiAiWXVrYXdhICYgTWFraSwgMTkzMSIsCiAgIm90aGVyTmFtZXMiIDogWyAiSGFzZWdhd2FlYSBqYXBvbmljYSAoWXVrYXdhICYgTWFraSkgWS4gWWFtYWRhICYgSS4gQmFubm8sIDE5ODc6YXV0aG9yaXR5IiwgIlNjaGl6b3NhY2NoYXJvbXljZXMgamFwb25pY3VzIFl1a2F3YSAmIE1ha2ksIDE5MzE6YXV0aG9yaXR5IiwgIlNjaGl6b3NhY2NoYXJvbXljZXMgamFwb25pY3VzIHZhci4gdmVyc2F0aWxpcyBXaWNrLiAmIER1cHJhdCBleCBTbG9vZmYsIDE5NzA6YXV0aG9yaXR5IiwgIlNjaGl6b3NhY2NoYXJvbXljZXMgc3AuIEFmMTQ2SGctNi0xOmluY2x1ZGVzIiwgIlNjaGl6b3NhY2NoYXJvbXljZXMgamFwb25pY3VzIHZhci4gdmVyc2F0aWxpczpzeW5vbnltIiwgIlNjaGl6b3NhY2NoYXJvbXljZXMgamFwb25pY3VzIHZhci4gamFwb25pY3VzOnN5bm9ueW0iLCAiSGFzZWdhd2FlYSBqYXBvbmljYTpzeW5vbnltIiBdLAogICJtZXRhZ2Vub21lIiA6ICJmYWxzZSIKfQ==",
+  "encoding": "utf-8",
+  "headers": {
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "Date": "Wed, 29 Jul 2026 14:18:36 GMT",
+    "Keep-Alive": "timeout=60",
+    "Strict-Transport-Security": "max-age=0",
+    "Transfer-Encoding": "chunked",
+    "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+  },
+  "reason": "",
+  "status_code": 200,
+  "url": "https://www.ebi.ac.uk/ena/taxonomy/rest/tax-id/4897"
+}
