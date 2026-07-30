@@ -64,8 +64,25 @@ def parquet_columns(con: duckdb.DuckDBPyConnection, parquet_glob: str) -> list[s
     ]
 
 
+def _extension_home() -> Path:
+    """
+    Directory DuckDB may use for its extension cache (``<home>/.duckdb``).
+
+    The load processes run the container with ``--contain``, which isolates
+    $HOME, so DuckDB's default home ('/homes/rnaprod' on the cluster) does not
+    exist inside the task and ``INSTALL`` fails before it can do anything.
+    DUCKDB_HOME points at a writable, bind-mounted directory shared by every
+    task, so the extension is downloaded once rather than per task; the cwd
+    fallback keeps a bare `bin/load-parquet` run working outside Nextflow.
+    """
+    home = Path(os.environ.get("DUCKDB_HOME") or Path.cwd())
+    home.mkdir(parents=True, exist_ok=True)
+    return home
+
+
 def _connect(pg_url: str) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
+    con.execute(f"SET home_directory = '{_extension_home()}'")
     con.execute("INSTALL postgres")
     con.execute("LOAD postgres")
     con.execute(f"ATTACH '{pg_url}' AS pg (TYPE postgres)")
