@@ -141,7 +141,12 @@ type_scores = {
     "R2DT": 100,  ## Can be very specific
 }
 
-so_graph = obo.read_obo(SO_ONTOLOGY_URL)
+@lru_cache()
+def get_so_graph():
+    # Lazy: every `rnac` command imports this module (cli/genes -> classify ->
+    # here), so an import-time fetch broke commands that never use the ontology.
+    return obo.read_obo(SO_ONTOLOGY_URL)
+
 
 # Generic "ncRNA" SO term. Any SO id we can't find in the loaded ontology
 # (renamed/removed across SO releases, or never present) gets short-circuited
@@ -155,7 +160,7 @@ def normalize_so_type(so_type):
     None and any id that is not a node in so_graph collapse to the generic
     ncRNA term, which is guaranteed to be present.
     """
-    if so_type is not None and so_type in so_graph:
+    if so_type is not None and so_type in get_so_graph():
         return so_type
     return GENERIC_NCRNA
 
@@ -998,7 +1003,7 @@ def calculate_type_specificity(so_type):
     # rather than blowing up (NodeNotFound) or being heavily penalised.
     so_type = normalize_so_type(so_type)
     try:
-        return nx.shortest_path_length(so_graph, so_type, "SO:0000673")
+        return nx.shortest_path_length(get_so_graph(), so_type, "SO:0000673")
     except (nx.NetworkXNoPath, nx.NodeNotFound):
         return -1000
 

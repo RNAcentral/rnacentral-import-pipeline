@@ -7,6 +7,7 @@ include { batch_lookup_ontology_information } from './workflows/lookup-ontology-
 include { parse_databases } from './workflows/parse-databases'
 include { parse_metadata } from './workflows/parse-metadata'
 include { load_data } from './workflows/load-data'
+include { qc_import } from './workflows/utils/qc'
 include { slack_message } from './workflows/utils/slack'
 include { slack_closure } from './workflows/utils/slack'
 
@@ -35,7 +36,8 @@ workflow import_data {
     | load_data \
     | set { post_release }
 
-
+    // Final import step: QC — per-database rows imported this release.
+    post_release | qc_import
 
   emit: post_release
 }
