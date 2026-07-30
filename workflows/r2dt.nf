@@ -12,7 +12,7 @@ process fetch_model_mapping {
   output:
   path('mapping.json')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """
@@ -21,14 +21,14 @@ process fetch_model_mapping {
 }
 
 process get_partitions {
-  when: { params.r2dt?.run }
-
   input:
   val(_flag)
   path(query)
 
   output:
   path('databases.csv')
+
+  when: params.r2dt?.run
 
   script:
   """
@@ -41,13 +41,13 @@ process get_partitions {
 
 
 process fetch_xrefs {
-  when: { params.r2dt?.run }
-
   input:
   tuple val(partition), path(query)
 
   output:
   path('urs_xref.csv')
+
+  when: params.r2dt?.run
 
   script:
   """
@@ -60,14 +60,14 @@ process fetch_xrefs {
 }
 
 process fetch_tracked {
-  when: { params.r2dt?.run }
-
   input:
   val(_flag)
   path(query)
 
   output:
   path('urs_tracked.csv')
+
+  when: params.r2dt?.run
 
   script:
   """
@@ -90,7 +90,7 @@ process extract_sequences {
   output:
   path('raw.json')
 
-  when: { params.r2dt?.run }
+  when: params.r2dt?.run
 
   script:
   """
@@ -148,7 +148,7 @@ process layout_sequences {
 
 process publish_layout {
   maxForks 50
-  errorStrategy { task.attempt < 5 ? "retry" : "ignore" }
+  errorStrategy { task.attempt < 5 ? "retry" : "finish" }
   maxRetries 5
   queue 'datamover'
   memory { 1.GB * task.attempt }
@@ -163,7 +163,7 @@ process publish_layout {
   """
   rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
   rnac r2dt prepare-s3 --allow-missing $mapping $output for-upload file-list
-  update-svg.sh file-list $params.r2dt.s3.env
+  rnac r2dt upload-s3 --env $params.r2dt.s3.env file-list
   """
 }
 
@@ -176,12 +176,13 @@ process parse_layout {
 
   output:
   path "data.csv", emit: data
-  path 'attempted.csv', emit: attempted
+  path "attempted.${params.writer_format}", emit: attempted
 
   script:
+  def attempted_out = "attempted.${params.writer_format}"
   """
   rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
-  rnac r2dt create-attempted $sequences $version attempted.csv
+  rnac r2dt create-attempted $sequences $version $attempted_out
   """
 }
 
@@ -191,8 +192,9 @@ process store_secondary_structures {
   input:
   path('data*.csv')
   path(ctl)
-  path('attempted*.csv')
+  path("attempted*.${params.writer_format}")
   path(attempted_ctl)
+  path(attempted_post_load)
   path(urs_sql)
   path(model)
   path(should_show_ctl)
@@ -202,9 +204,18 @@ process store_secondary_structures {
   val('r2dt done')
 
   script:
+  // Hits side (data*.csv) and should-show stay on the legacy pgloader path
+  // for now; only the attempted side has been migrated to parquet.
+  def attempted_cmd = (params.writer_format == 'parquet') ?
+    """
+    load-parquet load_traveler_attempted 'attempted*.parquet' \\
+      --truncate \\
+      --post-load $attempted_post_load
+    """ :
+    "split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted"
   """
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
-  split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted
+  $attempted_cmd
 
   psql -f "$urs_sql" "\$PGDATABASE" > urs.txt
   rnac r2dt should-show compute $model urs.txt should-show.csv
@@ -215,7 +226,7 @@ process store_secondary_structures {
 workflow common {
   take: ready
   main:
-    Channel.fromPath('files/r2dt/model_mapping.sql') | set { query }
+    channel.fromPath('files/r2dt/model_mapping.sql') | set { query }
 
     fetch_model_mapping(ready, query) | set { mapping }
   emit: mapping
@@ -225,15 +236,16 @@ workflow r2dt {
   take: ready
   main:
     if (params.r2dt.run) {
-      Channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
-      Channel.fromPath("files/r2dt/fetch-partition-xref.sql") | set { xref_sql }
-      Channel.fromPath("files/r2dt/fetch-tracked.sql") | set { tracked_sql }
-      Channel.fromPath("files/r2dt/fetch-partitions.sql") | set { partitions_sql }
-      Channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
-      Channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
-      Channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
-      Channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
-      Channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+      channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
+      channel.fromPath("files/r2dt/fetch-partition-xref.sql") | set { xref_sql }
+      channel.fromPath("files/r2dt/fetch-tracked.sql") | set { tracked_sql }
+      channel.fromPath("files/r2dt/fetch-partitions.sql") | set { partitions_sql }
+      channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
+      channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
+      channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
+      channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
+      channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+      channel.fromPath('files/r2dt/attempted-post-load.sql') | set { attempted_post_load }
 
       model_info(ready) | set { models_ready }
 
@@ -266,13 +278,13 @@ workflow r2dt {
 
       publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
 
-      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, uploaded) | set { done }
     } else {
-      Channel.of('r2dt skipped') | set { done }
+      channel.of('r2dt skipped') | set { done }
     }
   emit: done
 }
 
 workflow {
-  r2dt(Channel.from('ready'))
+  r2dt(channel.from('ready'))
 }

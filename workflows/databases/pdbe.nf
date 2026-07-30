@@ -3,9 +3,9 @@ process pdbe {
   maxRetries 5
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
-  when: { params.databases.pdb?.run }
+  when: params.databases.pdb?.run
 
   script:
   """

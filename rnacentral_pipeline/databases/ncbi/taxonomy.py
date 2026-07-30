@@ -28,6 +28,10 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 from sqlitedict import SqliteDict
 
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
+from rnacentral_pipeline.parquet_writers import typed_parquet_writer
+
 NAME_ALIASES = {
     "common name",
     "equivalent name",
@@ -146,6 +150,20 @@ def parse_directory(
 
 
 def write(directory: Path, output, ref_proteomes_path=None):
+    if isinstance(output, (str, Path)):
+        path = Path(output)
+        if is_parquet():
+            with typed_parquet_writer(path, schemas.TAXONOMY) as writer:
+                for entry in parse_directory(directory, ref_proteomes_path=ref_proteomes_path):
+                    for row in entry.writeable():
+                        writer.writerow(row)
+            return
+        with path.open("w") as handle:
+            writer = csv.writer(handle)
+            for entry in parse_directory(directory, ref_proteomes_path=ref_proteomes_path):
+                writer.writerows(entry.writeable())
+        return
+
     writer = csv.writer(output)
     for entry in parse_directory(directory, ref_proteomes_path=ref_proteomes_path):
         writer.writerows(entry.writeable())

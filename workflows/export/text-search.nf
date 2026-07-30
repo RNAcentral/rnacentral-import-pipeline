@@ -55,7 +55,7 @@ process atomic_publish {
 workflow text_search {
   take: _flag
   main:
-    Channel.fromPath('files/search-export/post-publish.sql') | set { post }
+    channel.fromPath('files/search-export/post-publish.sql') | set { post }
 
     sequences()
 
@@ -77,5 +77,5 @@ workflow text_search {
 }
 
 workflow {
-  text_search(Channel.of('ready'))
+  text_search(channel.of('ready'))
 }

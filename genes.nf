@@ -2,6 +2,8 @@
 
 nextflow.enable.dsl=2
 
+include { qc_genes } from './workflows/utils/qc'
+
 process fetch_taxids {
 
   input:
@@ -239,13 +241,13 @@ process store_metadata {
 workflow genes {
   // _flag is an ordering trigger so this stage can be chained after upstream
   // stages in main.nf. It is not otherwise used: the pipeline is driven by
-  // params.genes. Standalone runs pass Channel.of(true) (see entry below).
+  // params.genes. Standalone runs pass channel.of(true) (see entry below).
   take: _flag
 
   main:
-  Channel.of(true) | fetch_so_model | set { so_model }
-  Channel.of(true) | fetch_rf_model | set { rf_model }
-  Channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
+  channel.of(true) | fetch_so_model | set { so_model }
+  channel.of(true) | fetch_rf_model | set { rf_model }
+  channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
 
   taxa \
   | splitCsv \
@@ -286,10 +288,13 @@ workflow genes {
   | store_metadata \
   | set { done }
 
+  // QC: summarise genes created/updated this run once every taxon is stored.
+  done | qc_genes
+
   emit: done
 }
 
 
 workflow {
-  genes(Channel.of(true))
+  genes(channel.of(true))
 }

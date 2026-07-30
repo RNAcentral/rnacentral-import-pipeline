@@ -1,6 +1,5 @@
 process list_subdirs {
   tag { "$name" }
-  when { params.databases.ena.run }
   queue 'datamover'
   containerOptions "${params.common_container} --bind /nfs:/nfs"
   time '1h'
@@ -11,6 +10,9 @@ process list_subdirs {
   output:
   tuple val(name), path("${name}-dirs.txt")
 
+  when: params.databases.ena.run
+
+  script:
   """
   find -L ${path} -mindepth 1 -maxdepth 1 -type d > ${name}-dirs.txt
   """
@@ -28,7 +30,7 @@ process fetch_directory {
   output:
   path("${name}-chunks/*.ncr"), optional: true
 
-  when: { params.databases.ena?.run }
+  when: params.databases.ena?.run
 
   script:
   """
@@ -65,7 +67,7 @@ process fetch_metadata {
   output:
   tuple path('tpa.tsv'), path('model-lengths.csv')
 
-  when: { params.databases.ena?.run }
+  when: params.databases.ena?.run
 
   script:
   """
@@ -83,7 +85,7 @@ process process_file {
   tuple path(raw), path(tpa), path(model_lengths)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """
@@ -101,12 +103,11 @@ process process_file {
 }
 
 workflow ena {
-  emit: data
   main:
-    Channel.fromPath('files/import-data/ena/tpa-urls.txt') | set { urls }
+    channel.fromPath('files/import-data/ena/tpa-urls.txt') | set { urls }
     fetch_metadata(urls) | set { metadata }
 
-    Channel.fromList([
+    channel.fromList([
       ['wgs', "$params.databases.ena.remote/wgs/"],
       ['tls', "$params.databases.ena.remote/tls/"],
       ['tsa', "$params.databases.ena.remote/tsa/"],
@@ -114,13 +115,13 @@ workflow ena {
     | list_subdirs \
     | flatMap { name, listing ->
         listing.readLines()
-          .findAll { it.trim() }
+          .findAll { line -> line.trim() }
           .collate( params.databases.ena.subdir_batch_size )
-          .collect { batch -> [name, batch.collect { it.trim() }] }
+          .collect { batch -> [name, batch.collect { s -> s.trim() }] }
       } \
     | set { subdir_batches }
 
-    Channel.fromList([
+    channel.fromList([
       ['con', ["$params.databases.ena.remote/con/"]],
       ['std', ["$params.databases.ena.remote/std/"]],
     ]) \
@@ -130,4 +131,6 @@ workflow ena {
     | combine(metadata) \
     | process_file \
     | set { data }
+
+  emit: data
 }

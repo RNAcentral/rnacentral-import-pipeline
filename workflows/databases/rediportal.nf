@@ -7,8 +7,6 @@ process build_rnc_bedfile {
   output:
     tuple val(assembly_id), path("rnc_regions.bed")
 
-  when: { params.databases.rediportal?.run }
-
   script:
   """
   set -euo pipefail
@@ -29,8 +27,6 @@ process fetch_rediportal_inputs {
   output:
     tuple val(assembly_id), val(genome_build), path("rediportal.txt"), path("rediportal.bed")
 
-  when: { params.databases.rediportal?.run }
-
   script:
   """
   set -euo pipefail
@@ -48,11 +44,12 @@ process intersect_rnc_rediportal {
     tuple val(assembly_id), path(rnc_bed), val(genome_build), path(redi_meta), path(redi_bed)
 
   output:
-    path("features.csv")
+    path("features.${params.writer_format}")
 
   script:
+  def out = "features.${params.writer_format}"
   """
-  rnac rediportal parse-bed --genome-build "$genome_build" $redi_bed $redi_meta $rnc_bed features.csv
+  rnac rediportal parse-bed --genome-build "$genome_build" $redi_bed $redi_meta $rnc_bed $out
   """
 }
 
@@ -61,25 +58,34 @@ process load_rediportal {
   memory 6.GB
 
   input:
-    tuple path(features), path(ctl)
+    tuple path("raw*.${params.writer_format}"), path(ctl), path(post_load)
 
   output:
     val('rediportal done')
 
   script:
-  """
-  split-and-load $ctl *.csv ${params.databases.rediportal.chunk_size} rediportal-data
-  """
+  if (params.writer_format == 'parquet') {
+    """
+    load-parquet load_rediportal_features 'raw*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    """
+  } else {
+    """
+    split-and-load $ctl 'raw*.csv' ${params.databases.rediportal.chunk_size} rediportal-data
+    """
+  }
 
 }
 
 workflow rediportal {
-  take: ready
+  take: _ready
   main:
     if( params.databases.rediportal?.run ) {
-      Channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
-      Channel.fromPath("files/rediportal/load.ctl") | set { load_query }
-      Channel
+      channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
+      channel.fromPath("files/rediportal/load.ctl") | set { load_query }
+      channel.fromPath("files/rediportal/post-load.sql") | set { post_load }
+      channel
         .fromList(params.databases.rediportal.inputs)
         .map { input -> tuple(input.assembly_id, input.genome_build, input.remote) }
         | set { redi_inputs }
@@ -103,12 +109,13 @@ workflow rediportal {
         }
         | intersect_rnc_rediportal
         | combine(load_query)
+        | combine(post_load)
         | load_rediportal
         | set { done }
 
     }
     else {
-      Channel.of('rediportal not run') | set { done }
+      channel.of('rediportal not run') | set { done }
     }
 
   emit: done
@@ -116,5 +123,5 @@ workflow rediportal {
 
 
 workflow {
-  rediportal(Channel.of('ready'))
+  rediportal(channel.of('ready'))
 }

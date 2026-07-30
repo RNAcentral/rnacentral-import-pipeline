@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 process dump_data {
-  container ''
+  
   time '2d'
 
   output:
@@ -14,7 +14,7 @@ process dump_data {
   """
   export PGPASSWORD='${prod.password}'
 
-  /usr/pgsql-11/bin/pg_dump \
+  pg_dump \
     -h ${prod.host} -U ${prod.user} -d ${prod.db_name} -j 4 --schema ${prod.schema} -F d -O -f 'prod-dump' \
     --exclude-table=auth_group \
     --exclude-table=auth_group_permissions \
@@ -48,7 +48,7 @@ process dump_data {
 }
 
 process populate_public {
-  container ''
+  
   time '4d'
 
   input:
@@ -62,7 +62,7 @@ process populate_public {
   psql -c "ALTER ROLE rnacen SET statement_timeout = '2d';" \$PUBLIC
 
   export PGPASSWORD='${public_db.password}'
-  /usr/pgsql-10/bin/pg_restore -x -h ${public_db.host} -U ${public_db.user} -d ${public_db.db_name} -j 2 $dump_file
+  pg_restore -x -h ${public_db.host} -U ${public_db.user} -d ${public_db.db_name} -j 2 $dump_file
 
   psql -c 'revoke usage on schema rnacen from public' \$PUBLIC
   psql -c 'grant usage on schema rnacen to reader' \$PUBLIC

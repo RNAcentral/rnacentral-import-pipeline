@@ -3,13 +3,13 @@
 nextflow.enable.dsl=2
 
 process build_ranges {
-  when: { params.stopfree?.run }
-
   input:
   val(_flag)
 
   output:
   path('ranges.csv')
+
+  when: params.stopfree?.run
 
   script:
   def chunk_size = params.stopfree.db_chunk_size
@@ -27,7 +27,7 @@ process find_sequences {
   output:
   path('sequences/*.fasta'), optional: true
 
-  when: { params.stopfree?.run }
+  when: params.stopfree?.run
 
   script:
   """
@@ -45,7 +45,7 @@ process stopfree_scan {
   path(sequences)
 
   output:
-  path("results.csv")
+  path("results.${params.writer_format}")
 
   script:
   """
@@ -57,28 +57,37 @@ process store_results {
   memory 9.GB
 
   input:
-  path('results*.csv')
+  path("results*.${params.writer_format}")
   path(result_ctl)
+  path(post_load)
 
-  when: { params.stopfree?.load }
+  when: params.stopfree?.load
 
   script:
-  """
-  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} stopfree-results
-  """
+  if (params.writer_format == 'parquet')
+    """
+    load-parquet load_stopfree 'results*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    """
+  else
+    """
+    split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} stopfree-results
+    """
 }
 
 workflow stopfree {
-  take: flag
+  take: _flag
   main:
     if( !params.stopfree.run ) {
-      Channel.of('stopfree skipped') | set { done }
+      channel.of('stopfree skipped') | set { done }
     } else {
 
     def query = file(params.stopfree.query)
     def load_ctl = file('files/stopfree/stopfree.ctl')
+    def post_load = file('files/stopfree/post-load.sql')
 
-    def fasta_ch = Channel.of('ready') \
+    def fasta_ch = channel.of('ready') \
       | build_ranges \
       | splitCsv \
       | map { _table, min, max -> [min, max, query] } \
@@ -90,12 +99,12 @@ workflow stopfree {
 
     stopfree_scan.out | collect | set { data }
 
-    store_results(data, load_ctl)
-    data | map { _ -> 'stopfree done' } | first | set { done }
+    store_results(data, load_ctl, post_load)
+    data | map { _v -> 'stopfree done' } | set { done }
     }
   emit: done
 }
 
 workflow {
-  stopfree(Channel.of('ready'))
+  stopfree(channel.of('ready'))
 }
