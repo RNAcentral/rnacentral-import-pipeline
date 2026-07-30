@@ -249,8 +249,8 @@ workflow qc_genes {
   emit: report
 }
 
-// Export QC: validate published FTP files -> report (Slack + console); full
-// release summary -> file only (too big for Slack).
+// Export QC: validate published FTP files -> report (Slack + console); search
+// index comparison (www vs wwwdev facet counts) -> file only, too big for Slack.
 process qc_export_report {
   cache false
   errorStrategy 'ignore'
@@ -259,15 +259,13 @@ process qc_export_report {
 
   input:
   val(_ready)
-  path(query)
 
   output:
-  path('export-qc-report.txt'), emit: report
-  path('export-summary.txt'),   emit: summary
+  path('export-qc-report.txt'),          emit: report
+  path('search-index-comparison.tsv'),   emit: comparison
 
   script:
   def pubdir = params.export?.ftp?.publish ?: ''
-  def run_start = workflow.start ?: ''
   def notify = params.get('notify', false)
   def fence = '```'
   def slack = notify ? """
@@ -281,7 +279,6 @@ process qc_export_report {
   """ : "true"
   """
   report="export-qc-report.txt"
-  summary="export-summary.txt"
   pubdir="${pubdir}"
 
   # 1. Validate the published FTP files -> report (small, Slack + console).
@@ -315,11 +312,8 @@ process qc_export_report {
     fi
   } | tee "\$report"
 
-  # 2. Full release summary -> file only (too big for Slack).
-  {
-    ${qc_header('release summary')}
-    psql -q -P pager=off -v run_start='${run_start}' -f ${query} "\$PGDATABASE" 2>&1
-  } > "\$summary"
+  # 2. Search index comparison (www vs wwwdev) -> file only, too big for Slack.
+  rnac search-export compare search-index-comparison.tsv || echo "search-export compare failed" > search-index-comparison.tsv
 
   ${slack}
   """
@@ -328,7 +322,7 @@ process qc_export_report {
 workflow qc_export {
   take: ready
   main:
-    qc_export_report(ready.collect(), file('files/qc/export.sql')) \
+    qc_export_report(ready.collect()) \
     | set { out }
     print_report(out.report)
   emit: out.report

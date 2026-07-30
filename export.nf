@@ -13,7 +13,7 @@ workflow export {
   main:
     ready | (text_search & ftp & sequence_search) | mix | collect | set { done }
 
-    // Final QC: validate published FTP files + publish the release summary.
+    // Final QC: validate published FTP files + search index comparison.
     done | qc_export
   emit: done
 }
