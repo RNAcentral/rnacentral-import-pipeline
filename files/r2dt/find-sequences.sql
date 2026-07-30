@@ -27,7 +27,6 @@ AND NOT EXISTS (
     'SO:0002185', -- bidirectional_promoter_lncrna
     'SO:0002120', -- 3prime_overlapping_ncrna
     'SO:0000644', -- antisense_RNA
-    'SO:0001035', -- piRNA
     'SO:0000646', -- siRNA
     'SO:0000454'  -- rasiRNA
   )
