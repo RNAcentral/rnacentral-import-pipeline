@@ -9,13 +9,13 @@ ANALYZE urs_to_fetch;
 -- model (eg. drawing a tRNA for a lncRNA). Excluded if *any* xref gives the type.
 --
 -- Built as a table rather than a correlated NOT EXISTS. xref is partitioned on
--- dbid, so a probe by upi alone cannot prune and has to sweep every partition;
+-- dbid, so a probe by urs alone cannot prune and has to sweep every partition;
 -- correlated, that sweep happens once per candidate URS. Driving from
 -- urs_to_fetch bounds it to one pass.
 CREATE TEMP TABLE excluded AS
-SELECT DISTINCT x.upi
+SELECT DISTINCT x.urs
 FROM urs_to_fetch u
-JOIN xref x ON x.upi = u.urs
+JOIN xref x ON x.urs = u.urs
 JOIN rnc_accessions acc ON acc.accession = x.ac
 WHERE acc.rna_type IN (
   'SO:0002291', -- circRNA
@@ -27,7 +27,7 @@ WHERE acc.rna_type IN (
   'SO:0000454'  -- rasiRNA
 );
 
-CREATE INDEX ON excluded (upi);
+CREATE INDEX ON excluded (urs);
 ANALYZE excluded;
 
 COPY (
