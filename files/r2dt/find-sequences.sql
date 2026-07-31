@@ -1,8 +1,3 @@
--- Parallel workers could not get a 16MB DSM segment ("No space left on device"),
--- which means /dev/shm on the database host, not this query. Run serially until
--- that is sorted.
-SET max_parallel_workers_per_gather = 0;
-
 CREATE TEMP TABLE urs_to_fetch (urs text);
 
 \copy urs_to_fetch FROM 'urs_to_fetch.csv' DELIMITER ',' CSV HEADER;
