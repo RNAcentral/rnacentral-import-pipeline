@@ -92,20 +92,20 @@ BEGIN
         p.seq_short prot_seq_short,
         p.seq_long prot_seq_long,
         p.len prot_len,
-        P.UPI PROT_UPI
+        P.URS PROT_UPI
       FROM rnacen.rna p RIGHT OUTER JOIN distinct_loaded_rows l ON (p.md5 = l.md5) ) alias1' USING p_in_dbid, p_in_load_release;
 */
 
     EXECUTE 'drop table if exists distinct_loaded_rows_tmp';
 
     EXECUTE '
-      create temporary table distinct_loaded_rows_tmp 
-          on commit preserve rows 
+      create temporary table distinct_loaded_rows_tmp
+          on commit preserve rows
       as
       select distinct crc64, len, seq_short, seq_long my_seq_long, ac, version, taxid, md5
         from load_rnacentral
     ';
-                        
+
     EXECUTE 'analyze distinct_loaded_rows_tmp';
 
     insert into load_retro_tmp (
@@ -122,7 +122,7 @@ BEGIN
         comparable_prot_upi
       )
     select
-      p_in_dbid, 
+      p_in_dbid,
       p_in_load_release,
       in_crc64,
       in_len,
@@ -175,7 +175,7 @@ BEGIN
         p.seq_short prot_seq_short,
         p.seq_long prot_seq_long,
         p.len prot_len,
-        p.upi prot_upi
+        p.urs prot_upi
       from rna p right outer join distinct_loaded_rows_tmp l on (p.md5 = l.md5) ) alias1;
 
     --COMMIT;
@@ -185,4 +185,3 @@ BEGIN
   END;
 
 $function$
-

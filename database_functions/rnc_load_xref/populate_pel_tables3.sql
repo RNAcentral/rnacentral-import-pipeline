@@ -10,7 +10,7 @@ BEGIN
         DBID,
         VERSION,
         VERSION_I,
-        UPI,
+        URS,
         CREATED,
         LAST,
         DELETED,
@@ -27,7 +27,7 @@ BEGIN
           THEN 1
         WHEN LUMV.UPI = T.COMPARABLE_PROT_UPI  -- same UPI, keep old VERSION_I
           THEN T.MAX_PREVIOUS_XREF_VERSION_I
-        ELSE T.MAX_PREVIOUS_XREF_VERSION_I + 1 -- updated UPI, update VERSION_I
+        ELSE T.MAX_PREVIOUS_XREF_VERSION_I + 1 -- updated URS, update VERSION_I
       END,
       T.COMPARABLE_PROT_UPI UPI,
       T.IN_LOAD_RELEASE CREATED,
@@ -58,16 +58,16 @@ BEGIN
     -- Gap A: new sequences for accessions that ALREADY have active rows.
     -- The block above only covers accessions with NO current active row (that is
     -- baked into load_upi_max_versions_table's NOT EXISTS deleted='N' filter). Now
-    -- that populate_pel_tables1/2 join on (ac, upi), an incoming sequence whose
+    -- that populate_pel_tables1/2 join on (ac, urs), an incoming sequence whose
     -- (ac, comparable_prot_upi) is not currently active has no other insert path,
     -- so handle it here. Disjoint from the block above (EXISTS active row) and from
-    -- tables1/2 (which require a MATCHING active upi). On a no-change reload the
+    -- tables1/2 (which require a MATCHING active urs). On a no-change reload the
     -- inner NOT EXISTS is always false, so this inserts nothing.
     -- version_i choice: next generation for the accession, i.e. max(version_i)+1,
-    -- matching this function's existing "updated UPI -> max+1" rule. REVIEW if
+    -- matching this function's existing "updated URS -> max+1" rule. REVIEW if
     -- multi-sequence accessions need different version_i semantics.
     INSERT INTO RNACEN.XREF_PEL_NOT_DELETED(
-        AC, DBID, VERSION, VERSION_I, UPI, CREATED, LAST, DELETED, TAXID, TIMESTAMP, USERSTAMP
+        AC, DBID, VERSION, VERSION_I, URS, CREATED, LAST, DELETED, TAXID, TIMESTAMP, USERSTAMP
       )
     SELECT
       L.IN_AC,
@@ -105,4 +105,3 @@ BEGIN
   END;
 
 $function$
-

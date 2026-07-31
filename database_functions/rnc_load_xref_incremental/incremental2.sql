@@ -17,7 +17,7 @@ BEGIN
         dbid,
         version,
         version_i,
-        upi,
+        urs,
 
         created,
         last,
@@ -81,4 +81,3 @@ BEGIN
   END;
 
 $function$
-

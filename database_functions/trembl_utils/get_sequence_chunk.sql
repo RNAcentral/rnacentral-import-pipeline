@@ -15,9 +15,8 @@ BEGIN
       SELECT substr(seq_long,sub_start,chunksize)
       INTO   clobString
       FROM   rnacen.rna
-      WHERE  upi = p_upi_id;
+      WHERE  urs = p_upi_id;
       RETURN clobString;
    END;
 
 $function$
-
