@@ -195,10 +195,24 @@ def _fetch_batch(batch: ty.List[str]) -> ty.List[dict]:
         )
         response.raise_for_status()
     except requests.exceptions.RequestException as err:
-        # The session has already retried 429/5xx and connection errors, so this
-        # is a persistent failure. Returning [] here would drop up to 50 genes
-        # from the parse output, and an incremental load retires by absence --
-        # a flaky Ensembl would silently retire live xrefs. Fail loudly instead.
+        status = getattr(err.response, "status_code", None)
+        # A 4xx other than 429 is deterministic: some id in the batch is withdrawn
+        # or invalid (Ensembl 400s the whole POST for one bad id). Bisect to isolate
+        # it rather than losing the other 49, and never fail the run over it.
+        if status is not None and 400 <= status < 500 and status != 429:
+            if len(batch) == 1:
+                LOGGER.warning(
+                    "No Ensembl sequence for %s (HTTP %d) -- skipping record",
+                    batch[0],
+                    status,
+                )
+                return []
+            half = len(batch) // 2
+            return _fetch_batch(batch[:half]) + _fetch_batch(batch[half:])
+        # 429/5xx/network: the session has already retried these, so it is a
+        # persistent failure. Returning [] would drop up to 50 genes, and an
+        # incremental load retires by absence -- a flaky Ensembl would silently
+        # retire live xrefs. Fail loudly instead.
         raise RuntimeError(
             "Ensembl cdna lookup failed for a batch of %i genes" % len(batch)
         ) from err
