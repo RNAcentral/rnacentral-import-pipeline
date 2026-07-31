@@ -18,28 +18,31 @@ from pathlib import Path
 import attr
 import pytest
 
-from rnacentral_pipeline.rnacentral.r2dt import ribovore
+from rnacentral_pipeline import ribovore
+from rnacentral_pipeline.databases.data import RibovoreResult
+from rnacentral_pipeline.rnacentral.r2dt import ribovore as r2dt_ribovore
 
 
 @pytest.mark.r2dt
 @pytest.mark.parametrize(
     "filename,count",
     [
-        ("data/traveler/crw/crw.ribotyper.long.out", 1),
-        ("data/traveler/failed-data.ribotyper.long.out", 12),
+        ("data/r2dt/crw/crw.ribotyper.long.out", 1),
+        ("data/r2dt/failed-data.ribotyper.long.out", 16),
+        ("data/r2dt/ribovision/.ribotyper.long.out", 300),
     ],
 )
 def test_can_parse_whole_file(filename, count):
-    assert len(list(ribovore.parse(Path(filename)))) == count
+    assert len(list(ribovore.parse_file(Path(filename)))) == count
 
 
 @pytest.mark.r2dt
 def test_can_parse_a_simple_result():
-    path = Path("data/traveler/crw/crw.ribotyper.long.out")
-    data = list(ribovore.parse(path))
-    assert len(data) == 1
-    assert attr.asdict(data[0]) == attr.asdict(
-        ribovore.RibovoreResult(
+    path = Path("data/r2dt/crw/crw.ribotyper.long.out")
+    results = list(ribovore.parse_file(path))
+    assert len(results) == 1
+    assert attr.asdict(results[0]) == attr.asdict(
+        RibovoreResult(
             target="URS00000F9D45_9606",
             status="PASS",
             length=1588,
@@ -63,10 +66,22 @@ def test_can_parse_a_simple_result():
 
 
 @pytest.mark.r2dt
+def test_parse_directory_finds_prefixed_and_hidden_files():
+    # ribotyper writes either <dirname>.ribotyper.long.out or .ribotyper.long.out
+    assert len(list(ribovore.parse_directory(Path("data/r2dt/crw")))) == 1
+    assert len(list(ribovore.parse_directory(Path("data/r2dt/ribovision")))) == 300
+
+
+@pytest.mark.r2dt
+def test_parse_directory_raises_when_there_is_no_result_file(tmp_path):
+    with pytest.raises(ribovore.MissingRibotyperDataException):
+        list(ribovore.parse_directory(tmp_path))
+
+
+@pytest.mark.r2dt
 def test_can_produce_dict_of_results():
-    data = ribovore.as_dict(Path("data/traveler/crw"))
-    assert data == {
-        "URS00000F9D45_9606": ribovore.RibovoreResult(
+    assert r2dt_ribovore.as_dict(Path("data/r2dt/crw")) == {
+        "URS00000F9D45_9606": RibovoreResult(
             target="URS00000F9D45_9606",
             status="PASS",
             length=1588,
@@ -87,3 +102,20 @@ def test_can_produce_dict_of_results():
             mto=1512,
         )
     }
+
+
+@pytest.mark.r2dt
+def test_as_dict_is_keyed_by_target_and_drops_failures():
+    results = r2dt_ribovore.as_dict(Path("data/r2dt/ribovision"))
+    assert len(results) == 248
+    assert all(target == hit.target for target, hit in results.items())
+    assert all(hit.status != "FAIL" for hit in results.values())
+    assert "URS0000C5FF65" in results
+    assert "URS000083FA52" not in results  # FAIL in the fixture
+
+
+@pytest.mark.r2dt
+def test_as_dict_respects_allow_missing(tmp_path):
+    with pytest.raises(ValueError):
+        r2dt_ribovore.as_dict(tmp_path)
+    assert r2dt_ribovore.as_dict(tmp_path, allow_missing=True) == {}

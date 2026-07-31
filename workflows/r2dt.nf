@@ -148,7 +148,7 @@ process layout_sequences {
 
 process publish_layout {
   maxForks 50
-  errorStrategy { task.attempt < 5 ? "retry" : "ignore" }
+  errorStrategy { task.attempt < 5 ? "retry" : "finish" }
   maxRetries 5
   queue 'datamover'
   memory { 1.GB * task.attempt }
@@ -163,7 +163,7 @@ process publish_layout {
   """
   rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
   rnac r2dt prepare-s3 --allow-missing $mapping $output for-upload file-list
-  update-svg.sh file-list $params.r2dt.s3.env
+  rnac r2dt upload-s3 --env $params.r2dt.s3.env file-list
   """
 }
 
@@ -245,6 +245,7 @@ workflow r2dt {
       channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
       channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
       channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+      channel.fromPath('files/r2dt/attempted-post-load.sql') | set { attempted_post_load }
 
       model_info(ready) | set { models_ready }
 
@@ -277,7 +278,7 @@ workflow r2dt {
 
       publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
 
-      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, uploaded) | set { done }
     } else {
       channel.of('r2dt skipped') | set { done }
     }

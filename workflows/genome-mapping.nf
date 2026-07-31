@@ -313,7 +313,7 @@ workflow genome_mapping {
       blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
       blat.out.attempted | collect | set { attempted }
 
-      load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
+      load_mapping(hits, hits_ctl, post_load, attempted, attempted_ctl, attempted_post_load) | set { done }
     } else {
       channel.of('genome-mapping skipped') | set { done }
     }

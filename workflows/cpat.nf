@@ -135,7 +135,7 @@ workflow cpat {
     parse_results.out.results | collect | set { data }
     parse_results.out.orfs | collect | set { orfs }
 
-    store_results(data, orfs, load_ctl, orf_ctl, result_post_load, orf_post_load))
+    store_results(data, orfs, load_ctl, orf_ctl, result_post_load, orf_post_load)
     data | map { _v -> 'cpat done' } | set { done }
     }
   emit: done
