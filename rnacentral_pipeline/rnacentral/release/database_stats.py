@@ -272,6 +272,7 @@ def update_stats(db_url: str):
     with connect(db_url) as conn:
         query = Query.from_(db).select(db.id, db.descr).where(db.alive == "Y")
         with conn.cursor() as cur:
+            cur.execute("SET max_parallel_workers_per_gather = 0")
             cur.execute(str(query))
             db_ids = list(cur)
         for (db_id, descr) in db_ids:
