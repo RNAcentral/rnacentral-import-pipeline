@@ -20,18 +20,30 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from rnacentral_pipeline.databases.data.utils import SO_INSDC_MAPPING, INSDC_SO_MAPPING
 from rnacentral_pipeline.databases.data import RnaType
-from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
-from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
+from rnacentral_pipeline.databases.data.utils import INSDC_SO_MAPPING, SO_INSDC_MAPPING
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.description import (
     description_of,
     short_description_for,
 )
+from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 from rnacentral_pipeline.rnacentral.precompute.rna_type import rna_type_of
 from rnacentral_pipeline.rnacentral.repeats import tree
+
+
+def previous_rna_type(previous: ty.Dict[str, ty.Any]) -> str:
+    """
+    Pull the rna_type out of a previous precompute row, normalising the ways it
+    can be absent to an empty string.
+    """
+
+    rna_type = previous.get("rna_type") or ""
+    if rna_type == "NULL":
+        return ""
+    return rna_type
 
 
 @attr.s(frozen=True)
@@ -73,7 +85,7 @@ class SequenceUpdate:
         correct RNA type or useful description otherwise.
         """
 
-        insdc_rna_type = sequence.previous_update.get("rna_type", "")
+        insdc_rna_type = previous_rna_type(sequence.previous_update)
         if not insdc_rna_type:
             insdc_rna_type = "ncRNA"
             insdc_rna_types: ty.Set[str] = {
