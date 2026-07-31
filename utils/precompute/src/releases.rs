@@ -67,7 +67,10 @@ where
     iter.map(move |(key, value)| {
         if let Some(ref prev) = previous {
             if key < *prev {
-                panic!("release selection input is not sorted by key: {:?} came after {:?}", key, prev);
+                panic!(
+                    "release selection input is not sorted by key: {:?} came after {:?}",
+                    key, prev
+                );
             }
         }
         previous = Some(key.clone());
@@ -103,12 +106,11 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
 /// it). `known` comes from the existing precompute table. Comparing the two per
 /// `urs_taxid`:
 ///
-/// * if the known release equals the xref release the pair is up to date and is
-///   skipped,
-/// * if the known release is less than the xref release (or the pair has never
-///   been precomputed) the pair is selected for recomputation,
-/// * if the known release is greater than the xref release something has gone
-///   wrong and we error out.
+/// * if the known release equals the xref release the pair is up to date and is skipped,
+/// * if the known release is less than the xref release (or the pair has never been
+///   precomputed) the pair is selected for recomputation,
+/// * if the known release is greater than the xref release something has gone wrong and
+///   we error out.
 ///
 /// Both inputs must be CSV with columns `(urs_taxid, release)`, one row per
 /// `urs_taxid`, sorted by `urs_taxid` (byte order, i.e. `COLLATE "C"` on the
@@ -126,14 +128,12 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
 /// Returns an error if a file cannot be read/written, or if any precompute
 /// release is newer than the corresponding xref release.
 pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
-    let xref_records = checked_sorted_by_key(
-        entries::<ReleaseEntry>(xrefs)?.map(|e| (e.urs_taxid.clone(), e)),
-    )
-    .assume_sorted_by_key();
-    let known_records = checked_sorted_by_key(
-        entries::<ReleaseEntry>(known)?.map(|e| (e.urs_taxid.clone(), e)),
-    )
-    .assume_sorted_by_key();
+    let xref_records =
+        checked_sorted_by_key(entries::<ReleaseEntry>(xrefs)?.map(|e| (e.urs_taxid.clone(), e)))
+            .assume_sorted_by_key();
+    let known_records =
+        checked_sorted_by_key(entries::<ReleaseEntry>(known)?.map(|e| (e.urs_taxid.clone(), e)))
+            .assume_sorted_by_key();
 
     let mut writer = csv::Writer::from_writer(File::create(output)?);
     let pairs = xref_records.outer_join(known_records);
@@ -161,19 +161,26 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{
-        distributions::Alphanumeric,
-        Rng,
-    };
-    use std::io::{
-        BufRead,
-        Write,
+    use std::{
+        io::{
+            BufRead,
+            Write,
+        },
+        sync::atomic::{
+            AtomicUsize,
+            Ordering as AtomicOrdering,
+        },
     };
 
+    /// Unique-per-run temp filename. Process id plus a counter is enough here
+    /// and keeps `rand` out of the dependency tree.
     fn get_random_fname() -> String {
-        let rand_string: String =
-            rand::thread_rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect();
-        format!("{}.csv", rand_string)
+        static COUNTER: AtomicUsize = AtomicUsize::new(0);
+        let n = COUNTER.fetch_add(1, AtomicOrdering::Relaxed);
+        std::env::temp_dir()
+            .join(format!("precompute-releases-{}-{}.csv", std::process::id(), n))
+            .to_string_lossy()
+            .into_owned()
     }
 
     /// Write `contents` to a fresh temp file and return its path.
@@ -187,8 +194,7 @@ mod tests {
     /// Read the output file into a sorted Vec of lines.
     fn read_sorted_lines(path: &Path) -> Vec<String> {
         let file = File::open(path).unwrap();
-        let mut lines: Vec<String> =
-            BufReader::new(file).lines().map(|l| l.unwrap()).collect();
+        let mut lines: Vec<String> = BufReader::new(file).lines().map(|l| l.unwrap()).collect();
         lines.sort();
         lines
     }
@@ -220,11 +226,7 @@ mod tests {
         let got = read_sorted_lines(output);
         assert_eq!(
             got,
-            vec![
-                "URS1_9606".to_string(),
-                "URS3_9606".to_string(),
-                "URS6_9606".to_string(),
-            ]
+            vec!["URS1_9606".to_string(), "URS3_9606".to_string(), "URS6_9606".to_string(),]
         );
 
         std::fs::remove_file(output)?;
