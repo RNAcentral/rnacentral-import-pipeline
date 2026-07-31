@@ -450,13 +450,18 @@ R2DT_ATTEMPTED = pa.schema(
 # SequenceUpdate.as_writeables() / GenericUpdate.as_writeables().
 #
 # Numeric/bool columns are typed; the writer adapter converts the string rows
-# from as_writeables() into typed tuples on the way in. ``taxid`` is nullable
-# because GenericUpdate emits an empty string (translated to None).
+# from as_writeables() into typed tuples on the way in. ``taxid`` is NOT NULL:
+# it used to be nullable because GenericUpdate emitted an empty string, but that
+# path was removed (a710e6f3c) and rnc_rna_precomputed.taxid now has a NOT NULL
+# constraint plus an FK to rnc_taxonomy. nullable=False makes converter_for pick
+# int() over _to_int_or_none, so an empty taxid fails loudly at write time rather
+# than becoming a NULL that only errors later, inside the load. This is the
+# parquet counterpart of dropping `[null if ""]` from files/precompute/load.ctl.
 PRECOMPUTE_DATA = pa.schema(
     [
         pa.field("id", pa.string(), nullable=False),
         pa.field("upi", pa.string(), nullable=False),
-        pa.field("taxid", pa.int64()),
+        pa.field("taxid", pa.int64(), nullable=False),
         pa.field("is_active", pa.bool_(), nullable=False),
         pa.field("description", pa.string()),
         pa.field("rna_type", pa.string()),

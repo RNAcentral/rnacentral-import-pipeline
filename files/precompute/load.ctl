@@ -3,7 +3,7 @@ FROM ALL FILENAMES MATCHING ~<precompute.*csv$>
 HAVING FIELDS (
   id,
   upi,
-  taxid [null if ""],
+  taxid,
   is_active,
   description,
   rna_type [null if ""],
