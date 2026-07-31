@@ -6,7 +6,7 @@ HAVING FIELDS (
   taxid [null if ""],
   is_active,
   description,
-  rna_type,
+  rna_type [null if ""],
   has_coordinates,
   databases,
   short_description,
