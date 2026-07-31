@@ -10,6 +10,11 @@ class FakeCursor:
         self.calls.append((sql, params))
         self._last = sql
 
+    def executemany(self, sql, seq_of_params):
+        # _record_pending_stats batch-inserts the loaded dbids this way.
+        for params in seq_of_params:
+            self.execute(sql, params)
+
     def fetchall(self):
         # functions.apply asks which functions were already applied -- pretend none,
         # so it proceeds to (re)deploy them. It expects (schema, name, sha) triples,
@@ -116,9 +121,12 @@ def test_run_defaults_to_auto_release_type(monkeypatch):
     # The per-database load still runs for each release returned by the pending query.
     assert ("SELECT rnc_update.new_update_release(%s, %s)", (9, 123)) in calls
 
-    # do_checks runs exactly once, after the per-database loop.
-    assert sql_calls[-1] == "SELECT rnc_load_xref.do_checks(NULL::bigint)"
+    # do_checks runs exactly once, after the per-database loop -- but not last,
+    # since _record_pending_stats runs after it.
     assert sum("do_checks(NULL::bigint)" in sql for sql in sql_calls) == 1
+    assert sql_calls.index("SELECT rnc_load_xref.do_checks(NULL::bigint)") > max(
+        i for i, s in enumerate(sql_calls) if "new_update_release" in s
+    )
 
 
 def test_run_force_full_forces_full_release_type(monkeypatch):
