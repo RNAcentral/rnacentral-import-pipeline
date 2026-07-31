@@ -28,8 +28,8 @@ SET LOCAL maintenance_work_mem = '2GB';
 ALTER TABLE rnacen.rnc_rna_precomputed ALTER COLUMN rna_type DROP DEFAULT;
 
 -- Drop indexes to speed up bulk insert.
--- NB: (upi,taxid,last_release) was removed here - 0 scans over a 14-day prod
--- window; every query on upi/upi+taxid uses rnc_rna_precomputed_upi_idx (upi,taxid,
+-- NB: (urs,taxid,last_release) was removed here - 0 scans over a 14-day prod
+-- window; every query on urs/urs+taxid uses rnc_rna_precomputed_upi_idx (urs,taxid,
 -- 423M scans) instead, so we no longer build/maintain that 11 GB index.
 DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_98db0b07;
 DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_is_active_idx;
@@ -105,7 +105,7 @@ BEGIN
 
     sql_stmt := format($q$
         CREATE UNLOGGED TABLE tmp_new_precompute AS
-        SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.upi, xref.taxid
+        SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.urs, xref.taxid
         FROM xref
         WHERE
           xref.deleted = 'N'
@@ -144,8 +144,8 @@ BEGIN
     lo := 1;
     WHILE lo <= v_total LOOP
         sql_stmt := format($q$
-            INSERT INTO rnc_rna_precomputed (id, upi, taxid, is_active) (
-            SELECT id, upi, taxid, true
+            INSERT INTO rnc_rna_precomputed (urs_taxid, urs, taxid, is_active) (
+            SELECT id, urs, taxid, true
             FROM tmp_new_precompute
             WHERE rn >= %s AND rn < %s
             ) ON CONFLICT DO NOTHING
@@ -177,9 +177,9 @@ BEGIN TRANSACTION;
 SET LOCAL maintenance_work_mem = '512MB';
 SET LOCAL max_parallel_maintenance_workers = 0;
 
-CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
+CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (urs);
 CREATE INDEX rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
-CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (upi, taxid);
+CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (urs, taxid);
 CREATE INDEX ix_rnc_rna_precomputed_assigned_rna ON rnacen.rnc_rna_precomputed USING btree (assigned_so_rna_type);
 CREATE INDEX rnc_rna_precomputed_rna_type_idx ON rnacen.rnc_rna_precomputed USING btree (rna_type);
 

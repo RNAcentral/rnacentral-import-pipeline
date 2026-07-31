@@ -1,7 +1,7 @@
 COPY (
 SELECT
     json_build_object(
-        'upi', xref.upi,
+        'upi', xref.urs,
         'accession', xref.ac,
         'taxid', xref.taxid,
         'external_id', acc.external_id,
@@ -16,9 +16,9 @@ join rnc_accessions acc on acc.accession = xref.ac
 join rnc_database db on db.id = xref.dbid
 join rnc_rna_precomputed pre
 on
-    pre.upi = xref.upi
+    pre.urs = xref.urs
     and pre.taxid = xref.taxid
 where
     xref.deleted = 'N'
-    AND right(xref.upi, 1) = :'chunk'
+    AND right(xref.urs, 1) = :'chunk'
 ) TO STDOUT

@@ -9,6 +9,6 @@ select
 FROM search_export_urs todo
 JOIN rnc_feedback_overlap overlap
 ON
-  overlap.upi_taxid = todo.urs_taxid
+  overlap.urs_taxid = todo.urs_taxid
 ORDER BY todo.id
 ) TO STDOUT

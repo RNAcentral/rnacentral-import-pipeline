@@ -7,7 +7,7 @@ create index if not exists ix_load_rnc_sequence_regions__accession on load_rnc_s
 -- Update the table to include urs_taxid and pretty database name
 update load_rnc_sequence_regions regions
 set
-  urs_taxid = xref.upi || '_' || xref.taxid
+  urs_taxid = xref.urs || '_' || xref.taxid
 from xref
 where
   xref.ac = regions.accession
@@ -215,7 +215,7 @@ set
   has_coordinates = true
 from load_rnc_sequence_regions load
 where
-  load.urs_taxid = pre.id
+  load.urs_taxid = pre.urs_taxid
 ;
 
 drop table load_rnc_sequence_regions;

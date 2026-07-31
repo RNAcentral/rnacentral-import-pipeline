@@ -10,12 +10,12 @@
 COPY (
   SELECT urs_taxid FROM xref WHERE deleted = 'N'
   UNION
-  SELECT pre.id
+  SELECT pre.urs_taxid
   FROM rnc_rna_precomputed pre
   WHERE pre.is_active = true
     AND NOT EXISTS (
       SELECT 1 FROM xref
-      WHERE xref.urs_taxid = pre.id
+      WHERE xref.urs_taxid = pre.urs_taxid
         AND xref.deleted = 'N'
     )
 ) TO STDOUT

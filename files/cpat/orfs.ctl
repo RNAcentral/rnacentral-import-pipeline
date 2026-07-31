@@ -21,14 +21,14 @@ $$
 DELETE FROM rnc_sequence_features features
 USING load_cpat_orfs orfs
 WHERE
-  orfs.urs = features.upi
+  orfs.urs = features.urs
   and orfs.taxid = features.taxid
   and features.feature_name = 'cpat_orf'
 ;
 $$,
 $$
 INSERT INTO rnc_sequence_features (
-  upi,
+  urs,
   taxid,
   "start",
   "stop",
@@ -43,7 +43,7 @@ SELECT
   'cpat_orf',
   metadata
 from load_cpat_orfs
-) ON CONFLICT (upi, taxid, accession, start, stop, feature_name) DO UPDATE
+) ON CONFLICT (urs, taxid, accession, start, stop, feature_name) DO UPDATE
 SET
   metadata = excluded.metadata;
 $$,

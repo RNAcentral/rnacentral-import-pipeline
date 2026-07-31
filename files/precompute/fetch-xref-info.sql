@@ -3,7 +3,7 @@
 -- the OOM the rna join + temp table used to cause.
 --
 -- Notes:
---   * `urs_taxid` is xref's stored computed column (upi || '_' || taxid).
+--   * `urs_taxid` is xref's stored computed column (urs || '_' || taxid).
 --   * No `deleted` filter: deleted rows must stay so a newly-deleted pair still
 --     gets reselected and flipped to is_active=false downstream. A deletion
 --     bumps xref.last, so max(last) reflects it.

@@ -1,6 +1,6 @@
 COPY (
 SELECT
-    hits.upi,
+    hits.urs,
     hits.rfam_model_id,
     score,
     e_value,
@@ -15,9 +15,9 @@ WHERE
     EXISTS (
         SELECT 1
         FROM rnc_rna_precomputed pre
-        WHERE pre.upi = hits.upi
+        WHERE pre.urs = hits.urs
           AND pre.is_active = true
     )
     AND hits.sequence_stop > hits.sequence_start
-ORDER BY hits.upi, hits.sequence_start, hits.rfam_model_id
+ORDER BY hits.urs, hits.sequence_start, hits.rfam_model_id
 ) TO STDOUT
