@@ -28,13 +28,13 @@ process apply_manifest {
   cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
-  when: { params.get('should_release', false) }
-
   input:
   tuple path(manifest), val(_ready)
 
   output:
   val('done')
+
+  when: params.get('should_release', false)
 
   script:
   """
