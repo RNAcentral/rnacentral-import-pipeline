@@ -13,17 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
+import operator as op
 import re
 import typing as ty
-import operator as op
-import collections as coll
 
 import attr
+import psycopg2
 from attr.validators import instance_of as is_a
 from attr.validators import optional
-
-from pypika import Table, Query
-import psycopg2
+from pypika import Query, Table
 
 
 def maybe_first(data, name):
@@ -132,11 +131,11 @@ def ensembl_mapping(conn):
     acc = Table("rnc_accessions")
     query = (
         Query.from_(xref)
-        .select(xref.upi, acc.optional_id, rna.len)
+        .select(xref.urs, acc.optional_id, rna.len)
         .join(acc)
         .on(acc.accession == xref.ac)
         .join(rna)
-        .on(rna.upi == xref.upi)
+        .on(rna.urs == xref.urs)
         # dbid 21 == NONCODE
         .where((xref.dbid == 21) & (xref.taxid == 9606) & (xref.deleted == "N"))
     )
