@@ -25,6 +25,8 @@ SET LOCAL work_mem = '2GB';
 -- scale. Index builds use maintenance_work_mem, not work_mem.
 SET LOCAL maintenance_work_mem = '2GB';
 
+ALTER TABLE rnacen.rnc_rna_precomputed ALTER COLUMN rna_type DROP DEFAULT;
+
 -- Drop indexes to speed up bulk insert.
 -- NB: (upi,taxid,last_release) was removed here - 0 scans over a 14-day prod
 -- window; every query on upi/upi+taxid uses rnc_rna_precomputed_upi_idx (upi,taxid,
