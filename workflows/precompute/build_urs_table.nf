@@ -28,7 +28,9 @@ process select_outdated {
 
   script:
   """
-  precompute select xref.csv precompute.csv urs.csv
+  LC_ALL=C sort -t, -k1,1 --parallel=${task.cpus} -S 4G xref.csv > xref.sorted.csv
+  LC_ALL=C sort -t, -k1,1 --parallel=${task.cpus} -S 4G precompute.csv > precompute.sorted.csv
+  precompute select xref.sorted.csv precompute.sorted.csv urs.csv
   """
 }
 
