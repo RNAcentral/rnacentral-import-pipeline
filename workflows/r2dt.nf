@@ -126,7 +126,7 @@ process split_sequences {
 
 process layout_sequences {
   tag { "${sequences}" }
-  maxForks 200
+  maxForks params.r2dt.layout_max_forks
   memory params.r2dt.layout.memory
   container params.r2dt.container
   containerOptions "${params.r2dt_container}"
@@ -147,42 +147,60 @@ process layout_sequences {
 }
 
 process publish_layout {
-  maxForks 50
+  maxForks params.r2dt.publish_max_forks
   errorStrategy { task.attempt < 5 ? "retry" : "finish" }
   maxRetries 5
   queue 'datamover'
   memory { 1.GB * task.attempt }
 
   input:
-  tuple path(sequences), path(output), path(_version), path(mapping)
+  tuple path(_sequences, stageAs: 'seq_*.fasta'), path(outputs, stageAs: 'output_*'), path(_versions, stageAs: 'version_*'), path(mapping)
 
   output:
   val 'done', emit: flag
 
   script:
+  // prepare-s3 opens its file list with 'w', so each chunk needs its own to concatenate.
   """
-  rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
-  rnac r2dt prepare-s3 --allow-missing $mapping $output for-upload file-list
+  outs=( $outputs )
+
+  for i in "\${!outs[@]}"; do
+    rnac r2dt publish --allow-missing $mapping "\${outs[\$i]}" $params.r2dt.publish
+    rnac r2dt prepare-s3 --allow-missing $mapping "\${outs[\$i]}" for-upload "file-list.\$i"
+  done
+
+  cat file-list.* > file-list
   rnac r2dt upload-s3 --env $params.r2dt.s3.env file-list
   """
 }
 
 process parse_layout {
-    memory '2 GB'
-    errorStrategy "ignore"
+  maxForks params.r2dt.parse_max_forks
+  memory '2 GB'
+  errorStrategy "ignore"
 
   input:
-  tuple path(sequences), path(to_parse), path(version), path(mapping)
+  tuple path(sequences, stageAs: 'seq_*.fasta'), path(to_parse, stageAs: 'output_*'), path(versions, stageAs: 'version_*'), path(mapping)
 
   output:
-  path "data.csv", emit: data
-  path "attempted.${params.writer_format}", emit: attempted
+  path "data_*.csv", emit: data, optional: true
+  path "attempted_*.${params.writer_format}", emit: attempted, optional: true
 
   script:
-  def attempted_out = "attempted.${params.writer_format}"
+  // Skip a failed chunk rather than the batch, so errorStrategy 'ignore' still costs one chunk.
   """
-  rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
-  rnac r2dt create-attempted $sequences $version $attempted_out
+  seqs=( $sequences )
+  outs=( $to_parse )
+  vers=( $versions )
+
+  for i in "\${!outs[@]}"; do
+    if ! rnac r2dt process-svgs --allow-missing $mapping "\${outs[\$i]}" "data_\$i.csv"; then
+      echo "process-svgs failed for \${outs[\$i]}; skipping chunk" >&2
+      rm -f "data_\$i.csv"
+      continue
+    fi
+    rnac r2dt create-attempted "\${seqs[\$i]}" "\${vers[\$i]}" "attempted_\$i.${params.writer_format}"
+  done
   """
 }
 
@@ -267,6 +285,12 @@ workflow r2dt {
       | flatten \
       | filter { f -> !f.empty() } \
       | layout_sequences \
+      | collate(params.r2dt.batch_size) \
+      | map { batch -> tuple(
+          batch.collect { row -> row[0] },
+          batch.collect { row -> row[1] },
+          batch.collect { row -> row[2] },
+        ) } \
       | combine(model_mapping) \
       | set { data }
 
