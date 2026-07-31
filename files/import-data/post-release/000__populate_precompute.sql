@@ -165,7 +165,16 @@ DROP TABLE tmp_load_accessions;
 DROP TABLE tmp_load_dbids;
 DROP TABLE tmp_new_precompute;
 
--- Recreate indexes
+-- Commit the insert BEFORE rebuilding indexes. An index build that dies (see
+-- the OOM note below) must not roll back the multi-hour insert above.
+COMMIT;
+
+BEGIN TRANSACTION;
+-- Recreate indexes.
+
+SET LOCAL maintenance_work_mem = '512MB';
+SET LOCAL max_parallel_maintenance_workers = 0;
+
 CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
 CREATE INDEX rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
 CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (upi, taxid);
