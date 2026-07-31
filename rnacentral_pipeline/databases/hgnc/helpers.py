@@ -16,22 +16,15 @@ limitations under the License.
 import collections as coll
 import hashlib
 import json
-import operator as op
+import logging
+import threading
 import typing as ty
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from pypika import Order, Query, Table
-from pypika import functions as fn
-import logging
-import threading
-import typing as ty
-from concurrent.futures import ThreadPoolExecutor
-
-
-
 
 from rnacentral_pipeline.databases.hgnc.data import HgncEntry
 
@@ -78,58 +71,12 @@ def gene_synonyms(hgnc: HgncEntry) -> ty.List[str]:
     return hgnc.previous_symbols
 
 
-def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
-    xref = Table("xref")
-    rna = Table("rna")
-    acc = Table("rnc_accessions")
-    query = (
-        Query.from_(xref)
-        .select(rna.urs)
-        .join(acc)
-        .on(xref.ac == acc.accession)
-        .join(rna)
-        .on(rna.urs == xref.urs)
-        .where(
-            (xref.taxid == 9606)
-            & (xref.deleted == "N")
-            & (xref.dbid == 8)
-            & (acc.optional_id == raw)
-            & (acc.database == "GTRNADB")
-        )
-        .orderby(rna.len, order=Order.desc)
-    )
-
-    found = context.query_all(query)
-    if found:
-        return found[0][0]
-    return None
-
-
 def md5(sequence: str) -> str:
     sequence = sequence.replace("U", "T").upper()
     m = hashlib.md5(sequence.encode())
     return m.hexdigest()
 
 
-def refseq_id_to_urs(context: Context, refseq_id: str) -> ty.Optional[str]:
-    xref = Table("xref")
-    rna = Table("rna")
-    acc = Table("rnc_accessions")
-    query = (
-        Query.from_(xref)
-        .select(rna.urs, rna.len)
-        .join(acc)
-        .on(xref.ac == acc.accession)
-        .join(rna)
-        .on(rna.urs == xref.urs)
-        .where(
-            (xref.taxid == 9606)
-            & (xref.deleted == "N")
-            & (
-                (acc.parent_ac == refseq_id)
-                | (acc.external_id == refseq_id)
-                | (acc.optional_id == refseq_id)
-            )
 def _longest(rows) -> ty.Dict[str, str]:
     """
     Collapse (key, urs, length) rows to {key: urs}, keeping the longest
@@ -155,7 +102,7 @@ def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
 
     ids = sorted(set(refseq_ids))
     query = """
-    select k, rna.upi, rna.len
+    select k, rna.urs, rna.len
     from (
         select acc.parent_ac as k, acc.accession
         from rnc_accessions acc where acc.parent_ac = ANY(%s)
@@ -167,7 +114,7 @@ def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
         from rnc_accessions acc where acc.optional_id = ANY(%s)
     ) m
     join xref on xref.ac = m.accession
-    join rna on rna.upi = xref.upi
+    join rna on rna.urs = xref.urs
     where xref.taxid = %s and xref.deleted = 'N' and xref.dbid = %s
     """
     with conn.cursor() as cur:
@@ -183,10 +130,10 @@ def gtrnadb_mapping(conn, gtrnadb_ids: ty.List[str]) -> ty.Dict[str, str]:
         return {}
 
     query = """
-    select acc.optional_id, rna.upi, rna.len
+    select acc.optional_id, rna.urs, rna.len
     from xref
     join rnc_accessions acc on acc.accession = xref.ac
-    join rna on rna.upi = xref.upi
+    join rna on rna.urs = xref.urs
     where xref.taxid = %s and xref.deleted = 'N' and xref.dbid = %s
       and acc.database = 'GTRNADB' and acc.optional_id = ANY(%s)
     """
@@ -230,45 +177,6 @@ def _fetch_batch(batch: ty.List[str]) -> ty.List[dict]:
             timeout=ENSEMBL_TIMEOUT,
         )
         response.raise_for_status()
-    except requests.exceptions.HTTPError:
-        return None
-    return response.text
-
-
-def md5_to_urs(context: Context, md5: str) -> ty.Optional[str]:
-    rna = Table("rna")
-    query = Query.from_(rna).select(rna.urs).where(rna.md5 == md5)
-    found = context.query_one(query)
-    if found:
-        return found[0]
-    return None
-
-
-def ensembl_gene_to_urs(context: Context, gene: str) -> ty.Optional[str]:
-    return context.ensembl_gene(gene)
-
-
-def urs_to_sequence(context: Context, urs: str) -> str:
-    rna = Table("rna")
-    query = (
-        Query.from_(rna)
-        .select(fn.Coalesce(rna.seq_short, rna.seq_long))
-        .where(rna.urs == urs)
-    )
-    return context.query_one(query)[0]
-
-
-def so_term(context: Context, entry: HgncEntry) -> str:
-    if entry.hgnc_rna_type == "RNA, long non-coding":
-        return "SO:0001877"
-    if entry.hgnc_rna_type == "RNA, Y":
-        return "SO:0000405"
-    if entry.hgnc_rna_type == "RNA, cluster":
-        return "SO:0000655"
-    if entry.hgnc_rna_type == "RNA, micro":
-        return "SO:0000276"
-    if entry.hgnc_rna_type == "RNA, misc":
-        return "SO:0000655"
     except requests.exceptions.RequestException as err:
         LOGGER.error("Gave up on a batch, losing %i genes: %s", len(batch), err)
         return []
@@ -320,7 +228,7 @@ def ensembl_mapping(conn, gene_ids: ty.List[str]) -> ty.Dict[str, str]:
 
     with conn.cursor() as cur:
         cur.execute(
-            "select md5, upi, len from rna where md5 = ANY(%s)", (list(digests),)
+            "select md5, urs, len from rna where md5 = ANY(%s)", (list(digests),)
         )
         rows = [
             (gene_id, upi, length)
@@ -338,8 +246,8 @@ def sequence_mapping(conn, urs_ids: ty.List[str]) -> ty.Dict[str, str]:
         return {}
 
     query = """
-    select upi, coalesce(seq_short, seq_long)
-    from rna where upi = ANY(%s)
+    select urs, coalesce(seq_short, seq_long)
+    from rna where urs = ANY(%s)
     """
     with conn.cursor() as cur:
         cur.execute(query, (sorted(set(urs_ids)),))
