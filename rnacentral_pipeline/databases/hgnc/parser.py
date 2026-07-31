@@ -13,60 +13,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from pathlib import Path
-import typing as ty
 import logging
+import typing as ty
+from pathlib import Path
 
 from rnacentral_pipeline.databases import data
-
 from rnacentral_pipeline.databases.hgnc import helpers
-from rnacentral_pipeline.databases.hgnc.data import HgncEntry, Context
+from rnacentral_pipeline.databases.hgnc.data import Context, HgncEntry
 
 LOGGER = logging.getLogger(__name__)
 
 
 def rnacentral_id(context: Context, entry: HgncEntry) -> ty.Optional[str]:
     """
-    Map HGNC ncRNAs to RNAcentral using RefSeq, Vega, gtRNAdb accessions
-    and sequence matches.
+    Map HGNC ncRNAs to RNAcentral using RefSeq, gtRNAdb accessions and
+    sequence matches.
     """
+    return context.urs_for(entry)
 
-    if entry.refseq_id:
-        refseq_based = helpers.refseq_id_to_urs(context, entry.refseq_id)
-        if refseq_based:
-            return refseq_based
 
-    if entry.gtrnadb_id:
-        gtrnadb_id = entry.gtrnadb_id
-        if gtrnadb_id:
-            return helpers.gtrnadb_to_urs(context, gtrnadb_id)
+def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> ty.Optional[data.Entry]:
+    rna_type = helpers.so_term(hgnc)
+    if rna_type is None:
         return None
 
-    elif entry.ensembl_gene_id:
-        gene = entry.ensembl_gene_id
-        fasta = helpers.ensembl_sequence(context, gene)
-        if not fasta:
-            return None
-
-        md5_hash = helpers.md5(fasta)
-        urs = helpers.md5_to_urs(context, md5_hash)
-        if urs:
-            return urs
-        return helpers.ensembl_gene_to_urs(context, gene)
-
-    LOGGER.info("Cannot map %s", entry)
-    return None
-
-
-def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
     return data.Entry(
         primary_id=hgnc.hgnc_id,
         accession=hgnc.hgnc_id,
         ncbi_tax_id=9606,
         database="HGNC",
-        sequence=helpers.urs_to_sequence(context, urs),
+        sequence=context.sequences[urs],
         regions=[],
-        rna_type=helpers.so_term(context, hgnc),
+        rna_type=rna_type,
         url=helpers.url(hgnc),
         seq_version="1",
         description=helpers.description(hgnc),
@@ -77,10 +55,25 @@ def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
 
 
 def parse(path: Path, db_url: str) -> ty.Iterable[data.Entry]:
-    ctx = Context.build(db_url)
-    for raw_entry in helpers.load(path):
-        mapped = rnacentral_id(ctx, raw_entry)
-        if not mapped:
+    raw_entries = helpers.load(path)
+    ctx = Context.build(db_url, raw_entries)
+    yield from as_entries(ctx, raw_entries)
+
+
+def as_entries(
+    ctx: Context, raw_entries: ty.List[HgncEntry]
+) -> ty.Iterable[data.Entry]:
+    mapped = 0
+    for raw_entry in raw_entries:
+        urs = rnacentral_id(ctx, raw_entry)
+        if not urs:
+            LOGGER.debug("Cannot map %s", raw_entry.hgnc_id)
             continue
-        LOGGER.info("%s -> %s", raw_entry.hgnc_id, mapped)
-        yield as_entry(ctx, raw_entry, mapped)
+
+        entry = as_entry(ctx, raw_entry, urs)
+        if entry is None:
+            continue
+
+        mapped += 1
+        yield entry
+    LOGGER.info("Mapped %i of %i HGNC entries", mapped, len(raw_entries))

@@ -178,13 +178,13 @@ process load_data {
     load-parquet load_qa_status 'qa*.parquet' \\
       --truncate \\
       --post-load $qa_post_load
-    psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+    psql -v ON_ERROR_STOP=1 -f $post "\$PGDATABASE"
     """
   else
     """
     split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
     split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
-    psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+    psql -v ON_ERROR_STOP=1 -f $post "\$PGDATABASE"
     """
 }
 

@@ -168,15 +168,6 @@ def train(handle, db_url, cross_validation=5, test_size=0.4) -> RandomForestClas
     return clf
 
 
-def from_result(clf, result) -> bool:
-    predictable = {}
-    for attribute in Attributes:
-        value = attribute.r2dt_result_value(result)
-        predictable[attribute.column_name()] = [value]
-    predictable = pd.DataFrame.from_records(predictable)
-    return clf.predict(predictable)[0]
-
-
 def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
     model = joblib.load(model_path)
     ids = [r[0] for r in csv.reader(handle)]
