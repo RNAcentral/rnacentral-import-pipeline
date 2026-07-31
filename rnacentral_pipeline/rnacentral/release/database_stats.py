@@ -22,7 +22,7 @@ import attr
 import psycopg2
 import psycopg2.extras
 from attr.validators import instance_of as is_a
-from pypika import Order, Query, Table
+from pypika import Query, Table
 
 from rnacentral_pipeline.db import connect
 
@@ -57,6 +57,38 @@ SELECT
     (SELECT count(*) FROM joined) AS num_sequences,
     (SELECT count(distinct taxid) FROM joined) AS num_organisms,
     (SELECT coalesce(json_agg(by_length), '[]') FROM by_length) AS length_counts
+"""
+
+# Which databases need their stats recomputed. release_stats.end_time is written
+# by log_release_end_atx as the last act of a load, and rnc_database.last_import_date
+# is set from it by insert() below -- so last_import_date is the high-water mark of
+# "stats are current as of this load". A database whose newest load finished after
+# that mark was touched; everything else is unchanged and can be skipped.
+#
+# A database with no release_stats row has never been loaded (or predates the table)
+# and is left alone. Pass force=True to ignore the mark and rebuild everything.
+STALE_DATABASES_QUERY = """
+SELECT db.id, db.descr
+FROM rnc_database db
+WHERE
+    db.alive = 'Y'
+    AND (
+        %(force)s
+        OR db.last_import_date IS NULL
+        OR db.last_import_date < (
+            SELECT max(end_time) FROM release_stats WHERE dbid = db.id
+        )
+    )
+ORDER BY db.descr
+"""
+
+# The end of the newest completed load, falling back to the release date for
+# databases loaded before release_stats existed.
+LAST_IMPORT_QUERY = """
+SELECT coalesce(
+    (SELECT max(end_time) FROM release_stats WHERE dbid = %(dbid)s),
+    (SELECT max(release_date) FROM rnc_release WHERE dbid = %(dbid)s)
+)
 """
 
 
@@ -185,20 +217,9 @@ def sequence_stats(conn, db_id: int) -> ty.Dict[str, ty.Any]:
 
 
 def last_import_date(conn, db_id: int) -> ty.Optional[datetime.datetime]:
-    rnc_rel = Table("rnc_release")
-    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        query = (
-            Query.from_(rnc_rel)
-            .select(rnc_rel.release_date)
-            .where(rnc_rel.dbid == db_id)
-            .orderby(rnc_rel.release_date, order=Order.desc)
-            .limit(1)
-        )
-        cur.execute(str(query))
-        row = cur.fetchone()
-    if row is None:
-        return None
-    return row["release_date"]
+    with conn.cursor() as cur:
+        cur.execute(LAST_IMPORT_QUERY, {"dbid": db_id})
+        return cur.fetchone()[0]
 
 
 def update(conn, descr: str, db_id: int) -> DatabaseStats:
@@ -267,14 +288,13 @@ def insert(conn, stats: DatabaseStats):
             cur.execute(str(update))
 
 
-def update_stats(db_url: str):
-    db = Table("rnc_database")
+def update_stats(db_url: str, force=False):
     with connect(db_url) as conn:
-        query = Query.from_(db).select(db.id, db.descr).where(db.alive == "Y")
         with conn.cursor() as cur:
             cur.execute("SET max_parallel_workers_per_gather = 0")
-            cur.execute(str(query))
+            cur.execute(STALE_DATABASES_QUERY, {"force": force})
             db_ids = list(cur)
+        LOGGER.info("Updating stats for %i database(s)", len(db_ids))
         for (db_id, descr) in db_ids:
             if descr == "ENA":
                 LOGGER.info("Skipping %s", descr)
