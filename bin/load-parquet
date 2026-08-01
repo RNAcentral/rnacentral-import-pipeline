@@ -105,6 +105,38 @@ def _connect(pg_url: str) -> duckdb.DuckDBPyConnection:
     return con
 
 
+def target_row_count(pg_url: str, quoted_qualified: str) -> int | None:
+    """
+    Row count of the target table, over a plain psycopg2 connection.
+
+    Not through the DuckDB attachment: the postgres extension has no aggregate
+    pushdown, so ``SELECT count(*) FROM pg.<table>`` is answered by streaming
+    the whole table back with ``COPY ... TO STDOUT``, in parallel over several
+    connections. On the ENA load that meant pulling a freshly written staging
+    table of hundreds of millions of rows across the socket purely to print a
+    log line, and the resulting burst of dirty-buffer writes took the server
+    down with::
+
+        IO Error: Failed to fetch header for COPY: ERROR: failed to
+        initialize hash table "CompactCheckpointerRequestQueue"
+
+    -- i.e. the INSERT had already committed and the run still failed. The
+    count is informational, so a failure here is logged and swallowed rather
+    than losing a load that succeeded.
+    """
+    try:
+        conn = psycopg2.connect(pg_url)
+        try:
+            with conn.cursor() as cur:
+                cur.execute(f"SELECT count(*) FROM {quoted_qualified}")
+                return cur.fetchone()[0]
+        finally:
+            conn.close()
+    except Exception as exc:
+        sys.stderr.write(f"warning: could not count {quoted_qualified}: {exc}\n")
+        return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("table", help="Target Postgres table (schema-qualified OK).")
@@ -217,15 +249,20 @@ def main() -> int:
         [args.parquet_glob],
     )
 
-    total = con.execute(f"SELECT count(*) FROM pg.{quoted_qualified}").fetchone()[0]
-    sys.stderr.write(
-        f"loaded {inserted} row(s); pg.{quoted_qualified} now has {total} row(s)\n"
-    )
     write_count(args.count_file, inserted)
 
     # The attachment holds TRUNCATE's ACCESS EXCLUSIVE lock until it closes, so
-    # _run_post_load's own connection would deadlock against it forever.
+    # _run_post_load's own connection would deadlock against it forever. The
+    # count below opens its own connection too, so it has to come after this.
     con.close()
+
+    total = target_row_count(args.pg_url, quoted_qualified)
+    if total is None:
+        sys.stderr.write(f"loaded {inserted} row(s) into pg.{qualified}\n")
+    else:
+        sys.stderr.write(
+            f"loaded {inserted} row(s); pg.{quoted_qualified} now has {total} row(s)\n"
+        )
 
     if args.post_load is not None:
         return _run_post_load(args.pg_url, args.post_load, inserted, args.allow_empty)
