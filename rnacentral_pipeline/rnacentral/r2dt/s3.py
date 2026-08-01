@@ -56,7 +56,11 @@ def client(endpoint=ENDPOINT, pool_connections=64):
             max_pool_connections=pool_connections,
             connect_timeout=30,
             read_timeout=120,
-            retries={"max_attempts": 5, "mode": "adaptive"},
+            # One attempt, because _with_retries already gives each object five.
+            # Nesting the two budgets multiplied them: a wedged key cost
+            # 5 x 5 x 120s ~= 50 minutes before the task gave up. Adaptive mode
+            # still throttles client-side when the store pushes back.
+            retries={"max_attempts": 1, "mode": "adaptive"},
         ),
     )
     if os.environ.get("S3_KEY") and os.environ.get("S3_SECRET"):
@@ -153,12 +157,28 @@ def _with_retries(fn, key, attempts=MAX_ATTEMPTS, sleep=None, settled=None):
             (sleep or time.sleep)(BACKOFF * 2 ** (attempt - 1))
 
 
-def upload(file_list, env, endpoint=ENDPOINT, bucket=BUCKET, workers=32):
+def upload(
+    file_list,
+    env,
+    endpoint=ENDPOINT,
+    bucket=BUCKET,
+    workers=32,
+    allow_failures=0,
+    failure_list=None,
+):
     """Upload every gzipped SVG named in `file_list` to S3, in parallel.
 
     Each PUT sends Content-MD5 (server-side integrity) and we assert the returned
     ETag matches (client-side). Raises RuntimeError if ANY object failed, so the
     caller/pipeline sees the failure rather than a silent partial upload.
+
+    `allow_failures` relaxes that for stray objects the store will not accept --
+    a single wedged key (every PUT and HEAD to it timing out) otherwise costs the
+    whole batch and, after the retries, the run. Failures up to the cap are
+    logged and written to `failure_list`, one URS per line, so the gap is
+    recorded and can be reconciled with verify-s3 rather than silently lost.
+    Anything above the cap still raises: an outage must not slip through as
+    tolerated breakage.
     """
     paths = _read_file_list(file_list)
     s3 = client(endpoint, pool_connections=workers + 8)
@@ -206,10 +226,17 @@ def upload(file_list, env, endpoint=ENDPOINT, bucket=BUCKET, workers=32):
 
     LOGGER.info("Uploaded %d/%d objects to %s", done["n"], len(paths), bucket)
     if failures:
-        raise RuntimeError(
+        if failure_list is not None:
+            Path(failure_list).write_text(
+                "".join(f"{urs_of(path)}\t{err}\n" for path, err in failures)
+            )
+        summary = (
             f"{len(failures)}/{len(paths)} uploads failed; first: "
             f"{failures[0][0]}: {failures[0][1]}"
         )
+        if len(failures) > allow_failures:
+            raise RuntimeError(summary)
+        LOGGER.error("%s -- tolerated (allow_failures=%d)", summary, allow_failures)
     return done["n"]
 
 

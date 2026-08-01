@@ -158,6 +158,9 @@ process publish_layout {
 
   output:
   val 'done', emit: flag
+  // Only written when an upload failed and was tolerated, so the channel stays
+  // empty on a clean run.
+  path 'upload-failures.txt', optional: true, emit: failures
 
   script:
   // prepare-s3 opens its file list with 'w', so each chunk needs its own to concatenate.
@@ -170,7 +173,10 @@ process publish_layout {
   done
 
   cat file-list.* > file-list
-  rnac r2dt upload-s3 --env $params.r2dt.s3.env file-list
+  rnac r2dt upload-s3 --env $params.r2dt.s3.env \\
+    --allow-failures ${params.r2dt.allow_upload_failures} \\
+    --failure-list upload-failures.txt \\
+    file-list
   """
 }
 
@@ -301,6 +307,12 @@ workflow r2dt {
       parse_layout.out.attempted | collect | set { attempted }
 
       publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
+
+      // One file listing every URS that could not be uploaded, so a tolerated
+      // failure is on disk next to the SVGs rather than buried in task logs.
+      publish_layout.out.failures \
+      | collectFile(name: 'upload-failures.txt', storeDir: params.r2dt.publish) \
+      | subscribe { f -> log.warn "r2dt: some SVGs were not uploaded, see ${f}" }
 
       store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, uploaded) | set { done }
     } else {

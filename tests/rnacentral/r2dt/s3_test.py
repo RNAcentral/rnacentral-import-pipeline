@@ -64,6 +64,22 @@ def test_client_prefers_the_pipeline_credentials(monkeypatch):
     assert captured["endpoint_url"] == s3.ENDPOINT
 
 
+@pytest.mark.r2dt
+def test_botocore_does_not_retry_underneath_us(monkeypatch):
+    """
+    _with_retries gives every object MAX_ATTEMPTS goes. Letting botocore retry
+    as well multiplied the budgets, so one wedged key took 5 x 5 x 120s to fail.
+    """
+    captured = {}
+    monkeypatch.setattr(
+        s3.boto3, "client", lambda name, **kwargs: captured.update(kwargs) or name
+    )
+
+    s3.client()
+
+    assert captured["config"].retries["max_attempts"] == 1
+
+
 class _FakeS3:
     """Minimal stand-in that records puts and can be told to fail one key."""
 
@@ -244,6 +260,80 @@ def test_a_settled_check_does_not_rescue_a_permanent_error(tmp_path, monkeypatch
     with pytest.raises(RuntimeError, match="uploads failed"):
         s3.upload(str(listing), "prod", workers=1)
     assert fake.attempts == 1
+
+
+@pytest.mark.r2dt
+def test_upload_tolerates_failures_up_to_the_cap(tmp_path, monkeypatch):
+    """
+    A single key the store will not accept (every PUT and HEAD to it timing out)
+    otherwise costs the whole batch, and after the retries the run.
+    """
+    key = "prod/URS/00/00/F7/F7/URS0000F7F701.svg.gz"
+    fake = _FakeS3(fail_key=key, error=ReadTimeoutError(endpoint_url=""))
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+    listing = _write_list(tmp_path, ["URS0000F7F700", "URS0000F7F701"])
+    failures = tmp_path / "upload-failures.txt"
+
+    n = s3.upload(
+        str(listing), "prod", workers=2, allow_failures=1, failure_list=str(failures)
+    )
+
+    assert n == 1  # the good object still landed
+    assert "URS0000F7F701" in failures.read_text()
+    assert "URS0000F7F700" not in failures.read_text()
+
+
+@pytest.mark.r2dt
+def test_upload_still_fails_above_the_cap(tmp_path, monkeypatch):
+    """An outage must not slip through as tolerated breakage."""
+
+    class _AllFail(_FakeS3):
+        def put_object(self, Bucket, Key, Body, ContentMD5, ContentType):
+            raise ReadTimeoutError(endpoint_url="")
+
+    monkeypatch.setattr(s3, "client", lambda *a, **k: _AllFail())
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+    listing = _write_list(tmp_path, ["URS0000F7F700", "URS0000F7F701"])
+    failures = tmp_path / "upload-failures.txt"
+
+    with pytest.raises(RuntimeError, match="uploads failed"):
+        s3.upload(
+            str(listing),
+            "prod",
+            workers=2,
+            allow_failures=1,
+            failure_list=str(failures),
+        )
+    # Written before raising, so the record survives the failure.
+    assert failures.exists()
+
+
+@pytest.mark.r2dt
+def test_upload_writes_no_failure_list_on_a_clean_run(tmp_path, monkeypatch):
+    """The Nextflow output is `optional: true` and keys off this file existing."""
+    monkeypatch.setattr(s3, "client", lambda *a, **k: _FakeS3())
+    listing = _write_list(tmp_path, ["URS0000F7F700"])
+    failures = tmp_path / "upload-failures.txt"
+
+    s3.upload(str(listing), "prod", workers=1, failure_list=str(failures))
+
+    assert not failures.exists()
+
+
+@pytest.mark.r2dt
+def test_upload_defaults_to_tolerating_nothing(tmp_path, monkeypatch):
+    """Strictness stays the default; tolerance is opt-in per run."""
+    fake = _FakeS3(
+        fail_key="prod/URS/00/00/F7/F7/URS0000F7F701.svg.gz",
+        error=ReadTimeoutError(endpoint_url=""),
+    )
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+    listing = _write_list(tmp_path, ["URS0000F7F700", "URS0000F7F701"])
+
+    with pytest.raises(RuntimeError, match="uploads failed"):
+        s3.upload(str(listing), "prod", workers=2)
 
 
 @pytest.mark.r2dt

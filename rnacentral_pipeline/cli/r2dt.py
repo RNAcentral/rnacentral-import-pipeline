@@ -263,16 +263,41 @@ def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
 @click.option("--workers", default=32, help="parallel uploads")
 @click.option("--endpoint", default=r2dt_s3.ENDPOINT)
 @click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option(
+    "--allow-failures",
+    default=0,
+    help="tolerate up to this many failed objects instead of failing the batch",
+)
+@click.option(
+    "--failure-list",
+    default=None,
+    type=click.Path(dir_okay=False),
+    help="write the URS of each failed upload here, for later reconciliation",
+)
 @click.argument("file_list", type=click.Path(exists=True, dir_okay=False))
-def r2dt_upload_s3(file_list, env, workers, endpoint, bucket):
+def r2dt_upload_s3(
+    file_list, env, workers, endpoint, bucket, allow_failures, failure_list
+):
     """
     Upload the gzipped SVGs listed in FILE_LIST (produced by prepare-s3) to S3.
 
     Replaces update-svg.sh: uploads via boto3 with server-side Content-MD5
     verification and fails loudly if any object does not upload, rather than
     silently swallowing HTTP errors.
+
+    --allow-failures lets a stray unwritable object through rather than losing
+    the batch; anything beyond the cap still fails. Use --failure-list to record
+    what was skipped.
     """
-    r2dt_s3.upload(file_list, env, endpoint=endpoint, bucket=bucket, workers=workers)
+    r2dt_s3.upload(
+        file_list,
+        env,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        allow_failures=allow_failures,
+        failure_list=failure_list,
+    )
 
 
 @cli.command("verify-s3")
@@ -293,7 +318,9 @@ def r2dt_verify_s3(file_list, output, env, workers, endpoint, bucket):
         file_list, env, endpoint=endpoint, bucket=bucket, workers=workers, out=output
     )
     if problems:
-        raise click.ClickException(f"{problems} files missing or mismatched in {bucket}")
+        raise click.ClickException(
+            f"{problems} files missing or mismatched in {bucket}"
+        )
 
 
 @cli.command("list-s3")
