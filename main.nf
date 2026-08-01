@@ -9,9 +9,9 @@ params.connections = new groovy.json.JsonSlurper().parse(new File(params.connect
 // Inferred from params.databases; Nextflow 26 forbids the loop this replaced.
 // Expressions live in lib/Utils.groovy so import-data.nf can derive the same.
 params.databases.ensembl._any.run = Utils.ensembl_runs(params.databases)
-params.needs_publications = params.needs_publications || Utils.needs_publications(params.databases, params.get('skip_publications', false))
-params.should_release     = params.should_release || Utils.should_release(params.databases)
-params.needs_taxonomy     = params.needs_taxonomy || Utils.needs_taxonomy(params.databases)
+params.needs_publications = Utils.needs_publications(params.databases, params.skip_publications)
+params.should_release     = !params.skip_release && Utils.should_release(params.databases)
+params.needs_taxonomy     = Utils.needs_taxonomy(params.databases)
 
 include { genes } from './genes'
 include { import_data } from './import-data'
