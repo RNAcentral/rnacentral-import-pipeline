@@ -2,6 +2,17 @@
 
 BEGIN TRANSACTION;
 
+-- Parallel workers stage shared hash tables and sorts in /dev/shm
+-- (dynamic_shared_memory_type = posix), a fixed-size tmpfs unrelated to
+-- work_mem and usually far smaller than RAM in a container. The matview
+-- refreshes at the bottom of this file blow it out ("could not resize shared
+-- memory segment ... No space left on device"). Serial execution spills to
+-- normal disk temp files instead. Same guard as 000__populate_precompute.sql.
+SET LOCAL max_parallel_workers_per_gather = 0;
+-- Parallel index builds use the same DSM machinery, and this file creates
+-- seven indexes.
+SET LOCAL max_parallel_maintenance_workers = 0;
+
 create index if not exists ix_load_rnc_sequence_regions__accession on load_rnc_sequence_regions(accession);
 
 -- Update the table to include urs_taxid and pretty database name
