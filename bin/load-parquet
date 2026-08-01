@@ -96,9 +96,34 @@ def _extension_home() -> Path:
     return home
 
 
-def _connect(pg_url: str) -> duckdb.DuckDBPyConnection:
+def _resource_settings(threads: int | None, memory_limit: str | None) -> list[str]:
+    """
+    SET statements constraining DuckDB to the resources the task actually has.
+
+    Left alone, DuckDB sizes itself from the machine: hardware_concurrency()
+    threads and ~80% of system RAM. Neither sees the SLURM allocation, so on a
+    big node a task with `cpus 4` runs dozens of workers, each streaming into
+    Postgres through its own connection. That is how a load-time COPY took the
+    server out with 'out of memory ... in memory context "ExprContext"'.
+
+    preserve_insertion_order stays off because the row order of a staging table
+    does not matter and holding it costs memory proportional to the whole load.
+    """
+    settings = ["SET preserve_insertion_order = false"]
+    if threads:
+        settings.append(f"SET threads = {int(threads)}")
+    if memory_limit:
+        settings.append(f"SET memory_limit = '{memory_limit}'")
+    return settings
+
+
+def _connect(
+    pg_url: str, threads: int | None = None, memory_limit: str | None = None
+) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
     con.execute(f"SET home_directory = '{_extension_home()}'")
+    for statement in _resource_settings(threads, memory_limit):
+        con.execute(statement)
     con.execute("INSTALL postgres")
     con.execute("LOAD postgres")
     con.execute(f"ATTACH '{pg_url}' AS pg (TYPE postgres)")
@@ -170,6 +195,24 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--threads",
+        type=int,
+        default=int(os.environ.get("DUCKDB_THREADS", 0)) or None,
+        help=(
+            "Cap DuckDB worker threads. Defaults to $DUCKDB_THREADS, else "
+            "DuckDB's own machine-wide default. Pass the task's cpu allocation: "
+            "each thread can hold its own Postgres connection open."
+        ),
+    )
+    parser.add_argument(
+        "--memory-limit",
+        default=os.environ.get("DUCKDB_MEMORY_LIMIT") or None,
+        help=(
+            "Cap DuckDB memory, e.g. '8GB'. Defaults to $DUCKDB_MEMORY_LIMIT, "
+            "else ~80%% of system RAM, which ignores the task's allocation."
+        ),
+    )
+    parser.add_argument(
         "--allow-empty",
         action="store_true",
         help=(
@@ -212,7 +255,7 @@ def main() -> int:
     qualified = target if "." in target else f"{args.schema}.{target}"
     quoted_qualified = ".".join(f'"{p}"' for p in qualified.split("."))
 
-    con = _connect(args.pg_url)
+    con = _connect(args.pg_url, threads=args.threads, memory_limit=args.memory_limit)
 
     # Quick sanity check that the glob matches at least one file before we
     # touch Postgres, so a typo doesn't accidentally truncate a populated table.
