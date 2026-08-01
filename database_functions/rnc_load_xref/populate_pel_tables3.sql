@@ -97,7 +97,7 @@ BEGIN
     AND NOT EXISTS (
           SELECT 1 FROM RNACEN.XREF X
           WHERE X.AC = L.IN_AC AND X.DBID = p_in_dbid AND X.DELETED = 'N'
-          AND X.UPI = L.COMPARABLE_PROT_UPI
+          AND X.URS = L.COMPARABLE_PROT_UPI
         );
 
     --COMMIT;
