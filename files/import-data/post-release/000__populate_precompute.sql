@@ -171,16 +171,21 @@ DROP TABLE tmp_new_precompute;
 -- the OOM note below) must not roll back the multi-hour insert above.
 COMMIT;
 
-BEGIN TRANSACTION;
--- Recreate indexes.
+-- Recreate indexes. Deliberately NOT wrapped in one transaction: each build is
+-- its own statement-level transaction, so an OOM on the fifth index does not
+-- discard the four that already succeeded, and IF NOT EXISTS makes a re-run
+-- pick up where it stopped. (A failed CREATE INDEX rolls itself back cleanly,
+-- so there is never a half-built index left behind to confuse the re-run.)
+-- Session SET, not SET LOCAL - SET LOCAL would expire at the end of each
+-- implicit transaction, i.e. immediately.
+SET maintenance_work_mem = '256MB';
+SET max_parallel_maintenance_workers = 0;
 
-SET LOCAL maintenance_work_mem = '512MB';
-SET LOCAL max_parallel_maintenance_workers = 0;
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (urs);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (urs, taxid);
+CREATE INDEX IF NOT EXISTS ix_rnc_rna_precomputed_assigned_rna ON rnacen.rnc_rna_precomputed USING btree (assigned_so_rna_type);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_rna_type_idx ON rnacen.rnc_rna_precomputed USING btree (rna_type);
 
-CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (urs);
-CREATE INDEX rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
-CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (urs, taxid);
-CREATE INDEX ix_rnc_rna_precomputed_assigned_rna ON rnacen.rnc_rna_precomputed USING btree (assigned_so_rna_type);
-CREATE INDEX rnc_rna_precomputed_rna_type_idx ON rnacen.rnc_rna_precomputed USING btree (rna_type);
-
-COMMIT;
+RESET maintenance_work_mem;
+RESET max_parallel_maintenance_workers;
