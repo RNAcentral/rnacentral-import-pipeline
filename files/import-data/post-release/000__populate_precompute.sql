@@ -55,7 +55,7 @@ JOIN load_rnc_accessions a ON a.database = d.descr;
 -- Most accessions in a load already have a precompute row from a prior
 -- release (same urs_taxid), so a straight join+ON CONFLICT DO NOTHING spends
 -- almost all of its time computing rows that get thrown away at the conflict
--- check. Anti-join against rnc_rna_precomputed.id (the PK, and NOT dropped
+-- check. Anti-join against rnc_rna_precomputed.urs_taxid (the PK, and NOT dropped
 -- above) ONCE up front to materialise only the genuinely new rows, same
 -- no-op-skipping idea as the IS DISTINCT FROM guard in
 -- rnc_update.update_rnc_accessions. This collapses the batch loop down to
@@ -73,7 +73,7 @@ SET LOCAL max_parallel_workers_per_gather = 0;
 
 -- The planner badly underestimates the anti-join below as yielding ~1 row
 -- (no cross-table correlation stats exist between xref.urs_taxid and
--- rnc_rna_precomputed.id for two large, mostly-uncorrelated key sets), so it
+-- rnc_rna_precomputed.urs_taxid for two large, mostly-uncorrelated key sets), so it
 -- picks a Nested Loop for the "ac IN (...)" membership check instead of a
 -- Hash Semi Join. With a 228M-row inner side that doesn't fit work_mem for a
 -- Materialize, Nested Loop re-scans the full accession list from disk once
@@ -112,7 +112,7 @@ BEGIN
           AND xref.dbid = ANY(%L::int[])
           AND xref.ac IN (SELECT accession FROM tmp_load_accessions)
           AND NOT EXISTS (
-            SELECT 1 FROM rnc_rna_precomputed p WHERE p.id = xref.urs_taxid
+            SELECT 1 FROM rnc_rna_precomputed p WHERE p.urs_taxid = xref.urs_taxid
           )
     $q$, v_dbids);
     EXECUTE sql_stmt;

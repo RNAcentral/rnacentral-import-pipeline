@@ -1,5 +1,5 @@
 -- One (urs_taxid, last_release) row per existing precompute row, for the
--- release-based selection (`precompute select`). rnc_rna_precomputed.id IS the
+-- release-based selection (`precompute select`). rnc_rna_precomputed.urs_taxid IS the
 -- urs_taxid, so no join to rna is needed.
 --
 -- ORDER BY ... COLLATE "C" must match fetch-xref-info.sql so the Rust
