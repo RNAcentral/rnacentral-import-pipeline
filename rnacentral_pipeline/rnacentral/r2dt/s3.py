@@ -104,17 +104,53 @@ def _is_transient(err):
     return isinstance(err, BotoCoreError)
 
 
-def _with_retries(fn, key, attempts=MAX_ATTEMPTS, sleep=time.sleep):
+def _already_stored(s3, bucket, key, hex_md5, size):
+    """True when `key` already holds exactly these bytes.
+
+    A read timeout on a PUT usually means the object landed and only the
+    response was lost, so re-PUTting it times out the same way -- which is how
+    one object failed all MAX_ATTEMPTS and took a whole publish_layout chunk
+    down with it (1/3124 uploads failed). A HEAD is cheap; if the bytes are
+    there the upload is done. Any error here means "can't tell", so the caller
+    falls back to retrying.
+    """
+    try:
+        head = s3.head_object(Bucket=bucket, Key=key)
+    except Exception:  # noqa: BLE001 - unreachable/404/denied all mean "retry"
+        return False
+    if head.get("ContentLength") != size:
+        return False
+    etag = head.get("ETag", "").strip('"')
+    if _looks_like_md5(etag):
+        return etag == hex_md5
+    # Store's ETag isn't an MD5 (same caveat as verify()); size matched.
+    return True
+
+
+def _with_retries(fn, key, attempts=MAX_ATTEMPTS, sleep=None, settled=None):
+    """Call `fn`, retrying transient errors with exponential backoff.
+
+    `settled`, if given, is consulted after a failure and should report whether
+    the work actually landed despite the error; when it does we stop and return
+    None rather than retrying.
+    """
     for attempt in range(1, attempts + 1):
         try:
             return fn()
         except Exception as err:  # noqa: BLE001 - classified by _is_transient
+            if settled is not None and _is_transient(err) and settled():
+                LOGGER.warning(
+                    "%s reported %s but landed anyway; not retrying", key, err
+                )
+                return None
             if attempt == attempts or not _is_transient(err):
                 raise
             LOGGER.warning(
                 "Retrying %s after %s (attempt %d/%d)", key, err, attempt, attempts
             )
-            sleep(BACKOFF * 2 ** (attempt - 1))
+            # Resolved per call, not as a default argument: a default would bind
+            # time.sleep at import and quietly ignore a monkeypatched sleep.
+            (sleep or time.sleep)(BACKOFF * 2 ** (attempt - 1))
 
 
 def upload(file_list, env, endpoint=ENDPOINT, bucket=BUCKET, workers=32):
@@ -143,7 +179,10 @@ def upload(file_list, env, endpoint=ENDPOINT, bucket=BUCKET, workers=32):
                 ContentType=CONTENT_TYPE,
             ),
             key,
+            settled=lambda: _already_stored(s3, bucket, key, hex_md5, len(data)),
         )
+        if resp is None:  # the PUT landed, only its response was lost
+            return key
         etag = resp.get("ETag", "").strip('"')
         # Single-part PUT => ETag is the hex MD5. If the store doesn't do that we
         # still had server-side Content-MD5 verification, so only warn.

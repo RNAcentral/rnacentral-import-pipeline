@@ -158,6 +158,94 @@ def test_upload_gives_up_on_a_persistent_timeout(tmp_path, monkeypatch):
     assert fake.attempts == s3.MAX_ATTEMPTS
 
 
+class _LandsThenTimesOutS3(_FakeS3):
+    """A store that writes the object but loses the response.
+
+    What livingobjects did to URS0000112770: the PUT completed server-side and
+    the read timed out waiting for the ack, so every retry re-uploaded and
+    timed out identically.
+    """
+
+    def put_object(self, Bucket, Key, Body, ContentMD5, ContentType):
+        if Key == self.fail_key:
+            self.attempts += 1
+            self.puts[Key] = Body
+            self.objects[Key] = (Body, hashlib.md5(Body).hexdigest())
+            raise ReadTimeoutError(endpoint_url="")
+        return super().put_object(Bucket, Key, Body, ContentMD5, ContentType)
+
+
+@pytest.mark.r2dt
+def test_upload_accepts_an_object_that_landed_despite_a_timeout(tmp_path, monkeypatch):
+    """
+    The regression: one object timing out on all 5 attempts failed the whole
+    task ("1/3124 uploads failed"), and the Nextflow retry then redid the entire
+    ~10-minute publish loop only to time out on the same object again.
+    """
+    key = "prod/URS/00/00/F7/F7/URS0000F7F701.svg.gz"
+    fake = _LandsThenTimesOutS3(fail_key=key)
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+    listing = _write_list(tmp_path, ["URS0000F7F700", "URS0000F7F701"])
+
+    assert s3.upload(str(listing), "prod", workers=2) == 2
+    # Settled on the first failure, so no pointless re-PUTs of a stored object.
+    assert fake.attempts == 1
+
+
+@pytest.mark.r2dt
+def test_upload_still_fails_when_the_object_is_not_there(tmp_path, monkeypatch):
+    """A timeout with nothing stored is a real failure and must stay loud."""
+    key = "prod/URS/00/00/F7/F7/URS0000F7F701.svg.gz"
+    fake = _FakeS3(fail_key=key, error=ReadTimeoutError(endpoint_url=""))
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+    listing = _write_list(tmp_path, ["URS0000F7F700", "URS0000F7F701"])
+
+    with pytest.raises(RuntimeError, match="uploads failed"):
+        s3.upload(str(listing), "prod", workers=2)
+    assert fake.attempts == s3.MAX_ATTEMPTS
+
+
+@pytest.mark.r2dt
+def test_upload_rejects_a_partial_object_left_by_a_timeout(tmp_path, monkeypatch):
+    """
+    Truncated bytes on the server are not a settled upload -- the size check has
+    to send it back through the retries rather than call it done.
+    """
+    key = "prod/URS/00/00/F7/F7/URS0000F7F701.svg.gz"
+    fake = _FakeS3(
+        fail_key=key,
+        error=ReadTimeoutError(endpoint_url=""),
+        objects={key: (b"trunc", hashlib.md5(b"trunc").hexdigest())},
+    )
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+    listing = _write_list(tmp_path, ["URS0000F7F701"])
+
+    with pytest.raises(RuntimeError, match="uploads failed"):
+        s3.upload(str(listing), "prod", workers=1)
+    assert fake.attempts == s3.MAX_ATTEMPTS
+
+
+@pytest.mark.r2dt
+def test_a_settled_check_does_not_rescue_a_permanent_error(tmp_path, monkeypatch):
+    """403 is not transient; a stored object must not paper over it."""
+    key = "prod/URS/00/00/F7/F7/URS0000F7F701.svg.gz"
+    body = b"gzipped-svg-for-URS0000F7F701"
+    fake = _FakeS3(
+        fail_key=key,
+        error=ClientError({"ResponseMetadata": {"HTTPStatusCode": 403}}, "PutObject"),
+        objects={key: (body, hashlib.md5(body).hexdigest())},
+    )
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    listing = _write_list(tmp_path, ["URS0000F7F701"])
+
+    with pytest.raises(RuntimeError, match="uploads failed"):
+        s3.upload(str(listing), "prod", workers=1)
+    assert fake.attempts == 1
+
+
 @pytest.mark.r2dt
 @pytest.mark.parametrize(
     "error,transient",
