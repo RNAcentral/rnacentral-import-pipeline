@@ -85,10 +85,13 @@ def _resource_settings(threads: int | None, memory_limit: str | None) -> list[st
     SET statements constraining DuckDB to the resources the task actually has.
 
     Left alone, DuckDB sizes itself from the machine: hardware_concurrency()
-    threads and ~80% of system RAM. Neither sees the SLURM allocation, so on a
-    big node a task with `cpus 4` runs dozens of workers, each streaming into
-    Postgres through its own connection. That is how a load-time COPY took the
-    server out with 'out of memory ... in memory context "ExprContext"'.
+    threads and ~80% of system RAM. Neither sees the SLURM allocation, so a task
+    declaring `cpus 4` and `memory 9.GB` runs dozens of workers oversubscribing
+    four cores and may claim far more memory than the cgroup allows.
+
+    This bounds the task, not the server: the INSERT is one transaction and a
+    Postgres transaction cannot span connections, so the COPY goes over a single
+    one however many threads DuckDB has.
 
     preserve_insertion_order stays off because the row order of a staging table
     does not matter and holding it costs memory proportional to the whole load.
