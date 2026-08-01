@@ -131,6 +131,72 @@ def test_reserved_word_columns_are_quoted(con, tmp_path):
     assert con.execute("SELECT count(*) FROM target").fetchone()[0] == 1
 
 
+class _FakeCursor:
+    def __init__(self, recorder, result):
+        self.recorder = recorder
+        self.result = result
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+    def execute(self, sql):
+        self.recorder.append(sql)
+
+    def fetchone(self):
+        return (self.result,)
+
+
+class _FakeConnection:
+    def __init__(self, recorder, result):
+        self.recorder = recorder
+        self.result = result
+        self.closed = False
+
+    def cursor(self):
+        return _FakeCursor(self.recorder, self.result)
+
+    def close(self):
+        self.closed = True
+
+
+def test_target_row_count_goes_through_postgres_not_duckdb(monkeypatch):
+    """
+    The regression: this count used to run over the DuckDB postgres attachment,
+    which has no aggregate pushdown and answers it by COPYing the entire table
+    back. On a freshly loaded ENA staging table that killed the server with
+    'failed to initialize hash table "CompactCheckpointerRequestQueue"' -- after
+    the INSERT had committed.
+    """
+    executed = []
+    conn = _FakeConnection(executed, 42)
+    monkeypatch.setattr(load_parquet.psycopg2, "connect", lambda url: conn)
+
+    total = load_parquet.target_row_count("postgresql://x", '"rnacen"."load_x"')
+
+    assert total == 42
+    assert executed == ['SELECT count(*) FROM "rnacen"."load_x"']
+    assert "pg." not in executed[0]
+    assert conn.closed
+
+
+def test_target_row_count_survives_a_database_failure(monkeypatch, capsys):
+    """
+    The count is only used for a log line, so a hiccup here must not throw away
+    a load that already committed.
+    """
+
+    def boom(_url):
+        raise RuntimeError("server closed the connection unexpectedly")
+
+    monkeypatch.setattr(load_parquet.psycopg2, "connect", boom)
+
+    assert load_parquet.target_row_count("postgresql://x", '"rnacen"."load_x"') is None
+    assert "could not count" in capsys.readouterr().err
+
+
 def test_load_table_mapping_covers_every_writer_output():
     """
     Every key of ENTRY_WRITER_SCHEMAS needs an entry in ENTRY_WRITER_LOAD_TABLES
