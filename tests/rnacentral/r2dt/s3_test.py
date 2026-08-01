@@ -463,6 +463,24 @@ def test_drop_failed_is_a_noop_without_failures(tmp_path):
 
 
 @pytest.mark.r2dt
+def test_drop_failed_caps_the_whole_run(tmp_path):
+    """
+    upload-s3 tolerates per batch, so 1 each across 1000 batches is 1000 lost
+    SVGs. The aggregate list is where a run-wide limit can actually be enforced.
+    """
+    failures = _failures(tmp_path, "URS0000000001", "URS0000000002", "URS0000000003")
+    data = _data_csv(tmp_path, "URS0000000001", "URS0000F7F700")
+
+    with pytest.raises(RuntimeError, match="over the 2 allowed"):
+        s3.drop_failed(str(failures), [str(data)], max_failures=2)
+
+    # Raised before touching the files, so nothing is half-dropped.
+    assert "URS0000000001" in data.read_text()
+
+    assert s3.drop_failed(str(failures), [str(data)], max_failures=3) == 1
+
+
+@pytest.mark.r2dt
 def test_drop_failed_matches_the_urs_column_only(tmp_path):
     """A URS appearing in another field must not take the row with it."""
     failures = _failures(tmp_path, "URS0000112770")

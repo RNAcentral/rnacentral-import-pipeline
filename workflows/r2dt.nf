@@ -239,8 +239,8 @@ process store_secondary_structures {
     """ :
     "split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted"
   """
-  rnac r2dt drop-failed-uploads $upload_failures \\
-    data*.csv attempted*.${params.writer_format}
+  rnac r2dt drop-failed-uploads --max-failures ${params.r2dt.max_upload_failures} \\
+    $upload_failures data*.csv attempted*.${params.writer_format}
 
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
   $attempted_cmd

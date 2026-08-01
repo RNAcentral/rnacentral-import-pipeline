@@ -301,21 +301,28 @@ def r2dt_upload_s3(
 
 
 @cli.command("drop-failed-uploads")
+@click.option(
+    "--max-failures",
+    default=None,
+    type=int,
+    help="fail if FAILURE_LIST holds more URS than this (a run-wide cap)",
+)
 @click.argument("failure_list", type=click.Path(dir_okay=False))
 @click.argument("data_files", nargs=-1, type=click.Path(exists=True, dir_okay=False))
-def r2dt_drop_failed_uploads(failure_list, data_files):
+def r2dt_drop_failed_uploads(failure_list, data_files, max_failures):
     """
     Remove rows for URS listed in FAILURE_LIST from DATA_FILES, in place.
 
-    Keeps the database honest when upload-s3 tolerated a failure: without this
-    the URS gets a secondary structure row pointing at an S3 object that is not
-    there. Pass both the hits and the attempted files, so the sequence is left
-    undone rather than recorded as attempted and never retried.
+    Keeps the database honest when upload-s3 tolerated a failure: the URS would
+    otherwise get a structure row pointing at an object that is not in S3. Pass
+    the hits and the attempted files both, so the sequence is left undone rather
+    than recorded as attempted and never retried.
 
     A missing or empty FAILURE_LIST is a no-op, so callers can pass it
-    unconditionally.
+    unconditionally. --max-failures caps the whole run, since upload-s3's own
+    tolerance is per batch.
     """
-    r2dt_s3.drop_failed(failure_list, data_files)
+    r2dt_s3.drop_failed(failure_list, data_files, max_failures=max_failures)
 
 
 @cli.command("verify-s3")

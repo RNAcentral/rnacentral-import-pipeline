@@ -279,22 +279,24 @@ def _drop_from_parquet(path, failed):
     return table.num_rows - kept.num_rows
 
 
-def drop_failed(failure_list, paths):
+def drop_failed(failure_list, paths, max_failures=None):
     """
     Strip rows for URS whose SVG never reached S3 from the files about to load.
 
-    Both sides have to lose the row. Dropping it only from the hits (data*.csv)
-    would leave the URS in attempted*.parquet, which populates
-    pipeline_tracking_traveler -- and files/r2dt/setup.sql deletes every tracked
-    URS from the to-draw set, so it would never be attempted again. Dropping
-    both leaves the sequence simply undone, for the next run to pick up.
-
-    CSV rows carry the URS first (see files/r2dt/load.ctl); parquet is matched on
-    the ``urs`` column (schemas.R2DT_ATTEMPTED).
+    Both sides must lose the row: left in attempted*.parquet it reaches
+    pipeline_tracking_traveler, which files/r2dt/setup.sql excludes from future
+    runs, so the sequence would never be drawn again. Above max_failures this
+    raises -- that many missing objects is an outage, not a stray wedged key.
     """
     failed = failed_urs(failure_list)
     if not failed:
         return 0
+
+    if max_failures is not None and len(failed) > max_failures:
+        raise RuntimeError(
+            f"{len(failed)} uploads failed across the run, over the "
+            f"{max_failures} allowed: {', '.join(sorted(failed))}"
+        )
 
     dropped = 0
     for name in paths:
