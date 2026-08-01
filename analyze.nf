@@ -43,17 +43,12 @@ workflow {
   main:
     analyze(channel.of('ready'))
 
+  // No onError section: Nextflow 26.04 invokes it with a TraceRecord it can't
+  // accept ("Invalid method invocation `doCall`"). onComplete runs on failure too.
   onComplete:
     try {
       def msg = workflow.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
       slack_closure(msg)
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e}"
-    }
-
-  onError:
-    try {
-      slack_closure("Analyze workflow hit an error and crashed")
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }

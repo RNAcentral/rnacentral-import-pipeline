@@ -22,11 +22,13 @@ import logging
 import os
 import sys
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import boto3
 from botocore.config import Config
+from botocore.exceptions import BotoCoreError, ClientError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +36,11 @@ ENDPOINT = "https://livingobjects.ebi.ac.uk"
 BUCKET = "ebi-rnacentral"
 CONTENT_TYPE = "application/octet-stream"  # matches the existing objects
 SUFFIX = ".svg.gz"
+
+# botocore's retries share one adaptive quota per client, so a burst of slow
+# responses can exhaust it; retry each object here too, on its own backoff.
+MAX_ATTEMPTS = 5
+BACKOFF = 2.0
 
 
 def client(endpoint=ENDPOINT, pool_connections=64):
@@ -47,6 +54,8 @@ def client(endpoint=ENDPOINT, pool_connections=64):
         config=Config(
             s3={"addressing_style": "path"},
             max_pool_connections=pool_connections,
+            connect_timeout=30,
+            read_timeout=120,
             retries={"max_attempts": 5, "mode": "adaptive"},
         ),
     )
@@ -87,6 +96,27 @@ def _read_file_list(file_list):
         return [line.strip() for line in fh if line.strip()]
 
 
+def _is_transient(err):
+    """True for errors worth another go: timeouts, dropped connections, 5xx, 429."""
+    if isinstance(err, ClientError):
+        status = err.response.get("ResponseMetadata", {}).get("HTTPStatusCode", 0)
+        return status >= 500 or status == 429
+    return isinstance(err, BotoCoreError)
+
+
+def _with_retries(fn, key, attempts=MAX_ATTEMPTS, sleep=time.sleep):
+    for attempt in range(1, attempts + 1):
+        try:
+            return fn()
+        except Exception as err:  # noqa: BLE001 - classified by _is_transient
+            if attempt == attempts or not _is_transient(err):
+                raise
+            LOGGER.warning(
+                "Retrying %s after %s (attempt %d/%d)", key, err, attempt, attempts
+            )
+            sleep(BACKOFF * 2 ** (attempt - 1))
+
+
 def upload(file_list, env, endpoint=ENDPOINT, bucket=BUCKET, workers=32):
     """Upload every gzipped SVG named in `file_list` to S3, in parallel.
 
@@ -104,12 +134,15 @@ def upload(file_list, env, endpoint=ENDPOINT, bucket=BUCKET, workers=32):
         data = Path(path).read_bytes()
         hex_md5, b64_md5 = _md5(data)
         key = s3_key(urs_of(path), env)
-        resp = s3.put_object(
-            Bucket=bucket,
-            Key=key,
-            Body=data,
-            ContentMD5=b64_md5,
-            ContentType=CONTENT_TYPE,
+        resp = _with_retries(
+            lambda: s3.put_object(
+                Bucket=bucket,
+                Key=key,
+                Body=data,
+                ContentMD5=b64_md5,
+                ContentType=CONTENT_TYPE,
+            ),
+            key,
         )
         etag = resp.get("ETag", "").strip('"')
         # Single-part PUT => ETag is the hex MD5. If the store doesn't do that we
@@ -145,7 +178,9 @@ def _looks_like_md5(etag):
     return len(etag) == 32 and all(c in "0123456789abcdef" for c in etag.lower())
 
 
-def verify(file_list, env, endpoint=ENDPOINT, bucket=BUCKET, workers=32, out=sys.stdout):
+def verify(
+    file_list, env, endpoint=ENDPOINT, bucket=BUCKET, workers=32, out=sys.stdout
+):
     """Check every file in `file_list` against the bucket by checksum.
 
     For each local file, HEAD the corresponding key and compare the ETag to the

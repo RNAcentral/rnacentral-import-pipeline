@@ -46,16 +46,10 @@ workflow {
   main:
     import_data(channel.of('ready'))
 
+  // See analyze.nf: an onError section crashes on Nextflow 26.04.
   onComplete:
     try {
       slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e}"
-    }
-
-  onError:
-    try {
-      slack_closure("Import pipeline encountered an error and failed")
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }

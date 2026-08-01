@@ -124,6 +124,36 @@ def test_paths_creates_expected_ribovision_paths():
 
 
 @pytest.mark.r2dt
+@pytest.mark.parametrize(
+    "model,expected",
+    [
+        ("EC_LSU_3D", "ribovision-lsu"),
+        ("mHS_LSU_3D", "ribovision-lsu"),
+        # Named after the rRNA rather than the subunit; these used to raise
+        ("cSO_23S_3D", "ribovision-lsu"),
+        ("DD_28S_3D", "ribovision-lsu"),
+        ("EC_SSU_3D", "ribovision-ssu"),
+        ("cSO_16S_3D", "ribovision-ssu"),
+        ("HS_18S_3D", "ribovision-ssu"),
+    ],
+)
+def test_ribovision_models_map_to_a_subunit_directory(model, expected):
+    info = result_info("URS0000C5FF65", model, data.Source.ribovision)
+    assert info.source_directory == (BASE / expected).resolve()
+
+
+@pytest.mark.r2dt
+def test_ribovision_falls_back_to_the_directory_holding_the_results():
+    # An unrecognised model name still resolves if the overlaps file exists
+    info = result_info("URS0000C5FF65", "EC_wat_3D", data.Source.ribovision)
+    assert info.source_directory == (BASE / "ribovision-lsu").resolve()
+
+    missing = result_info("URS0000000000", "EC_wat_3D", data.Source.ribovision)
+    with pytest.raises(ValueError):
+        missing.source_directory
+
+
+@pytest.mark.r2dt
 def test_paths_creates_expected_rfam_paths():
     # Rfam models are keyed by short name but the files use the RF accession
     info = result_info("URS0000A7635A", "SAM", data.Source.rfam, alias="RF00162")

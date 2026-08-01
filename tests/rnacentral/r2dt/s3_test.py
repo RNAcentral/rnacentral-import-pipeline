@@ -6,7 +6,7 @@ import hashlib
 import io
 
 import pytest
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ReadTimeoutError
 
 from rnacentral_pipeline.rnacentral.r2dt import s3
 
@@ -67,14 +67,19 @@ def test_client_prefers_the_pipeline_credentials(monkeypatch):
 class _FakeS3:
     """Minimal stand-in that records puts and can be told to fail one key."""
 
-    def __init__(self, fail_key=None, objects=None):
+    def __init__(self, fail_key=None, objects=None, fail_times=None, error=None):
         self.puts = {}
         self.fail_key = fail_key
+        self.fail_times = fail_times
+        self.error = error or RuntimeError("simulated S3 500")
+        self.attempts = 0
         self.objects = objects if objects is not None else {}
 
     def put_object(self, Bucket, Key, Body, ContentMD5, ContentType):
         if Key == self.fail_key:
-            raise RuntimeError("simulated S3 500")
+            self.attempts += 1
+            if self.fail_times is None or self.attempts <= self.fail_times:
+                raise self.error
         self.puts[Key] = Body
         return {"ETag": '"%s"' % hashlib.md5(Body).hexdigest()}
 
@@ -122,6 +127,52 @@ def test_upload_raises_on_any_failure(tmp_path, monkeypatch):
 
     with pytest.raises(RuntimeError, match="uploads failed"):
         s3.upload(str(listing), "prod", workers=2)
+
+
+@pytest.mark.r2dt
+def test_upload_retries_a_read_timeout(tmp_path, monkeypatch):
+    # One transient timeout used to fail the whole publish_layout task, throwing
+    # away ~10 minutes of publishing for 1 of 2660 objects.
+    key = "prod/URS/00/00/F7/F7/URS0000F7F701.svg.gz"
+    fake = _FakeS3(fail_key=key, fail_times=2, error=ReadTimeoutError(endpoint_url=""))
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+    listing = _write_list(tmp_path, ["URS0000F7F700", "URS0000F7F701"])
+
+    assert s3.upload(str(listing), "prod", workers=2) == 2
+    assert key in fake.puts
+
+
+@pytest.mark.r2dt
+def test_upload_gives_up_on_a_persistent_timeout(tmp_path, monkeypatch):
+    fake = _FakeS3(
+        fail_key="prod/URS/00/00/F7/F7/URS0000F7F701.svg.gz",
+        error=ReadTimeoutError(endpoint_url=""),
+    )
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+    listing = _write_list(tmp_path, ["URS0000F7F700", "URS0000F7F701"])
+
+    with pytest.raises(RuntimeError, match="uploads failed"):
+        s3.upload(str(listing), "prod", workers=2)
+    assert fake.attempts == s3.MAX_ATTEMPTS
+
+
+@pytest.mark.r2dt
+@pytest.mark.parametrize(
+    "error,transient",
+    [
+        (ReadTimeoutError(endpoint_url=""), True),
+        (ClientError({"ResponseMetadata": {"HTTPStatusCode": 503}}, "PutObject"), True),
+        (
+            ClientError({"ResponseMetadata": {"HTTPStatusCode": 403}}, "PutObject"),
+            False,
+        ),
+        (ValueError("bad etag"), False),
+    ],
+)
+def test_only_transient_errors_are_retried(error, transient):
+    assert s3._is_transient(error) is transient
 
 
 @pytest.mark.r2dt
