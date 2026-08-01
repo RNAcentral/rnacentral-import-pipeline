@@ -133,10 +133,9 @@ def test_reserved_word_columns_are_quoted(con, tmp_path):
 
 def test_resource_settings_bound_duckdb_to_the_task():
     """
-    The regression: nothing capped DuckDB, so it took hardware_concurrency()
-    threads and ~80% of system RAM regardless of `cpus 4`/`memory 9.GB`. Each
-    worker streams to Postgres on its own connection, and the server died
-    mid-COPY with 'out of memory ... in memory context "ExprContext"'.
+    Nothing capped DuckDB, so it took hardware_concurrency() threads and ~80% of
+    system RAM regardless of the `cpus 4`/`memory 9.GB` the task declared --
+    oversubscribing its cores and free to exceed its cgroup.
     """
     settings = load_parquet._resource_settings(4, "8GB")
 
