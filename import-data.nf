@@ -15,9 +15,9 @@ include { slack_closure } from './workflows/utils/slack'
 // false, so the load stops at the staging tables.
 params.connections = new groovy.json.JsonSlurper().parse(new File(params.connection_file))
 params.databases.ensembl._any.run = Utils.ensembl_runs(params.databases)
-params.needs_publications = params.needs_publications || Utils.needs_publications(params.databases, params.get('skip_publications', false))
-params.should_release = params.should_release || Utils.should_release(params.databases)
-params.needs_taxonomy = params.needs_taxonomy || Utils.needs_taxonomy(params.databases)
+params.needs_publications = Utils.needs_publications(params.databases, params.skip_publications)
+params.should_release = !params.skip_release && Utils.should_release(params.databases)
+params.needs_taxonomy = Utils.needs_taxonomy(params.databases)
 
 // Promote a delta parse's manifest into rnc_import_manifest, once the release has
 // committed. Gated on should_release so a run that does not release never advances
