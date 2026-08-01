@@ -40,8 +40,15 @@ process merge_and_import {
     // at the start of load_data, so targets are empty when we append. Keeping
     // --truncate would wipe load_rnacentral_all between the short_sequences
     // and long_sequences runs (both map to it).
+    //
+    // DuckDB otherwise sizes itself from the machine, not the allocation. The
+    // memory limit leaves a GB for the Python process so the cgroup kills
+    // nothing; the thread cap bounds how many connections we open on the
+    // server, which is what ran it out of memory mid-COPY.
     """
-    load-parquet $name 'raw*.parquet'
+    load-parquet $name 'raw*.parquet' \\
+      --threads ${task.cpus} \\
+      --memory-limit ${Math.max(1, task.memory.toGiga() - 1)}GB
     """
   } else {
     """
