@@ -222,6 +222,7 @@ process store_secondary_structures {
   path(urs_sql)
   path(model)
   path(should_show_ctl)
+  path(upload_failures)
   val(_flag)
 
   output:
@@ -238,6 +239,9 @@ process store_secondary_structures {
     """ :
     "split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted"
   """
+  rnac r2dt drop-failed-uploads $upload_failures \\
+    data*.csv attempted*.${params.writer_format}
+
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
   $attempted_cmd
 
@@ -308,13 +312,17 @@ workflow r2dt {
 
       publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
 
-      // One file listing every URS that could not be uploaded, so a tolerated
-      // failure is on disk next to the SVGs rather than buried in task logs.
+      // Every URS that could not be uploaded, in one file next to the SVGs.
+      // store_secondary_structures drops those rows before loading, so a
+      // tolerated upload failure leaves the sequence undone rather than
+      // recorded with an SVG that is not in S3. The placeholder keeps the
+      // input satisfied on a clean run, where the channel is empty.
       publish_layout.out.failures \
       | collectFile(name: 'upload-failures.txt', storeDir: params.r2dt.publish) \
-      | subscribe { f -> log.warn "r2dt: some SVGs were not uploaded, see ${f}" }
+      | ifEmpty(file('files/r2dt/no-upload-failures.txt')) \
+      | set { upload_failures }
 
-      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, upload_failures, uploaded) | set { done }
     } else {
       channel.of('r2dt skipped') | set { done }
     }

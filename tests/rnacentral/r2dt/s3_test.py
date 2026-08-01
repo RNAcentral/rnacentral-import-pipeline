@@ -404,6 +404,75 @@ def test_verify_reports_a_size_mismatch(tmp_path, monkeypatch):
     assert out.getvalue().startswith("SIZE")
 
 
+def _failures(tmp_path, *urs_ids):
+    path = tmp_path / "upload-failures.txt"
+    path.write_text("".join(f"{u}\tRead timeout\n" for u in urs_ids))
+    return path
+
+
+def _data_csv(tmp_path, *urs_ids):
+    path = tmp_path / "data_1.csv"
+    path.write_text("".join(f"{u},1,(((...))),0,3\n" for u in urs_ids))
+    return path
+
+
+def _attempted_parquet(tmp_path, *urs_ids):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    path = tmp_path / "attempted_1.parquet"
+    pq.write_table(
+        pa.table({"urs": list(urs_ids), "r2dt_version": ["2.0"] * len(urs_ids)}), path
+    )
+    return path
+
+
+@pytest.mark.r2dt
+def test_drop_failed_removes_the_urs_from_both_sides(tmp_path):
+    """
+    Both files must lose the row. Dropping only the hits would leave the URS in
+    pipeline_tracking_traveler, and files/r2dt/setup.sql deletes tracked URS
+    from the to-draw set -- so it would never be attempted again.
+    """
+    import pyarrow.parquet as pq
+
+    failures = _failures(tmp_path, "URS0000112770")
+    data = _data_csv(tmp_path, "URS0000112770", "URS0000F7F700")
+    attempted = _attempted_parquet(tmp_path, "URS0000112770", "URS0000F7F700")
+
+    dropped = s3.drop_failed(str(failures), [str(data), str(attempted)])
+
+    assert dropped == 2
+    assert "URS0000112770" not in data.read_text()
+    assert "URS0000F7F700" in data.read_text()
+    assert pq.read_table(attempted).column("urs").to_pylist() == ["URS0000F7F700"]
+
+
+@pytest.mark.r2dt
+def test_drop_failed_is_a_noop_without_failures(tmp_path):
+    """The workflow passes the list unconditionally, placeholder and all."""
+    data = _data_csv(tmp_path, "URS0000F7F700")
+    before = data.read_text()
+
+    empty = tmp_path / "empty.txt"
+    empty.write_text("")
+
+    assert s3.drop_failed(str(empty), [str(data)]) == 0
+    assert s3.drop_failed(str(tmp_path / "missing.txt"), [str(data)]) == 0
+    assert data.read_text() == before
+
+
+@pytest.mark.r2dt
+def test_drop_failed_matches_the_urs_column_only(tmp_path):
+    """A URS appearing in another field must not take the row with it."""
+    failures = _failures(tmp_path, "URS0000112770")
+    data = tmp_path / "data_1.csv"
+    data.write_text("URS0000F7F700,1,URS0000112770,0,3\n")
+
+    assert s3.drop_failed(str(failures), [str(data)]) == 0
+    assert "URS0000F7F700" in data.read_text()
+
+
 class _FakeListingS3:
     """Serves list_objects_v2 pages out of a flat key list."""
 

@@ -17,6 +17,7 @@ Objects live at (matching the historic layout in update-svg.sh):
 """
 
 import base64
+import csv
 import hashlib
 import logging
 import os
@@ -27,6 +28,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import boto3
+import pyarrow.parquet as pq
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
@@ -242,6 +244,73 @@ def upload(
 
 def _looks_like_md5(etag):
     return len(etag) == 32 and all(c in "0123456789abcdef" for c in etag.lower())
+
+
+def failed_urs(failure_list):
+    """The URS ids in a --failure-list file (one per line, URS first)."""
+    path = Path(failure_list)
+    if not path.is_file():
+        return set()
+    return {
+        line.split("\t", 1)[0].strip()
+        for line in path.read_text().splitlines()
+        if line.strip()
+    }
+
+
+def _drop_from_csv(path, failed):
+    rows = list(csv.reader(path.open()))
+    keep = [row for row in rows if not row or row[0] not in failed]
+    if len(keep) == len(rows):
+        return 0
+    with path.open("w", newline="") as out:
+        csv.writer(out).writerows(keep)
+    return len(rows) - len(keep)
+
+
+def _drop_from_parquet(path, failed):
+    table = pq.read_table(path)
+    if "urs" not in table.column_names:
+        return 0
+    kept = table.filter([u not in failed for u in table.column("urs").to_pylist()])
+    if kept.num_rows == table.num_rows:
+        return 0
+    pq.write_table(kept, path)
+    return table.num_rows - kept.num_rows
+
+
+def drop_failed(failure_list, paths):
+    """
+    Strip rows for URS whose SVG never reached S3 from the files about to load.
+
+    Both sides have to lose the row. Dropping it only from the hits (data*.csv)
+    would leave the URS in attempted*.parquet, which populates
+    pipeline_tracking_traveler -- and files/r2dt/setup.sql deletes every tracked
+    URS from the to-draw set, so it would never be attempted again. Dropping
+    both leaves the sequence simply undone, for the next run to pick up.
+
+    CSV rows carry the URS first (see files/r2dt/load.ctl); parquet is matched on
+    the ``urs`` column (schemas.R2DT_ATTEMPTED).
+    """
+    failed = failed_urs(failure_list)
+    if not failed:
+        return 0
+
+    dropped = 0
+    for name in paths:
+        path = Path(name)
+        if path.suffix == ".parquet":
+            dropped += _drop_from_parquet(path, failed)
+        else:
+            dropped += _drop_from_csv(path, failed)
+
+    LOGGER.warning(
+        "Dropped %d row(s) for %d URS whose SVG did not upload: %s",
+        dropped,
+        len(failed),
+        ", ".join(sorted(failed)),
+    )
+    return dropped
 
 
 def verify(

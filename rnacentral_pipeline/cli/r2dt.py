@@ -300,6 +300,24 @@ def r2dt_upload_s3(
     )
 
 
+@cli.command("drop-failed-uploads")
+@click.argument("failure_list", type=click.Path(dir_okay=False))
+@click.argument("data_files", nargs=-1, type=click.Path(exists=True, dir_okay=False))
+def r2dt_drop_failed_uploads(failure_list, data_files):
+    """
+    Remove rows for URS listed in FAILURE_LIST from DATA_FILES, in place.
+
+    Keeps the database honest when upload-s3 tolerated a failure: without this
+    the URS gets a secondary structure row pointing at an S3 object that is not
+    there. Pass both the hits and the attempted files, so the sequence is left
+    undone rather than recorded as attempted and never retried.
+
+    A missing or empty FAILURE_LIST is a no-op, so callers can pass it
+    unconditionally.
+    """
+    r2dt_s3.drop_failed(failure_list, data_files)
+
+
 @cli.command("verify-s3")
 @click.option("--env", default="prod")
 @click.option("--workers", default=32)
