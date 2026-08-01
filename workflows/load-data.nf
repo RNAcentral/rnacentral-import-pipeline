@@ -18,7 +18,7 @@ process create_load_tables {
 process merge_and_import {
   tag { name }
   memory 9.GB
-  maxForks 2
+  maxForks params.import_data.load_max_forks
   cpus 4
   cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
