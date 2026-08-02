@@ -247,14 +247,18 @@ def _looks_like_md5(etag):
 
 
 def failed_urs(failure_list):
-    """The URS ids in a --failure-list file (one per line, URS first)."""
+    """The URS ids in a --failure-list file (one per line, URS first).
+
+    `#` lines are the run headers the published, appended-to copy carries, so
+    that file can be read back here as well as by a person.
+    """
     path = Path(failure_list)
     if not path.is_file():
         return set()
     return {
         line.split("\t", 1)[0].strip()
         for line in path.read_text().splitlines()
-        if line.strip()
+        if line.strip() and not line.startswith("#")
     }
 
 

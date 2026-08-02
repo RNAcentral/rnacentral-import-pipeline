@@ -180,6 +180,23 @@ process publish_layout {
   """
 }
 
+process record_upload_failures {
+  queue 'datamover'
+  memory '1 GB'
+
+  input:
+  path(failures, stageAs: 'run-failures.txt')
+
+  script:
+  """
+  mkdir -p $params.r2dt.publish
+  {
+    echo "# ${workflow.runName} ${workflow.start}"
+    cat run-failures.txt
+  } >> $params.r2dt.publish/upload-failures.txt
+  """
+}
+
 process parse_layout {
   maxForks params.r2dt.parse_max_forks
   memory '2 GB'
@@ -318,7 +335,15 @@ workflow r2dt {
       // recorded with an SVG that is not in S3. The placeholder keeps the
       // input satisfied on a clean run, where the channel is empty.
       publish_layout.out.failures \
-      | collectFile(name: 'upload-failures.txt', storeDir: params.r2dt.publish) \
+      | collectFile(name: 'upload-failures.txt') \
+      | set { run_failures }
+
+      // Published by appending, so the history of every run survives; the
+      // channel keeps this run's file alone, since max_upload_failures counts
+      // the failures of one run.
+      run_failures | record_upload_failures
+
+      run_failures \
       | ifEmpty(file('files/r2dt/no-upload-failures.txt')) \
       | set { upload_failures }
 

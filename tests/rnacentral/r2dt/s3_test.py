@@ -463,6 +463,20 @@ def test_drop_failed_is_a_noop_without_failures(tmp_path):
 
 
 @pytest.mark.r2dt
+def test_failed_urs_skips_the_run_headers(tmp_path):
+    """The published copy is appended to per run, one `#` header per run."""
+    path = tmp_path / "upload-failures.txt"
+    path.write_text(
+        "# run_one 2026-08-01T10:00\n"
+        "URS0000112770\tRead timeout\n"
+        "# run_two 2026-08-02T10:00\n"
+        "URS0000F7F701\tRead timeout\n"
+    )
+
+    assert s3.failed_urs(str(path)) == {"URS0000112770", "URS0000F7F701"}
+
+
+@pytest.mark.r2dt
 def test_drop_failed_caps_the_whole_run(tmp_path):
     """
     upload-s3 tolerates per batch, so 1 each across 1000 batches is 1000 lost
