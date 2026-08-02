@@ -10,9 +10,10 @@ DECLARE
     sql_stmt text;
     -- Range-batch size (rows of the staging table per insert statement). Each
     -- statement queues one FK-check after-trigger event per inserted row
-    -- (rnc_reference_map -> rnc_accessions, -> rnc_references) and that queue is
-    -- only drained at end of statement, so peak memory scales with batch size,
-    -- NOT import size. A single unbatched insert OOMs in "AfterTriggerEvents".
+    -- (ck_rnc_reference_map__reference_id -> rnc_references.id, IMMEDIATE) and
+    -- that queue is only drained at end of statement, so peak memory scales with
+    -- batch size, NOT import size. A single unbatched insert OOMs in
+    -- "AfterTriggerEvents".
     -- Smaller = safer/slower; this is the knob to turn down if it ever OOMs again.
     v_batch_size bigint := 10000000;
     v_total bigint;
