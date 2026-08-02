@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime
 import json
 import logging
+import time
 
 import psycopg2
 
@@ -30,21 +32,35 @@ _BASE_CONNECT = {
 }
 
 # Conservative default: allows spilling to disk rather than OOM-killing the backend.
-_CONNECT_DEFAULT = {**_BASE_CONNECT, "options": "-c statement_timeout=0 -c work_mem=64MB"}
+_CONNECT_DEFAULT = {
+    **_BASE_CONNECT,
+    "options": "-c statement_timeout=0 -c work_mem=64MB",
+}
 # Higher memory only for DDL-heavy steps (index builds, partition exchange).
-_CONNECT_HIGH_MEM = {**_BASE_CONNECT, "options": "-c statement_timeout=0 -c work_mem=256MB"}
+_CONNECT_HIGH_MEM = {
+    **_BASE_CONNECT,
+    "options": "-c statement_timeout=0 -c work_mem=256MB",
+}
 
 
 def _connect(db_url, high_mem=False):
-    return psycopg2.connect(db_url, **(_CONNECT_HIGH_MEM if high_mem else _CONNECT_DEFAULT))
+    return psycopg2.connect(
+        db_url, **(_CONNECT_HIGH_MEM if high_mem else _CONNECT_DEFAULT)
+    )
+
+
+def _elapsed(started):
+    return datetime.timedelta(seconds=round(time.monotonic() - started))
 
 
 def _run(db_url, sql, params=None, label="query", high_mem=False):
+    LOGGER.info("START  %s", label)
+    started = time.monotonic()
     with _connect(db_url, high_mem=high_mem) as conn:
         conn.autocommit = True
         with conn.cursor() as cur:
-            LOGGER.info("Running %s", label)
             cur.execute(sql, params)
+    LOGGER.info("DONE   %s (%s)", label, _elapsed(started))
 
 
 # Databases loaded this run, for update-stats to scope to (see database_stats.py).
@@ -122,27 +138,51 @@ def run(db_url, force_full=False):
     load is INCREMENTAL (only new/changed rows are touched). Pass force_full=True
     to force a FULL release for every database -- e.g. after a schema change.
     """
+    run_started = time.monotonic()
     # Deploy any changed database functions from database_functions/ before the
     # release logic runs. Replaces the per-function CREATE OR REPLACE patches that
     # used to live here inline.
+    LOGGER.info("START  apply_functions")
+    started = time.monotonic()
     functions.apply(db_url)
-    _run(db_url, "SELECT rnc_update.update_rnc_accessions()", label="update_rnc_accessions")
-    _run(db_url, "SELECT rnc_update.update_literature_references()", label="update_literature_references")
+    LOGGER.info("DONE   apply_functions (%s)", _elapsed(started))
+    _run(
+        db_url,
+        "SELECT rnc_update.update_rnc_accessions()",
+        label="update_rnc_accessions",
+    )
+    _run(
+        db_url,
+        "SELECT rnc_update.update_literature_references()",
+        label="update_literature_references",
+    )
     _run(db_url, CREATE_INDEX_SQL, label="create_index", high_mem=True)
     _run(db_url, LOAD_MD5_INDEX_SQL, label="create_load_md5_index", high_mem=True)
     # 'A' = auto (per-database FULL/INCREMENTAL from history); 'F' forces FULL.
-    _run(db_url, "SELECT rnc_update.prepare_releases(%s)",
-         params=("F" if force_full else "A",), label="prepare_releases")
+    _run(
+        db_url,
+        "SELECT rnc_update.prepare_releases(%s)",
+        params=("F" if force_full else "A",),
+        label="prepare_releases",
+    )
 
     with _connect(db_url) as conn:
         with conn.cursor() as cur:
             cur.execute(TO_RELEASE)
             releases = cur.fetchall()
 
-    for (dbid, rid) in releases:
-        LOGGER.info("Executing release %i from database %i", rid, dbid)
-        _run(db_url, "SELECT rnc_update.new_update_release(%s, %s)", params=(dbid, rid),
-             label=f"new_update_release(dbid={dbid}, rid={rid})")
+    LOGGER.info(
+        "%i database(s) to release: %s",
+        len(releases),
+        ", ".join(str(dbid) for (dbid, _rid) in releases),
+    )
+    for (n, (dbid, rid)) in enumerate(releases, start=1):
+        _run(
+            db_url,
+            "SELECT rnc_update.new_update_release(%s, %s)",
+            params=(dbid, rid),
+            label=f"new_update_release(dbid={dbid}, rid={rid}) [{n}/{len(releases)}]",
+        )
 
     # do_pel_exchange adds each partition's upi->rna foreign key (fk4) NOT VALID to keep the
     # full-partition validation scan off the load's critical path. Validate them now, after
@@ -152,20 +192,27 @@ def run(db_url, force_full=False):
     # committed at this point, so this is detection, not a pre-commit gate.
     for (dbid, rid) in releases:
         for suffix in ("deleted", "not_deleted"):
-            _run(db_url,
-                 f"ALTER TABLE xref_p{dbid}_{suffix} "
-                 f"VALIDATE CONSTRAINT xref_p{dbid}_{suffix}_fk4",
-                 label=f"validate fk4 xref_p{dbid}_{suffix}")
+            _run(
+                db_url,
+                f"ALTER TABLE xref_p{dbid}_{suffix} "
+                f"VALIDATE CONSTRAINT xref_p{dbid}_{suffix}_fk4",
+                label=f"validate fk4 xref_p{dbid}_{suffix}",
+            )
 
     # Verify xref primary key uniqueness once, after all databases are loaded,
     # rather than once per database inside load_xref. The check is global (it
     # ignores its argument), so a single run covers every partition.
     if releases:
-        _run(db_url, "SELECT rnc_load_xref.do_checks(NULL::bigint)",
-             label="do_checks (once, post-loop)", high_mem=True)
+        _run(
+            db_url,
+            "SELECT rnc_load_xref.do_checks(NULL::bigint)",
+            label="do_checks (once, post-loop)",
+            high_mem=True,
+        )
 
     # `releases` was captured before mark_as_done flipped their status.
     _record_pending_stats(db_url, [dbid for (dbid, _rid) in releases])
+    LOGGER.info("DONE   release run (%s total)", _elapsed(run_started))
 
 
 def check(limit_file, db_url, default_allowed_change=0.30):
@@ -197,7 +244,8 @@ def check(limit_file, db_url, default_allowed_change=0.30):
             # partitions (dbids spliced as literals so the partitions prune).
             if new_counts:
                 cur.execute(
-                    "SELECT id FROM rnc_database WHERE descr = ANY(%s)", (list(new_counts),)
+                    "SELECT id FROM rnc_database WHERE descr = ANY(%s)",
+                    (list(new_counts),),
                 )
                 dbids = ",".join(str(int(row[0])) for row in cur)
                 if dbids:
@@ -228,7 +276,10 @@ def check(limit_file, db_url, default_allowed_change=0.30):
             if decrease > limit:
                 LOGGER.error(
                     "Database %s decreased by %f (loaded %d distinct sequences vs %d active)",
-                    name, decrease, int(current), int(previous),
+                    name,
+                    decrease,
+                    int(current),
+                    int(previous),
                 )
                 problems = True
 

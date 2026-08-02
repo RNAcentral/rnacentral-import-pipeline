@@ -92,16 +92,18 @@ process release {
     fi
   }
 
+  # 2>&1 so the per-step `rnac` progress logs (which go to stderr) land in
+  # .command.out next to the TIMING markers instead of in .command.err.
   echo "TIMING \$(date +%T) start release-check"
-  ${should_release ? '' : '# ' }rnac --log-level info release check $limits
+  ${should_release ? '' : '# ' }rnac --log-level info release check $limits 2>&1
   echo "TIMING \$(date +%T) start pre-release-sql"
   run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   echo "TIMING \$(date +%T) start release-run"
-  ${should_release ? '' : '# ' }rnac --log-level info release run
+  ${should_release ? '' : '# ' }rnac --log-level info release run 2>&1
   echo "TIMING \$(date +%T) start post-release-sql"
   run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   echo "TIMING \$(date +%T) start update-stats"
-  ${should_release ? '' : '# ' }rnac --log-level info release update-stats
+  ${should_release ? '' : '# ' }rnac --log-level info release update-stats 2>&1
   echo "TIMING \$(date +%T) done"
   """
 }
