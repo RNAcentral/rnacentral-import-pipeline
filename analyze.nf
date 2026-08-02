@@ -47,7 +47,9 @@ workflow {
   // accept ("Invalid method invocation `doCall`"). onComplete runs on failure too.
   onComplete:
     try {
-      def msg = workflow.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
+      def msg = workflow.success
+        ? "Analyze workflow completed"
+        : "Analyze workflow failed: ${workflow.errorMessage ?: "exit status ${workflow.exitStatus}"}"
       slack_closure(msg)
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
