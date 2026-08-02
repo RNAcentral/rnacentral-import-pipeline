@@ -43,17 +43,14 @@ workflow {
   main:
     analyze(channel.of('ready'))
 
+  // No onError: section -- see the note in import-data.nf. onComplete covers
+  // both outcomes.
   onComplete:
     try {
-      def msg = workflow.success ? "Analyze workflow completed" : "Analyze workflow completed with errors"
+      def msg = workflow.success
+        ? "Analyze workflow completed"
+        : "Analyze workflow failed: ${workflow.errorMessage ?: "exit status ${workflow.exitStatus}"}"
       slack_closure(msg)
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e}"
-    }
-
-  onError:
-    try {
-      slack_closure("Analyze workflow hit an error and crashed")
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }

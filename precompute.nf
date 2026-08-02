@@ -236,18 +236,14 @@ workflow {
   main:
     precompute(channel.of(true))
 
+  // No onError: section -- see the note in import-data.nf. onComplete covers
+  // both outcomes.
   onComplete:
     try {
-      if (workflow.success) {
-        slack_closure("Precompute workflow completed. Data import complete")
-      }
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e}"
-    }
-
-  onError:
-    try {
-      slack_closure("Precompute workflow encountered an error and crashed")
+      def msg = workflow.success
+        ? "Precompute workflow completed. Data import complete"
+        : "Precompute workflow failed: ${workflow.errorMessage ?: "exit status ${workflow.exitStatus}"}"
+      slack_closure(msg)
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }

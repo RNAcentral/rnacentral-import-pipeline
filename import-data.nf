@@ -84,16 +84,14 @@ workflow {
   main:
     import_data(channel.of('ready'))
 
+  // No onError: NF 26 calls those handlers with an argument but compiles the
+  // section to a zero-arg closure, so it dies and buries the real failure.
   onComplete:
     try {
-      slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e}"
-    }
-
-  onError:
-    try {
-      slack_closure("Import pipeline encountered an error and failed")
+      def msg = workflow.success
+        ? "Import workflow completed Ok"
+        : "Import workflow failed: ${workflow.errorMessage ?: "exit status ${workflow.exitStatus}"}"
+      slack_closure(msg)
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }
