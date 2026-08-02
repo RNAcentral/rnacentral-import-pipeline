@@ -135,3 +135,26 @@ def test_run_force_full_forces_full_release_type(monkeypatch):
     # --force-full pins every database to a FULL release.
     assert ("SELECT rnc_update.prepare_releases(%s)", ("F",)) in calls
     assert ("SELECT rnc_update.prepare_releases(%s)", ("A",)) not in calls
+
+
+def test_run_logs_progress_for_every_step(monkeypatch, caplog):
+    """A release run that logs nothing is indistinguishable from a wedged one."""
+    with caplog.at_level("INFO", logger=run.LOGGER.name):
+        _run_capture(monkeypatch)
+
+    messages = [r.getMessage() for r in caplog.records]
+
+    # Each long-running step brackets itself, so the last START with no matching
+    # DONE is the step currently in progress.
+    for step in (
+        "apply_functions",
+        "update_rnc_accessions",
+        "update_literature_references",
+        "prepare_releases",
+        "new_update_release(dbid=9, rid=123) [1/1]",
+        "do_checks (once, post-loop)",
+    ):
+        assert f"START  {step}" in messages, step
+        assert any(m.startswith(f"DONE   {step} (") for m in messages), step
+
+    assert "DONE   release run" in messages[-1]
