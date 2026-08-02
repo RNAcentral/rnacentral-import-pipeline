@@ -158,6 +158,7 @@ process load_data {
   memory 9.GB
 
   input:
+  val(_taxonomy_ready)
   path("precompute*.${params.writer_format}")
   path("qa*.${params.writer_format}")
   path(pre_ctl)
@@ -200,6 +201,10 @@ workflow precompute {
     channel.fromPath('files/precompute/data-post-load.sql') | set { data_post_load }
     channel.fromPath('files/precompute/qa-post-load.sql') | set { qa_post_load }
     channel.fromPath('files/precompute/post-load.sql') | set { post_load }
+
+    channel.fromPath('files/precompute/missing-taxids.sql') | set { missing_taxids_sql }
+    channel.fromPath('files/import-data/load/taxonomy.ctl') | set { taxonomy_ctl }
+    channel.fromPath('files/import-data/pre-release/000__taxonomy.sql') | set { taxonomy_upsert }
 
     channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
     channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
@@ -260,7 +265,7 @@ workflow precompute {
     process_range.out.data | collect | set { data }
     process_range.out.qa | collect | set { qa }
 
-    load_data(data, qa, data_ctl, qa_ctl, data_post_load, qa_post_load, post_load)
+    load_data(taxonomy_ready, data, qa, data_ctl, qa_ctl, data_post_load, qa_post_load, post_load)
 
     // Final precompute step: QC — active-sequence counts + flags.
     load_data.out | qc_precompute

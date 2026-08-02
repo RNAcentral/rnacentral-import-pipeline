@@ -165,10 +165,7 @@ workflow build_urs_table {
     main:
       channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
       channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
-      channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
       channel.fromPath('files/precompute/get-urs-count.sql') | set { count_sql }
-
-      fetch_all_urs_taxid(active_sql) | set { active_urs }
 
       create_schema(schema_sql) \
       | combine(method) \
