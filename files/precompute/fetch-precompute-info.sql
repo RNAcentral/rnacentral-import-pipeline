@@ -6,8 +6,8 @@
 -- merge-join sees both inputs in the same (byte-wise) key order.
 COPY (
 SELECT
-  id,
+  urs_taxid,
   COALESCE(last_release, 0)
 FROM rnc_rna_precomputed
-order by id COLLATE "C"
+order by urs_taxid COLLATE "C"
 ) TO STDOUT (FORMAT CSV)
