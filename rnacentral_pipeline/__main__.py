@@ -11,5 +11,10 @@ import logging
 
 from rnacentral_pipeline.cli import cli
 
-logging.basicConfig()
+# Stays on stderr: several commands write their data to stdout (`output`
+# defaults to `-`), so log lines there would corrupt the payload.
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 cli()
