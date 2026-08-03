@@ -63,7 +63,7 @@ workflow id_mapping {
   channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql') | set { id_query }
   channel.fromPath('files/ftp-export/id-mapping/readme.txt') | set { readme_template }
 
-  channel.of('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f') \
+  channel.of('0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F') \
   | combine(id_query) \
   | build_id_mapping_chunk \
   | collect \
