@@ -64,6 +64,7 @@ process build_table {
   script:
   """
   sort -u computed*.csv > to-load-urs-taxid.csv
+  test -s to-load-urs-taxid.csv || { echo "No urs_taxid selected to precompute" >&2; exit 1; }
   psql \
     -v ON_ERROR_STOP=1 \
     -f "$load" "\$PGDATABASE"
