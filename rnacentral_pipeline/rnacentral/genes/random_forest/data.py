@@ -43,7 +43,7 @@ QUERY = """
 select
 region_name,
 sr.id as region_id,
-urs_taxid,
+sr.urs_taxid,
 assembly_id,
 chromosome,
 region_start,
@@ -56,7 +56,7 @@ so_rna_type as so_type
 
 from rnc_sequence_regions_active sr
 join rnc_sequence_exons ex on ex.region_id = sr.id
-join rnc_rna_precomputed pc on pc.id = sr.urs_taxid
+join rnc_rna_precomputed pc on pc.urs_taxid = sr.urs_taxid
 
 where pc.taxid = %s
 """
@@ -140,6 +140,7 @@ type_scores = {
     Database.rfam.value.descr: 100,
     "R2DT": 100,  ## Can be very specific
 }
+
 
 @lru_cache()
 def get_so_graph():
@@ -850,11 +851,16 @@ def get_accessions(urs_taxids, db_str):
                 (urs_taxids,),
             )
 
-            accessions = pl.DataFrame(cur.fetchall(), schema={"urs_taxid": pl.String,
-                                                              "database": pl.String,
-                                                              "description": pl.String,
-                                                              "rna_type": pl.String,
-                                                              "cm_overlap": pl.Float64})
+            accessions = pl.DataFrame(
+                cur.fetchall(),
+                schema={
+                    "urs_taxid": pl.String,
+                    "database": pl.String,
+                    "description": pl.String,
+                    "rna_type": pl.String,
+                    "cm_overlap": pl.Float64,
+                },
+            )
         conn.commit()
         return accessions
     except Exception as e:

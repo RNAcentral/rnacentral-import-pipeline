@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
+import operator as op
 import logging
 import re
 import typing as ty
@@ -21,6 +23,7 @@ import attr
 import psycopg2
 from attr.validators import instance_of as is_a
 from attr.validators import optional
+from pypika import Query, Table
 
 LOGGER = logging.getLogger(__name__)
 
@@ -125,6 +128,39 @@ class HgncEntry:
                 + m.group(3)
             )
         return None
+
+
+def ensembl_mapping(conn):
+    xref = Table("xref")
+    rna = Table("rna")
+    acc = Table("rnc_accessions")
+    query = (
+        Query.from_(xref)
+        .select(xref.urs, acc.optional_id, rna.len)
+        .join(acc)
+        .on(acc.accession == xref.ac)
+        .join(rna)
+        .on(rna.urs == xref.urs)
+        # dbid 21 == NONCODE
+        .where((xref.dbid == 21) & (xref.taxid == 9606) & (xref.deleted == "N"))
+    )
+
+    found = coll.defaultdict(set)
+    with conn.cursor() as cur:
+        cur.execute(str(query))
+        for result in cur:
+            urs, gene, length = result
+            gene = gene.split(".")[0]
+            found[gene].add((urs, length))
+
+    mapping = {}
+    for gene, ids in found.items():
+        if not ids:
+            continue
+
+        best, _ = max(ids, key=op.itemgetter(1))
+        mapping[gene] = best
+    return mapping
 
 
 @attr.s()

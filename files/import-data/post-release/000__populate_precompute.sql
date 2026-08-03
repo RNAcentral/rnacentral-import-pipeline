@@ -25,9 +25,11 @@ SET LOCAL work_mem = '2GB';
 -- scale. Index builds use maintenance_work_mem, not work_mem.
 SET LOCAL maintenance_work_mem = '2GB';
 
+ALTER TABLE rnacen.rnc_rna_precomputed ALTER COLUMN rna_type DROP DEFAULT;
+
 -- Drop indexes to speed up bulk insert.
--- NB: (upi,taxid,last_release) was removed here - 0 scans over a 14-day prod
--- window; every query on upi/upi+taxid uses rnc_rna_precomputed_upi_idx (upi,taxid,
+-- NB: (urs,taxid,last_release) was removed here - 0 scans over a 14-day prod
+-- window; every query on urs/urs+taxid uses rnc_rna_precomputed_upi_idx (urs,taxid,
 -- 423M scans) instead, so we no longer build/maintain that 11 GB index.
 DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_98db0b07;
 DROP INDEX IF EXISTS rnacen.rnc_rna_precomputed_is_active_idx;
@@ -53,7 +55,7 @@ JOIN load_rnc_accessions a ON a.database = d.descr;
 -- Most accessions in a load already have a precompute row from a prior
 -- release (same urs_taxid), so a straight join+ON CONFLICT DO NOTHING spends
 -- almost all of its time computing rows that get thrown away at the conflict
--- check. Anti-join against rnc_rna_precomputed.id (the PK, and NOT dropped
+-- check. Anti-join against rnc_rna_precomputed.urs_taxid (the PK, and NOT dropped
 -- above) ONCE up front to materialise only the genuinely new rows, same
 -- no-op-skipping idea as the IS DISTINCT FROM guard in
 -- rnc_update.update_rnc_accessions. This collapses the batch loop down to
@@ -71,7 +73,7 @@ SET LOCAL max_parallel_workers_per_gather = 0;
 
 -- The planner badly underestimates the anti-join below as yielding ~1 row
 -- (no cross-table correlation stats exist between xref.urs_taxid and
--- rnc_rna_precomputed.id for two large, mostly-uncorrelated key sets), so it
+-- rnc_rna_precomputed.urs_taxid for two large, mostly-uncorrelated key sets), so it
 -- picks a Nested Loop for the "ac IN (...)" membership check instead of a
 -- Hash Semi Join. With a 228M-row inner side that doesn't fit work_mem for a
 -- Materialize, Nested Loop re-scans the full accession list from disk once
@@ -103,14 +105,14 @@ BEGIN
 
     sql_stmt := format($q$
         CREATE UNLOGGED TABLE tmp_new_precompute AS
-        SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.upi, xref.taxid
+        SELECT row_number() OVER () AS rn, xref.urs_taxid AS id, xref.urs, xref.taxid
         FROM xref
         WHERE
           xref.deleted = 'N'
           AND xref.dbid = ANY(%L::int[])
           AND xref.ac IN (SELECT accession FROM tmp_load_accessions)
           AND NOT EXISTS (
-            SELECT 1 FROM rnc_rna_precomputed p WHERE p.id = xref.urs_taxid
+            SELECT 1 FROM rnc_rna_precomputed p WHERE p.urs_taxid = xref.urs_taxid
           )
     $q$, v_dbids);
     EXECUTE sql_stmt;
@@ -142,8 +144,8 @@ BEGIN
     lo := 1;
     WHILE lo <= v_total LOOP
         sql_stmt := format($q$
-            INSERT INTO rnc_rna_precomputed (id, upi, taxid, is_active) (
-            SELECT id, upi, taxid, true
+            INSERT INTO rnc_rna_precomputed (urs_taxid, urs, taxid, is_active) (
+            SELECT id, urs, taxid, true
             FROM tmp_new_precompute
             WHERE rn >= %s AND rn < %s
             ) ON CONFLICT DO NOTHING
@@ -165,11 +167,25 @@ DROP TABLE tmp_load_accessions;
 DROP TABLE tmp_load_dbids;
 DROP TABLE tmp_new_precompute;
 
--- Recreate indexes
-CREATE INDEX rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (upi);
-CREATE INDEX rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
-CREATE INDEX rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (upi, taxid);
-CREATE INDEX ix_rnc_rna_precomputed_assigned_rna ON rnacen.rnc_rna_precomputed USING btree (assigned_so_rna_type);
-CREATE INDEX rnc_rna_precomputed_rna_type_idx ON rnacen.rnc_rna_precomputed USING btree (rna_type);
-
+-- Commit the insert BEFORE rebuilding indexes. An index build that dies (see
+-- the OOM note below) must not roll back the multi-hour insert above.
 COMMIT;
+
+-- Recreate indexes. Deliberately NOT wrapped in one transaction: each build is
+-- its own statement-level transaction, so an OOM on the fifth index does not
+-- discard the four that already succeeded, and IF NOT EXISTS makes a re-run
+-- pick up where it stopped. (A failed CREATE INDEX rolls itself back cleanly,
+-- so there is never a half-built index left behind to confuse the re-run.)
+-- Session SET, not SET LOCAL - SET LOCAL would expire at the end of each
+-- implicit transaction, i.e. immediately.
+SET maintenance_work_mem = '256MB';
+SET max_parallel_maintenance_workers = 0;
+
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_98db0b07 ON rnacen.rnc_rna_precomputed USING btree (urs);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_is_active_idx ON rnacen.rnc_rna_precomputed USING btree (is_active);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_upi_idx ON rnacen.rnc_rna_precomputed USING btree (urs, taxid);
+CREATE INDEX IF NOT EXISTS ix_rnc_rna_precomputed_assigned_rna ON rnacen.rnc_rna_precomputed USING btree (assigned_so_rna_type);
+CREATE INDEX IF NOT EXISTS rnc_rna_precomputed_rna_type_idx ON rnacen.rnc_rna_precomputed USING btree (rna_type);
+
+RESET maintenance_work_mem;
+RESET max_parallel_maintenance_workers;

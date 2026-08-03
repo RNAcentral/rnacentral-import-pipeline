@@ -20,6 +20,3 @@ sorted-iter = "0.1.7"
 structopt = "0.3"
 strum = "0.21"
 strum_macros = "0.21"
-
-[dev-dependencies]
-rand = "0.9"

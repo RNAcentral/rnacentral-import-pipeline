@@ -46,6 +46,31 @@ def test_schema_columns_match_ctl(schema_name, ctl_stem):
     assert list(schema.names) == target_columns(ctl_stem)
 
 
+# Every logical name whose schema can be paired with a ctl by name. Wider than
+# CASES: this is the repo-wide drift net. The sequences pair is excluded because
+# short_sequences and long_sequences share one staging table but have separate
+# ctls whose HAVING FIELDS differ only in the seq column.
+WIDE_CASES = sorted(
+    (name, name.replace("_", "-"))
+    for name, table in schemas.ENTRY_WRITER_LOAD_TABLES.items()
+    if table is not None
+    and hasattr(schemas, name.upper().replace("-", "_"))
+    and (CTL_DIR / f"{name.replace('_', '-')}.ctl").exists()
+)
+
+
+@pytest.mark.parametrize("name,ctl_stem", WIDE_CASES, ids=[c[1] for c in WIDE_CASES])
+def test_every_mapped_schema_matches_its_ctl(name, ctl_stem):
+    """
+    A schema narrower than its ctl means the writer emits more values than the
+    schema declares, and every task dies on "Row length (8) does not match
+    schema length (5)" -- which is exactly how TAXONOMY shipped.
+    """
+    schema = getattr(schemas, name.upper().replace("-", "_"))
+    expected = [c.lower() for c in target_columns(ctl_stem)]
+    assert [n.lower() for n in schema.names] == expected
+
+
 SCHEMA_SQL = (
     Path(__file__).resolve().parents[1] / "files" / "schema" / "create_load.sql"
 ).read_text()

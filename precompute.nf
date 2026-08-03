@@ -131,10 +131,34 @@ process process_range {
   """
 }
 
+process reconcile_taxonomy {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  val(_flag)
+  path(missing_sql)
+  path(tax_ctl)
+  path(tax_upsert)
+
+  output:
+  val('done')
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f $missing_sql "\$PGDATABASE" > missing-taxids.csv
+  if [ -s missing-taxids.csv ]; then
+    rnac ncbi fill-missing-taxonomy missing-taxids.csv taxonomy.csv
+    split-and-load $tax_ctl 'taxonomy.csv' ${params.import_data.chunk_size} taxonomy
+    psql -v ON_ERROR_STOP=1 -f $tax_upsert "\$PGDATABASE"
+  fi
+  """
+}
+
 process load_data {
   memory 9.GB
 
   input:
+  val(_taxonomy_ready)
   path("precompute*.${params.writer_format}")
   path("qa*.${params.writer_format}")
   path(pre_ctl)
@@ -178,6 +202,10 @@ workflow precompute {
     channel.fromPath('files/precompute/qa-post-load.sql') | set { qa_post_load }
     channel.fromPath('files/precompute/post-load.sql') | set { post_load }
 
+    channel.fromPath('files/precompute/missing-taxids.sql') | set { missing_taxids_sql }
+    channel.fromPath('files/import-data/load/taxonomy.ctl') | set { taxonomy_ctl }
+    channel.fromPath('files/import-data/pre-release/000__taxonomy.sql') | set { taxonomy_upsert }
+
     channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
     channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
     channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
@@ -190,6 +218,17 @@ workflow precompute {
     // repeats | build_precompute_context | set { context }
     channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
     urs_counts | build_precompute_accessions | set { accessions_ready }
+
+    // Resolve any taxids the load will reference but that are missing from
+    // rnc_taxonomy (ENA runs ahead of the NCBI taxdump) before loading the
+    // precompute data, so the rnc_rna_precomputed.taxid FK always holds.
+    reconcile_taxonomy(
+      urs_counts,
+      missing_taxids_sql,
+      taxonomy_ctl,
+      taxonomy_upsert,
+    ) \
+    | set { taxonomy_ready }
 
     build_metadata(
       basic_query(urs_counts, basic_sql),
@@ -226,7 +265,7 @@ workflow precompute {
     process_range.out.data | collect | set { data }
     process_range.out.qa | collect | set { qa }
 
-    load_data(data, qa, data_ctl, qa_ctl, data_post_load, qa_post_load, post_load)
+    load_data(taxonomy_ready, data, qa, data_ctl, qa_ctl, data_post_load, qa_post_load, post_load)
 
     // Final precompute step: QC — active-sequence counts + flags.
     load_data.out | qc_precompute

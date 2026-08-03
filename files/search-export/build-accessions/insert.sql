@@ -25,7 +25,7 @@ SELECT
 FROM search_export_urs todo
 JOIN :partition xref
 ON
-    xref.upi = todo.urs AND xref.taxid = todo.taxid
+    xref.urs = todo.urs AND xref.taxid = todo.taxid
 JOIN rnc_database rncdb
 ON
     xref.dbid = rncdb.id

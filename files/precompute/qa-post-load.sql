@@ -5,8 +5,8 @@ ALTER TABLE qa_status
   ADD COLUMN IF NOT EXISTS possible_orf_tcode bool;
 
 INSERT INTO qa_status (
-  rna_id,
-  upi,
+  urs_taxid,
+  urs,
   taxid,
   has_issue,
   incomplete_sequence,
@@ -33,7 +33,7 @@ SELECT DISTINCT ON (rna_id)
   messages
 FROM load_qa_status
 )
-ON CONFLICT (rna_id) DO UPDATE
+ON CONFLICT (urs_taxid) DO UPDATE
 SET
   has_issue = EXCLUDED.has_issue,
   incomplete_sequence = EXCLUDED.incomplete_sequence,

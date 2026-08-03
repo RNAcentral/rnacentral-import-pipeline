@@ -333,7 +333,8 @@ CREATE UNLOGGED TABLE load_taxonomy (
     aliases json,
     replaced_by int,
     rank text,
-    reference_proteome boolean
+    reference_proteome boolean,
+    is_deleted boolean
 );
 
 DROP TABLE IF EXISTS load_overlaps;
