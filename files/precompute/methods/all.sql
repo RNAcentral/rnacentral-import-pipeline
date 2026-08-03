@@ -9,7 +9,7 @@
 -- We emit urs_taxid directly; build_table dedupes with `sort -u`.
 COPY (
   SELECT urs_taxid FROM xref WHERE deleted = 'N'
-  UNION
+  UNION ALL
   SELECT pre.urs_taxid
   FROM rnc_rna_precomputed pre
   WHERE pre.is_active = true
