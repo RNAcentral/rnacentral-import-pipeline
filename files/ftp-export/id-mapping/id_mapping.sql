@@ -1,4 +1,4 @@
-SET work_mem = '1GB';
+SET work_mem = '512MB';
 SET hash_mem_multiplier = 2;
 SET enable_nestloop = off;
 SET max_parallel_workers_per_gather = 0;
