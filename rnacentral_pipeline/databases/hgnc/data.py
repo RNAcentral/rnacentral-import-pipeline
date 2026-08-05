@@ -112,7 +112,7 @@ class HgncEntry:
                 "tRNA-" + ONE_TO_THREE[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
             )
         # nuclear-encoded mitochondrial tRNAs
-        m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", accession)
+        m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", self.symbol)
         if m:
             if m.group(1) not in ONE_TO_THREE:
                 return None
