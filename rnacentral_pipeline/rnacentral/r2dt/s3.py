@@ -45,12 +45,24 @@ SUFFIX = ".svg.gz"
 MAX_ATTEMPTS = 5
 BACKOFF = 2.0
 
+# Sized for moving an object's bytes.
+READ_TIMEOUT = 120
+# Listing is different: a page is a few tens of KB, so anything slower than this
+# means the store is struggling, not that the response is large. Waiting the full
+# READ_TIMEOUT there just parks a worker for two minutes before the retry that
+# was always going to be needed -- with every worker doing it, throughput
+# collapses while the connection pressure that caused it stays pinned.
+LIST_READ_TIMEOUT = 30
 
-def client(endpoint=ENDPOINT, pool_connections=64):
+
+def client(endpoint=ENDPOINT, pool_connections=64, read_timeout=READ_TIMEOUT):
     """A path-style boto3 S3 client for the Weka endpoint.
 
     Honours S3_KEY/S3_SECRET (as update-svg.sh did) first, else falls back to
     boto3's normal chain (~/.aws/credentials, AWS_PROFILE, instance role, ...).
+
+    `read_timeout` defaults to a value sized for transferring an object. Listing
+    passes something much shorter: see LIST_READ_TIMEOUT.
     """
     kwargs = dict(
         endpoint_url=endpoint,
@@ -58,7 +70,7 @@ def client(endpoint=ENDPOINT, pool_connections=64):
             s3={"addressing_style": "path"},
             max_pool_connections=pool_connections,
             connect_timeout=30,
-            read_timeout=120,
+            read_timeout=read_timeout,
             # One attempt, because _with_retries already gives each object five.
             # Nesting the two budgets multiplied them: a wedged key cost
             # 5 x 5 x 120s ~= 50 minutes before the task gave up. Adaptive mode
@@ -421,13 +433,14 @@ def list_svgs(env, out, endpoint=ENDPOINT, bucket=BUCKET, workers=32, depth=2):
     Completeness is independent of depth: scan lists each prefix without a
     delimiter, so it recurses fully; depth only tunes fan-out for the skew.
     """
-    s3 = client(endpoint, pool_connections=workers + 8)
+    s3 = client(endpoint, pool_connections=workers + 8, read_timeout=LIST_READ_TIMEOUT)
     root = f"{env}/URS/"
     prefixes = _discover_prefixes(s3, bucket, root, depth, workers)
     LOGGER.info("Discovered %d prefixes under %s", len(prefixes), root)
 
     lock = threading.Lock()
     matched = {"n": 0}
+    done = {"n": 0}
 
     def scan(prefix):
         for page in _pages(s3, bucket, prefix):
@@ -440,7 +453,15 @@ def list_svgs(env, out, endpoint=ENDPOINT, bucket=BUCKET, workers=32, depth=2):
             if urs:
                 with lock:
                     out.write("\n".join(urs) + "\n")
+                    # Flushed per page: a listing run takes tens of minutes and
+                    # the default 8KB buffer holds back the only evidence it is
+                    # progressing, which reads as a hang. One flush per ~1000
+                    # keys is free next to the request that fetched them.
+                    out.flush()
                     matched["n"] += len(urs)
+                    done["n"] += 1
+                    if done["n"] % 100 == 0:
+                        LOGGER.info("%d pages, %d SVGs listed", done["n"], matched["n"])
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for fut in as_completed([pool.submit(scan, p) for p in prefixes]):
