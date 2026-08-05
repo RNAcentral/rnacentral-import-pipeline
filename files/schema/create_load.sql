@@ -359,12 +359,6 @@ CREATE UNLOGGED TABLE load_qa_status (
   messages jsonb
 );
 
-DROP TABLE IF EXISTS load_traveler_attempted;
-CREATE TABLE load_traveler_attempted (
-  urs text PRIMARY KEY,
-  r2dt_version text
-);
-
 DROP TABLE IF EXISTS load_qa_rfam_attempted;
 CREATE UNLOGGED TABLE load_qa_rfam_attempted (
   urs text NOT NULL,
@@ -397,21 +391,6 @@ CREATE UNLOGGED TABLE load_secondary_layout_models (
     model_source text not null,
     model_length int,
     model_basepair_count int
-);
-
-DROP TABLE IF EXISTS load_secondary_layout;
-CREATE UNLOGGED TABLE load_secondary_layout (
-    urs text NOT NULL,
-    secondary_structure text NOT NULL,
-    model text NOT NULL,
-    overlap_count int not null,
-    basepair_count int not null,
-    model_start int,
-    model_stop int,
-    model_coverage float,
-    sequence_start int,
-    sequence_stop int,
-    sequence_coverage float
 );
 
 DROP TABLE IF EXISTS load_ensembl_pseudogenes;

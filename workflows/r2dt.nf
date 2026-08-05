@@ -235,6 +235,7 @@ process store_secondary_structures {
   path(ctl)
   path("attempted*.${params.writer_format}")
   path(attempted_ctl)
+  path(attempted_schema)
   path(attempted_post_load)
   path(urs_sql)
   path(model)
@@ -248,10 +249,16 @@ process store_secondary_structures {
   script:
   // Hits side (data*.csv) and should-show stay on the legacy pgloader path
   // for now; only the attempted side has been migrated to parquet.
+  //
+  // The parquet branch creates its own staging table: load-parquet does not
+  // run the ctl's BEFORE LOAD DO, so without the psql step the table would
+  // only exist if a previous import-data release had run create_load.sql.
+  // Recreating it also makes the load self-cleaning, so --truncate is not
+  // needed here.
   def attempted_cmd = (params.writer_format == 'parquet') ?
     """
+    psql -v ON_ERROR_STOP=1 -f $attempted_schema "\$PGDATABASE"
     load-parquet load_traveler_attempted 'attempted*.parquet' \\
-      --truncate \\
       --post-load $attempted_post_load
     """ :
     "split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted"
@@ -290,6 +297,7 @@ workflow r2dt {
       channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
       channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
       channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+      channel.fromPath('files/r2dt/attempted-schema.sql') | set { attempted_schema }
       channel.fromPath('files/r2dt/attempted-post-load.sql') | set { attempted_post_load }
 
       model_info(ready) | set { models_ready }
@@ -347,7 +355,7 @@ workflow r2dt {
       | ifEmpty(file('files/r2dt/no-upload-failures.txt')) \
       | set { upload_failures }
 
-      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, upload_failures, uploaded) | set { done }
+      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_schema, attempted_post_load, ss_query, ss_model, ss_ctl, upload_failures, uploaded) | set { done }
     } else {
       channel.of('r2dt skipped') | set { done }
     }

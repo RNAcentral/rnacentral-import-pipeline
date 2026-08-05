@@ -11,3 +11,7 @@ FROM load_genome_mapping_attempted load
 ) ON CONFLICT (urs_taxid, assembly_id) DO UPDATE
 SET
     last_run = EXCLUDED.last_run;
+
+-- Clear the staging table now that it is merged; nothing else empties it
+-- between runs.
+TRUNCATE load_genome_mapping_attempted;
