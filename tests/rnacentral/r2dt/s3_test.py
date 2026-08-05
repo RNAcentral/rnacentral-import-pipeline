@@ -2,6 +2,7 @@
 
 """Tests for rnacentral_pipeline.rnacentral.r2dt.s3 (SVG upload to S3)."""
 
+import gzip
 import hashlib
 import io
 
@@ -90,6 +91,7 @@ class _FakeS3:
         self.error = error or RuntimeError("simulated S3 500")
         self.attempts = 0
         self.objects = objects if objects is not None else {}
+        self.deleted = []
 
     def put_object(self, Bucket, Key, Body, ContentMD5, ContentType):
         if Key == self.fail_key:
@@ -106,6 +108,24 @@ class _FakeS3:
             )
         body, etag = self.objects[Key]
         return {"ContentLength": len(body), "ETag": '"%s"' % etag}
+
+    def get_object(self, Bucket, Key):
+        if Key == self.fail_key:
+            raise self.error
+        if Key not in self.objects:
+            raise ClientError(
+                {"Error": {"Code": "404", "Message": "Not Found"}}, "GetObject"
+            )
+        body, _ = self.objects[Key]
+        return {"Body": io.BytesIO(body)}
+
+    def delete_objects(self, Bucket, Delete):
+        keys = [o["Key"] for o in Delete["Objects"]]
+        self.deleted.append(keys)
+        errors = [
+            {"Key": k, "Code": "AccessDenied"} for k in keys if k == self.fail_key
+        ]
+        return {"Deleted": [{"Key": k} for k in keys], "Errors": errors}
 
 
 def _write_list(tmp_path, urs_ids):
@@ -565,3 +585,115 @@ def test_list_svgs_is_complete_at_any_depth(monkeypatch, depth):
     out = io.StringIO()
     assert s3.list_svgs("prod", out, workers=2, depth=depth) == 3
     assert len(out.getvalue().split()) == 3
+
+
+def _bucket_with(urs_ids, env="prod"):
+    """A fake bucket holding a gzipped SVG for each URS."""
+    objects = {}
+    for u in urs_ids:
+        body = gzip.compress(f"<svg id='{u}'/>".encode())
+        objects[s3.s3_key(u, env)] = (body, hashlib.md5(body).hexdigest())
+    return objects
+
+
+@pytest.mark.r2dt
+def test_local_path_shards_like_the_bucket(tmp_path):
+    assert s3.local_path(tmp_path, "URS0000F7F700") == (
+        tmp_path / "URS/00/00/F7/F7/URS0000F7F700.svg"
+    )
+
+
+@pytest.mark.r2dt
+def test_download_writes_ungzipped_files_and_a_manifest(tmp_path, monkeypatch):
+    urs_ids = ["URS0000F7F700", "URS0001ABCD12"]
+    fake = _FakeS3(objects=_bucket_with(urs_ids))
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+
+    urs_list = tmp_path / "urs.txt"
+    urs_list.write_text("\n".join(urs_ids) + "\n")
+    dest = tmp_path / "out"
+
+    assert s3.download(dest, "prod", urs_list=urs_list, workers=2) == 2
+
+    svg = dest / "URS/00/00/F7/F7/URS0000F7F700.svg"
+    assert svg.read_bytes() == b"<svg id='URS0000F7F700'/>"
+
+    rows = {
+        line.split("\t")[0]: line.split("\t")
+        for line in (dest / "manifest.tsv").read_text().splitlines()
+    }
+    assert set(rows) == set(urs_ids)
+    urs, relative, size, md5 = rows["URS0000F7F700"]
+    assert dest / relative == svg
+    assert int(size) == svg.stat().st_size
+    assert md5 == hashlib.md5(svg.read_bytes()).hexdigest()
+
+
+@pytest.mark.r2dt
+def test_download_skips_what_is_already_on_disk(tmp_path, monkeypatch):
+    urs_ids = ["URS0000F7F700", "URS0001ABCD12"]
+    fake = _FakeS3(objects=_bucket_with(urs_ids))
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+
+    urs_list = tmp_path / "urs.txt"
+    urs_list.write_text("\n".join(urs_ids) + "\n")
+    dest = tmp_path / "out"
+    done = s3.local_path(dest, "URS0000F7F700")
+    done.parent.mkdir(parents=True)
+    done.write_bytes(b"already here")
+
+    # Only the other URS is fetched, and the pre-existing file is left alone.
+    assert s3.download(dest, "prod", urs_list=urs_list, workers=2) == 1
+    assert done.read_bytes() == b"already here"
+    assert (dest / "manifest.tsv").read_text().count("\n") == 1
+
+
+@pytest.mark.r2dt
+def test_download_raises_but_still_writes_the_rest(tmp_path, monkeypatch):
+    urs_ids = ["URS0000F7F700", "URS0001ABCD12"]
+    fake = _FakeS3(
+        objects=_bucket_with(urs_ids),
+        fail_key=s3.s3_key("URS0000F7F700", "prod"),
+        error=ClientError(
+            {
+                "Error": {"Code": "AccessDenied"},
+                "ResponseMetadata": {"HTTPStatusCode": 403},
+            },
+            "GetObject",
+        ),
+    )
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+
+    urs_list = tmp_path / "urs.txt"
+    urs_list.write_text("\n".join(urs_ids) + "\n")
+    dest = tmp_path / "out"
+
+    with pytest.raises(RuntimeError):
+        s3.download(dest, "prod", urs_list=urs_list, workers=2)
+    assert s3.local_path(dest, "URS0001ABCD12").exists()
+
+
+@pytest.mark.r2dt
+def test_delete_orphans_batches_at_the_api_limit(tmp_path, monkeypatch):
+    fake = _FakeS3()
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+
+    urs_ids = ["URS%010X" % n for n in range(2500)]
+    orphans = tmp_path / "orphan-svgs.txt"
+    orphans.write_text("\n".join(urs_ids) + "\n")
+
+    assert s3.delete_orphans(orphans, "prod", workers=2) == 2500
+    assert sorted(len(b) for b in fake.deleted) == [500, 1000, 1000]
+    assert set(sum(fake.deleted, [])) == {s3.s3_key(u, "prod") for u in urs_ids}
+
+
+@pytest.mark.r2dt
+def test_delete_orphans_raises_on_a_reported_error(tmp_path, monkeypatch):
+    fake = _FakeS3(fail_key=s3.s3_key("URS0000F7F700", "prod"))
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+
+    orphans = tmp_path / "orphan-svgs.txt"
+    orphans.write_text("URS0000F7F700\n")
+
+    with pytest.raises(RuntimeError):
+        s3.delete_orphans(orphans, "prod", workers=1)

@@ -366,6 +366,82 @@ def r2dt_list_s3(output, env, workers, depth, endpoint, bucket):
     )
 
 
+@cli.command("sync-s3")
+@click.option("--env", default="prod")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.option("--workers", default=32)
+@click.option("--depth", default=2, help="delimiter levels to shard on")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option("--missing-list", default="missing-svgs.txt")
+@click.option("--orphan-list", default="orphan-svgs.txt")
+@click.option(
+    "--delete",
+    is_flag=True,
+    default=False,
+    help="actually remove the orphans; without it this is a dry run",
+)
+def r2dt_sync_s3(
+    env, db_url, workers, depth, endpoint, bucket, missing_list, orphan_list, delete
+):
+    """
+    Reconcile the bucket against the database should-show set.
+
+    Writes MISSING-LIST (should show, but no SVG in S3 -- feed this back through
+    r2dt) and ORPHAN-LIST (in S3, but no longer should show). Nothing is removed
+    unless --delete is given: check the orphan list first, since a mis-set --env
+    would prune the wrong environment.
+    """
+    counts = r2dt_s3.sync(
+        env,
+        db_url,
+        missing_list,
+        orphan_list,
+        delete=delete,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        depth=depth,
+    )
+    click.echo(
+        f"in_s3={counts['in_s3']} missing={counts['missing']} "
+        f"orphan={counts['orphan']}"
+    )
+
+
+@cli.command("download-s3")
+@click.option("--env", default="prod")
+@click.option("--workers", default=32)
+@click.option("--depth", default=2, help="delimiter levels to shard on")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option(
+    "--urs-list",
+    default=None,
+    type=click.Path(exists=True, dir_okay=False),
+    help="URS to fetch, one per line; defaults to everything in the bucket",
+)
+@click.argument("directory", type=click.Path(file_okay=False))
+def r2dt_download_s3(directory, env, workers, depth, endpoint, bucket, urs_list):
+    """
+    Download every SVG into DIRECTORY, ready to tar + gzip for distribution.
+
+    Files are written decompressed as URS/xx/xx/xx/xx/<urs>.svg, mirroring the S3
+    layout, with a manifest.tsv of urs/path/size/md5 alongside. Re-running skips
+    files already on disk, so an interrupted run can just be repeated; the
+    manifest is appended to, so it may then hold duplicate rows.
+    """
+    r2dt_s3.download(
+        directory,
+        env,
+        urs_list=urs_list,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        depth=depth,
+    )
+
+
 @cli.command("prepare-sequences")
 @click.argument("xref_urs", type=click.File("r"))
 @click.argument("tracked_urs", type=click.File("r"))
