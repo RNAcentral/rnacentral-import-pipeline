@@ -137,6 +137,7 @@ class Context:
     """
 
     conn = attr.ib()
+    supplied = attr.ib(factory=set)
     refseq = attr.ib(factory=dict)
     gtrnadb = attr.ib(factory=dict)
     ensembl = attr.ib(factory=dict)
@@ -148,14 +149,30 @@ class Context:
         from rnacentral_pipeline.databases.hgnc import helpers
 
         conn = psycopg2.connect(db_url)
+
+        # HGNC curates the URS itself for most entries. Deriving one from RefSeq
+        # or Ensembl instead follows whichever transcript they happen to annotate
+        # this month, so the mapping drifts every release while HGNC's is stable.
         context = cls(
             conn=conn,
-            refseq=helpers.refseq_mapping(
-                conn, [e.refseq_id for e in entries if e.refseq_id]
+            supplied=helpers.known_urs(
+                conn, [e.rnacentral_id for e in entries if e.rnacentral_id]
             ),
-            gtrnadb=helpers.gtrnadb_mapping(
-                conn, [e.gtrnadb_id for e in entries if e.gtrnadb_id]
-            ),
+        )
+        LOGGER.info(
+            "HGNC supplied a URS we hold for %i of %i entries",
+            sum(1 for e in entries if context.urs_for(e)),
+            len(entries),
+        )
+
+        # Everything below is a fallback, so only the entries HGNC did not
+        # already answer for are worth looking up.
+        remaining = [e for e in entries if context.urs_for(e) is None]
+        context.refseq = helpers.refseq_mapping(
+            conn, [e.refseq_id for e in remaining if e.refseq_id]
+        )
+        context.gtrnadb = helpers.gtrnadb_mapping(
+            conn, [e.gtrnadb_id for e in remaining if e.gtrnadb_id]
         )
         LOGGER.info(
             "Resolved %i refseq and %i gtrnadb ids",
@@ -166,7 +183,7 @@ class Context:
         # Only the entries nothing else could map are worth asking Ensembl about.
         pending = [
             e.ensembl_gene_id
-            for e in entries
+            for e in remaining
             if e.ensembl_gene_id and context.urs_for(e) is None
         ]
         context.ensembl = helpers.ensembl_mapping(conn, pending)
@@ -182,8 +199,12 @@ class Context:
 
     def urs_for(self, entry: HgncEntry) -> ty.Optional[str]:
         """
-        Map a single entry to a URS, using RefSeq, gtRNAdb then Ensembl.
+        Map a single entry to a URS, preferring the one HGNC supplies and
+        falling back to RefSeq, gtRNAdb then Ensembl.
         """
+        if entry.rnacentral_id in self.supplied:
+            return entry.rnacentral_id
+
         if entry.refseq_id:
             urs = self.refseq.get(entry.refseq_id)
             if urs:

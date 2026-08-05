@@ -118,6 +118,54 @@ def test_longest_sequence_wins():
     }
 
 
+@pytest.mark.hgnc
+def test_supplied_urs_beats_a_derived_one():
+    """
+    HGNC curates the URS for ~86% of its ncRNAs. Deriving one from RefSeq or
+    Ensembl instead follows whichever transcript they annotate this month, so
+    the mapping churns every release and retires xrefs that should have stayed.
+    """
+    entry = hgnc_entry(
+        rnacentral_id="URS00025F651D",
+        refseq_id="NR_186578",
+        ensembl_gene_id="ENSG00000274659",
+    )
+    context = Context(
+        conn=None,
+        supplied={"URS00025F651D"},
+        refseq={"NR_186578": "URS00026A1B18"},
+        ensembl={"ENSG00000274659": "URS00026A1B18"},
+    )
+    assert context.urs_for(entry) == "URS00025F651D"
+
+
+@pytest.mark.hgnc
+def test_falls_back_when_hgnc_supplies_no_urs():
+    entry = hgnc_entry(rnacentral_id=None, refseq_id="NR_186578")
+    context = Context(conn=None, refseq={"NR_186578": "URS00026A1B18"})
+    assert context.urs_for(entry) == "URS00026A1B18"
+
+
+@pytest.mark.hgnc
+def test_falls_back_when_we_do_not_hold_the_supplied_urs():
+    """A URS we do not have would make an xref pointing at nothing."""
+    entry = hgnc_entry(rnacentral_id="URS00FFFFFFFF", refseq_id="NR_186578")
+    context = Context(conn=None, supplied=set(), refseq={"NR_186578": "URS00026A1B18"})
+    assert context.urs_for(entry) == "URS00026A1B18"
+
+
+@pytest.mark.db
+@pytest.mark.hgnc
+def test_uses_the_urs_hgnc_supplies_for_known_entries(context, current_data):
+    """
+    Regression for HGNC:53293, whose URS moved four times across releases while
+    HGNC pointed at the same transcript throughout.
+    """
+    entry = current_data["HGNC:53293"]
+    assert entry.rnacentral_id is not None
+    assert parser.rnacentral_id(context, entry) == entry.rnacentral_id
+
+
 @pytest.mark.db
 @pytest.mark.hgnc
 @pytest.mark.parametrize("urs,hgnc_id", known_mappings())
