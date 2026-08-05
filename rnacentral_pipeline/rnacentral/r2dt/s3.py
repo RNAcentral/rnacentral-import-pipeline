@@ -394,6 +394,7 @@ def _pages(s3, bucket, prefix, delimiter=None):
     a `urs text PRIMARY KEY` table, which a re-emitted key would fail.
     """
     token = None
+    pages = 0
     while True:
         kwargs = {"Bucket": bucket, "Prefix": prefix}
         if delimiter:
@@ -401,10 +402,30 @@ def _pages(s3, bucket, prefix, delimiter=None):
         if token:
             kwargs["ContinuationToken"] = token
         page = _with_retries(lambda: s3.list_objects_v2(**kwargs), prefix)
+        pages += 1
+        LOGGER.debug(
+            "%s page %d: %d keys, truncated=%s, token=%s",
+            prefix,
+            pages,
+            len(page.get("Contents", [])),
+            page.get("IsTruncated"),
+            bool(page.get("NextContinuationToken")),
+        )
         yield page
+
+        truncated = page.get("IsTruncated")
         token = page.get("NextContinuationToken")
-        if not page.get("IsTruncated") or not token:
+        if not truncated:
             return
+        # Truncated but no token to continue from: the store is telling us there
+        # is more and refusing to say where. Stopping here would silently drop
+        # the rest of the prefix and still report a clean total -- exactly the
+        # class of silent divergence this module exists to prevent. Fail instead.
+        if not token:
+            raise RuntimeError(
+                f"{prefix} page {pages} is truncated but carries no "
+                "NextContinuationToken; listing would silently be short"
+            )
 
 
 def _discover_prefixes(s3, bucket, root, depth, workers):

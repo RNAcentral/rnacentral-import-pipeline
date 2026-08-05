@@ -644,6 +644,29 @@ def test_list_svgs_still_fails_on_a_persistent_timeout(monkeypatch):
         s3.list_svgs("prod", io.StringIO(), workers=2)
 
 
+@pytest.mark.r2dt
+def test_list_svgs_refuses_a_truncated_page_with_no_token(monkeypatch):
+    """
+    A store that says "more to come" but omits the continuation token must not
+    end the prefix quietly: that reports a clean total for a short listing, and
+    sync() would then read the whole gap as work to redo.
+    """
+
+    class _NoTokenS3:
+        def list_objects_v2(self, Bucket, Prefix, Delimiter=None, **kwargs):
+            if Delimiter is not None:
+                return {"CommonPrefixes": []}
+            return {
+                "Contents": [{"Key": f"{Prefix}URS0000F7F700.svg.gz"}],
+                "IsTruncated": True,  # ... and no NextContinuationToken
+            }
+
+    monkeypatch.setattr(s3, "client", lambda *a, **k: _NoTokenS3())
+
+    with pytest.raises(RuntimeError, match="no NextContinuationToken"):
+        s3.list_svgs("prod", io.StringIO(), workers=2)
+
+
 def _bucket_with(urs_ids, env="prod"):
     """A fake bucket holding a gzipped SVG for each URS."""
     objects = {}
