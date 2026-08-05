@@ -526,26 +526,43 @@ def test_drop_failed_matches_the_urs_column_only(tmp_path):
 
 
 class _FakeListingS3:
-    """Serves list_objects_v2 pages out of a flat key list."""
+    """Serves list_objects_v2 pages out of a flat key list.
 
-    def __init__(self, keys):
+    `page_size` splits the keys into continuation-token pages; `fail_after` makes
+    the given number of pages raise once each, to exercise the retry.
+    """
+
+    def __init__(self, keys, page_size=None, fail_pages=()):
         self.keys = keys
+        self.page_size = page_size
+        self.fail_pages = set(fail_pages)
+        self.calls = 0
 
-    def get_paginator(self, name):
-        assert name == "list_objects_v2"
-        return self
+    def list_objects_v2(self, Bucket, Prefix, Delimiter=None, ContinuationToken=None):
+        self.calls += 1
+        matching = sorted(k for k in self.keys if k.startswith(Prefix))
 
-    def paginate(self, Bucket, Prefix, Delimiter=None):
-        matching = [k for k in self.keys if k.startswith(Prefix)]
-        if Delimiter is None:
-            yield {"Contents": [{"Key": k} for k in matching]}
-            return
-        prefixes = set()
-        for key in matching:
-            rest = key[len(Prefix) :]
-            if Delimiter in rest:
-                prefixes.add(Prefix + rest.split(Delimiter, 1)[0] + Delimiter)
-        yield {"CommonPrefixes": [{"Prefix": p} for p in sorted(prefixes)]}
+        if Delimiter is not None:
+            prefixes = set()
+            for key in matching:
+                rest = key[len(Prefix) :]
+                if Delimiter in rest:
+                    prefixes.add(Prefix + rest.split(Delimiter, 1)[0] + Delimiter)
+            return {"CommonPrefixes": [{"Prefix": p} for p in sorted(prefixes)]}
+
+        start = int(ContinuationToken or 0)
+        if start in self.fail_pages:
+            self.fail_pages.discard(start)  # transient: fails once, then serves
+            raise ReadTimeoutError(endpoint_url="")
+
+        size = self.page_size or len(matching) or 1
+        chunk = matching[start : start + size]
+        end = start + len(chunk)
+        page = {"Contents": [{"Key": k} for k in chunk]}
+        if end < len(matching):
+            page["IsTruncated"] = True
+            page["NextContinuationToken"] = str(end)
+        return page
 
 
 @pytest.mark.r2dt
@@ -585,6 +602,46 @@ def test_list_svgs_is_complete_at_any_depth(monkeypatch, depth):
     out = io.StringIO()
     assert s3.list_svgs("prod", out, workers=2, depth=depth) == 3
     assert len(out.getvalue().split()) == 3
+
+
+@pytest.mark.r2dt
+def test_list_svgs_resumes_after_a_page_timeout(monkeypatch):
+    """
+    One read timeout on prod/URS/00/00/ used to kill an inventory run 2.6M
+    objects in. The retry must resume from the continuation token, not restart
+    the prefix: sync() COPYs this into a PRIMARY KEY table, so a duplicated URS
+    would fail the load.
+    """
+    keys = [f"prod/URS/00/00/F7/F7/URS0000F7F7{i:02d}.svg.gz" for i in range(10)]
+    fake = _FakeListingS3(keys, page_size=3, fail_pages=[3, 6])
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+
+    out = io.StringIO()
+    assert s3.list_svgs("prod", out, workers=2) == 10
+
+    listed = out.getvalue().split()
+    assert len(listed) == len(set(listed)) == 10
+
+
+@pytest.mark.r2dt
+def test_list_svgs_still_fails_on_a_persistent_timeout(monkeypatch):
+    # A dead endpoint must not silently produce a short inventory. The gap lands
+    # in sync()'s `missing` list (in the DB, seemingly not in S3), so the run
+    # would re-render thousands of SVGs that are already in the bucket.
+    keys = ["prod/URS/00/00/F7/F7/URS0000F7F700.svg.gz"]
+    fake = _FakeListingS3(keys, page_size=1, fail_pages=[])
+    fake.fail_pages = None  # every page raises
+
+    def always_timeout(*a, **k):
+        raise ReadTimeoutError(endpoint_url="")
+
+    fake.list_objects_v2 = always_timeout
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+
+    with pytest.raises(ReadTimeoutError):
+        s3.list_svgs("prod", io.StringIO(), workers=2)
 
 
 def _bucket_with(urs_ids, env="prod"):

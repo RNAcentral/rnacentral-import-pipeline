@@ -369,11 +369,36 @@ def verify(
     return problems["n"]
 
 
+def _pages(s3, bucket, prefix, delimiter=None):
+    """Yield every listing page under `prefix`, retrying a failed page in place.
+
+    Deliberately not paginator.paginate: listing was the one S3 path here with no
+    retry at all, while client() sets max_attempts=1 on the assumption that
+    _with_retries covers everything -- so a single read timeout on one page threw
+    away a whole multi-million-object inventory run.
+
+    A retry has to resume from the last continuation token rather than restart
+    the prefix: the caller streams keys straight out, and sync() COPYs that into
+    a `urs text PRIMARY KEY` table, which a re-emitted key would fail.
+    """
+    token = None
+    while True:
+        kwargs = {"Bucket": bucket, "Prefix": prefix}
+        if delimiter:
+            kwargs["Delimiter"] = delimiter
+        if token:
+            kwargs["ContinuationToken"] = token
+        page = _with_retries(lambda: s3.list_objects_v2(**kwargs), prefix)
+        yield page
+        token = page.get("NextContinuationToken")
+        if not page.get("IsTruncated") or not token:
+            return
+
+
 def _discover_prefixes(s3, bucket, root, depth, workers):
     def children(pfx):
-        paginator = s3.get_paginator("list_objects_v2")
         out = []
-        for page in paginator.paginate(Bucket=bucket, Prefix=pfx, Delimiter="/"):
+        for page in _pages(s3, bucket, pfx, delimiter="/"):
             out += [c["Prefix"] for c in page.get("CommonPrefixes", [])]
         return out
 
@@ -405,8 +430,7 @@ def list_svgs(env, out, endpoint=ENDPOINT, bucket=BUCKET, workers=32, depth=2):
     matched = {"n": 0}
 
     def scan(prefix):
-        paginator = s3.get_paginator("list_objects_v2")
-        for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for page in _pages(s3, bucket, prefix):
             urs = [
                 name[: -len(SUFFIX)]
                 for obj in page.get("Contents", [])
