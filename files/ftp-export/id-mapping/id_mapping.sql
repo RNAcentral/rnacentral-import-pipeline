@@ -22,5 +22,5 @@ join rnc_database db on db.id = xref.dbid
 join rnc_rna_precomputed pre on pre.id = xref.urs_taxid
 where
     xref.deleted = 'N'
-    AND right(xref.upi, 1) = :'chunk'
+    AND right(xref.upi, 1) = ANY (string_to_array(:'chunk', ','))
 ) TO STDOUT
