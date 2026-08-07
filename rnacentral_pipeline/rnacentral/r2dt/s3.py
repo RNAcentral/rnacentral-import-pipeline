@@ -22,6 +22,7 @@ import gzip
 import hashlib
 import logging
 import os
+import random
 import sys
 import threading
 import time
@@ -431,8 +432,24 @@ def _pages(s3, bucket, prefix, delimiter=None):
 def _discover_prefixes(s3, bucket, root, depth, workers):
     def children(pfx):
         out = []
+        direct = False
         for page in _pages(s3, bucket, pfx, delimiter="/"):
             out += [c["Prefix"] for c in page.get("CommonPrefixes", [])]
+            direct = direct or any(
+                obj["Key"].endswith(SUFFIX) for obj in page.get("Contents", [])
+            )
+        # A level that holds sub-prefixes AND its own SVGs cannot be sharded:
+        # we replace it with its children, so its own keys are listed by nobody.
+        # Adding it back instead would double-list every child key, and sync()
+        # COPYs this into a `urs text PRIMARY KEY` table. Neither is acceptable,
+        # so refuse rather than return a short inventory. The layout written by
+        # s3_key() is uniformly four levels deep, so this means the bucket holds
+        # keys from some other writer.
+        if out and direct:
+            raise RuntimeError(
+                f"{pfx} holds both sub-prefixes and its own {SUFFIX} keys; "
+                "a sharded listing would silently skip the latter"
+            )
         return out
 
     prefixes = [root]
@@ -502,6 +519,89 @@ GROUP BY urs
 """
 
 DELETE_BATCH = 1000  # S3 DeleteObjects caps at 1000 keys per call
+
+# How hard sync() checks its own answer before anyone acts on it.
+SPOT_CHECK_SAMPLE = 500
+# Objects uploaded while the listing was running are legitimately in the bucket
+# and legitimately in `missing`, so a few percent is a race, not a fault.
+SPOT_CHECK_TOLERANCE = 0.05
+
+
+def _reservoir_sample(path, size, rng=None):
+    """`size` lines drawn uniformly from `path`, without holding the file.
+
+    The missing list runs to tens of millions of lines and comes out of COPY in
+    key order, so head -n is biased towards the low URS range -- exactly the
+    range that is densest and least likely to be wrong.
+    """
+    rng = rng or random.Random()
+    seen = 0
+    sample = []
+    with open(path) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            seen += 1
+            if len(sample) < size:
+                sample.append(line)
+            else:
+                j = rng.randrange(seen)
+                if j < size:
+                    sample[j] = line
+    return sample
+
+
+def spot_check_missing(
+    s3,
+    env,
+    missing_list,
+    bucket=BUCKET,
+    size=SPOT_CHECK_SAMPLE,
+    tolerance=SPOT_CHECK_TOLERANCE,
+    workers=32,
+    rng=None,
+):
+    """HEAD a random sample of the computed missing set and raise if it is wrong.
+
+    A listing that comes back short is indistinguishable from a bucket that is
+    short: both produce a large `missing` list and a clean exit code. That is
+    how a run reported 29.3M sequences to redraw when 94% of them were sitting
+    in the bucket -- weeks of redrawing, and a proposal to delete 19M
+    pipeline_tracking_traveler rows, off an inventory nobody could check.
+
+    So check. A few hundred HEADs against a set this size is free, and the
+    failure it catches is one that otherwise costs a release.
+    """
+    urs = _reservoir_sample(missing_list, size, rng=rng)
+    if not urs:
+        return 0.0
+
+    def present(u):
+        try:
+            s3.head_object(Bucket=bucket, Key=s3_key(u, env))
+            return True
+        except Exception:  # noqa: BLE001 - 404, denied, unreachable: not "present"
+            return False
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        found = sum(pool.map(present, urs))
+
+    rate = found / len(urs)
+    LOGGER.info(
+        "Spot check: %d/%d sampled 'missing' URS are actually in %s (%.1f%%)",
+        found,
+        len(urs),
+        bucket,
+        100 * rate,
+    )
+    if rate > tolerance:
+        raise RuntimeError(
+            f"{found}/{len(urs)} ({100 * rate:.1f}%) of the sampled missing URS "
+            f"are in {bucket} already, over the {100 * tolerance:.0f}% tolerated. "
+            "The listing is short, not the bucket -- do not act on this result."
+        )
+    return rate
 
 
 def _copy_out(conn, query, path):
@@ -575,6 +675,18 @@ def sync(
         orphan,
         "deleting orphans" if delete else "dry run, nothing deleted",
     )
+
+    # Before anything acts on these numbers -- and before we delete a single
+    # object -- confirm the listing they came from was complete.
+    if missing:
+        spot_check_missing(
+            client(endpoint, pool_connections=workers + 8),
+            env,
+            missing_list,
+            bucket=bucket,
+            workers=workers,
+        )
+
     if delete and orphan:
         delete_orphans(
             orphan_list, env, endpoint=endpoint, bucket=bucket, workers=workers

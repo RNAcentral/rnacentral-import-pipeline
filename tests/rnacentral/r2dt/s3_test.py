@@ -543,12 +543,22 @@ class _FakeListingS3:
         matching = sorted(k for k in self.keys if k.startswith(Prefix))
 
         if Delimiter is not None:
+            # A delimited listing returns BOTH the sub-prefixes and the keys
+            # sitting directly at this level, as the real API does. Returning
+            # only CommonPrefixes made a whole class of short listing invisible
+            # to these tests.
             prefixes = set()
+            direct = []
             for key in matching:
                 rest = key[len(Prefix) :]
                 if Delimiter in rest:
                     prefixes.add(Prefix + rest.split(Delimiter, 1)[0] + Delimiter)
-            return {"CommonPrefixes": [{"Prefix": p} for p in sorted(prefixes)]}
+                else:
+                    direct.append(key)
+            return {
+                "CommonPrefixes": [{"Prefix": p} for p in sorted(prefixes)],
+                "Contents": [{"Key": k} for k in direct],
+            }
 
         start = int(ContinuationToken or 0)
         if start in self.fail_pages:
@@ -602,6 +612,29 @@ def test_list_svgs_is_complete_at_any_depth(monkeypatch, depth):
     out = io.StringIO()
     assert s3.list_svgs("prod", out, workers=2, depth=depth) == 3
     assert len(out.getvalue().split()) == 3
+
+
+@pytest.mark.r2dt
+def test_list_svgs_refuses_a_prefix_holding_both_keys_and_children(monkeypatch):
+    """
+    A level with sub-prefixes AND its own SVGs cannot be sharded: discovery
+    replaces it with its children, so its own keys are listed by nobody, and the
+    run still reports a clean total. _FakeListingS3 derives CommonPrefixes from
+    the keys it holds, so it never produced this shape -- which is why the
+    listing tests all passed while the inventory came back 68% short.
+    """
+    keys = [
+        "prod/URS/00/00/F7/F7/URS0000F7F700.svg.gz",
+        "prod/URS/00/00/URS0000000000.svg.gz",  # sits directly in 00/00/
+    ]
+    monkeypatch.setattr(s3, "client", lambda *a, **k: _FakeListingS3(keys))
+
+    # At depth 2 the mixed level is a leaf and gets scanned recursively, which
+    # is correct. It is only lost once discovery expands past it.
+    assert s3.list_svgs("prod", io.StringIO(), workers=2, depth=2) == 2
+
+    with pytest.raises(RuntimeError, match="silently skip"):
+        s3.list_svgs("prod", io.StringIO(), workers=2, depth=3)
 
 
 @pytest.mark.r2dt
@@ -665,6 +698,69 @@ def test_list_svgs_refuses_a_truncated_page_with_no_token(monkeypatch):
 
     with pytest.raises(RuntimeError, match="no NextContinuationToken"):
         s3.list_svgs("prod", io.StringIO(), workers=2)
+
+
+class _FakeHeadS3:
+    """HEADs succeed for the keys it holds, 404 otherwise."""
+
+    def __init__(self, present_urs, env="prod"):
+        self.keys = {s3.s3_key(u, env) for u in present_urs}
+
+    def head_object(self, Bucket, Key):
+        if Key not in self.keys:
+            raise ClientError({"Error": {"Code": "404"}}, "HeadObject")
+        return {"ContentLength": 1}
+
+
+def _missing_file(tmp_path, urs_ids):
+    path = tmp_path / "missing-svgs.txt"
+    path.write_text("".join(f"{u}\n" for u in urs_ids))
+    return str(path)
+
+
+@pytest.mark.r2dt
+def test_spot_check_passes_when_the_missing_set_is_real(tmp_path):
+    urs = [f"URS0000F7F7{i:02d}" for i in range(50)]
+    fake = _FakeHeadS3([])  # none of them are in the bucket: the list is honest
+
+    assert s3.spot_check_missing(fake, "prod", _missing_file(tmp_path, urs)) == 0.0
+
+
+@pytest.mark.r2dt
+def test_spot_check_tolerates_uploads_that_raced_the_listing(tmp_path):
+    # Objects written while the listing ran are legitimately in both places.
+    urs = [f"URS0000F7F7{i:02d}" for i in range(100)]
+    fake = _FakeHeadS3(urs[:3])
+
+    rate = s3.spot_check_missing(fake, "prod", _missing_file(tmp_path, urs))
+    assert rate == pytest.approx(0.03)
+
+
+@pytest.mark.r2dt
+def test_spot_check_refuses_a_missing_set_that_is_really_in_the_bucket(tmp_path):
+    """
+    The August 2026 shape: sync reported 29.3M sequences to redraw, 94% of which
+    were in the bucket already. A short listing and an empty bucket produce the
+    same numbers and the same exit code, so the only thing that separates them
+    is asking the bucket.
+    """
+    urs = [f"URS0000F7F7{i:02d}" for i in range(100)]
+    fake = _FakeHeadS3(urs[:94])
+
+    with pytest.raises(RuntimeError, match="listing is short, not the bucket"):
+        s3.spot_check_missing(fake, "prod", _missing_file(tmp_path, urs))
+
+
+@pytest.mark.r2dt
+def test_spot_check_samples_the_whole_file_not_just_the_head(tmp_path):
+    # COPY emits the missing list in key order, so a head -n sample would only
+    # ever see the low URS range.
+    urs = [f"URS0000{i:06X}" for i in range(10000)]
+    sample = s3._reservoir_sample(_missing_file(tmp_path, urs), 200)
+
+    assert len(sample) == 200
+    assert len(set(sample)) == 200
+    assert max(urs.index(u) for u in sample) > 5000
 
 
 def _bucket_with(urs_ids, env="prod"):
