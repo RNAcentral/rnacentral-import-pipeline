@@ -1,7 +1,7 @@
 COPY(
   SELECT
     refs.pmid,
-    xref.upi || '_' || xref.taxid
+    xref.urs_taxid
   FROM rnc_accessions acc
   JOIN xref ON xref.ac = acc.accession
   JOIN rnc_reference_map rmap ON rmap.accession = acc.accession

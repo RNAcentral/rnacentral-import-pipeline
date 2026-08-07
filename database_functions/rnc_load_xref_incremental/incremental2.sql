@@ -32,7 +32,7 @@ BEGIN
       CASE
         WHEN(
 
-            X.UPI != L.COMPARABLE_PROT_UPI
+            X.URS != L.COMPARABLE_PROT_UPI
           )
         OR (
             X."VERSION" != L.IN_VERSION
@@ -65,7 +65,7 @@ BEGIN
     AND x.last    = p_previous_release
     AND l.COMPARABLE_PROT_UPI IS NOT NULL
     AND NOT(
-        X.UPI = L.COMPARABLE_PROT_UPI
+        X.URS = L.COMPARABLE_PROT_UPI
       AND (
           X."VERSION" = L.IN_VERSION
 
