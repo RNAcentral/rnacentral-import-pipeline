@@ -2,27 +2,38 @@
 
 nextflow.enable.dsl = 2
 
+// Also derived in main.nf; without these a direct run leaves should_release
+// false, so the load stops at the staging tables. Must stay above the includes:
+// a module captures params as they are when it is included, so load_data would
+// not see these and `release` would never be scheduled.
+params.connections = new groovy.json.JsonSlurper().parse(new File(params.connection_file))
+params.databases.ensembl._any.run = Utils.ensembl_runs(params.databases)
+params.needs_publications = Utils.needs_publications(params.databases, params.skip_publications)
+params.should_release = !params.skip_release && Utils.should_release(params.databases)
+params.needs_taxonomy = Utils.needs_taxonomy(params.databases)
+
 include { lookup_ref_ids } from './workflows/lookup-references'
 include { batch_lookup_ontology_information } from './workflows/lookup-ontology-info'
 include { parse_databases } from './workflows/parse-databases'
 include { parse_metadata } from './workflows/parse-metadata'
 include { load_data } from './workflows/load-data'
+include { qc_import } from './workflows/utils/qc'
 include { slack_message } from './workflows/utils/slack'
 include { slack_closure } from './workflows/utils/slack'
 
 workflow import_data {
   take: _flag
   main:
-    Channel.of("Starting data import pipeline") | slack_message
+    channel.of("Starting data import pipeline") | slack_message
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       parse_databases(),
       parse_metadata(),
     ) \
-    | branch {
-      terms: it.name == "terms.csv"
-      ref_ids: it.name == "ref_ids.csv"
+    | branch { r ->
+      terms: r.name == "terms.csv" || r.name == "terms.parquet"
+      ref_ids: r.name == "ref_ids.csv" || r.name == "ref_ids.parquet"
       csv: true
     } \
     | set { results }
@@ -35,27 +46,21 @@ workflow import_data {
     | load_data \
     | set { post_release }
 
-
+    // Final import step: QC — per-database rows imported this release.
+    post_release | qc_import
 
   emit: post_release
 }
 
 workflow {
-  import_data(Channel.of('ready'))
+  main:
+    import_data(channel.of('ready'))
 
-  workflow.onError {
+  // See analyze.nf: an onError section crashes on Nextflow 26.04.
+  onComplete:
     try {
-      slack_closure("Import pipeline encountered an error and failed")
+      slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
     } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
+      log.warn "Could not send Slack notification: ${e}"
     }
-  }
-
-  workflow.onComplete {
-    try {
-      slack_closure("Workflow completed ${workflow?.success ? 'Ok' : 'with errors'}")
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e.message}"
-    }
-  }
 }

@@ -2,7 +2,7 @@ process fetch {
   output:
   path('*.rnac')
 
-  when: { params.databases.silva?.run }
+  when: params.databases.silva?.run
 
   script:
   """
@@ -18,7 +18,7 @@ process parse {
   tuple path(raw), path(taxonomy)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """

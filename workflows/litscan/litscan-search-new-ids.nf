@@ -7,7 +7,7 @@ process slack_message {
     script:
     """
     #!/bin/bash
-    curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' $LITSCAN_SLACK_WEBHOOK
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' \$LITSCAN_SLACK_WEBHOOK
     """
 }
 
@@ -20,7 +20,7 @@ process get_ids {
 
     script:
     """
-    psql -t -A -f $database "$PGDB_EMBASSY_USER" > results
+    psql -t -A -f $database "\$PGDB_EMBASSY_USER" > results
     """
 }
 
@@ -140,9 +140,9 @@ process register_urs {
 workflow search_new_ids {
     emit: new_ids
     main:
-      Channel.of("Starting LitScan pipeline") | slack_message
+      channel.of("Starting LitScan pipeline") | slack_message
 
-      Channel.fromPath('workflows/litscan/queries/*.sql') \
+      channel.fromPath('workflows/litscan/queries/*.sql') \
       | get_ids \
       | check_ids \
       | sort_ids \

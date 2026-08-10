@@ -45,7 +45,7 @@ process create_xml {
     script:
     """
     rm -f "$params.litscan_index"/metadata*
-    litscan-create-xml-metadata.py "$PSYCOPG_CONN" $merged_metadata metadata_*
+    litscan-create-xml-metadata.py "\$PSYCOPG_CONN" $merged_metadata metadata_*
     """
 }
 
@@ -91,7 +91,7 @@ process get_statistics {
 
     script:
     """
-    litscan-get-statistics.py "$PSYCOPG_CONN" statistics.csv
+    litscan-get-statistics.py "\$PSYCOPG_CONN" statistics.csv
     """
 }
 
@@ -106,6 +106,7 @@ process save_statistics {
     script:
     """
     pgloader --on-error-stop --with "drop indexes" $ctl
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"LitScan workflow completed"}' \$LITSCAN_SLACK_WEBHOOK
     """
 }
 
@@ -115,16 +116,16 @@ workflow export_metadata {
       ready
       reference_files
     main:
-      database = Channel.fromPath('workflows/litscan/results/*.txt')
+      database = channel.fromPath('workflows/litscan/results/*.txt')
       database | combine(ready) | create_metadata | collect | merge_metadata | set{ metadata }
 
       create_xml(metadata) | collect | set{ xml_metadata }
       create_release_file(xml_metadata, reference_files.collect())
 
-      load = Channel.of("$baseDir/workflows/litscan/metadata/load-metadata.ctl")
+      load = channel.of("$baseDir/workflows/litscan/metadata/load-metadata.ctl")
       load_database_table(metadata, load) | get_statistics | set{ statistics }
 
-      load_statistics = Channel.of("$baseDir/workflows/litscan/metadata/load-statistics.ctl")
+      load_statistics = channel.of("$baseDir/workflows/litscan/metadata/load-statistics.ctl")
       save_statistics(statistics, load_statistics)
 }
 

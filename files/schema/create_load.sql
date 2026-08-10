@@ -367,21 +367,6 @@ CREATE UNLOGGED TABLE load_qa_rfam_attempted (
   last_run timestamp default CURRENT_TIMESTAMP
 );
 
-DROP TABLE IF EXISTS load_rfam_model_hits;
-CREATE UNLOGGED TABLE load_rfam_model_hits (
-  sequence_start integer NOT NULL,
-  sequence_stop integer NOT NULL,
-  sequence_completeness double precision,
-  model_start integer NOT NULL,
-  model_stop integer NOT NULL,
-  model_completeness double precision,
-  overlap character varying(30) COLLATE pg_catalog."default" NOT NULL,
-  e_value double precision NOT NULL,
-  score double precision NOT NULL,
-  rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-  upi character varying(13) COLLATE pg_catalog."default" NOT NULL
-);
-
 DROP TABLE IF EXISTS load_rnc_text_mining;
 CREATE UNLOGGED TABLE load_rnc_text_mining (
     pattern_group text,
@@ -406,21 +391,6 @@ CREATE UNLOGGED TABLE load_secondary_layout_models (
     model_source text not null,
     model_length int,
     model_basepair_count int
-);
-
-DROP TABLE IF EXISTS load_secondary_layout;
-CREATE UNLOGGED TABLE load_secondary_layout (
-    urs text NOT NULL,
-    secondary_structure text NOT NULL,
-    model text NOT NULL,
-    overlap_count int not null,
-    basepair_count int not null,
-    model_start int,
-    model_stop int,
-    model_coverage float,
-    sequence_start int,
-    sequence_stop int,
-    sequence_coverage float
 );
 
 DROP TABLE IF EXISTS load_ensembl_pseudogenes;

@@ -21,90 +21,132 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.hgnc import parser
-from rnacentral_pipeline.databases.hgnc import helpers
-from rnacentral_pipeline.databases.hgnc.data import Context
+from rnacentral_pipeline.databases.hgnc import helpers, parser
+from rnacentral_pipeline.databases.hgnc.data import Context, HgncEntry
+
+DATA_PATH = Path("data/hgnc/current-data.json")
+
+# data/hgnc/current-mapping.tsv is a regression baseline regenerated against
+# the database. It previously carried seven xfails for entries that "used the
+# wrong Ensembl gene" - those were the genomic sequence lookup failing to match
+# spliced transcripts, and they resolve correctly now.
 
 
 @pytest.fixture(scope="module")
-def current_data():
-    path = Path("data/hgnc/current-data.json")
-    data = {}
-    for entry in helpers.load(path):
-        data[entry.hgnc_id] = entry
-    return data
+def raw_entries():
+    return helpers.load(DATA_PATH)
 
 
 @pytest.fixture(scope="module")
-def context():
-    return Context.build(os.environ["PGDATABASE"])
+def current_data(raw_entries):
+    return {entry.hgnc_id: entry for entry in raw_entries}
 
 
 @pytest.fixture(scope="module")
-def parsed():
-    data_path = Path("data/hgnc/current-data.json")
-    data = {}
-    for entry in parser.parse(data_path, os.environ["PGDATABASE"]):
-        data[entry.primary_id] = entry
-    return data
+def context(raw_entries):
+    return Context.build(os.environ["PGDATABASE"], raw_entries)
 
 
-# These appear to have something wrong with them. It looks like either they are
-# using the wrong Ensembl gene (though everything matches in the db) or
-# annotatikons changed in a way I can't track.
-ISSUES = {
-    "HGNC:19380",
-    "HGNC:51945",
-    "HGNC:54172",
-    "HGNC:54171",
-    "HGNC:52553",
-    "HGNC:51654",
-    "HGNC:52379",
-}
+@pytest.fixture(scope="module")
+def parsed(context, raw_entries):
+    return {e.primary_id: e for e in parser.as_entries(context, raw_entries)}
 
 
 def known_mappings():
-    params = []
     with open("data/hgnc/current-mapping.tsv", "r") as raw:
-        data = list(csv.reader(raw, delimiter="\t"))
-        for entry in data:
-            if entry[1] in ISSUES:
-                entry = pytest.param(
-                    *entry, marks=pytest.mark.xfail(reason="Unknown issue")
-                )
-            params.append(entry)
-    return params
+        return list(csv.reader(raw, delimiter="\t"))
+
+
+def hgnc_entry(**kwargs) -> HgncEntry:
+    defaults = {
+        "symbol": "EXAMPLE1",
+        "name": "example gene",
+        "hgnc_id": "HGNC:1",
+        "ucsc_id": None,
+        "hgnc_rna_type": "RNA, long non-coding",
+        "agr_id": None,
+        "ensembl_gene_id": None,
+        "lncipedia_id": None,
+        "rnacentral_id": None,
+        "previous_names": [],
+        "previous_symbols": [],
+        "refseq_id": None,
+        "ena_ids": [],
+        "gene_groups": [],
+    }
+    defaults.update(kwargs)
+    return HgncEntry(**defaults)
+
+
+@pytest.mark.hgnc
+def test_so_term_handles_known_types():
+    assert helpers.so_term(hgnc_entry(hgnc_rna_type="RNA, micro")) == "SO:0000276"
+    assert helpers.so_term(hgnc_entry(hgnc_rna_type="RNA, transfer")) == "SO:0000253"
+
+
+@pytest.mark.hgnc
+def test_so_term_uses_gene_groups_for_ribosomal():
+    ribosomal = {"hgnc_rna_type": "RNA, ribosomal"}
+    assert helpers.so_term(hgnc_entry(**ribosomal)) == "SO:0000252"
+    assert (
+        helpers.so_term(hgnc_entry(gene_groups=["5S ribosomal RNAs"], **ribosomal))
+        == "SO:0000652"
+    )
+    assert (
+        helpers.so_term(hgnc_entry(gene_groups=["12S RNA"], **ribosomal))
+        == "SO:0002344"
+    )
+
+
+@pytest.mark.hgnc
+def test_so_term_skips_unknown_types_instead_of_raising():
+    """A new HGNC locus type must cost one entry, not the whole run."""
+    assert helpers.so_term(hgnc_entry(hgnc_rna_type="RNA, newly invented")) is None
+
+
+@pytest.mark.hgnc
+def test_longest_sequence_wins():
+    rows = [
+        ("key", "URS0000000001", 100),
+        ("key", "URS0000000002", 300),
+        ("key", "URS0000000003", 200),
+        ("other", "URS0000000004", 10),
+    ]
+    assert helpers._longest(rows) == {
+        "key": "URS0000000002",
+        "other": "URS0000000004",
+    }
 
 
 @pytest.mark.db
+@pytest.mark.hgnc
 @pytest.mark.parametrize("urs,hgnc_id", known_mappings())
 def test_maps_sequences_correctly(current_data, context, urs, hgnc_id):
     if hgnc_id not in current_data:
-        return None
+        return
     entry = current_data[hgnc_id]
     assert parser.rnacentral_id(context, entry) == urs
 
 
-@pytest.mark.skip(reason="Not sure of correct count")
 @pytest.mark.db
-def test_can_parse_all_data(parsed):
-    data_path = Path("data/hgnc/current-data.json")
-    with data_path.open("r") as raw:
-        expected = len(raw.readlines())
-    assert len(parsed) == expected
+@pytest.mark.hgnc
+def test_maps_the_expected_number_of_entries(parsed):
+    """
+    Guards against silent degradation. A failing Ensembl batch, or a lost
+    partition filter, drops entries without raising anything.
+    """
+    assert len(parsed) > 7900
 
 
 @pytest.mark.db
-def test_produces_one_entry_pre_sequence():
-    data_path = Path("data/hgnc/current-data.json")
-    seen = set()
-    for entry in parser.parse(data_path, os.environ["PGDATABASE"]):
-        assert entry.primary_id not in seen
-        seen.add(entry.primary_id)
+@pytest.mark.hgnc
+def test_produces_one_entry_per_gene(context, raw_entries):
+    ids = [e.primary_id for e in parser.as_entries(context, raw_entries)]
+    assert len(ids) == len(set(ids))
 
 
-@pytest.mark.skip
 @pytest.mark.db
+@pytest.mark.hgnc
 def test_produces_expected_data(parsed):
     assert attr.asdict(parsed["HGNC:34365"]) == attr.asdict(
         Entry(

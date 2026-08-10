@@ -37,5 +37,5 @@ workflow find_retracted_articles {
 }
 
 workflow {
-    find_retracted_articles()
+    find_retracted_articles(channel.of('ready'))
 }

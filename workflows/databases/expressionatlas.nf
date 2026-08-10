@@ -39,7 +39,7 @@ process synchronize_cache {
   output:
     val('cache synchronized')
 
-  when: { params.databases.expressionatlas?.run }
+  when: params.databases.expressionatlas?.run
 
   script:
   """
@@ -101,7 +101,7 @@ process group_and_convert {
     tuple path(genes), path(lookup)
 
   output:
-    path('*.csv')
+    path('*.{csv,parquet}')
 
   script:
   """
@@ -113,13 +113,12 @@ process group_and_convert {
 
 workflow expressionatlas {
 
-  emit: data
   main:
 
   if( params.databases.expressionatlas?.run ) {
-    Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
-    Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
-    Channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
+    channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
+    channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
+    channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
 
     tsv_path.combine(ea_cache) | synchronize_cache |  set { cache_syncd }
 
@@ -140,9 +139,10 @@ workflow expressionatlas {
 
   }
   else {
-    Channel.empty() | set { data }
+    channel.empty() | set { data }
   }
 
+  emit: data
 }
 
 

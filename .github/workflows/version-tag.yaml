@@ -2,12 +2,15 @@
 # It only fires if the commit message starts Release:
 name: Automatic version tagging
 
+permissions:
+  contents: write
+
 on:
   pull_request:
     types:
       - closed
     branches:
-      - main
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest

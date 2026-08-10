@@ -6,6 +6,9 @@ import re
 import typing as ty
 from pathlib import Path
 
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.output_format import is_parquet
+from rnacentral_pipeline.parquet_writers import typed_parquet_writer
 from rnacentral_pipeline.stopfree.data import StopfreeResult
 
 Record = tuple[str, str]
@@ -84,6 +87,14 @@ def calculate_results(
 
 
 def write_results(results: ty.Iterable[StopfreeResult], output: Path) -> None:
+    if is_parquet():
+        with typed_parquet_writer(
+            output / "results.parquet", schemas.STOPFREE_RESULTS
+        ) as writer:
+            for result in results:
+                writer.writerow(result.writeable())
+        return
+
     with (output / "results.csv").open("w", newline="") as handle:
         writer = csv.writer(
             handle,

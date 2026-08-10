@@ -3,9 +3,9 @@ process zfin {
   maxRetries 3
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
-  when: { params.databases.zfin?.run }
+  when: params.databases.zfin?.run
 
   script:
   """

@@ -1,7 +1,4 @@
 process assemblies {
-  when:
-  params.databases.ensembl?.vertebrates?.run
-
   input:
   path(connections)
   path(query)
@@ -9,22 +6,25 @@ process assemblies {
   path(known)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
+
+  when:
+  params.databases.ensembl?.vertebrates?.run
 
   script:
   """
-  rnac ensembl assemblies $connections $query $examples $known
+  rnac ensembl assemblies $connections $query $examples $known assemblies.${params.writer_format}
   """
 }
 
 process fetch_compara {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
   output:
   path('*.nt.fasta.gz')
+
+  when: params.databases.ensembl?.vertebrates?.run
 
   script:
   """
@@ -40,33 +40,32 @@ process process_compara {
   path(gz)
 
   output:
-  path('compara.csv')
+  path("compara.${params.writer_format}")
 
   script:
+  def out = "compara.${params.writer_format}"
   """
-  zcat $gz | rnac ensembl compara - compara.csv
+  zcat $gz | rnac ensembl compara - $out
   """
 }
 
 process proteins {
-  when: { params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run }
-
   input:
   path(connections)
   path(query)
 
   output:
-  path('proteins.csv')
+  path("proteins.${params.writer_format}")
+
+  when: params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run
 
   script:
   """
-  rnac ensembl proteins $connections $query proteins.csv
+  rnac ensembl proteins $connections $query proteins.${params.writer_format}
   """
 }
 
 process coordinate_systems {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
@@ -75,48 +74,50 @@ process coordinate_systems {
   path(query)
 
   output:
-  path('coordinate_systems.csv')
+  path("coordinate_systems.${params.writer_format}")
+
+  when: params.databases.ensembl?.vertebrates?.run
 
   script:
   """
-  rnac ensembl coordinate-systems $connections $query coordinate_systems.csv
+  rnac ensembl coordinate-systems $connections $query coordinate_systems.${params.writer_format}
   """
 }
 
 process karyotypes {
-  when: { params.databases.ensembl?.vertebrates?.run }
-
   errorStrategy 'retry'
   maxRetries 10
 
   output:
-  path('karyotypes.csv')
+  path("karyotypes.${params.writer_format}")
+
+  when: params.databases.ensembl?.vertebrates?.run
 
   script:
+  def out = "karyotypes.${params.writer_format}"
   """
-  rnac ensembl karyotypes karyotypes.csv
+  rnac ensembl karyotypes $out
   """
 }
 
 workflow compara {
-  emit: data
   main:
     fetch_compara | flatten | process_compara | set { data }
+  emit: data
 }
 
 workflow ensembl {
-  emit: data
   main:
-    Channel.fromPath('config/databases.json') | set { conn }
+    channel.fromPath('config/databases.json') | set { conn }
 
-    Channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
-    Channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
+    channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
+    channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
 
-    Channel.fromPath('files/import-data/ensembl/assemblies.sql') | set { assemblies_sql }
-    Channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
-    Channel.fromPath('files/import-data/ensembl/known-assemblies.sql') | set { known }
+    channel.fromPath('files/import-data/ensembl/assemblies.sql') | set { assemblies_sql }
+    channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
+    channel.fromPath('files/import-data/ensembl/known-assemblies.sql') | set { known }
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       assemblies(conn, assemblies_sql, examples, known),
       coordinate_systems(conn, coordinate_systems_sql),
@@ -126,4 +127,5 @@ workflow ensembl {
     ) \
     | flatten \
     | set { data }
+  emit: data
 }

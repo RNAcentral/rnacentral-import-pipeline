@@ -19,19 +19,7 @@ BEGIN
 -- it is logically equivalent; only the plan changes. All three values are
 -- bigints (l_prev_release is coalesced to 0), so %s interpolation is safe.
 EXECUTE format($fmt$
-with pred as (
-    -- Per-ac predecessor flag for this dbid, computed in a single pass.
-    -- Replaces two per-row correlated EXISTS(...) subqueries against xref that
-    -- each probed xref(ac, dbid, created) once per outer row, turning an
-    -- O(rows * lookups) nested loop into one hash aggregate + hash join.
-    -- An ac "has a predecessor" iff any of its xref rows (for this dbid) was
-    -- created before this release, i.e. the earliest created < l_this_release.
-    select ac, (min(created) < %2$s) as has_predecessor
-    from xref
-    where dbid = %1$s
-    group by ac
-),
-new_stats as (
+with new_stats as (
     SELECT
       %1$s dbid,
       %2$s this_release,
@@ -101,13 +89,13 @@ new_stats as (
                 END) retired_total,
               sum(
                 CASE
-                WHEN created = %2$s AND hp.has_predecessor
+                WHEN created = %2$s AND has_predecessor
                 then 1
                 else 0
                 end) created_w_predecessors,
               sum(
                 CASE
-                WHEN created = %2$s and not hp.has_predecessor
+                WHEN created = %2$s and not has_predecessor
                 then 1
                 else 0
                 END) created_wo_predecessors,
@@ -152,11 +140,19 @@ new_stats as (
                 then 1
                 else 0
                 END) active_total
-        FROM xref as x
-        -- pred is built from the same xref/dbid rows, so every x.ac is present;
-        -- the join always matches (has_predecessor is never NULL for these rows).
-        JOIN pred hp ON hp.ac = x.ac
-        WHERE x.dbid = %1$s
+        FROM (
+          -- Per-row predecessor flag via window function instead of a
+          -- separate grouped CTE joined back to xref: this collapses the
+          -- old two full scans of the dbid's xref rows (once for the pred
+          -- CTE, once for the main aggregation) into a single scan. An ac
+          -- "has a predecessor" iff any of its xref rows (for this dbid)
+          -- was created before this release.
+          SELECT
+            x.*,
+            (min(created) OVER (PARTITION BY ac) < %2$s) AS has_predecessor
+          FROM xref x
+          WHERE x.dbid = %1$s
+        ) x
         GROUP BY version_i) alias33
       ) q
     )

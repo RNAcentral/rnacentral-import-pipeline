@@ -4,8 +4,6 @@ process find_urls {
   output:
   path("urls.txt")
 
-  when: { params.databases.pirbase?.run }
-
   script:
   """
   rnac pirbase urls-for $params.databases.pirbase.remote urls.txt
@@ -17,9 +15,7 @@ process find_known {
   path(query)
 
   output:
-  path(known)
-
-  when: { params.databases.pirbase?.run }
+  path('known')
 
   script:
   """
@@ -36,7 +32,7 @@ process parse_data {
   tuple val(url), path(known)
 
   output:
-  path("*.csv")
+  path('*.{csv,parquet}')
 
   script:
   """
@@ -47,16 +43,22 @@ process parse_data {
 }
 
 workflow pirbase {
-  emit: data_files
   main:
-    Channel.fromPath('files/import-data/pirbase/known-md5.sql') | set { query }
+    if ( params.databases.pirbase?.run ) {
+      channel.fromPath('files/import-data/pirbase/known-md5.sql') | set { query }
 
-    find_urls \
-    | splitCsv \
-    | map { row -> row[0] } \
-    | filter { url -> !url.contains('piRBase_tbe.json') } \
-    | combine(find_known(query)) \
-    | parse_data \
-    | flatten \
-    | set { data_files }
+      find_urls \
+      | splitCsv \
+      | map { row -> row[0] } \
+      | filter { url -> !url.contains('piRBase_tbe.json') } \
+      | combine(find_known(query)) \
+      | parse_data \
+      | flatten \
+      | set { data_files }
+    }
+    else {
+      channel.empty() | set { data_files }
+    }
+
+  emit: data_files
 }

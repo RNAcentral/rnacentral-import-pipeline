@@ -1,6 +1,4 @@
 process generate_files {
-  when: { params.rfam?.run }
-
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -9,6 +7,8 @@ process generate_files {
   output:
   path 'rfam', emit: cm_files
   path 'version_file', emit: version_info
+
+  when: params.rfam?.run
 
   script:
   def base = params.rfam.files
@@ -57,10 +57,12 @@ process scan {
   tuple path(version), path('sequences.fasta'), path(cm_files)
 
   output:
-  path 'hits.csv', emit: hits
-  path 'attempted.csv', emit: attempted
+  path "hits.${params.writer_format}", emit: hits
+  path "attempted.${params.writer_format}", emit: attempted
 
   script:
+  def hits_out = "hits.${params.writer_format}"
+  def attempted_out = "attempted.${params.writer_format}"
   """
   cmscan \
     -o output.inf \
@@ -77,8 +79,8 @@ process scan {
     "$cm_files/Rfam.cm" \
     sequences.fasta
 
-  rnac qa rfam results.tblout hits.csv
-  rnac qa create-attempted sequences.fasta rfam $version attempted.csv
+  rnac qa rfam results.tblout $hits_out
+  rnac qa create-attempted sequences.fasta rfam $version $attempted_out
   """
 }
 
@@ -86,30 +88,47 @@ process import_data {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory 6.GB
   input:
-  path('raw*.csv')
+  // Both hits and attempted land as either CSV (legacy pgloader path) or
+  // Parquet, depending on params.writer_format.
+  path("raw*.${params.writer_format}")
   path(ctl)
-  path('attempted*.csv')
-  path('attempted.ctl')
+  path(post_load)
+  path("attempted*.${params.writer_format}")
+  path(attempted_ctl)
+  path(attempted_post_load)
 
   output:
   val('rfam done')
 
   script:
-  """
-  split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} rfam
-  split-and-load attempted.ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam
-  """
+  if (params.writer_format == 'parquet') {
+    """
+    load-parquet load_rfam_model_hits 'raw*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    load-parquet load_qa_rfam_attempted 'attempted*.parquet' \\
+      --truncate \\
+      --post-load $attempted_post_load
+    """
+  } else {
+    """
+    split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} rfam
+    split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam
+    """
+  }
 }
 
 workflow rfam_scan {
   take: ready
   main:
     if (params.rfam.run) {
-      Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
-      Channel.fromPath("files/qa/computed.sql").set { computed_sql }
-      Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
-      Channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
-      Channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
+      channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
+      channel.fromPath("files/qa/computed.sql").set { computed_sql }
+      channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
+      channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
+      channel.fromPath("files/rfam-scan/post-load.sql").set { post_load }
+      channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
+      channel.fromPath("files/rfam-scan/attempted-post-load.sql").set { attempted_post_load }
 
       generate_files(ready)
 
@@ -119,18 +138,18 @@ workflow rfam_scan {
       | combine(compute_required_sql) \
       | sequences \
       | flatMap { version, files ->
-        (files instanceof ArrayList) ? files.collect { [version, it] } : [[version, files]]
+        (files instanceof ArrayList) ? files.collect { f -> [version, f] } : [[version, files]]
       } \
-      | filter { v, f -> !f.isEmpty() } \
+      | filter { _v, f -> !f.isEmpty() } \
       | combine(generate_files.out.cm_files) \
       | scan
 
       scan.out.hits | collect | set { hits }
       scan.out.attempted | collect | set { attempted }
 
-      import_data(hits, ctl, attempted, attempted_ctl) | set { done }
+      import_data(hits, ctl, post_load, attempted, attempted_ctl, attempted_post_load) | set { done }
     } else {
-      Channel.of('rfam skipped') | set { done }
+      channel.of('rfam skipped') | set { done }
     }
   emit: done
 }

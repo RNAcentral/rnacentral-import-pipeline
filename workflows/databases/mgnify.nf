@@ -4,7 +4,7 @@ process mgnify_fetch {
   output:
     path('*.json')
 
-  when: { params.databases.mgnify?.run }
+  when: params.databases.mgnify?.run
 
   script:
   """
@@ -18,7 +18,7 @@ process mgnify_parse {
   input:
     path(json)
   output:
-    path('*.csv')
+    path('*.{csv,parquet}')
 
   script:
   """
@@ -28,12 +28,13 @@ process mgnify_parse {
 
 
 workflow mgnify {
-  emit: data
   main:
     if ( params.databases.mgnify?.run ) {
       mgnify_fetch | flatten | mgnify_parse | set { data }
     }
     else {
-      Channel.empty() | set { data }
+      channel.empty() | set { data }
     }
+
+  emit: data
 }

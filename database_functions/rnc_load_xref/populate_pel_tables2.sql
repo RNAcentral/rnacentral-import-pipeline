@@ -34,6 +34,7 @@ BEGIN
   where x.ac = l.in_ac
   and   x.dbid = l.in_dbid
   and   x.dbid = v_dbid   -- partition pruning hint; redundant (load_retro_tmp is single-dbid)
+  and   x.upi = l.comparable_prot_upi
   and   l.comparable_prot_upi is not null
   and   not -- this condition differentiates this procedure from populate_pel_tables1
         (x.last < l.in_load_release and x.upi = l.comparable_prot_upi and (x.version = l.in_version or (x.version is null and l.in_version is null)))

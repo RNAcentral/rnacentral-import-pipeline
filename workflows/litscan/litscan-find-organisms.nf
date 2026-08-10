@@ -12,7 +12,7 @@ process get_organisms {
 
     script:
     """
-    psql -v ON_ERROR_STOP=1 -f $query $PGDB_EMBASSY_USER > organism_pmcid
+    psql -v ON_ERROR_STOP=1 -f $query \$PGDB_EMBASSY_USER > organism_pmcid
     """
 }
 
@@ -33,14 +33,14 @@ process save_organisms {
 workflow find_organisms {
     take: ready
     main:
-      query = Channel.of("$baseDir/workflows/litscan/organisms/get-organisms.sql")
+      query = channel.of("$baseDir/workflows/litscan/organisms/get-organisms.sql")
       get_organisms(ready, query) | set{ organism_pmcid }
 
-      save_ctl = Channel.of("$baseDir/workflows/litscan/organisms/save-organisms.ctl")
+      save_ctl = channel.of("$baseDir/workflows/litscan/organisms/save-organisms.ctl")
       save_organisms(organism_pmcid, save_ctl) | set{ done }
     emit: done
 }
 
 workflow {
-  find_organisms()
+  find_organisms(channel.of('ready'))
 }

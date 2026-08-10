@@ -50,5 +50,8 @@ SET
     overlapping_upis = excluded.overlapping_upis,
     no_overlaps_with = excluded.no_overlaps_with
 ;
+$$,
+$$
+TRUNCATE load_overlaps;
 $$
 ;
