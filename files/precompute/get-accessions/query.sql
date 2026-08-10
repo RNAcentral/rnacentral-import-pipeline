@@ -18,14 +18,11 @@ SELECT
     'locus_tag', todo.locus_tag,
     'organelle', todo.organelle,
     'lineage', todo.lineage,
-    'all_species', ARRAY[tax.name, todo.species::text],
-    'all_common_names', ARRAY[tax.common_name, todo.common_name::text],
+    'all_species', ARRAY[todo.species::text],
+    'all_common_names', ARRAY[todo.common_name::text],
     'so_rna_type', todo.so_rna_type
   )
 FROM precompute_urs_accession todo
-LEFT JOIN rnc_taxonomy tax 
-ON 
-  tax.id = todo.taxid
 WHERE
   todo.precompute_urs_id BETWEEN :min and :max
 order by todo.precompute_urs_id, todo.precompute_urs_taxid_id

@@ -40,8 +40,6 @@ INSERT INTO search_export_accessions
     urs,
     taxid,
     accession,
-    lineage,
-    common_name,
     database,
     external_id,
     function,
@@ -54,7 +52,6 @@ INSERT INTO search_export_accessions
     organelle,
     parent_accession,
     product,
-    species,
     standard_name
 ) (
 SELECT
@@ -63,8 +60,6 @@ SELECT
     todo.urs,
     todo.taxid,
     todo.accession,
-    acc.classification,
-    acc.common_name,
     todo.database_name,
     acc.external_id,
     acc.function,
@@ -77,7 +72,6 @@ SELECT
     acc.organelle,
     acc.parent_ac || '.' || acc.seq_version,
     acc.product,
-    acc.species,
     acc.standard_name
 FROM temp_current_urs_with_accession todo
 JOIN rnc_accessions acc

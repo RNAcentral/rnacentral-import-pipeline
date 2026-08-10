@@ -22,8 +22,6 @@ CREATE TABLE search_export_accessions (
   taxid INT NOT NULL,
   urs_taxid TEXT NOT NULL,
   accession TEXT NOT NULL,
-  lineage TEXT,
-  common_name TEXT,
   database TEXT,
   external_id TEXT,
   function TEXT,
@@ -36,7 +34,6 @@ CREATE TABLE search_export_accessions (
   organelle TEXT,
   parent_accession TEXT,
   product TEXT,
-  species TEXT,
   standard_name TEXT
 );
 
