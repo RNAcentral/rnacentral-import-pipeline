@@ -67,7 +67,10 @@ def test_xref_data_is_empty_when_not_given():
     assert helpers.xref_data({"dbXrefs": "-"}) == {}
 
 
-def test_can_parse_xref_data_from_a_real_row():
+def test_no_ncrna_in_the_sample_has_xrefs():
+    """
+    Every ncRNA row in the sample has dbXrefs of '-', which is why the parsing
+    branch above went years without anyone noticing it raised NameError.
+    """
     with open("data/ncbi_gene/simple.txt") as raw:
-        rows = list(helpers.ncrnas(raw))
-    assert helpers.xref_data(rows[1]) == {"MGI": ["MGI:100336"]}
+        assert all(helpers.xref_data(r) == {} for r in helpers.ncrnas(raw))

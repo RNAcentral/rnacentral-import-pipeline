@@ -101,6 +101,7 @@ def xref_data(row):
     for dbid in given.split(","):
         parts = dbid.split(":", 1)
         assert len(parts) == 2, "Invalid DB id: " + dbid
+        db, key = parts
         data[db].append(key)
     return data
 
