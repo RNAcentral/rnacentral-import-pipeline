@@ -19,9 +19,10 @@ process create_xml_files {
 
 workflow export_articles {
     take: ready
-    emit: reference_files
     main:
       create_xml_files(ready) | set{ reference_files }
+
+    emit: reference_files
 }
 
 workflow {

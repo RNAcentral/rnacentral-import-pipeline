@@ -8,6 +8,7 @@ process fetch_pmcoa_metadata {
     output:
     path('out')
 
+    script:
     """
     cp /nfs/ftp/public/databases/pmc/PMCOALiteMetadata/PMCOALiteMetadata.tgz .
     tar xvf PMCOALiteMetadata.tgz
@@ -24,7 +25,7 @@ process check_articles {
 
     script:
     """
-    litscan-retracted-articles.py "$PSYCOPG_CONN" $LITSCAN_SLACK_WEBHOOK ${xml_dir}
+    litscan-retracted-articles.py "\$PSYCOPG_CONN" \$LITSCAN_SLACK_WEBHOOK ${xml_dir}
     """
 }
 

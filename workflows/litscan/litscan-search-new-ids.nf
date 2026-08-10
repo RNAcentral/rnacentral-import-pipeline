@@ -138,7 +138,6 @@ process register_urs {
 }
 
 workflow search_new_ids {
-    emit: new_ids
     main:
       channel.of("Starting LitScan pipeline") | slack_message
 
@@ -153,6 +152,8 @@ workflow search_new_ids {
       register_ids.out | register_urs
 
       new_ids = register_ids.out.mix(register_urs.out)
+
+    emit: new_ids
 }
 
 workflow {

@@ -25,6 +25,7 @@ nextflow.enable.dsl=2
   output:
     path "search_results.csv"
 
+  script:
   """
   litscan-search-job.py --job-id $id_chunk --output search_results.csv
   """
@@ -54,9 +55,10 @@ process load_job {
   output:
     val true
 
+  script:
   """
   set -euo pipefail
-  psql -v ON_ERROR_STOP=1 "$PSYCOPG_CONN" << EOF
+  psql -v ON_ERROR_STOP=1 "\$PSYCOPG_CONN" << EOF
   BEGIN;
 
 
@@ -141,7 +143,6 @@ EOF
 
 workflow scan_new_ids {
     take: new_ids_files
-    emit: done
     main:
       // Split each registered-IDs file into individual job_id values,
       // then run one SLURM scan_job per ID in parallel.
@@ -158,6 +159,8 @@ workflow scan_new_ids {
         | load_job
 
       done = load_job.out
+
+    emit: done
 }
 
 workflow {
