@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
 import subprocess as sp
 import tempfile
 from contextlib import contextmanager
@@ -24,6 +25,8 @@ from Bio import Entrez, SeqIO
 from rnacentral_pipeline.utils import pickle_stream
 
 from . import helpers
+
+LOGGER = logging.getLogger(__name__)
 
 BATCH_SIZE = 300
 
