@@ -480,26 +480,68 @@ def list_svgs(env, out, endpoint=ENDPOINT, bucket=BUCKET, workers=32, depth=2):
     matched = {"n": 0}
     done = {"n": 0}
 
-    def scan(prefix):
+    def keys_under(prefix):
+        """Every SVG URS under `prefix`, buffered rather than streamed.
+
+        Buffering is what makes the retry below safe: a prefix that is written
+        as it pages cannot be listed again without double-writing, and sync()
+        COPYs this into a `urs text PRIMARY KEY` table.
+        """
+        urs = []
         for page in _pages(s3, bucket, prefix):
-            urs = [
+            urs += [
                 name[: -len(SUFFIX)]
                 for obj in page.get("Contents", [])
                 for name in (obj["Key"].rsplit("/", 1)[-1],)
                 if name.endswith(SUFFIX)
             ]
-            if urs:
-                with lock:
-                    out.write("\n".join(urs) + "\n")
-                    # Flushed per page: a listing run takes tens of minutes and
-                    # the default 8KB buffer holds back the only evidence it is
-                    # progressing, which reads as a hang. One flush per ~1000
-                    # keys is free next to the request that fetched them.
-                    out.flush()
-                    matched["n"] += len(urs)
-                    done["n"] += 1
-                    if done["n"] % 100 == 0:
-                        LOGGER.info("%d pages, %d SVGs listed", done["n"], matched["n"])
+        return urs
+
+    def scan(prefix):
+        # A discovered prefix is populated by construction: the store only
+        # reports it under CommonPrefixes because something lives there. At
+        # depth 4 it is also a single page, so an empty response carries no
+        # truncation flag and no error -- it is indistinguishable from an empty
+        # prefix, and silently drops every key beneath it. That is how a run
+        # counted 10.8M of the 41.2M objects its own prefix list covered, twice,
+        # with different totals and a clean exit both times. Treat empty as a
+        # dropped response, not as a fact.
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            urs = keys_under(prefix)
+            if urs or prefix == root:
+                break
+            LOGGER.warning(
+                "%s listed empty but was discovered as populated "
+                "(attempt %d/%d); retrying",
+                prefix,
+                attempt,
+                MAX_ATTEMPTS,
+            )
+            time.sleep(BACKOFF * 2 ** (attempt - 1))
+        else:
+            raise RuntimeError(
+                f"{prefix} was discovered as a populated prefix but listed "
+                f"empty {MAX_ATTEMPTS} times; the store is dropping responses "
+                "and the inventory would be short"
+            )
+
+        if urs:
+            with lock:
+                out.write("\n".join(urs) + "\n")
+                # Flushed per prefix: a listing run takes tens of minutes and
+                # the default 8KB buffer holds back the only evidence it is
+                # progressing, which reads as a hang. One flush per ~250 keys is
+                # free next to the requests that fetched them.
+                out.flush()
+                matched["n"] += len(urs)
+                done["n"] += 1
+                if done["n"] % 1000 == 0:
+                    LOGGER.info(
+                        "%d/%d prefixes, %d SVGs listed",
+                        done["n"],
+                        len(prefixes),
+                        matched["n"],
+                    )
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for fut in as_completed([pool.submit(scan, p) for p in prefixes]):

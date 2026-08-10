@@ -637,6 +637,72 @@ def test_list_svgs_refuses_a_prefix_holding_both_keys_and_children(monkeypatch):
         s3.list_svgs("prod", io.StringIO(), workers=2, depth=3)
 
 
+class _DroppingS3(_FakeListingS3):
+    """Returns an empty, untruncated page for `drop` the first `times` times.
+
+    The livingobjects failure mode: under concurrency a leaf prefix answers with
+    no Contents, no IsTruncated and no error, which is byte-for-byte what an
+    empty prefix looks like.
+    """
+
+    def __init__(self, keys, drop, times=1):
+        super().__init__(keys)
+        self.drop = drop
+        self.times = times
+
+    def list_objects_v2(self, Bucket, Prefix, Delimiter=None, ContinuationToken=None):
+        if Delimiter is None and Prefix == self.drop and self.times:
+            self.times -= 1
+            return {"Contents": []}
+        return super().list_objects_v2(
+            Bucket, Prefix, Delimiter=Delimiter, ContinuationToken=ContinuationToken
+        )
+
+
+@pytest.mark.r2dt
+def test_list_svgs_retries_a_prefix_that_drops_its_keys(monkeypatch):
+    keys = [
+        "prod/URS/00/00/F7/F7/URS0000F7F700.svg.gz",
+        "prod/URS/00/01/AB/CD/URS0001ABCD12.svg.gz",
+    ]
+    fake = _DroppingS3(keys, drop="prod/URS/00/01/", times=1)
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+
+    out = io.StringIO()
+    assert s3.list_svgs("prod", out, workers=2, depth=2) == 2
+
+    listed = out.getvalue().split()
+    assert len(listed) == len(set(listed)) == 2  # retried, not double-written
+
+
+@pytest.mark.r2dt
+def test_list_svgs_fails_when_a_prefix_never_yields_its_keys(monkeypatch):
+    """
+    Two consecutive production runs counted 10.8M and 13.6M of the same ~41.2M
+    objects, both exiting clean, because a dropped response looks exactly like
+    an empty prefix. A short inventory must be an error, not a number.
+    """
+    keys = [
+        "prod/URS/00/00/F7/F7/URS0000F7F700.svg.gz",
+        "prod/URS/00/01/AB/CD/URS0001ABCD12.svg.gz",
+    ]
+    fake = _DroppingS3(keys, drop="prod/URS/00/01/", times=99)
+    monkeypatch.setattr(s3, "client", lambda *a, **k: fake)
+    monkeypatch.setattr(s3.time, "sleep", lambda _: None)
+
+    with pytest.raises(RuntimeError, match="listed empty"):
+        s3.list_svgs("prod", io.StringIO(), workers=2, depth=2)
+
+
+@pytest.mark.r2dt
+def test_list_svgs_allows_a_genuinely_empty_bucket(monkeypatch):
+    # The root is the one prefix nobody discovered, so it is allowed to be empty.
+    monkeypatch.setattr(s3, "client", lambda *a, **k: _FakeListingS3([]))
+
+    assert s3.list_svgs("prod", io.StringIO(), workers=2) == 0
+
+
 @pytest.mark.r2dt
 def test_list_svgs_resumes_after_a_page_timeout(monkeypatch):
     """
