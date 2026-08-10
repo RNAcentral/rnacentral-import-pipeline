@@ -18,9 +18,8 @@ from pathlib import Path
 
 import polars as pl
 
-from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
+from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.expressionatlas import sdrf
-from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 LOGGER = logging.getLogger(__name__)
@@ -37,18 +36,6 @@ def primary_id(info):
 def taxid(info):
     taxid = info["taxid"]
     return int(taxid)
-
-
-def species(info):
-    return phy.species(info["taxid"])
-
-
-def lineage(info):
-    return phy.lineage(info["taxid"])
-
-
-def common_name(info):
-    return phy.common_name(info["taxid"])
 
 
 def url(info):
@@ -88,9 +75,6 @@ def as_entry(info):
         url=url(info),
         seq_version="1",
         description=info["description"],
-        species=species(info),
-        common_name=common_name(info),
-        lineage=lineage(info),
         gene=info["gene"],
         note_data={"experiments": info["experiment"]},
     )

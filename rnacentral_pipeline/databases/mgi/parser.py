@@ -17,7 +17,6 @@ for export to usable flat files.
 """
 
 import csv
-import itertools as it
 import operator as op
 
 from rnacentral_pipeline.databases.data import Entry
@@ -51,9 +50,6 @@ def as_entry(data):
         url="",
         xref_data=helpers.xref_data(data),
         chromosome=helpers.chromosome(data),
-        species=helpers.species(data),
-        common_name=helpers.common_name(data),
-        lineage=helpers.lineage(data),
         gene=helpers.gene(data),
         optional_id=helpers.symbol(data),
         description=helpers.name(data),

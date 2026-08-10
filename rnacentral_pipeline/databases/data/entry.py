@@ -18,7 +18,6 @@ import json
 import logging
 import operator as op
 import typing as ty
-from collections import Counter
 
 import attr
 from attr.validators import and_
@@ -85,9 +84,6 @@ class Entry:
     related_diseases: ty.List[str] = utils.possibly_empty(list)
 
     chromosome: str = utils.optionally(str)
-    species: str = utils.optionally(str)
-    common_name: str = utils.optionally(str)
-    lineage: str = utils.optionally(str)
     gene: str = utils.optionally(str)
     locus_tag: str = utils.optionally(str)
     optional_id: str = utils.optionally(str)

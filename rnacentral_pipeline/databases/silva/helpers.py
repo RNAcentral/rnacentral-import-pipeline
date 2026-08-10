@@ -13,14 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import logging
-import typing as ty
 import operator as op
+import re
+import typing as ty
 
-from rnacentral_pipeline.databases import data
-import rnacentral_pipeline.databases.helpers.publications as pubs
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
+import rnacentral_pipeline.databases.helpers.publications as pubs
+from rnacentral_pipeline.databases import data
 
 url = op.itemgetter("silvaUri")
 
@@ -139,8 +139,6 @@ def as_entry(
             rna_type=rna_type(row),
             url=url(row),
             seq_version=version(row),
-            species=species(taxonomy, row, cache),
-            lineage=lineage(taxonomy, row, cache),
             references=[
                 pubs.reference("doi:10.1093/nar/gks1219"),
             ],

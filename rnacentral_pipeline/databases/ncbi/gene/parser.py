@@ -13,10 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 
-from rnacentral_pipeline.utils import unpickle_stream
 from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.utils import unpickle_stream
 
 from . import helpers
 
@@ -36,9 +35,6 @@ def parse(handle):
             url=helpers.url(row),
             seq_version=helpers.seq_version(row),
             xref_data=helpers.xref_data(row),
-            species=helpers.species(row),
-            common_name=helpers.common_name(row),
-            lineage=helpers.lineage(row),
             gene=helpers.gene(row),
             product=helpers.product(row),
             locus_tag=helpers.locus_tag(row),

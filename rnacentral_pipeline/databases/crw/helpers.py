@@ -13,10 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import logging
-from pathlib import Path
+import re
 import typing as ty
+from pathlib import Path
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -46,14 +46,6 @@ def species(row: ty.Dict[str, ty.Any]) -> str:
     return phy.species(taxid(row))
 
 
-def common_name(row: ty.Dict[str, ty.Any]) -> str:
-    return phy.common_name(taxid(row))
-
-
-def lineage(row: ty.Dict[str, ty.Any]) -> str:
-    return phy.lineage(taxid(row))
-
-
 def sequence(row: ty.Dict[str, ty.Any], sequences: ty.Dict[str, SeqRecord]) -> str:
     return str(sequences[row["model_name"]].seq).upper().replace("U", "T")
 
@@ -74,6 +66,7 @@ def organelle(row: ty.Dict[str, ty.Any]) -> ty.Optional[str]:
     else:
         return None
 
+
 def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
     try:
         return data.Entry(
@@ -87,9 +80,6 @@ def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
             url="",
             seq_version="1",
             description=description(row),
-            species=species(row),
-            common_name=common_name(row),
-            lineage=lineage(row),
             references=[
                 pub.reference(11869452),
             ],

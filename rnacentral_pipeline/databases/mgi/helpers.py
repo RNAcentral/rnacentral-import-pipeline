@@ -16,8 +16,7 @@ This contains the logic for parsing MGI data files and producing Entry objects
 for export to usable flat files.
 """
 
-from rnacentral_pipeline.databases.data import Exon
-from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.data import Exon, Reference
 from rnacentral_pipeline.databases.helpers import phylogeny as helpers
 
 RNA_TYPE_MAPPING = {
@@ -219,13 +218,6 @@ def species(data):
     Gets the species name for mice.
     """
     return helpers.species(taxon_id(data))
-
-
-def lineage(data):
-    """
-    Gets the mouse lineage.
-    """
-    return helpers.lineage(taxon_id(data))
 
 
 def common_name(data):

@@ -240,10 +240,6 @@ def reference_mapping_id(info: ChainInfo) -> str:
     return info.pdb_id
 
 
-def lineage(info: ChainInfo) -> str:
-    return phy.lineage(taxid(info))
-
-
 def species(info: ChainInfo) -> str:
     return phy.species(taxid(info))
 

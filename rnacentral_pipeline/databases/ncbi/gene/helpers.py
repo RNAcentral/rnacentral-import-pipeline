@@ -13,17 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
 import csv
 import operator as op
-import collections as coll
-
-from Bio import SeqIO
-from Bio import Entrez
 
 from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
-
 
 ALLOWED_RNA = {
     "miscRNA",
@@ -139,10 +135,6 @@ def description(row):
 
 def species(row):
     return phy.species(taxid(row))
-
-
-def lineage(row):
-    return phy.lineage(taxid(row))
 
 
 def common_name(row):

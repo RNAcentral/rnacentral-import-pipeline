@@ -14,14 +14,11 @@ limitations under the License.
 """
 
 import csv
-import typing as ty
 
 from rnacentral_pipeline.databases import data
 
-from . import lookup
-from . import helpers
-from .data import Context
-from .data import KnownSequence
+from . import helpers, lookup
+from .data import Context, KnownSequence
 
 
 def as_entry(context: Context, row, matching: KnownSequence) -> data.Entry:
@@ -30,16 +27,13 @@ def as_entry(context: Context, row, matching: KnownSequence) -> data.Entry:
         accession=helpers.accession(context, row),
         ncbi_tax_id=helpers.taxid(context, row),
         database=context.database,
-        sequence=matching.sequence.upper().replace('U', 'T'),
+        sequence=matching.sequence.upper().replace("U", "T"),
         regions=[],
         rna_type=matching.rna_type,
         url=context.url(row),
         seq_version=1,
         gene=context.gene(row),
         description=matching.description,
-        species=helpers.species(context, row),
-        lineage=helpers.lineage(context, row),
-        common_name=helpers.common_name(context, row),
         references=context.references,
     )
 

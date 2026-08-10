@@ -15,31 +15,18 @@ limitations under the License.
 
 import typing as ty
 
-from rnacentral_pipeline.databases.helpers import phylogeny as phy
-from rnacentral_pipeline.databases.helpers import publications as pub
 from rnacentral_pipeline.databases.data import (
     Entry,
-    Interaction,
-    IdReference,
     GoTermAnnotation,
+    IdReference,
+    Interaction,
 )
+from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 def taxid(urs_taxid: str):
     _, taxid = urs_taxid.split("_")
     return int(taxid)
-
-
-def species(urs_taxid: str):
-    return phy.species(taxid(urs_taxid))
-
-
-def lineage(urs_taxid: str):
-    return phy.lineage(taxid(urs_taxid))
-
-
-def common_name(urs_taxid: str):
-    return phy.common_name(taxid(urs_taxid))
 
 
 def references(interactions: ty.List[Interaction]) -> ty.List[IdReference]:
@@ -83,8 +70,5 @@ def as_entry(
         seq_version="1",
         description=info["description"],
         references=references(interactions),
-        species=species(urs_taxid),
-        common_name=common_name(urs_taxid),
-        lineage=lineage(urs_taxid),
         interactions=interactions,
     )

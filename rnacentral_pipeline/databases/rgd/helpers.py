@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
+import collections as coll
 import csv
 import gzip
-import tempfile
 import operator as op
-import collections as coll
+import re
+import tempfile
 from contextlib import contextmanager
 
 import attr
@@ -27,7 +27,6 @@ from Bio import SeqIO
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
-
 
 KNOWN_RNA_TYPES = {
     "ncrna",
@@ -55,11 +54,15 @@ PREFERRED_ASSEMBLIES = ["Rnor_6.0", "mRatBN7.2", "GRCr8", "Rnor_5.0"]
 
 
 def _assembly_suffix(entry):
-    available = {key[len("CHROMOSOME_"):] for key in entry if key.startswith("CHROMOSOME_")}
+    available = {
+        key[len("CHROMOSOME_") :] for key in entry if key.startswith("CHROMOSOME_")
+    }
     for assembly in PREFERRED_ASSEMBLIES:
         if assembly in available:
             return assembly
-    raise ValueError("Cannot find a known chromosome column in entry: %s" % list(entry.keys()))
+    raise ValueError(
+        "Cannot find a known chromosome column in entry: %s" % list(entry.keys())
+    )
 
 
 def known_organisms():
@@ -233,14 +236,6 @@ def taxid(_):
     return 10116
 
 
-def lineage(entry):
-    return phy.lineage(taxid(entry))
-
-
-def common_name(entry):
-    return phy.common_name(taxid(entry))
-
-
 def species(entry):
     return phy.species(taxid(entry))
 
@@ -385,9 +380,6 @@ def as_entries(entry, seqs):
                 url=url(entry),
                 seq_version=seq_version(entry),
                 xref_data=xref_data(entry),
-                common_name=common_name(entry),
-                species=species(entry),
-                lineage=lineage(entry),
                 gene=gene(entry),
                 locus_tag=locus_tag(entry),
                 gene_synonyms=gene_synonyms(entry),
@@ -397,33 +389,6 @@ def as_entries(entry, seqs):
         )
 
     return list(data.related_isoforms(ncrnas))
-
-    # for index, (sequence, _) in enumerate(sequences):
-    # acc_index = index + 1
-    # if len(sequences) == 1:
-    #     acc_index = None
-    # acc = accession(data, acc_index)
-    # entries.append(Entry(
-    #     primary_id=primary_id(data),
-    #     accession=acc,
-    #     ncbi_tax_id=taxid(data),
-    #     database='RGD',
-    #     sequence=sequence,
-    #     regions=[],
-    #     rna_type=rna_type(data),
-    #     url=url(data),
-    #     seq_version=seq_version(data),
-    #     xref_data=xref_data(data),
-    #     common_name=common_name(data),
-    #     species=species(data),
-    #     lineage=lineage(data),
-    #     gene=gene(data),
-    #     locus_tag=locus_tag(data),
-    #     gene_synonyms=gene_synonyms(data),
-    #     description=description(data),
-    #     references=references(acc, data),
-    # ))
-    # return entries
 
 
 def as_rows(lines):

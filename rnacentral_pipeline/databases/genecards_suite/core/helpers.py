@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 from . import data
 
@@ -31,15 +30,3 @@ def accession(context: data.Context, row) -> str:
 def taxid(context, row) -> int:
     rna_id = context.urs(row)
     return int(rna_id.split("_", 1)[1])
-
-
-def species(context: data.Context, row) -> str:
-    return phy.species(taxid(context, row))
-
-
-def lineage(context: data.Context, row) -> str:
-    return phy.lineage(taxid(context, row))
-
-
-def common_name(context: data.Context, row) -> str:
-    return phy.common_name(taxid(context, row))

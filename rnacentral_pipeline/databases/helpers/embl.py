@@ -141,14 +141,6 @@ def taxid(record) -> int:
     return value
 
 
-def common_name(record) -> str:
-    """
-    Look up the common name of the record. This will use the taxid to pull an
-    annotated common_name.
-    """
-    return phy.common_name(taxid(record))
-
-
 def species(record) -> str:
     """
     Get the species from the record. This will use the taxid to pull the
@@ -162,15 +154,6 @@ def organism(record) -> str:
     Get the annotated organism in the record.
     """
     return record.qualifiers["organism"]
-
-
-def lineage(record) -> str:
-    """
-    Extract the taxon id and then query a remote server for the lineage for the
-    given taxon id. Results are cached because it is common to constantly query
-    with only the same few taxon ids.
-    """
-    return phy.lineage(taxid(record))
 
 
 def project(record) -> ty.Optional[str]:
@@ -218,14 +201,6 @@ def seq_version(record):
     """
 
     return str(record.annotations.get("sequence_version", None))
-
-
-def division(record):
-    """
-    get the division given a record.
-    """
-
-    return phy.division(taxid(record))
 
 
 def standard_name(feature):

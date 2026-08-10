@@ -76,11 +76,8 @@ def as_entry(
         rna_type=info.so_rna_type,
         url=helpers.url(feature),
         seq_version=helpers.seq_version(feature),
-        lineage=embl.lineage(record),
         chromosome=helpers.chromosome(record),
         parent_accession=record.id,
-        common_name=common_name,
-        species=species,
         gene=embl.gene(gene),
         locus_tag=embl.locus_tag(gene),
         optional_id=embl.gene(gene),
@@ -91,7 +88,10 @@ def as_entry(
         mol_type="genomic DNA",
     )
 
-    return attr.evolve(entry, description=helpers.description(context, gene, entry))
+    return attr.evolve(
+        entry,
+        description=helpers.description(context, gene, entry, species, common_name),
+    )
 
 
 def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:

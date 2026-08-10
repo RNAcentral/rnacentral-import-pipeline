@@ -14,16 +14,10 @@ limitations under the License.
 """
 
 import re
-import typing as ty
-
-import attr
 
 from rnacentral_pipeline.databases import data
-
 from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.helpers import publications as pubs
-
-from rnacentral_pipeline.databases.ensembl.vertebrates.context import Context
 
 URL = "http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}"
 
@@ -81,15 +75,14 @@ def rna_type(inference, feature, xref_data):
     return inference.infer_rna_type(xref_data, base_type)
 
 
-def description(context, gene, entry):
+def description(context, gene, entry, species, common_name=None):
     """
     Generate a description for the entry based upon the locus this is a part
     of. This will be of the form 'Homo sapiens (human) lncRNA xist
     """
 
-    species = entry.species
-    if entry.common_name:
-        species += " (%s)" % entry.common_name
+    if common_name:
+        species += " (%s)" % common_name
 
     gene_name = notes(gene)
     if gene_name and len(gene_name) == 1:

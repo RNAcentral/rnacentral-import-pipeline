@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
@@ -29,18 +28,6 @@ def primary_id(urs_taxid):
 def taxid(urs_taxid):
     _, taxid = urs_taxid.split("_")
     return int(taxid)
-
-
-def species(interaction):
-    return phy.species(taxid(interaction))
-
-
-def lineage(interaction):
-    return phy.lineage(taxid(interaction))
-
-
-def common_name(interaction):
-    return phy.common_name(taxid(interaction))
 
 
 def url(urs_taxid):
@@ -68,8 +55,5 @@ def as_entry(urs_taxid, interactions, info):
         seq_version="1",
         description=info["description"],
         references=references(interactions),
-        species=species(urs_taxid),
-        common_name=common_name(urs_taxid),
-        lineage=lineage(urs_taxid),
         interactions=interactions,
     )

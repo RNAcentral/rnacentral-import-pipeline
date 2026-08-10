@@ -1,5 +1,4 @@
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 
 def primary_id(record):
@@ -37,7 +36,9 @@ def rna_type(record):
 
 
 def url(record):
-    return f"https://www.sdklab-biophysics-dzu.net/EVLncRNAs3/#/detail?id={record['ID']}"
+    return (
+        f"https://www.sdklab-biophysics-dzu.net/EVLncRNAs3/#/detail?id={record['ID']}"
+    )
 
 
 def description(record):
@@ -52,10 +53,6 @@ def common_name(record):
     return record["Species"]
 
 
-def lineage(record):
-    return phy.lineage(int(record["taxid"]))
-
-
 def as_entry(record):
     return Entry(
         primary_id=primary_id(record),
@@ -68,9 +65,6 @@ def as_entry(record):
         url=url(record),
         seq_version="1",
         description=description(record),
-        species=species(record),
-        common_name=common_name(record),
-        lineage=lineage(record),
         references=record["publications"],
         gene_synonyms=aliases(record),
     )

@@ -52,8 +52,6 @@ def as_entry(
         rna_type=helpers.rna_type(family),
         url=helpers.url(family),
         note_data=helpers.note(data),
-        species=helpers.species(data),
-        lineage=helpers.lineage(data),
         optional_id=helpers.optional_id(family),
         product=helpers.product(family),
         parent_accession=helpers.parent_accession(data),

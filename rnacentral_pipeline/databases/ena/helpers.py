@@ -19,7 +19,6 @@ import re
 import typing as ty
 
 import attr
-from Bio.Seq import Seq
 
 import rnacentral_pipeline.databases.helpers.embl as embl
 import rnacentral_pipeline.databases.helpers.publications as pubs
@@ -257,18 +256,6 @@ def species(record):
     return org
 
 
-def common_name(record):
-    # try:
-    #     return embl.common_name(record)
-    # except UnknownTaxonId:
-    org = organism(record)
-    if org:
-        match = re.search(r"\(([^()]+)\)$", org)
-        if match:
-            return match.group(1)
-    return None
-
-
 def lineage(record) -> ty.Optional[str]:
     # try:
     #     return embl.lineage(record)
@@ -337,9 +324,9 @@ def is_protein(feature) -> bool:
 
 
 def is_skippable_sequence(
-    entry: Entry, status: ty.Optional[ribovore.RibovoreResult]
+    entry: Entry, record, status: ty.Optional[ribovore.RibovoreResult]
 ) -> bool:
-    if entry.rna_type != "SO:0000252" or "metagenome" not in entry.lineage:
+    if entry.rna_type != "SO:0000252" or "metagenome" not in (lineage(record) or ""):
         return False
 
     if not status or status.status == "FAIL":
@@ -377,9 +364,6 @@ def as_entry(ctx, record, feature) -> Entry:
         note_data=note_data(feature),
         xref_data=xref_data(record, feature, record_refs),
         chromosome=chromosome(record),
-        species=species(record),
-        common_name=common_name(record),
-        lineage=lineage(record),
         gene=gene,
         locus_tag=embl.locus_tag(feature),
         product=prod,

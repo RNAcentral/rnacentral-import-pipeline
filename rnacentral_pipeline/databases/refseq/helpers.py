@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 
 import attr
 
@@ -138,9 +137,6 @@ def as_entry(record, source, feature):
         optional_id=optional,
         note_data={},
         xref_data=xref_data(feature),
-        species=embl.species(record),
-        common_name=embl.common_name(record),
-        lineage=embl.lineage(record),
         gene=embl.gene(feature),
         locus_tag=embl.locus_tag(feature),
         product=embl.product(feature),
