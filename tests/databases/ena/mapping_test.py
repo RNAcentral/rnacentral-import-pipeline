@@ -188,13 +188,6 @@ def test_can_transform_correct_lncrnadb_entry():
             },
             optional_id="Kcnq1ot1",
             non_coding_id="HG975405.1:1..32753:ncRNA",
-            species="Homo sapiens",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;"
-                " Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini; "
-                "Catarrhini; Hominidae; Homo; Homo sapiens"
-            ),
-            common_name="human",
             product="Long non-coding sense-intronic RNA Kcnq1ot1",
             description="Homo sapiens (human) Long non-coding sense-intronic RNA Kcnq1ot1",
             parent_accession="HG975405",
@@ -236,13 +229,6 @@ def test_can_transform_correct_srpdb_entry():
                 "ontology": ["ECO:0000305", "GO:0006617", "GO:0048501", "SO:0000590"],
                 "text": ["alignment group:Small 4.5S Bacteria (SB)"],
             },
-            species="Acinetobacter baumannii ATCC 17978",
-            lineage=(
-                "Bacteria; Proteobacteria; Gammaproteobacteria; "
-                "Pseudomonadales; Moraxellaceae; Acinetobacter; "
-                "Acinetobacter calcoaceticus/baumannii complex; "
-                "Acinetobacter baumannii ATCC 17978"
-            ),
             description="Acinetobacter baumannii ATCC 17978 signal recognition particle RNA",
             mol_type="transcribed RNA",
             gene="SRP RNA",
@@ -280,14 +266,6 @@ def test_can_transform_correct_snopy_entry():
                 ],
             },
             description="Arabidopsis thaliana (thale cress) small nucleolar RNA SnoR1b",
-            species="Arabidopsis thaliana",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; "
-                "Tracheophyta; Spermatophyta; Magnoliophyta; eudicotyledons; "
-                "Gunneridae; Pentapetalae; rosids; malvids; Brassicales; "
-                "Brassicaceae; Camelineae; Arabidopsis; Arabidopsis thaliana"
-            ),
-            common_name="thale cress",
             mol_type="genomic DNA",
             gene="SnoR1b",
             non_coding_id="LN809305.1:1..93:ncRNA",
@@ -324,12 +302,6 @@ def test_can_transform_correct_wormbase_entry():
                 },
             },
             description="Caenorhabditis elegans Non-coding transcript of protein-coding gene grl-25",
-            species="Caenorhabditis elegans",
-            lineage=(
-                "Eukaryota; Metazoa; Ecdysozoa; Nematoda; Chromadorea; Rhabditida;"
-                " Rhabditoidea; Rhabditidae; Peloderinae; Caenorhabditis; "
-                "Caenorhabditis elegans"
-            ),
             mol_type="genomic DNA",
             chromosome="III",
             locus_tag="CELE_ZK643.8",

@@ -51,11 +51,6 @@ def test_can_build_correct_entry_for_rrna():
             },
             optional_id="A",
             description="16S ribosomal RNA from Thermus thermophilus (PDB 1J5E, chain A)",
-            species="Thermus thermophilus",
-            lineage=(
-                "Bacteria; Deinococcota; Deinococci; Thermales; Thermaceae; "
-                "Thermus; Thermus thermophilus"
-            ),
             parent_accession="1J5E",
             product="16S ribosomal RNA",
             references=[
@@ -100,12 +95,6 @@ def test_can_build_correct_entry_for_srp_rna():
                 "experimentalTechnique": "SOLUTION NMR",
             },
             optional_id="A",
-            lineage=(
-                "Bacteria; Pseudomonadota; Gammaproteobacteria; "
-                "Enterobacterales; Enterobacteriaceae; Escherichia; "
-                "Escherichia coli"
-            ),
-            species="Escherichia coli",
             description="SRP RNA DOMAIN IV from Escherichia coli (PDB 1CQ5, chain A)",
             references=[
                 pubs.reference(10580470),

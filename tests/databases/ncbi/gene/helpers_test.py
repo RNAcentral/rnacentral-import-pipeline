@@ -52,3 +52,22 @@ def test_can_generate_rna_type(filename, index, rna_type):
     with open(filename) as raw:
         data = list(helpers.ncrnas(raw))
         assert helpers.row_rna_type(data[index]) == rna_type
+
+
+def test_can_parse_xref_data():
+    row = {"dbXrefs": "MIM:138670,HGNC:HGNC:4171,Ensembl:ENSG00000109061"}
+    assert helpers.xref_data(row) == {
+        "MIM": ["138670"],
+        "HGNC": ["HGNC:4171"],
+        "Ensembl": ["ENSG00000109061"],
+    }
+
+
+def test_xref_data_is_empty_when_not_given():
+    assert helpers.xref_data({"dbXrefs": "-"}) == {}
+
+
+def test_can_parse_xref_data_from_a_real_row():
+    with open("data/ncbi_gene/simple.txt") as raw:
+        rows = list(helpers.ncrnas(raw))
+    assert helpers.xref_data(rows[1]) == {"MGI": ["MGI:100336"]}

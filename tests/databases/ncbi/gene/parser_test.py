@@ -19,10 +19,7 @@ import pytest
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import publications as pub
-
-from rnacentral_pipeline.databases.ncbi.gene import fetch
-from rnacentral_pipeline.databases.ncbi.gene import helpers
-from rnacentral_pipeline.databases.ncbi.gene import parser
+from rnacentral_pipeline.databases.ncbi.gene import fetch, helpers, parser
 
 
 def parse(filename):
@@ -69,14 +66,6 @@ def test_produces_correct_data(simple):
         rna_type="snoRNA",
         url="https://www.ncbi.nlm.nih.gov/gene/113344155",
         seq_version="1",
-        species="Papaver somniferum",
-        common_name="opium poppy",
-        lineage=(
-            "Eukaryota; Viridiplantae; Streptophyta; "
-            "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-            "Ranunculales; Papaveraceae; Papaveroideae; Papaver; Papaver "
-            "somniferum"
-        ),
         xref_data={},
         product="small nucleolar RNA Z223",
         gene="LOC113344155",

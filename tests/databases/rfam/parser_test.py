@@ -83,18 +83,11 @@ def test_it_builds_first_entry_correctly():
                     "SO": ["SO:0000253"],
                     "GO": ["GO:0030533"],
                 },
-                species="Stegodyphus mimosarum",
-                lineage=(
-                    "Eukaryota; Metazoa; Arthropoda; Chelicerata; Arachnida; Araneae; "
-                    "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; "
-                    "Stegodyphus mimosarum"
-                ),
                 references=[
                     reference(29112718),
                     reference(8256282),
                     reference(9023104),
                 ],
-                common_name="",
                 optional_id="tRNA",
                 parent_accession="KK113858",
                 description="Stegodyphus mimosarum tRNA",

@@ -17,8 +17,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.ensembl import protists
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from . import helpers
 
@@ -162,13 +162,6 @@ def test_can_parse_expected_data(leis_36):
             seq_version="1",
             note_data={},
             xref_data={},
-            species="Leishmania major",
-            common_name=None,
-            lineage=(
-                "Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; "
-                "Trypanosomatida; Trypanosomatidae; Leishmaniinae; Leishmania; "
-                "Leishmania major strain Friedlin"
-            ),
             gene="LMJF_36_TRNAGLY_01",
             locus_tag="LMJF_36_TRNAGLY_01",
             description="Leishmania major tRNA-Gly",

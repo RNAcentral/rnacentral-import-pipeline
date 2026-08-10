@@ -17,8 +17,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.ensembl import metazoa
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from . import helpers
 
@@ -132,14 +132,6 @@ def test_can_get_expected_data(apis_1):
             seq_version="1",
             note_data={},
             xref_data={},
-            species="Apis mellifera",
-            common_name="European honey bee",
-            lineage=(
-                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; "
-                "Hexapoda; Insecta; Pterygota; Neoptera; Holometabola; "
-                "Hymenoptera; Apocrita; Aculeata; Apoidea; Apidae; Apis; "
-                "Apis mellifera"
-            ),
             gene="ENSRNA022717521",
             locus_tag="ame-mir-193",
             description="Apis mellifera (European honey bee) pre miRNA ame-mir-193",

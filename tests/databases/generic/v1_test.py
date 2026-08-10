@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
 import hashlib
+import json
 
 import attr
 import pytest
@@ -34,7 +34,10 @@ from rnacentral_pipeline.databases.helpers import publications as pub
         ("data/json-schema/v020/lincipedia.json", [9606]),
         ("data/json-schema/v020/lncbook.json", [9606, 9606, 9606]),
         ("data/json-schema/v020/lncipedia-5.0.json", [9606]),
-        ("data/json-schema/v020/lncipedia-with-isoforms.json", [9606, 9606, 9606, 9606, 9606]),
+        (
+            "data/json-schema/v020/lncipedia-with-isoforms.json",
+            [9606, 9606, 9606, 9606, 9606],
+        ),
         ("data/json-schema/v020/missing-mirbase.json", [10116, 15368]),
         ("data/json-schema/v020/modomics-modifications.json", [562]),
         ("data/json-schema/v020/pombase.json", [4896]),
@@ -104,7 +107,9 @@ def test_can_parse_modomics_modifications_to_sequence_features():
     assert result[1].provider == "MODOMICS"
     assert result[4].provider == "MODOMICS"
 
-    accession = hashlib.md5(record["sequence"].encode("utf-8")).hexdigest() + "_modomics"
+    accession = (
+        hashlib.md5(record["sequence"].encode("utf-8")).hexdigest() + "_modomics"
+    )
     assert result[0].metadata["accession"] == accession
     assert result[1].metadata["accession"] == accession
     assert result[4].metadata["accession"] == accession
@@ -235,11 +240,6 @@ def test_can_correctly_parse_data():
             xref_data={
                 "REFSEQ": ["NR_133553.1"],
             },
-            species="Drosophila melanogaster",
-            common_name="fruit fly",
-            lineage=(
-                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota; Neoptera; Endopterygota; Diptera; Brachycera; Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora; Drosophila melanogaster"
-            ),
             gene="FBgn0267497",
             locus_tag="Dmel_CR45837",
             description="Drosophila melanogaster (fruit fly) 28S ribosomal RNA:CR45837",
@@ -329,14 +329,6 @@ def test_can_correctly_parse_lncipedia_data():
             ],
             # product='long non-coding RNA lnc-CLEC18B-3:5',
             description="Homo sapiens (human) non-protein coding lnc-CLEC18B-3:5",
-            species="Homo sapiens",
-            common_name="human",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Primates; Haplorrhini; Catarrhini; "
-                "Hominidae; Homo; Homo sapiens"
-            ),
         )
     )
 
@@ -369,14 +361,6 @@ def test_can_correctly_parse_mirbase_data():
             },
             optional_id="rno-mir-335",
             description="Rattus norvegicus miR-335 stem-loop",
-            species="Rattus norvegicus",
-            common_name="Norway rat",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; "
-                "Muridae; Murinae; Rattus; Rattus norvegicus"
-            ),
             references=[
                 pub.reference(17604727),
                 pub.reference(14691248),
@@ -417,14 +401,6 @@ def test_can_correct_fetch_related_sequences():
             },
             gene_synonyms=["TARBASE:hsa-miR-576-3p"],
             description="Homo sapiens (human) hsa-miR-576-3p",
-            species="Homo sapiens",
-            common_name="human",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Primates; Haplorrhini; Catarrhini; "
-                "Hominidae; Homo; Homo sapiens"
-            ),
             references=[
                 pub.reference(22100165),
                 pub.reference(22291592),
@@ -2696,14 +2672,6 @@ def test_can_correctly_find_isoforms():
                 "LOC101927560",
             ],
             description="Homo sapiens (human) non-protein coding LINC01725:19",
-            species="Homo sapiens",
-            common_name="human",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Primates; Haplorrhini; Catarrhini; "
-                "Hominidae; Homo; Homo sapiens"
-            ),
             references=[],
             related_sequences=[
                 dat.RelatedSequence(
@@ -2866,14 +2834,6 @@ def test_does_get_correct_lncbook_genes():
             xref_data={
                 "NONCODE": ["NONHSAT000005.2"],
             },
-            species="Homo sapiens",
-            common_name="human",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Primates; Haplorrhini; Catarrhini; "
-                "Hominidae; Homo; Homo sapiens"
-            ),
             gene="HSALNG0000002",
             description="Homo sapiens (human) HSALNT0000002",
             references=[

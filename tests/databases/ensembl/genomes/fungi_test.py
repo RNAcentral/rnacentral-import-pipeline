@@ -17,8 +17,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.ensembl import fungi
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from . import helpers
 
@@ -93,14 +93,6 @@ def test_can_produce_correct_data(asp_1):
             seq_version="1",
             note_data={},
             xref_data={"RFAM": ["RF00004"]},
-            species="Aspergillus nidulans FGSC A4",
-            common_name=None,
-            lineage=(
-                "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; "
-                "Eurotiomycetes; Eurotiomycetidae; Eurotiales; Aspergillaceae; "
-                "Aspergillus; Aspergillus subgen. Nidulantes; "
-                "Aspergillus nidulans FGSC A4"
-            ),
             gene="EBG00005235662",
             locus_tag="U2",
             description="Aspergillus nidulans FGSC A4 snRNA U2",

@@ -13,16 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
-import pytest
 from io import open
 
-from rnacentral_pipeline.databases.data import Exon
-from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.data import Reference
-from rnacentral_pipeline.databases.data import SequenceRegion
-from rnacentral_pipeline.databases.data import CoordinateSystem
+import attr
+import pytest
 
+from rnacentral_pipeline.databases.data import (
+    CoordinateSystem,
+    Entry,
+    Exon,
+    Reference,
+    SequenceRegion,
+)
 from rnacentral_pipeline.databases.rgd import helpers as rgd
 
 
@@ -168,14 +170,6 @@ def test_can_build_correct_entry(simple_entry, sequences):
                 ],
                 "ncbi_gene": ["100861533"],
             },
-            species="Rattus norvegicus",
-            common_name="Norway rat",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; "
-                "Muridae; Murinae; Rattus; Rattus norvegicus"
-            ),
             gene="Rn18s",
             locus_tag="Rn18s",
             description="Rattus norvegicus 18S ribosomal RNA (Rn18s)",
@@ -185,14 +179,14 @@ def test_can_build_correct_entry(simple_entry, sequences):
                     location="Nucleic Acids Res 43(database issue):D743-50 (2015)",
                     title="The Rat Genome Database 2015: genomic, phenotypic and environmental variations and disease",
                     pmid=25355511,
-                    doi=u"10.1093/nar/gku1026",
+                    doi="10.1093/nar/gku1026",
                 ),
                 Reference(
                     authors="Girard A, Sachidanandam R, Hannon GJ, Carmell MA.",
                     location="Nature 442(7099):199-202 (2006)",
                     title="A germline-specific class of small RNAs binds mammalian Piwi proteins",
                     pmid=16751776,
-                    doi=u"10.1038/nature04917",
+                    doi="10.1038/nature04917",
                 ),
                 Reference(
                     authors="Choi YC.",
@@ -206,21 +200,21 @@ def test_can_build_correct_entry(simple_entry, sequences):
                     location="Nucleic Acids Res 10(12):3667-3680 (1982)",
                     title="Nucleotide sequence of the region between the 18S rRNA sequence and the 28S rRNA sequence of rat ribosomal DNA",
                     pmid=6287418,
-                    doi=u"10.1093/nar/10.12.3667",
+                    doi="10.1093/nar/10.12.3667",
                 ),
                 Reference(
                     authors="Rothblum LI, Reddy R, Cassidy B.",
                     location="Nucleic Acids Res 10(22):7345-7362 (1982)",
                     title="Transcription initiation site of rat ribosomal DNA",
                     pmid=6296773,
-                    doi=u"10.1093/nar/10.22.7345",
+                    doi="10.1093/nar/10.22.7345",
                 ),
                 Reference(
                     authors="Chan YL, Olvera J, Wool IG.",
                     location="Nucleic Acids Res 11(22):7819-7831 (1983)",
                     title="The structure of rat 28S ribosomal ribonucleic acid inferred from the sequence of nucleotides in a gene",
                     pmid=6316273,
-                    doi=u"10.1093/nar/11.22.7819",
+                    doi="10.1093/nar/11.22.7819",
                 ),
                 Reference(
                     authors="Chan YL, Gutell R, Noller HF, Wool IG.",
@@ -234,7 +228,7 @@ def test_can_build_correct_entry(simple_entry, sequences):
                     location="Nucleic Acids Res 12(8):3677-3693 (1984)",
                     title="Primary and secondary structure of rat 28 S ribosomal RNA",
                     pmid=6328433,
-                    doi=u"10.1093/nar/12.8.3677",
+                    doi="10.1093/nar/12.8.3677",
                 ),
             ],
         )
@@ -301,14 +295,6 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
                     "XR_356920",
                 ],
             },
-            species="Rattus norvegicus",
-            common_name="Norway rat",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; "
-                "Muridae; Murinae; Rattus; Rattus norvegicus"
-            ),
             gene="LOC102549948",
             locus_tag="LOC102549948",
             description="Rattus norvegicus uncharacterized LOC102549948",
@@ -318,7 +304,7 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
                     location="Nucleic Acids Res 43(database issue):D743-50 (2015)",
                     title="The Rat Genome Database 2015: genomic, phenotypic and environmental variations and disease",
                     pmid=25355511,
-                    doi=u"10.1093/nar/gku1026",
+                    doi="10.1093/nar/gku1026",
                 )
             ],
         )
@@ -348,14 +334,6 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
                     "XR_356920",
                 ],
             },
-            species="Rattus norvegicus",
-            common_name="Norway rat",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; "
-                "Muridae; Murinae; Rattus; Rattus norvegicus"
-            ),
             gene="LOC102549948",
             locus_tag="LOC102549948",
             description="Rattus norvegicus uncharacterized LOC102549948",
@@ -365,7 +343,7 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
                     location="Nucleic Acids Res 43(database issue):D743-50 (2015)",
                     title="The Rat Genome Database 2015: genomic, phenotypic and environmental variations and disease",
                     pmid=25355511,
-                    doi=u"10.1093/nar/gku1026",
+                    doi="10.1093/nar/gku1026",
                 )
             ],
         )
@@ -395,14 +373,6 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
                     "XR_356920",
                 ],
             },
-            species="Rattus norvegicus",
-            common_name="Norway rat",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; "
-                "Vertebrata; Euteleostomi; Mammalia; Eutheria; "
-                "Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; "
-                "Muridae; Murinae; Rattus; Rattus norvegicus"
-            ),
             gene="LOC102549948",
             locus_tag="LOC102549948",
             description="Rattus norvegicus uncharacterized LOC102549948",
@@ -412,7 +382,7 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
                     location="Nucleic Acids Res 43(database issue):D743-50 (2015)",
                     title="The Rat Genome Database 2015: genomic, phenotypic and environmental variations and disease",
                     pmid=25355511,
-                    doi=u"10.1093/nar/gku1026",
+                    doi="10.1093/nar/gku1026",
                 )
             ],
         )

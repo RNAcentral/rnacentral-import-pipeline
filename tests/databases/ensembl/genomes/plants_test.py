@@ -17,8 +17,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.ensembl import plants
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from . import helpers
 
@@ -111,15 +111,6 @@ def test_can_parse_data(cress_2):
                 "RefSeq": ["NR_139968.1"],
                 "TAIR": ["AT2G01010.1"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G01010",
             description="Arabidopsis thaliana (thale-cress) rRNA",
             references=[pubs.reference(29092050)],
@@ -184,15 +175,6 @@ def test_can_create_tair_entry(cress_2):
             xref_data={
                 "RefSeq": ["NR_139968.1"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G01010",
             description="Arabidopsis thaliana (thale-cress) rRNA",
             references=[pubs.reference(29092050)],
@@ -241,15 +223,6 @@ def test_can_get_with_odd_rna_type(cress_2):
             xref_data={
                 "RefSeq": ["NR_139974.1"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G03895",
             description="Arabidopsis thaliana (thale-cress) lncRNA AT2G03895",
             references=[pubs.reference(29092050)],
@@ -281,15 +254,6 @@ def test_can_parse_a_trna(cress_2):
             rna_type="tRNA",
             url="",
             seq_version="1",
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="ENSRNA049492366",
             locus_tag="tRNA-Asn",
             description="Arabidopsis thaliana (thale-cress) tRNA-Asn for anticodon GUU",
@@ -325,15 +289,6 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
             rna_type="lncRNA",
             url="",
             seq_version="1",
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G03905",
             description="Arabidopsis thaliana (thale-cress) lncRNA AT2G03905",
             references=[pubs.reference(29092050)],
@@ -367,15 +322,6 @@ def test_can_parse_premirna(cress_2):
             rna_type="pre_miRNA",
             url="",
             seq_version="1",
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="ENSRNA049757815",
             locus_tag="ath-MIR840",
             description="Arabidopsis thaliana (thale-cress) pre miRNA ath-MIR840",
@@ -412,14 +358,6 @@ def test_can_parse_rice_trna(oryza_9):
             rna_type="tRNA",
             url="",
             seq_version="1",
-            species="Oryza barthii",
-            common_name="African wild rice",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; "
-                "Oryzeae; Oryzinae; Oryza; Oryza barthii"
-            ),
             gene="ENSRNA049456349",
             locus_tag="tRNA-Glu",
             description="Oryza barthii (African wild rice) tRNA-Glu for anticodon CUC",
@@ -449,14 +387,6 @@ def test_can_parse_rice_snorna(oryza_9):
             rna_type="snoRNA",
             url="",
             seq_version="1",
-            species="Oryza barthii",
-            common_name="African wild rice",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; "
-                "Oryzeae; Oryzinae; Oryza; Oryza barthii"
-            ),
             gene="ENSRNA049475670",
             locus_tag="snoR74",
             description="Oryza barthii (African wild rice) small nucleolar RNA snoR74",
@@ -486,14 +416,6 @@ def test_can_parse_rice_pre_mirna(oryza_9):
             rna_type="pre_miRNA",
             url="",
             seq_version="1",
-            species="Oryza barthii",
-            common_name="African wild rice",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; "
-                "Oryzeae; Oryzinae; Oryza; Oryza barthii"
-            ),
             gene="ENSRNA049475651",
             locus_tag="MIR1846",
             description="Oryza barthii (African wild rice) microRNA MIR1846",
@@ -523,14 +445,6 @@ def test_can_parse_rice_u6(oryza_9):
             rna_type="snRNA",
             url="",
             seq_version="1",
-            species="Oryza barthii",
-            common_name="African wild rice",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; "
-                "Oryzeae; Oryzinae; Oryza; Oryza barthii"
-            ),
             gene="ENSRNA049475710",
             locus_tag="U6",
             description="Oryza barthii (African wild rice) U6 spliceosomal RNA",
@@ -562,14 +476,6 @@ def test_can_parse_barley_antisense(hordeum_pt):
             rna_type="antisense_RNA",
             url="",
             seq_version="1",
-            species="Hordeum vulgare subsp. vulgare",
-            common_name="two-rowed barley",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; "
-                "Tracheophyta; Spermatophyta; Magnoliopsida; Liliopsida; "
-                "Poales; Poaceae; BOP clade; Pooideae; Triticodae; "
-                "Triticeae; Hordeinae; Hordeum; Hordeum vulgare subsp. vulgare"
-            ),
             gene="ENSRNA049483195",
             locus_tag="IsrR",
             description="Hordeum vulgare subsp. vulgare (two-rowed barley) antisense RNA which regulates isiA expression",
@@ -606,14 +512,6 @@ def test_can_parse_zea_lincrna(zea_7):
             rna_type="lncRNA",
             url="",
             seq_version="1",
-            species="Zea mays",
-            common_name="maize",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; PACMAD clade; Panicoideae; "
-                "Andropogonodae; Andropogoneae; Tripsacinae; Zea; Zea mays"
-            ),
             gene="Zm00001d001070",
             description="Zea mays (maize) lncRNA Zm00001d001070",
             references=[pubs.reference(29092050)],

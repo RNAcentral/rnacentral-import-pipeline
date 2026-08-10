@@ -75,14 +75,6 @@ def test_it_can_build_correct_entry():
                 "MIM": ["157660"],
             },
             note_data={},
-            species="Homo sapiens",
-            common_name="human",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
-                "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
-                "Homo sapiens"
-            ),
             gene="RMRP",
             gene_synonyms=["CHH", "NME1", "RMRPR", "RRP2"],
             optional_id="GeneID:6023",
@@ -125,14 +117,6 @@ def test_can_build_correct_entries_when_multiple_present():
                 "miRBase": ["MI0020366"],
             },
             note_data={},
-            species="Homo sapiens",
-            common_name="human",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
-                "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
-                "Homo sapiens"
-            ),
             gene="MIR6089",
             gene_synonyms=[
                 "hsa-mir-6089-1",
@@ -171,14 +155,6 @@ def test_can_build_correct_entries_when_multiple_present():
                 "miRBase": ["MI0020366", "MIMAT0023714"],
             },
             note_data={},
-            species="Homo sapiens",
-            common_name="human",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
-                "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
-                "Homo sapiens"
-            ),
             gene="MIR6089",
             gene_synonyms=[
                 "hsa-mir-6089-1",
@@ -221,8 +197,6 @@ def test_can_assign_related_sequences_for_mirnas():
             description="Caenorhabditis elegans pre-microRNA mir-79 (mir-79)",
             xref_data={"GeneID": ["259856"]},
             note_data={},
-            species="Caenorhabditis elegans",
-            lineage=phy.lineage(6239),
             gene="mir-79",
             gene_synonyms=[],
             optional_id="GeneID:259856",
@@ -286,11 +260,6 @@ def test_can_assign_isoform_to_rnase_p():
                 "FLYBASE": ["FBgn0046696", "FBtr0085775"],
             },
             note_data={},
-            species="Drosophila melanogaster",
-            common_name="fruit fly",
-            lineage=(
-                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota; Neoptera; Endopterygota; Diptera; Brachycera; Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora; Drosophila melanogaster"
-            ),
             gene="RNaseP:RNA",
             gene_synonyms=[
                 "chr3R:27043287..27043402",
