@@ -72,8 +72,7 @@ def main():
         conn.close()
 
     with open(output_file, "w") as fh:
-        for job_id in registered:
-            fh.write(job_id + "\n")
+        fh.writelines(job_id + "\n" for job_id in registered)
 
     print(f"Registered {len(registered)} of {len(ids)} IDs")
 
