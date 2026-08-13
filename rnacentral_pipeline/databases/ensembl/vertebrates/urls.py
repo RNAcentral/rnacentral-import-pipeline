@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import json
-import re
 import tempfile
 import typing as ty
 from contextlib import contextmanager
@@ -24,16 +23,13 @@ from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 
 
 def latest_release(ftp: FTP) -> str:
-    ## Parse the readme for the current release to avoid getting a half baked release
-    readme_lines = []
-    ftp.retrlines("RETR current_README", readme_lines.append)
-    cur_readme = "\n".join(readme_lines)
-    pattern = r"Ensembl Release (\d+) Databases\."
-    match = re.search(pattern, cur_readme, re.IGNORECASE)
-
-    if not match:
-        raise ValueError("Could not determine latest Ensembl release from README")
-    release = match.group(1)
+    ## VERSION rather than a release-* listing, to avoid picking up a half baked
+    ## release. current_README, which we used to parse, is gone from the FTP site.
+    lines: ty.List[str] = []
+    ftp.retrlines("RETR VERSION", lines.append)
+    release = "".join(lines).strip()
+    if not release.isdigit():
+        raise ValueError(f"Could not determine latest Ensembl release, got {release!r}")
     return f"release-{release}"
 
 
