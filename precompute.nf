@@ -283,11 +283,4 @@ workflow {
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }
-
-  onError:
-    try {
-      slack_closure("Precompute workflow encountered an error and crashed")
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e}"
-    }
 }

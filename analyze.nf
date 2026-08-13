@@ -50,11 +50,4 @@ workflow {
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }
-
-  onError:
-    try {
-      slack_closure("Analyze workflow hit an error and crashed")
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e}"
-    }
 }
