@@ -6,11 +6,13 @@ nextflow.enable.dsl = 2
 // main.config, but Nextflow 26+ forbids variable declarations in config files.
 params.connections = new groovy.json.JsonSlurper().parse(new File(params.connection_file))
 
+include { any_ensembl_division_runs } from './workflows/utils/ensembl-divisions'
+
 // Whether a database entry is configured to run. Ensembl is special-cased: it
 // runs if any of its divisions do.
 def willRun(key, db) {
   if (key == 'ensembl') {
-    return ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { d -> db[d]?.get('run', false) }
+    return any_ensembl_division_runs()
   }
   return db.get('run', false)
 }
@@ -20,8 +22,6 @@ def willRun(key, db) {
 // Nextflow 26+ forbids loops in config files and top-level loop statements in
 // scripts, so these are derived with collection expressions (param assignments,
 // which are permitted at the top level).
-params.databases.ensembl._any.run =
-  ['vertebrates', 'plants', 'fungi', 'protists', 'metazoa'].any { d -> params.databases.ensembl[d]?.get('run', false) }
 params.needs_publications = !params.get('skip_publications', false) && params.databases.any { key, db -> willRun(key, db) }
 params.should_release     = params.databases.any { key, db -> willRun(key, db) && db.get('release', true) }
 params.needs_taxonomy     = params.databases.any { key, db -> willRun(key, db) && db.get('needs_taxonomy', false) }
