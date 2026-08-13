@@ -27,7 +27,6 @@ from rnacentral_pipeline.databases.ensembl.metadata import (
     assemblies,
     compara,
     coordinate_systems,
-    karyotypes,
     proteins,
 )
 from rnacentral_pipeline.output_format import format_option
@@ -138,22 +137,6 @@ def ensembl_coordinates(connections, query, output):
     the database.
     """
     coordinate_systems.write(connections, query, Path(output))
-
-
-@cli.command("karyotypes")
-@click.argument("output", default="karyotypes.csv")
-@click.argument("species", nargs=-1)
-@format_option
-def ensembl_write_karyotypes(output, species):
-    """
-    Fetch all the karyotype information from all Ensembl species. This will use
-    the Ensembl API to fetch the data and write to the given output file.
-    """
-    if not species:
-        species = None
-    else:
-        species = set(species)
-    karyotypes.write(output, species=species)
 
 
 @cli.command("proteins")

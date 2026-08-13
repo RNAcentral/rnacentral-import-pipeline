@@ -233,12 +233,6 @@ CREATE UNLOGGED TABLE load_interactions (
   taxid int NOT NULL
 );
 
-DROP TABLE IF EXISTS load_karyotypes;
-CREATE UNLOGGED TABLE load_karyotypes (
-	assembly_id varchar(255) NOT NULL,
-    karyotype text
-);
-
 DROP TABLE IF EXISTS load_rnc_coordinates;
 CREATE UNLOGGED TABLE load_rnc_coordinates (
     accession varchar(200) NULL,

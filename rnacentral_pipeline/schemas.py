@@ -322,19 +322,6 @@ REDIPORTAL_FEATURES = pa.schema(
 
 
 # ---------------------------------------------------------------------------
-# ensembl.metadata.karyotypes.write() -> karyotypes.parquet (ensembl metadata
-# workflow). Source: files/import-data/load/karyotypes.ctl. Loaded into
-# ``load_karyotypes``, then post-release/001__karyotypes.sql casts the
-# ``karyotype`` text column to json on its way into ``ensembl_karyotype``.
-KARYOTYPES = pa.schema(
-    [
-        pa.field("assembly_id", pa.string(), nullable=False),
-        pa.field("karyotype", pa.string()),
-    ]
-)
-
-
-# ---------------------------------------------------------------------------
 # ensembl.metadata.compara.write() -> compara.parquet (ensembl metadata
 # workflow). Source: files/import-data/load/compara.ctl. Loaded into
 # ``load_compara``, then post-release/001__compara.sql resolves urs_taxids /
@@ -708,7 +695,6 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "terms": None,
     "go_annotations": "load_go_term_annotations",
     "go_publication_mappings": "load_go_term_publication_map",
-    "karyotypes": "load_karyotypes",
     "compara": "load_compara",
     "taxonomy": "load_taxonomy",
     "rfam_ontology_mappings": "load_rfam_go_terms",
