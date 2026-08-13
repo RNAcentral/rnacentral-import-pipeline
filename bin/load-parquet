@@ -64,6 +64,22 @@ def parquet_columns(con: duckdb.DuckDBPyConnection, parquet_glob: str) -> list[s
     ]
 
 
+def write_count(path: Path | None, rows: int) -> None:
+    """
+    Record how many rows the parquet input held, which is what the INSERT
+    loads. That the two agree is still unverified -- see the phase-1 TODO in
+    load-data.nf.
+
+    Under csv an empty parser left a 0-byte file, which load-data.nf dropped
+    before it could contribute a name -- and a name is what selects the
+    pre/post-release SQL. A zero-row parquet file is still several hundred
+    bytes of schema and footer, so that filter no longer catches it; this count
+    is what load-data.nf gates on instead.
+    """
+    if path is not None:
+        path.write_text(f"{rows}\n")
+
+
 def _extension_home() -> Path:
     """
     Directory DuckDB may use for its extension cache (``<home>/.duckdb``).
@@ -130,6 +146,16 @@ def main() -> int:
             "DELETE-then-INSERT merge against an empty staging table."
         ),
     )
+    parser.add_argument(
+        "--count-file",
+        type=Path,
+        default=None,
+        help=(
+            "Write the parquet input's row count to this path. load-data.nf "
+            "gates release-script selection on it, so a parser that produced "
+            "nothing does not pull in its pre/post-release SQL."
+        ),
+    )
     args = parser.parse_args()
 
     if not args.pg_url:
@@ -145,6 +171,7 @@ def main() -> int:
             sys.stderr.write(
                 f"'{target}' has no pgloader target today; skipping load\n"
             )
+            write_count(args.count_file, 0)
             return 0
         sys.stderr.write(f"resolved logical name '{target}' -> {mapped}\n")
         target = mapped
@@ -195,6 +222,7 @@ def main() -> int:
     sys.stderr.write(
         f"loaded {inserted} row(s); pg.{quoted_qualified} now has {total} row(s)\n"
     )
+    write_count(args.count_file, inserted)
 
     if args.post_load is not None:
         return _run_post_load(args.pg_url, args.post_load, inserted, args.allow_empty)

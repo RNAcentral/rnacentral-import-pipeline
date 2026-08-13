@@ -145,3 +145,25 @@ def test_load_table_mapping_covers_every_writer_output():
 
     missing = set(ENTRY_WRITER_SCHEMAS) - set(ENTRY_WRITER_LOAD_TABLES)
     assert not missing, f"no load target declared for: {sorted(missing)}"
+
+
+def test_count_file_records_rows_loaded(tmp_path):
+    """
+    load-data.nf reads this file to decide whether the name goes on to select
+    pre/post-release SQL, so the value has to be parseable as an int.
+    """
+    path = tmp_path / "rows.count"
+    load_parquet.write_count(path, 5375353)
+    assert int(path.read_text().strip()) == 5375353
+
+
+def test_count_file_records_an_empty_load(tmp_path):
+    path = tmp_path / "rows.count"
+    load_parquet.write_count(path, 0)
+    assert int(path.read_text().strip()) == 0
+
+
+def test_no_count_file_is_written_when_not_asked(tmp_path):
+    """Bare CLI use passes no --count-file and must not litter the cwd."""
+    load_parquet.write_count(None, 3)
+    assert list(tmp_path.iterdir()) == []
