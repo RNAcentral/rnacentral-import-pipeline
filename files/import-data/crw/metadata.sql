@@ -4,7 +4,8 @@ SELECT
     'taxid', taxid,
     'model_name', model_name,
     'rna_type', rna_type,
-    'so_term_id', so_term_id
+    'so_term_id', so_term_id,
+    'cellular_location', cellular_location
   )
 from r2dt_models
 where

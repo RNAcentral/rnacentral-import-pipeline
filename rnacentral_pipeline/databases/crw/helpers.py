@@ -13,17 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import logging
-from pathlib import Path
 import typing as ty
+from pathlib import Path
 
-from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
+from rnacentral_pipeline.databases.helpers import r2dt
 
 LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +73,7 @@ def organelle(row: ty.Dict[str, ty.Any]) -> ty.Optional[str]:
     else:
         return None
 
+
 def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
     try:
         return data.Entry(
@@ -96,17 +96,10 @@ def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
             organelle=organelle(row),
         )
     except Exception as err:
-        LOGGER.warn("Could not generate entry for %s", row)
+        LOGGER.warning("Could not generate entry for %s", row)
         LOGGER.exception(err)
         return None
 
 
 def fasta_entries(directory: Path) -> ty.Iterable[SeqRecord]:
-    model_pattern = re.compile("crw-bpseq/(.+).bpseq ")
-    for fasta_file in directory.glob("*.fasta"):
-        with fasta_file.open("r") as raw:
-            header, sequence, _ = raw.readlines()
-            matches = re.search(model_pattern, header)
-            if matches is None:
-                raise ValueError(f"Could not get model id from {header}")
-        yield SeqRecord(Seq(sequence.strip()), id=matches.group(1))
+    return r2dt.fasta_entries([directory])
