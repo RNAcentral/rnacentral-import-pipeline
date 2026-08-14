@@ -15,8 +15,11 @@ limitations under the License.
 RiboVision used to be imported by scraping rnacentral_mapping.html from
 apollo.chemistry.gatech.edu, which keyed entries on PDB chains. That host is
 gone and RiboVision2 serves a JavaScript app with no equivalent page, so the
-models are taken from the copy R2DT ships instead -- the same arrangement CRW
-uses, with metadata from r2dt_models and sequences from the repo.
+models are taken from the copy R2DT ships instead, the same way CRW works.
+
+The metadata lives in the repo rather than r2dt_models because that table
+carries neither taxid nor cellular_location -- files/r2dt/load-models.ctl drops
+both on the way in.
 """
 
 import typing as ty
@@ -24,14 +27,20 @@ from pathlib import Path
 
 from Bio import SeqIO
 
-from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.ribovision import helpers
+from rnacentral_pipeline.rnacentral.r2dt.models import ribovision as models
 
 
-def parse(metadata_handle: ty.IO, sequences: Path) -> ty.Iterable[Entry]:
+def parse(directory: Path, sequences: Path) -> ty.Iterable[Entry]:
+    """
+    Read every metadata.tsv under an R2DT data directory. RiboVision splits its
+    models across a large and a small subunit directory.
+    """
     indexed = SeqIO.index(str(sequences), "fasta")
-    for entry in psql.json_handler(metadata_handle):
-        data = helpers.as_entry(entry, indexed)
-        if data:
-            yield data
+    for metadata in sorted(directory.glob("ribovision-*/metadata.tsv")):
+        with metadata.open("r") as handle:
+            for info in models.parse(handle):
+                entry = helpers.as_entry(info, indexed)
+                if entry:
+                    yield entry

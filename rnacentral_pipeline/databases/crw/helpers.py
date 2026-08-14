@@ -23,80 +23,53 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
 from rnacentral_pipeline.databases.helpers import r2dt
+from rnacentral_pipeline.rnacentral.r2dt.data import SO_RNA_NAME_LOOKUP
 
 LOGGER = logging.getLogger(__name__)
 
-ORGANELLE_MAPPING = {
-    "Mitochondrion": "mitochondria",
-    "Cyanelle": "cyanelle",
-    "Chloroplast": "chloroplast",
-}
+
+def primary_id(info) -> str:
+    return "CRW:" + info.model_name
 
 
-def primary_id(row: ty.Dict[str, ty.Any]) -> str:
-    return "CRW:" + row["model_name"]
+def sequence(info, sequences) -> str:
+    return str(sequences[info.model_name].seq).upper().replace("U", "T")
 
 
-def taxid(row: ty.Dict[str, ty.Any]) -> int:
-    return row["taxid"]
+def description(info) -> str:
+    # The lookup holds internal names ("cytosolic_SSU_rRNA"); descriptions
+    # are user facing, so space them out.
+    rna_type = SO_RNA_NAME_LOOKUP[info.so_rna_type].replace("_", " ")
+    return f"{phy.species(info.taxid)} {rna_type}"
 
 
-def species(row: ty.Dict[str, ty.Any]) -> str:
-    return phy.species(taxid(row))
-
-
-def common_name(row: ty.Dict[str, ty.Any]) -> str:
-    return phy.common_name(taxid(row))
-
-
-def lineage(row: ty.Dict[str, ty.Any]) -> str:
-    return phy.lineage(taxid(row))
-
-
-def sequence(row: ty.Dict[str, ty.Any], sequences: ty.Dict[str, SeqRecord]) -> str:
-    return str(sequences[row["model_name"]].seq).upper().replace("U", "T")
-
-
-def description(row: ty.Dict[str, ty.Any]) -> str:
-    name = species(row)
-    loc = organelle(row)
-    rna_type = row["rna_type"]
-    if loc:
-        return f"{name} {loc} {rna_type}"
-    return f"{name} {rna_type}"
-
-
-def organelle(row: ty.Dict[str, ty.Any]) -> ty.Optional[str]:
-    cellular_location = row.get("cellular_location", None)
-    if cellular_location is not None:
-        return ORGANELLE_MAPPING.get(row["cellular_location"], None)
-    else:
-        return None
-
-
-def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
+def as_entry(info, sequences) -> ty.Optional[data.Entry]:
+    """
+    Build an entry from the ModelInfo r2dt.models.crw parses out of R2DT's
+    crw-metadata.tsv. No organelle: the metadata has no such column and
+    r2dt_models never stored one either.
+    """
     try:
         return data.Entry(
-            primary_id=primary_id(row),
-            accession=primary_id(row),
-            ncbi_tax_id=taxid(row),
+            primary_id=primary_id(info),
+            accession=primary_id(info),
+            ncbi_tax_id=info.taxid,
             database="CRW",
             regions=[],
-            rna_type=row["so_term_id"],
-            sequence=sequence(row, sequences),
+            rna_type=info.so_rna_type,
+            sequence=sequence(info, sequences),
             url="",
             seq_version="1",
-            description=description(row),
-            species=species(row),
-            common_name=common_name(row),
-            lineage=lineage(row),
+            description=description(info),
+            species=phy.species(info.taxid),
+            common_name=phy.common_name(info.taxid),
+            lineage=phy.lineage(info.taxid),
             references=[
                 pub.reference(11869452),
             ],
-            organelle=organelle(row),
         )
     except Exception as err:
-        LOGGER.warning("Could not generate entry for %s", row)
+        LOGGER.warning("Could not generate entry for %s", info.model_name)
         LOGGER.exception(err)
         return None
 

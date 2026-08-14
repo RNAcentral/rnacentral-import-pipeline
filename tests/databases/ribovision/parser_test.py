@@ -5,8 +5,8 @@ RiboVision was imported by scraping rnacentral_mapping.html, keyed on PDB
 chains. apollo.chemistry.gatech.edu is gone and RiboVision2 serves a JavaScript
 app with no equivalent page, so the models now come from the copy R2DT ships.
 
-These cover the parts that need no taxonomy service: reading bpseq2fasta output
-and mapping the organelle. The entry-building path is exercised by the db tests.
+These cover the part that needs no taxonomy service: reading bpseq2fasta output.
+Entries carry no organelle, since nothing stored one before.
 """
 
 import pytest
@@ -64,16 +64,3 @@ def test_tolerates_a_missing_trailing_newline(tmp_path):
         "> generated from a/b/EC_LSU_3D.bpseq by bpseq2fasta\nACGU\n...."
     )
     assert [r.id for r in r2dt.fasta_entries([directory])] == ["EC_LSU_3D"]
-
-
-@pytest.mark.parametrize(
-    "location,expected",
-    [
-        ("Mitochondrion", "mitochondria"),
-        ("Chloroplast", "chloroplast"),
-        ("Cyanelle", "cyanelle"),
-        (None, None),
-    ],
-)
-def test_maps_the_organelle(location, expected):
-    assert helpers.organelle({"cellular_location": location}) == expected

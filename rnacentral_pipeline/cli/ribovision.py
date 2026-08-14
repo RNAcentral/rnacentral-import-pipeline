@@ -31,18 +31,18 @@ def cli():
 
 
 @cli.command("parse")
-@click.argument("metadata_file", type=click.File("r"))
+@click.argument("data_directory", type=click.Path(file_okay=False))
 @click.argument("sequence_file", type=click.Path(dir_okay=False))
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def process_ribovision(metadata_file, sequence_file, output):
+def process_ribovision(data_directory, sequence_file, output):
     """
-    Build entries from the r2dt_models metadata and the sequences R2DT ships.
+    Build entries from the metadata.tsv files and sequences R2DT ships.
     """
-    entries = parser.parse(metadata_file, Path(sequence_file))
+    entries = parser.parse(Path(data_directory), Path(sequence_file))
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
 

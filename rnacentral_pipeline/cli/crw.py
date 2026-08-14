@@ -16,10 +16,9 @@ limitations under the License.
 from pathlib import Path
 
 import click
-
 from Bio import SeqIO
 
-from rnacentral_pipeline.databases.crw import parser, helpers
+from rnacentral_pipeline.databases.crw import helpers, parser
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -33,7 +32,7 @@ def cli():
 
 @cli.command("parse")
 @click.argument("metadata_file", type=click.File("r"))
-@click.argument("sequence_directory", type=click.Path(dir_okay=True))
+@click.argument("sequence_file", type=click.Path(dir_okay=False))
 @click.argument(
     "output",
     default=".",
@@ -43,8 +42,9 @@ def cli():
         file_okay=False,
     ),
 )
-def process_crw(metadata_file, sequence_directory, output):
-    entries = parser.parse(metadata_file, sequence_directory)
+def process_crw(metadata_file, sequence_file, output):
+    """Build entries from R2DT's crw-metadata.tsv and the model sequences."""
+    entries = parser.parse(metadata_file, Path(sequence_file))
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
 

@@ -1,7 +1,4 @@
 process fetch_and_process {
-  input:
-  path(metadata_query)
-
   output:
   path('*.{csv,parquet}')
 
@@ -9,17 +6,16 @@ process fetch_and_process {
 
   script:
   """
-  psql -f "$metadata_query" "\$PGDATABASE" > metadata.json
-  git clone --depth 1 "$params.databases.ribovision.r2dt_repo" r2dt
+  git clone --depth 1 --filter=blob:none --sparse "$params.databases.ribovision.r2dt_repo" r2dt
+  git -C r2dt sparse-checkout set data/ribovision-lsu data/ribovision-ssu
+
   rnac ribovision r2dt-to-fasta r2dt/data sequences.fasta
-  rnac ribovision parse metadata.json sequences.fasta
+  rnac ribovision parse r2dt/data sequences.fasta
   """
 }
 
 workflow ribovision {
   main:
-    channel.fromPath('files/import-data/ribovision/metadata.sql') \
-    | fetch_and_process \
-    | set { data }
+    fetch_and_process | set { data }
   emit: data
 }
