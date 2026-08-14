@@ -190,7 +190,7 @@ process blat {
   // blat holds the target in memory and these assemblies run from 12Mb yeast to
   // hexaploid oat. Without the attempt factor an OOM retries at the same size
   // until maxRetries kills the run; once retries are spent, drop the chunk.
-  memory { (params.genome_mapping.blat.directives.memory + (genome.size() / 1e9).toInteger() * 4.GB) * task.attempt }
+  memory { (params.genome_mapping.blat.directives.memory + (genome.size() / 1e9).toInteger() * 8.GB) * task.attempt }
   errorStrategy { task.exitStatus in [137, 140, 143] && task.attempt <= 3 ? 'retry' : 'ignore' }
   time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 24.h }
   maxRetries 3
