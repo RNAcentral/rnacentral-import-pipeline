@@ -7,7 +7,7 @@ process fetch_and_process {
   script:
   """
   git clone --depth 1 --filter=blob:none --sparse "$params.databases.ribovision.r2dt_repo" r2dt
-  git -C r2dt sparse-checkout set data/ribovision-lsu data/ribovision-ssu
+  git -C r2dt sparse-checkout set --no-cone /data/ribovision-lsu /data/ribovision-ssu
 
   rnac ribovision r2dt-to-fasta r2dt/data sequences.fasta
   rnac ribovision parse r2dt/data sequences.fasta
