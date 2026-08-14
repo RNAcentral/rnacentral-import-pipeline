@@ -76,14 +76,21 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  path("${species}.${assembly}.ensembl.gff3.gz")
+  path("${species}.${assembly}.ensembl.gff3.gz"), optional: true
 
   script:
   """
   set -o pipefail
 
-  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}.${assembly}.gff3.gz '{}'
+  status=0
+  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly url.txt || status=\$?
+  if [[ "\$status" -eq 3 ]]; then
+    exit 0
+  elif [[ "\$status" -ne 0 ]]; then
+    exit "\$status"
+  fi
+
+  wget -O ${species}.${assembly}.gff3.gz "\$(cat url.txt)"
   gzip -d "${species}.${assembly}.gff3.gz"
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
@@ -117,7 +124,7 @@ process download_genome {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple val(species), val(assembly), path("${species}.${assembly}.fa")
+  tuple val(species), val(assembly), path("${species}.${assembly}.fa"), optional: true
 
   script:
   """
@@ -125,8 +132,15 @@ process download_genome {
 
   psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" \$PGDATABASE
 
-  rnac genome-mapping url-for --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
+  status=0
+  rnac genome-mapping url-for --host=$division $species $assembly url.txt || status=\$?
+  if [[ "\$status" -eq 3 ]]; then
+    exit 0
+  elif [[ "\$status" -ne 0 ]]; then
+    exit "\$status"
+  fi
+
+  wget -O ${species}.${assembly}.fa.gz "\$(cat url.txt)"
 
   gzip -d ${species}.${assembly}.fa.gz
   """
