@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2022] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 from pathlib import Path
 
 import click
+from Bio import SeqIO
 
-from rnacentral_pipeline.databases.ribovision import parser
+from rnacentral_pipeline.databases.ribovision import helpers, parser
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -31,17 +31,28 @@ def cli():
 
 
 @cli.command("parse")
-@click.option("--db-url", envvar="PGDATABASE")
-@click.argument("html", type=click.File("r"))
+@click.argument("metadata_file", type=click.File("r"))
+@click.argument("sequence_file", type=click.Path(dir_okay=False))
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def process_ribovision(html, output, db_url=None):
+def process_ribovision(metadata_file, sequence_file, output):
     """
-    This parses the HTML that ribovision provides us
+    Build entries from the r2dt_models metadata and the sequences R2DT ships.
     """
-    entries = parser.parse(html, db_url)
+    entries = parser.parse(metadata_file, Path(sequence_file))
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
+
+
+@cli.command("r2dt-to-fasta")
+@click.argument("directory", type=click.Path())
+@click.argument("output", type=click.File("w"))
+def generate_r2dt_fasta(directory, output):
+    """
+    Collect the LSU and SSU model sequences from an R2DT data directory.
+    """
+    entries = helpers.fasta_entries(Path(directory))
+    SeqIO.write(entries, output, "fasta")
