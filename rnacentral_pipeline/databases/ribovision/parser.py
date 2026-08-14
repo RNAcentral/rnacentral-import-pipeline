@@ -22,6 +22,7 @@ carries neither taxid nor cellular_location -- files/r2dt/load-models.ctl drops
 both on the way in.
 """
 
+import logging
 import typing as ty
 from pathlib import Path
 
@@ -31,16 +32,38 @@ from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.ribovision import helpers
 from rnacentral_pipeline.rnacentral.r2dt.models import ribovision as models
 
+LOGGER = logging.getLogger(__name__)
+
 
 def parse(directory: Path, sequences: Path) -> ty.Iterable[Entry]:
     """
     Read every metadata.tsv under an R2DT data directory. RiboVision splits its
     models across a large and a small subunit directory.
+
+    Models with no sequence are counted apart from models that failed to build:
+    the first is a gap in what R2DT ships, the second means something is wrong.
     """
     indexed = SeqIO.index(str(sequences), "fasta")
+    total = no_sequence = failed = 0
     for metadata in sorted(directory.glob("ribovision-*/metadata.tsv")):
         with metadata.open("r") as handle:
             for info in models.parse(handle):
+                total += 1
+                if info.model_name not in indexed:
+                    no_sequence += 1
+                    continue
                 entry = helpers.as_entry(info, indexed)
-                if entry:
-                    yield entry
+                if entry is None:
+                    failed += 1
+                    continue
+                yield entry
+
+    LOGGER.info(
+        "%i models: %i written, %i without a sequence, %i failed to build",
+        total,
+        total - no_sequence - failed,
+        no_sequence,
+        failed,
+    )
+    if total and no_sequence + failed == total:
+        raise ValueError(f"Could not build an entry for any of {total} models")

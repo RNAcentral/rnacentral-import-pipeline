@@ -12,7 +12,7 @@ Entries carry no organelle, since nothing stored one before.
 import pytest
 
 from rnacentral_pipeline.databases.helpers import r2dt
-from rnacentral_pipeline.databases.ribovision import helpers
+from rnacentral_pipeline.databases.ribovision import helpers, parser
 
 LSU = """> generated from /rna/auto-traveler/data/ribovision/bpseq/EC_LSU_3D.bpseq by bpseq2fasta
 GGUUAAGCGACUAAGCGUACACGGUGGAUGCC
@@ -64,3 +64,22 @@ def test_tolerates_a_missing_trailing_newline(tmp_path):
         "> generated from a/b/EC_LSU_3D.bpseq by bpseq2fasta\nACGU\n...."
     )
     assert [r.id for r in r2dt.fasta_entries([directory])] == ["EC_LSU_3D"]
+
+
+def test_raises_when_nothing_can_be_built(tmp_path):
+    """
+    A query that returned nothing used to surface as "Found no entries to
+    write" from the writer, three steps after the actual failure. Report it
+    where it happens instead.
+    """
+    directory = tmp_path / "ribovision-lsu"
+    directory.mkdir(parents=True)
+    (directory / "metadata.tsv").write_text(
+        "model_name\tspecies\ttaxid\nEC_LSU_3D\tEscherichia coli\t562\n"
+    )
+    empty = tmp_path / "none.fasta"
+    empty.write_text("")
+
+    with pytest.raises(ValueError) as err:
+        list(parser.parse(tmp_path, empty))
+    assert "any of 1 models" in str(err.value)
