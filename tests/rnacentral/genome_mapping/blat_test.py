@@ -14,18 +14,17 @@ limitations under the License.
 """
 
 
-import attr
+import operator as op
 import random
 import tempfile
-import operator as op
 from contextlib import contextmanager
 
+import attr
 import pytest
 
-from rnacentral_pipeline.rnacentral.genome_mapping import blat as gm
 from rnacentral_pipeline.databases.data import regions
-from rnacentral_pipeline.utils import pickle_stream
-from rnacentral_pipeline.utils import unpickle_stream
+from rnacentral_pipeline.rnacentral.genome_mapping import blat as gm
+from rnacentral_pipeline.utils import pickle_stream, unpickle_stream
 
 
 def parse(assembly_id, filename):
@@ -87,7 +86,8 @@ def test_parses_correct_data(assembly_id, filename, count):
 def test_always_has_good_enough_hits(assembly_id, filename):
     hits = select_hits(assembly_id, filename)
     assert hits
-    assert min(hits, key=lambda h: h.match_fraction).match_fraction >= 0.95
+    assert min(hits, key=lambda h: h.coverage).coverage >= gm.MIN_COVERAGE
+    assert min(hits, key=lambda h: h.identity).identity >= gm.MIN_IDENTITY
 
 
 def test_gets_correct_upis():
@@ -97,42 +97,59 @@ def test_gets_correct_upis():
         "URS0000032237_9606",
         "URS0000034CE9_9606",
         "URS000007D899_9606",
+        "URS00000938D9_9606",
+        "URS000009A1C9_9606",
         "URS00000B856F_9606",
         "URS00000CF258_9606",
+        "URS00000EBA19_9606",
         "URS000013CF05_9606",
+        "URS000015F76B_9606",
         "URS0000169307_9606",
         "URS000019683B_9606",
+        "URS000019A2E2_9606",
+        "URS0000200EAF_9606",
         "URS0000233572_9606",
         "URS00002412DD_9606",
         "URS000024BA85_9606",
         "URS000024DA9C_9606",
         "URS000027D6D4_9606",
+        "URS000029E8C9_9606",
         "URS00002EF678_9606",
         "URS000031BFD7_9606",
         "URS000033979A_9606",
         "URS000034CE59_9606",
         "URS00003C95EB_9606",
         "URS00003D311C_9606",
+        "URS00003D72A1_9606",
+        "URS00003DA102_9606",
         "URS00003ED72C_9606",
+        "URS0000440F4E_9606",
         "URS0000463768_9606",
         "URS00004AA950_9606",
         "URS000050824C_9606",
         "URS0000551482_9606",
         "URS0000567331_9606",
         "URS0000584A85_9606",
+        "URS0000597503_9606",
         "URS00005ADEFA_9606",
         "URS00005C4E95_9606",
+        "URS000061F5E1_9606",
         "URS00006D05AC_9606",
         "URS000073FCEB_9606",
         "URS000075EF8B_9606",
         "URS00007C3E04_9606",
         "URS00007CC811_9606",
         "URS00007CCDF8_9606",
+        "URS00007CDA1D_9606",
+        "URS00007D1B8E_9606",
+        "URS00007D9F28_9606",
+        "URS00007E0404_9606",
         "URS00008C2236_9606",
         "URS00008C2810_9606",
         "URS0000907D4C_9606",
         "URS0000924419_9606",
         "URS000093C0D6_9606",
+        "URS000094AB1D_9606",
         "URS0000964436_9606",
         "URS000097430A_9606",
         "URS0000A7635E_9606",
@@ -145,8 +162,11 @@ def test_gets_correct_upis():
         "URS0000CED72F_9606",
         "URS0000CF712B_9606",
         "URS0000CF843A_9606",
+        "URS0000D02E8F_9606",
         "URS0000D051B0_9606",
+        "URS0000D08096_9606",
         "URS0000D0D132_9606",
+        "URS0000D24B2B_9606",
         "URS0000D35D47_9606",
         "URS0000D37792_9606",
         "URS0000D56C31_9606",
@@ -305,6 +325,8 @@ def test_can_build_correct_data_structures():
             sequence_length=19,
             matches=19,
             target_insertions=0,
+            coverage=1.0,
+            identity=100.0,
             region=regions.SequenceRegion(
                 assembly_id="human",
                 chromosome="MT",
@@ -325,6 +347,8 @@ def test_can_build_correct_for_minus_strand():
             sequence_length=16,
             matches=16,
             target_insertions=0,
+            coverage=1.0,
+            identity=100.0,
             region=regions.SequenceRegion(
                 assembly_id="human",
                 chromosome="Y",
@@ -345,6 +369,8 @@ def test_can_correctly_parse_with_several_exons():
             sequence_length=1388,
             matches=1388,
             target_insertions=7661,
+            coverage=1.0,
+            identity=100.0,
             region=regions.SequenceRegion(
                 assembly_id="human",
                 chromosome="21",
@@ -366,8 +392,8 @@ def test_can_correctly_parse_with_several_exons():
 @pytest.mark.parametrize(
     "assembly_id,filename,count",
     [
-        ("human", "data/genome-mapping/results.psl", 275),
-        ("human", "data/genome-mapping/stegastes_partitus.psl", 0),
+        ("human", "data/genome-mapping/results.psl", 279),
+        ("human", "data/genome-mapping/stegastes_partitus.psl", 1),
     ],
 )
 def test_produces_correct_number_of_results(assembly_id, filename, count):
@@ -393,6 +419,8 @@ def test_it_selects_correct_exact_locations():
             sequence_length=1388,
             matches=1388,
             target_insertions=7661,
+            coverage=1.0,
+            identity=100.0,
             region=regions.SequenceRegion(
                 assembly_id="human",
                 chromosome="21",
@@ -413,13 +441,15 @@ def test_it_selects_correct_exact_locations():
 
 def test_selectes_correct_inexact_locations():
     val = results_for("human", "data/genome-mapping/results.psl", "URS000093C0D6_9606")
-    assert len(val) == 4
+    assert len(val) == 1
     assert attr.asdict(val[0]) == attr.asdict(
         gm.BlatHit(
             upi="URS000093C0D6_9606",
             sequence_length=154,
             matches=153,
             target_insertions=0,
+            coverage=1.0,
+            identity=99.35064935064935,
             region=regions.SequenceRegion(
                 assembly_id="human",
                 chromosome="15",
@@ -462,9 +492,6 @@ def test_selectes_correct_inexact_locations():
             "URS000093C0D6_9606",
             [
                 "URS000093C0D6_9606@15/82478089-82478242:-",
-                "URS000093C0D6_9606@15/84205482-84205576,84205581-84205638:-",
-                "URS000093C0D6_9606@15/84467963-84468020,84468025-84468119:+",
-                "URS000093C0D6_9606@15/85210081-85210175,85210180-85210237:-",
             ],
         ),
         (
@@ -523,6 +550,8 @@ def test_can_parse_pickled_data(randomize):
                 sequence_length=1388,
                 matches=1388,
                 target_insertions=7661,
+                coverage=1.0,
+                identity=100.0,
                 region=regions.SequenceRegion(
                     assembly_id="human",
                     chromosome="21",
@@ -571,3 +600,35 @@ def test_produces_same_results_for_sorted_or_not():
         randomized = set(gm.select_hits(data, sort=True))
 
     assert ordered == randomized
+
+
+def test_maps_sequences_the_combined_ratio_rejected():
+    """
+    match_fraction multiplies coverage by identity, so a hit that is good at
+    both lands under the single 0.95 threshold and the sequence gets no
+    location at all.
+    """
+    hit = result_for(
+        "stegastes_partitus",
+        "data/genome-mapping/stegastes_partitus.psl",
+        "URS00002F0AC4_144197",
+    )
+    assert hit.coverage >= gm.MIN_COVERAGE
+    assert hit.identity >= gm.MIN_IDENTITY
+    assert hit.match_fraction < 0.95
+
+
+def test_coverage_ignores_query_bases_aligned_to_nothing():
+    """
+    qEnd - qStart spans bases inside a query insertion, which align to nothing.
+    This sequence spans 98% of the query while covering 8% of it.
+    """
+    hits = parse_of("human", "data/genome-mapping/results.psl", "URS0000CEA3D8_9606")
+    assert max(h.coverage for h in hits) < 0.1
+    assert not any(gm.select_possible(h) for h in hits)
+
+
+def test_still_takes_a_perfect_match_of_any_length():
+    hits = parse_of("human", "data/genome-mapping/results.psl", "URS0000032237_9606")
+    assert [h.sequence_length for h in hits] == [19]
+    assert all(gm.select_possible(h) for h in hits)
