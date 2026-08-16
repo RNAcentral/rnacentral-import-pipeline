@@ -224,6 +224,10 @@ def main() -> int:
     )
     write_count(args.count_file, inserted)
 
+    # The attachment holds TRUNCATE's ACCESS EXCLUSIVE lock until it closes, so
+    # _run_post_load's own connection would deadlock against it forever.
+    con.close()
+
     if args.post_load is not None:
         return _run_post_load(args.pg_url, args.post_load, inserted, args.allow_empty)
     return 0
