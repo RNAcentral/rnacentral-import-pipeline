@@ -192,7 +192,9 @@ process blat {
   // until maxRetries kills the run; once retries are spent, drop the chunk.
   memory { (params.genome_mapping.blat.directives.memory + (genome.size() / 1e9).toInteger() * 8.GB) * task.attempt }
   errorStrategy { task.exitStatus in [137, 140, 143] && task.attempt <= 3 ? 'retry' : 'ignore' }
-  time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 24.h }
+  // Measured over a full run: chunks take 14m to 4h46 and the old 15m/60m rungs
+  // timed out 532 attempts before reaching the 24h one that always succeeded.
+  time { task.attempt == 1 ? 6.h : 24.h }
   maxRetries 3
 
   input:
