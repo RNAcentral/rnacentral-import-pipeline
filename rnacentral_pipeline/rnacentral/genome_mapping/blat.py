@@ -43,6 +43,13 @@ LOGGER = logging.getLogger(__name__)
 MIN_COVERAGE = 0.95
 MIN_IDENTITY = 95.0
 
+# blat lays every target sequence out in one 32-bit coordinate space, so a
+# target over 2^32 bases fails `assert (hit->tStart >> bucketShift) <
+# bucketCount` in clumpHits and aligns nothing at all. Shards are cut between
+# whole sequences and never exceed this, so it is a ceiling with margin rather
+# than an exact figure.
+MAX_SHARD_BASES = 3500000000
+
 FIELDS = [
     "matches",  # Number of bases that match that aren't repeats
     "misMatches",  # Number of bases that don't match
@@ -161,6 +168,51 @@ def select_best(hits: ty.Iterable[BlatHit]) -> ty.List[BlatHit]:
     hits = list(hits)
     best = max(hits, key=op.attrgetter("match_fraction"))
     return [h for h in hits if h.match_fraction >= best.match_fraction]
+
+
+def parse_fai(handle: ty.IO) -> ty.Iterable[ty.Tuple[str, int]]:
+    for row in csv.reader(handle, delimiter="\t"):
+        if row:
+            yield row[0], int(row[1])
+
+
+def shard_targets(
+    sizes: ty.Iterable[ty.Tuple[str, int]], max_bases: int = MAX_SHARD_BASES
+) -> ty.Iterable[ty.List[str]]:
+    """
+    Group target sequences into shards of at most max_bases, splitting only
+    between whole sequences. psl records name their target sequence and give
+    offsets within it, so hits from separate shards merge with no coordinate
+    translation. A sequence larger than max_bases gets a shard to itself; no
+    assembly has one, and splitting it would need that translation.
+    """
+    shard: ty.List[str] = []
+    used = 0
+    for name, length in sizes:
+        if shard and used + length > max_bases:
+            yield shard
+            shard = []
+            used = 0
+        shard.append(name)
+        used += length
+    if shard:
+        yield shard
+
+
+def write_shard_plan(
+    handle: ty.IO, output: ty.Union[str, Path], max_bases: int = MAX_SHARD_BASES
+):
+    """
+    Write one file of target sequence names per shard. The names are zero
+    padded because genome-mapping.nf pairs each shard's .2bit with its .ooc by
+    the sorted order of two globs.
+    """
+    path = Path(output)
+    path.mkdir(parents=True, exist_ok=True)
+    shards = shard_targets(parse_fai(handle), max_bases=max_bases)
+    for index, shard in enumerate(shards, start=1):
+        with (path / ("shard-%03i.names" % index)).open("w") as out:
+            out.writelines("%s\n" % name for name in shard)
 
 
 def parse_psl(assembly_id: str, handle: ty.IO) -> ty.Iterable[BlatHit]:

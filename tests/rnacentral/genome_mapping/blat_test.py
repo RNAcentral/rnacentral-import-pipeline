@@ -14,10 +14,12 @@ limitations under the License.
 """
 
 
+import io
 import operator as op
 import random
 import tempfile
 from contextlib import contextmanager
+from pathlib import Path
 
 import attr
 import pytest
@@ -632,3 +634,55 @@ def test_still_takes_a_perfect_match_of_any_length():
     hits = parse_of("human", "data/genome-mapping/results.psl", "URS0000032237_9606")
     assert [h.sequence_length for h in hits] == [19]
     assert all(gm.select_possible(h) for h in hits)
+
+
+def shards(sizes, max_bases):
+    return list(gm.shard_targets(sizes, max_bases=max_bases))
+
+
+def test_leaves_a_genome_under_the_limit_in_one_shard():
+    sizes = [("1", 1000), ("2", 900), ("MT", 16)]
+    assert shards(sizes, 3000) == [["1", "2", "MT"]]
+
+
+def test_shards_a_genome_over_the_limit():
+    """
+    T. aestivum is 15.4Gb, over three times blat's 2^32 target ceiling.
+    """
+    sizes = [("%i" % i, 800) for i in range(1, 8)]
+    assert shards(sizes, 2000) == [
+        ["1", "2"],
+        ["3", "4"],
+        ["5", "6"],
+        ["7"],
+    ]
+
+
+def test_never_puts_more_than_the_limit_in_a_shard():
+    sizes = [("%i" % i, 700) for i in range(1, 21)]
+    for shard in shards(sizes, 2000):
+        assert 700 * len(shard) <= 2000
+
+
+def test_keeps_every_sequence_exactly_once():
+    sizes = [("%i" % i, 900) for i in range(1, 11)]
+    names = [n for shard in shards(sizes, 2000) for n in shard]
+    assert names == [n for n, _ in sizes]
+
+
+def test_gives_a_sequence_over_the_limit_its_own_shard():
+    """
+    Splitting one target sequence would mean translating psl offsets, so an
+    oversized sequence is left whole and blat fails on it as it always has.
+    """
+    sizes = [("1", 100), ("huge", 5000), ("2", 100)]
+    assert shards(sizes, 2000) == [["1"], ["huge"], ["2"]]
+
+
+def test_writes_a_zero_padded_file_per_shard():
+    sizes = "\n".join("%i\t900\t0\t60\t61" % i for i in range(1, 21))
+    with tempfile.TemporaryDirectory() as tmp:
+        gm.write_shard_plan(io.StringIO(sizes), tmp, max_bases=2000)
+        plan = sorted(p.name for p in Path(tmp).glob("*.names"))
+        assert plan == ["shard-%03i.names" % i for i in range(1, 11)]
+        assert Path(tmp, "shard-001.names").read_text() == "1\n2\n"

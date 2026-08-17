@@ -155,17 +155,38 @@ process blat_index {
   tuple val(species), val(assembly), path("${species}_${assembly}.fa")
 
   output:
-  tuple val(species), val(assembly), path("${species}_${assembly}.{2bit,ooc}")
+  tuple val(species),
+        val(assembly),
+        path("${species}_${assembly}.shard-*.2bit"),
+        path("${species}_${assembly}.shard-*.ooc")
 
   script:
+  def genome = "${species}_${assembly}.fa"
+  // blat indexes the whole target in one 32-bit coordinate space and aborts on
+  // anything past 2^32 bases, which is most of the polyploid plants. Cutting
+  // the target on whole-sequence boundaries keeps every psl offset valid, so
+  // the shards align independently and their hits merge as they are.
+  // Assemblies under the limit produce a single shard and one index, as before.
   """
-  faToTwoBit -noMask ${species}_${assembly}.fa ${species}_${assembly}.2bit
-  blat \
-    -makeOoc=${species}_${assembly}.ooc \
-    -stepSize=${params.genome_mapping.blat.options.step_size} \
-    -repMatch=${params.genome_mapping.blat.options.rep_match} \
-    -minScore=${params.genome_mapping.blat.options.min_score} \
-    ${species}_${assembly}.fa /dev/null /dev/null
+  set -o pipefail
+
+  samtools faidx $genome
+  rnac genome-mapping blat shard-plan \
+    --max-bases ${params.genome_mapping.blat.max_shard_bases} \
+    ${genome}.fai plan
+
+  for names in plan/shard-*.names; do
+    shard="${species}_${assembly}.\$(basename "\$names" .names)"
+    samtools faidx -r "\$names" $genome > "\$shard.fa"
+    faToTwoBit -noMask "\$shard.fa" "\$shard.2bit"
+    blat \
+      -makeOoc="\$shard.ooc" \
+      -stepSize=${params.genome_mapping.blat.options.step_size} \
+      -repMatch=${params.genome_mapping.blat.options.rep_match} \
+      -minScore=${params.genome_mapping.blat.options.min_score} \
+      "\$shard.fa" /dev/null /dev/null
+    rm "\$shard.fa"
+  done
   """
 }
 
@@ -187,10 +208,9 @@ process index_genome_for_browser {
 
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
-  // blat holds the target in memory and these assemblies run from 12Mb yeast to
-  // hexaploid oat. Without the attempt factor an OOM retries at the same size
-  // until maxRetries kills the run; once retries are spent, drop the chunk.
-  memory { (params.genome_mapping.blat.directives.memory + (genome.size() / 1e9).toInteger() * 8.GB) * task.attempt }
+  // A shard holds up to max_shard_bases in memory, so an OOM retried at the
+  // same size just fails again until maxRetries drops the chunk.
+  memory { params.genome_mapping.blat.directives.memory * task.attempt }
   errorStrategy { task.exitStatus in [137, 140, 143] && task.attempt <= 3 ? 'retry' : 'ignore' }
   // Measured over a full run: chunks take 14m to 4h46 and the old 15m/60m rungs
   // timed out 532 attempts before reaching the 24h one that always succeeded.
@@ -320,11 +340,16 @@ workflow genome_mapping {
       genomes
       | blat_index \
       | join(split_sequences) \
-      | flatMap { species, assembly, genome_chunks, chunks ->
+      | flatMap { species, assembly, indexes, oocs, chunks ->
+        def indexList = indexes instanceof List ? indexes : [indexes]
+        def oocList = oocs instanceof List ? oocs : [oocs]
         def chunkList = chunks instanceof List ? chunks : [chunks]
-        [genome_chunks.collate(2), chunkList]
+        // Both globs are sorted by name and the shards are numbered, so the
+        // .2bit and .ooc of a shard line up.
+        def shards = [indexList, oocList].transpose()
+        [shards, chunkList]
           .combinations()
-          .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
+          .collect { shard, chunk -> [species, assembly] + shard + [chunk] }
       } \
       | filter { _s, _a, _g, _o, chunk -> !chunk.isEmpty() } \
       | blat
