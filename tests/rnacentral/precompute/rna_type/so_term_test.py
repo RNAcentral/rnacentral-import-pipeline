@@ -417,3 +417,99 @@ def test_rfam_hit_still_corrects_a_generic_database():
     result = so_term.rna_type_of(context, sequence)
     assert result is not None
     assert result.so_term.name == "tRNA"
+
+
+@pytest.mark.parametrize(
+    "intron_so_id,expected",
+    [
+        ("SO:0000588", "autocatalytically_spliced_intron"),
+        ("SO:0000587", "group_I_intron"),
+        ("SO:0000603", "group_II_intron"),
+        ("SO:0001213", "group_III_intron"),
+    ],
+)
+def test_self_splicing_intron_alone_keeps_its_term(intron_so_id, expected):
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence([as_accession("NONCODE", intron_so_id)], [])
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == expected
+
+
+@pytest.mark.parametrize(
+    "intron_so_id,expected",
+    [
+        ("SO:0000588", "autocatalytically_spliced_intron"),
+        ("SO:0000587", "group_I_intron"),
+        ("SO:0000603", "group_II_intron"),
+    ],
+)
+def test_ribozyme_defers_to_a_self_splicing_intron(intron_so_id, expected):
+    # These describe the same molecule now that introns sit under ribozyme, so
+    # the specific term has to win rather than the pair conflicting.
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession("ENA", "SO:0000374"), as_accession("NONCODE", intron_so_id)],
+        [],
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == expected
+
+
+@pytest.mark.parametrize("other_so_id", ["SO:0000380", "SO:0000188"])
+@pytest.mark.parametrize("intron_so_id", ["SO:0000588", "SO:0000587", "SO:0000603"])
+def test_self_splicing_introns_still_conflict_with_hammerhead_and_intron(
+    intron_so_id, other_so_id
+):
+    # A hammerhead is a different ribozyme, and the bare intron term is no
+    # longer an ancestor. The intron column is the boundary to check when
+    # intron sequences get imported: a vague `intron` annotation next to a
+    # specific self splicing term conflicts instead of resolving to it.
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession("ENA", other_so_id), as_accession("NONCODE", intron_so_id)],
+        [],
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == "ncRNA"
+
+
+@pytest.mark.parametrize(
+    "intron_so_id,expected",
+    [
+        ("SO:0000588", "autocatalytically_spliced_intron"),
+        ("SO:0000587", "group_I_intron"),
+        ("SO:0000603", "group_II_intron"),
+        ("SO:0001213", "group_III_intron"),
+    ],
+)
+def test_a_vague_ncrna_annotation_defers_to_a_self_splicing_intron(
+    intron_so_id, expected
+):
+    # ncRNA is a normal INSDC feature so this pairing is common, and as an
+    # ancestor of the grafted branch it has to give way to the specific term.
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession("ENA", "SO:0000655"), as_accession("NONCODE", intron_so_id)],
+        [],
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == expected
+
+
+@pytest.mark.parametrize("intron_so_id", ["SO:0000587", "SO:0000603"])
+def test_rfam_database_annotation_still_wins_over_a_bare_intron(intron_so_id):
+    # The rfam_db_annotations fallback rescues the common form of the conflict
+    # above, where the specific term comes from the Rfam import and the vague
+    # one from ENA. Nothing rescues it when two other databases disagree.
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession("ENA", "SO:0000188"), as_accession("RFAM", intron_so_id)],
+        [],
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name != "ncRNA"

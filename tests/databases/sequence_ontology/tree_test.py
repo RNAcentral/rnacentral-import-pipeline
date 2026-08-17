@@ -50,7 +50,8 @@ def ontology():
         (
             "group_I_intron",
             [
-                ("SO:0000188", "intron"),
+                ("SO:0000655", "ncRNA"),
+                ("SO:0000374", "ribozyme"),
                 ("SO:0000588", "autocatalytically_spliced_intron"),
                 ("SO:0000587", "group_I_intron"),
             ],
@@ -65,7 +66,7 @@ def ontology():
         (
             "hammerhead_ribozyme",
             [
-                ("SO:0000673", "transcript"),
+                ("SO:0000655", "ncRNA"),
                 ("SO:0000374", "ribozyme"),
                 ("SO:0000380", "hammerhead_ribozyme"),
             ],
@@ -175,6 +176,77 @@ def ontology():
 )
 def test_can_compute_some_simple_paths(ontology, so_term_id, expected):
     assert so.rna_type_tree(ontology, so_term_id) == expected
+
+
+@pytest.mark.parametrize(
+    "so_term_id",
+    [
+        "autocatalytically_spliced_intron",
+        "group_I_intron",
+        "group_II_intron",
+        "group_IIA_intron",
+        "group_IIB_intron",
+        "group_IIC_intron",
+        "group_III_intron",
+    ],
+)
+def test_self_splicing_introns_are_ribozymes(ontology, so_term_id):
+    # The whole branch has to move, not just the term itself, or it splits back
+    # apart the moment SO adds another child.
+    tree = so.rna_type_tree(ontology, so_term_id)
+    assert tree[:3] == [
+        ("SO:0000655", "ncRNA"),
+        ("SO:0000374", "ribozyme"),
+        ("SO:0000588", "autocatalytically_spliced_intron"),
+    ]
+    assert tree[-1][1] == so_term_id
+
+
+@pytest.mark.parametrize(
+    "so_term_id",
+    [
+        "ribozyme",
+        "self_cleaving_ribozyme",
+        "hammerhead_ribozyme",
+        "RNase_P_RNA",
+        "RNase_MRP_RNA",
+        "autocatalytically_spliced_intron",
+        "group_I_intron",
+        "group_II_intron",
+        "group_III_intron",
+    ],
+)
+def test_every_catalytic_rna_is_in_the_ribozyme_tree(ontology, so_term_id):
+    # SO scatters these across enzymatic_RNA, intron and RNA_motif, so this is
+    # the check that they all present as one type.
+    tree = so.rna_type_tree(ontology, so_term_id)
+    assert tree[0] == ("SO:0000655", "ncRNA")
+    assert ("SO:0000374", "ribozyme") in tree
+
+
+@pytest.mark.parametrize(
+    "so_term_id,expected_root",
+    [
+        ("intron", "intron"),
+        ("spliceosomal_intron", "intron"),
+        ("U2_intron", "intron"),
+        ("UTR_intron", "intron"),
+        ("tRNA_intron", "intron"),
+        ("twintron", "intron"),
+        ("lariat_intron", "intron"),
+        ("miRtron", "intron"),
+    ],
+)
+def test_other_introns_keep_the_intron_root(ontology, so_term_id, expected_root):
+    tree = so.rna_type_tree(ontology, so_term_id)
+    assert tree[0][1] == expected_root
+
+
+def test_ribozyme_terms_share_one_root(ontology):
+    roots = set()
+    for term in ["ribozyme", "hammerhead_ribozyme", "self_cleaving_ribozyme"]:
+        roots.add(so.rna_type_tree(ontology, term)[0])
+    assert roots == {("SO:0000655", "ncRNA")}
 
 
 @pytest.mark.parametrize(
