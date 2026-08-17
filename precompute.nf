@@ -189,6 +189,28 @@ process load_data {
     """
 }
 
+// Pairs whose xrefs have been removed outright are no longer selected for
+// recompute, so nothing in the fan-out can flip them to inactive. Sweep them
+// here. Only meaningful after a full rebuild, hence the method check.
+process deactivate_orphans {
+  input:
+  val(_flag)
+  path(sql)
+
+  output:
+  val('done')
+
+  script:
+  def sweep = params.precompute.method == 'all'
+  """
+  if [ "${sweep}" = "true" ]; then
+    psql -v ON_ERROR_STOP=1 -f $sql "\$PGDATABASE"
+  else
+    echo "Skipping orphan sweep, selection method is ${params.precompute.method}"
+  fi
+  """
+}
+
 workflow precompute {
   take: _flag
   main:
@@ -201,6 +223,7 @@ workflow precompute {
     channel.fromPath('files/precompute/data-post-load.sql') | set { data_post_load }
     channel.fromPath('files/precompute/qa-post-load.sql') | set { qa_post_load }
     channel.fromPath('files/precompute/post-load.sql') | set { post_load }
+    channel.fromPath('files/precompute/deactivate-orphans.sql') | set { orphan_sql }
 
     channel.fromPath('files/precompute/missing-taxids.sql') | set { missing_taxids_sql }
     channel.fromPath('files/import-data/load/taxonomy.ctl') | set { taxonomy_ctl }
@@ -267,8 +290,10 @@ workflow precompute {
 
     load_data(taxonomy_ready, data, qa, data_ctl, qa_ctl, data_post_load, qa_post_load, post_load)
 
+    deactivate_orphans(load_data.out, orphan_sql) | set { swept }
+
     // Final precompute step: QC — active-sequence counts + flags.
-    load_data.out | qc_precompute
+    swept | qc_precompute
 }
 
 workflow {
