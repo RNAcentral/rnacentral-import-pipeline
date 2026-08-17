@@ -242,6 +242,23 @@ def test_other_introns_keep_the_intron_root(ontology, so_term_id, expected_root)
     assert tree[0][1] == expected_root
 
 
+@pytest.mark.parametrize("so_term_id", ["SO:0000001", "SO:0000110", "SO:0000704"])
+def test_a_term_under_no_base_root_falls_back_to_itself(ontology, so_term_id):
+    # What a term does without an ALTERNATES entry: no error, just a bare path.
+    # hammerhead_ribozyme lands here if its entry is ever removed.
+    assert len(so.rna_type_tree(ontology, so_term_id)) == 1
+
+
+@pytest.mark.parametrize("insdc_name,expected", [("snoRNA", "SO:0000275")])
+def test_can_resolve_an_insdc_synonym_to_a_term(ontology, insdc_name, expected):
+    assert ontology.as_node_id(insdc_name) == expected
+
+
+def test_an_unknown_term_is_an_error_not_a_guess(ontology):
+    with pytest.raises(ValueError):
+        ontology.as_node_id("not_a_real_so_term")
+
+
 def test_ribozyme_terms_share_one_root(ontology):
     roots = set()
     for term in ["ribozyme", "hammerhead_ribozyme", "self_cleaving_ribozyme"]:
