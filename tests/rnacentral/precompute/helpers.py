@@ -17,11 +17,11 @@ import os
 import typing as ty
 
 from rnacentral_pipeline.databases.sequence_ontology import tree
-from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
-from tests.helpers import SO_ONTOLOGY_PATH, run_range_as_single, run_with_replacements
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from tests.helpers import run_range_as_single, run_with_replacements
 
-SO_TREE = tree.load_ontology(SO_ONTOLOGY_PATH)
+SO_TREE = tree.load_ontology(tree.REMOTE_ONTOLOGY)
 
 
 def load_data(rna_id: str) -> ty.Tuple[Context, Sequence]:
