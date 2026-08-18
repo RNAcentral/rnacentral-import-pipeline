@@ -113,7 +113,14 @@ process query_accession_range {
 
 process process_range {
   tag { "$min-$max" }
-  memory params.precompute.range.memory
+  // A cgroup OOM kill on this cluster reaches nextflow with no exit status at
+  // all ("terminated for an unknown reason"), so the usual `task.exitStatus in
+  // 137..140` guard never fires - retry on the attempt count instead. Ranges
+  // are not uniform: a range holding a few heavily-annotated URS costs far more
+  // than 25,000 average ones, so the retry has to raise the request.
+  memory { params.precompute.range.memory * task.attempt }
+  errorStrategy { task.attempt <= 3 ? 'retry' : 'terminate' }
+  maxRetries 3
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
