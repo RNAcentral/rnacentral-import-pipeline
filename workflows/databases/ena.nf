@@ -10,7 +10,7 @@ process list_subdirs {
   output:
   tuple val(name), path("${name}-dirs.txt")
 
-  when: params.databases.ena.run
+  when: params.databases.ena?.run
 
   script:
   """
