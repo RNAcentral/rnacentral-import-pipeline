@@ -27,6 +27,7 @@ from rnacentral_pipeline.parquet_writers import (
     parquet_writer,
     typed_parquet_writer,
 )
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult, QaStatus
 
 SIMPLE = pa.schema(
     [
@@ -256,3 +257,33 @@ def test_no_schema_is_entirely_non_nullable_by_accident():
         name: sum(1 for f in schema if f.nullable) for name, schema in ALL_SCHEMAS
     }
     assert sum(nullable_counts.values()) > 0
+
+
+def test_qa_status_without_orf_data_writes_nulls(tmp_path):
+    """
+    QaResult.null() emits "" for the three possible_orf columns whenever a
+    sequence has no ORF/CPAT data, which crashed process_range for a whole
+    25,000 pair range while PRECOMPUTE_QA declared them NOT NULL.
+    """
+    ok = QaResult.ok
+    status = QaStatus(
+        incomplete_sequence=ok("incomplete_sequence"),
+        possible_contamination=ok("possible_contamination"),
+        missing_rfam_match=ok("missing_rfam_match"),
+        from_repetitive_region=ok("from_repetitive_region"),
+        possible_orf=QaResult.null("possible_orf"),
+        possible_orf_stopfree=QaResult.null("possible_orf_stopfree"),
+        possible_orf_tcode=QaResult.null("possible_orf_tcode"),
+    )
+
+    out = tmp_path / "qa.parquet"
+    with typed_parquet_writer(out, schemas.PRECOMPUTE_QA) as writer:
+        writer.writerow(status.writeable("URS0000000001", 9606))
+
+    row = pq.read_table(out).to_pylist()[0]
+    assert row["rna_id"] == "URS0000000001_9606"
+    assert row["has_issue"] is False
+    assert row["incomplete_sequence"] is False
+    assert row["possible_orf"] is None
+    assert row["possible_orf_stopfree"] is None
+    assert row["possible_orf_tcode"] is None

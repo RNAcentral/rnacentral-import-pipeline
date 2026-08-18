@@ -478,9 +478,11 @@ PRECOMPUTE_QA = pa.schema(
         pa.field("possible_contamination", pa.bool_(), nullable=False),
         pa.field("missing_rfam_match", pa.bool_(), nullable=False),
         pa.field("from_repetitive_region", pa.bool_(), nullable=False),
-        pa.field("possible_orf", pa.bool_(), nullable=False),
-        pa.field("possible_orf_stopfree", pa.bool_(), nullable=False),
-        pa.field("possible_orf_tcode", pa.bool_(), nullable=False),
+        # Nullable, like the load_qa_status columns: QaResult.null() writes ""
+        # for these three whenever a sequence has no ORF/CPAT data.
+        pa.field("possible_orf", pa.bool_()),
+        pa.field("possible_orf_stopfree", pa.bool_()),
+        pa.field("possible_orf_tcode", pa.bool_()),
         pa.field("messages", pa.string(), nullable=False),
     ]
 )

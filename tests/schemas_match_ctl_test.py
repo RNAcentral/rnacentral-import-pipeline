@@ -137,3 +137,32 @@ def test_schema_is_mapped_to_a_load_table(schema_name, ctl_stem):
         if table == into.group(1)
     ]
     assert logical, f"{into.group(1)} missing from ENTRY_WRITER_LOAD_TABLES"
+
+
+# The precompute pair is parquet-only (no ctl), so its drift risk is nullability
+# against the staging DDL rather than column names: a NOT NULL field crashes the
+# writer as soon as a producer emits "" for it.
+PRECOMPUTE_DDL = (
+    Path(__file__).resolve().parents[1] / "files" / "precompute" / "schema.sql"
+)
+
+
+def ddl_not_null(table: str) -> dict:
+    """Column name -> whether the CREATE TABLE declares it NOT NULL."""
+    body = re.search(
+        rf"CREATE TABLE {table} \((.*?)^\);", PRECOMPUTE_DDL.read_text(), re.S | re.M
+    )
+    assert body, f"no CREATE TABLE {table} in {PRECOMPUTE_DDL}"
+    columns = {}
+    for line in body.group(1).strip().splitlines():
+        line = line.strip().rstrip(",")
+        if line:
+            columns[line.split()[0]] = "not null" in line.lower()
+    return columns
+
+
+def test_precompute_qa_nullability_matches_ddl():
+    columns = ddl_not_null("load_qa_status")
+    assert list(schemas.PRECOMPUTE_QA.names) == list(columns)
+    for field in schemas.PRECOMPUTE_QA:
+        assert field.nullable != columns[field.name], field.name
