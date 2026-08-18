@@ -15,6 +15,7 @@ include { japonicusdb } from './databases/japonicusdb'
 include { lncbase } from './databases/lncbase'
 include { lncbook } from './databases/lncbook'
 include { lncipedia } from './databases/lncipedia'
+include { mgi } from './databases/mgi'
 include { mgnify } from './databases/mgnify'
 include { mirbase } from './databases/mirbase'
 include { mirgenedb } from './databases/mirgenedb'
@@ -87,6 +88,7 @@ workflow parse_databases {
       lncbase(),
       lncbook(),
       lncipedia(),
+      mgi(),
       mirbase(),
       mgnify(),
       mirgenedb(),

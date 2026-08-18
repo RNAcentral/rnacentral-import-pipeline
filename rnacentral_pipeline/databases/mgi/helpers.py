@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,29 +16,52 @@ This contains the logic for parsing MGI data files and producing Entry objects
 for export to usable flat files.
 """
 
-from rnacentral_pipeline.databases.data import Exon
-from rnacentral_pipeline.databases.data import Reference
-from rnacentral_pipeline.databases.helpers import phylogeny as helpers
+import csv
+import logging
+import typing as ty
+from pathlib import Path
 
-RNA_TYPE_MAPPING = {
-    "gene": None,
+from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.mgi.data import MgiEntry
+
+LOGGER = logging.getLogger(__name__)
+
+MOUSE_TAXID = 10090
+REFSEQ_DBID = 9
+ENSEMBL_DBID = 25
+
+# MGI's 'Feature Type' is an SO term by another name, so this is a rename, not
+# an inference. Anything mapping to None is not RNA and is dropped; anything
+# absent is new since the last import and raises, because silently skipping a
+# new ncRNA feature type is how a database quietly stops importing.
+SO_TERMS: ty.Dict[str, ty.Optional[str]] = {
     "BAC/YAC end": None,
+    "CpG island": None,
     "DNA segment": None,
-    "RNase MRP RNA gene": "RNase_MRP_RNA",
-    "RNase P RNA gene": "RNase_P_RNA",
-    "SRP RNA gene": "SRP_RNA",
-    "antisense lncRNA gene": "lncRNA",
+    "QTL": None,
+    "RNase MRP RNA gene": "SO:0000385",
+    "RNase P RNA gene": "SO:0000386",
+    "SRP RNA gene": "SO:0000590",
+    "antisense lncRNA gene": "SO:0001904",
+    "bidirectional promoter lncRNA gene": "SO:0001877",
     "chromosomal deletion": None,
     "complex/cluster/region": None,
     "endogenous retroviral region": None,
+    "enhancer": None,
+    "gene": None,
     "gene segment": None,
     "heritable phenotypic marker": None,
-    "intronic lncRNA gene": "lncRNA",
-    "lincRNA gene": "lncRNA",
-    "lncRNA gene": "lncRNA",
-    "miRNA gene": "miRNA",
+    "imprinting control region": None,
+    "insertion": None,
+    "intronic lncRNA gene": "SO:0001877",
+    "lincRNA gene": "SO:0001877",
+    "lncRNA gene": "SO:0001877",
+    "locus control region": None,
+    "miRNA gene": "SO:0000276",
     "minisatellite": None,
-    "non-coding RNA gene": "ncRNA",
+    "non-coding RNA gene": "SO:0000655",
+    "open chromatin region": None,
+    "origin of replication": None,
     "other genome feature": None,
     "polymorphic pseudogene": None,
     "promoter": None,
@@ -46,210 +69,63 @@ RNA_TYPE_MAPPING = {
     "pseudogene": None,
     "pseudogenic gene segment": None,
     "pseudogenic region": None,
-    "rRNA gene": "rRNA",
+    "rRNA gene": "SO:0000252",
     "retrotransposon": None,
-    "ribozyme gene": "ribozyme",
-    "scRNA gene": "scRNA",
-    "snRNA gene": "snRNA",
-    "snoRNA gene": "snoRNA",
-    "tRNA gene": "tRNA",
-    "telomerase RNA gene": "ncRNA",
+    "ribozyme gene": "SO:0000374",
+    "scRNA gene": "SO:0000013",
+    "sense intronic lncRNA gene": "SO:0001877",
+    "sense overlapping lncRNA gene": "SO:0001877",
+    "snRNA gene": "SO:0000274",
+    "snoRNA gene": "SO:0000275",
+    "tRNA gene": "SO:0000253",
+    "telomerase RNA gene": "SO:0000390",
+    "transcriptional cis regulatory region": None,
     "transgene": None,
     "unclassified cytogenetic marker": None,
     "unclassified gene": None,
-    "unclassified non-coding RNA gene": "ncRNA",
+    "unclassified non-coding RNA gene": "SO:0000655",
     "unclassified other genome feature": None,
 }
 
 
-def accession(data):
-    """
-    Get the accession for the given data.
-    """
-    return data["mgi_marker_accession_id"]
+def column_name(header: str) -> str:
+    return header.strip().lower().replace(" ", "_")
 
 
-def infer_rna_type(data):
+def load(path: Path) -> ty.List[MgiEntry]:
     """
-    Determine the rna_type of the given entry. If the entry is not RNA then
-    None will be returned.
+    Load every marker in an MRK_Sequence.rpt file.
     """
 
-    base = data["feature_type"]
-    return RNA_TYPE_MAPPING[base]
+    with path.open("r") as handle:
+        reader = csv.DictReader(handle, delimiter="\t")
+        if reader.fieldnames is None:
+            raise ValueError(f"No header in {path}")
+        reader.fieldnames = [column_name(f) for f in reader.fieldnames]
+        return [MgiEntry.from_row(row) for row in reader]
 
 
-def name(data):
+def so_term(entry: MgiEntry) -> ty.Optional[str]:
     """
-    Get the assigned name of the entry.
-    """
-    return data["marker_name"]
-
-
-def symbol(data):
-    """
-    Get the feature symbol.
-    """
-    return data["marker_symbol"]
-
-
-def chromosome(data):
-    """
-    Get the chromosome, if known. This treats 'UN' as unknown meaning unknown.
+    Get the SO term for a marker, or None if the marker is not RNA.
     """
 
-    chrom = data["chromosome"]
-    if chrom == "UN":
-        return None
-    return chrom
+    if entry.feature_type not in SO_TERMS:
+        raise ValueError(f"Unknown MGI feature type: {entry.feature_type}")
+    return SO_TERMS[entry.feature_type]
 
 
-def start(data):
-    """
-    Get the start coordinate as an int of the data.
-    """
-
-    value = data["genome_coordinate_start"]
-    if value:
-        return int(value)
-    return None
+def url(entry: MgiEntry) -> str:
+    return f"https://www.informatics.jax.org/marker/{entry.mgi_id}"
 
 
-def stop(data):
-    """
-    Get the stop coordinate as an int of the data.
-    """
-
-    value = data["genome_coordinate_end"]
-    if value:
-        return int(value)
-    return None
+def description(entry: MgiEntry) -> str:
+    return f"Mus musculus (house mouse) {entry.name}"
 
 
-def is_complement(data):
-    """
-    Check if the entry is on the - strand.
-    """
-
-    strand = data["strand"]
-    if not strand:
-        return None
-    return strand == "-"
-
-
-def exon(data):
-    """
-    Create an exon representing the known location of the given datum if the
-    location is known.
-    """
-
-    start_pos = start(data)
-    if not start_pos:
-        return []
-
-    return [
-        Exon(
-            chromosome=chromosome(data),
-            primary_start=start_pos,
-            primary_end=stop(data),
-            complement=is_complement(data),
-        )
-    ]
-
-
-def split_ids(key, data):
-    """
-    This will split an entry by '|', since the id fields are '|' separated. If
-    the given key is not present then [] is returned.
-    """
-
-    if data[key]:
-        return data[key].split("|")
-    return []
-
-
-def xref_data(data):
-    """
-    Creates Xref data for the entry. This will create a dict with keys for
-    ensembl, ref_seq and vega that will contain a list of the transcript and
-    protein is (which should be empty). For RefSeq it will also have an
-    'xr_ids' entry which will contain all XR_* ids. These are separate from the
-    transcript ids because we do not import this data.
-    """
-
-    ref_trans_all = split_ids("refseq_transcript_ids", data)
-    xr_ids = [tid for tid in ref_trans_all if tid.startswith("XR_")]
-    ref_trans = [tid for tid in ref_trans_all if not tid.startswith("XR_")]
-    return {
-        "ensembl": {
-            "transcript_ids": split_ids("ensembl_transcript_ids", data),
-            "protein_ids": split_ids("ensembl_protein_ids", data),
-        },
-        "ref_seq": {
-            "transcript_ids": ref_trans,
-            "xr_ids": xr_ids,
-            "protein_ids": split_ids("refseq_protein_ids", data),
-        },
-        "vega": {
-            "transcript_ids": split_ids("vega_transcript_ids", data),
-            "protein_ids": split_ids("vega_protein_ids", data),
-        },
-    }
-
-
-def gene(data):
-    """
-    Gets the name of the gene this data is from. This is the symbol assigned to
-    the data.
-    """
-    if "gene" in data["feature_type"]:
-        return symbol(data)
-    return None
-
-
-def taxon_id(_):
-    """
-    Always returns 10090, the mouse taxon id.
-    """
-    return 10090
-
-
-def species(data):
-    """
-    Gets the species name for mice.
-    """
-    return helpers.species(taxon_id(data))
-
-
-def lineage(data):
-    """
-    Gets the mouse lineage.
-    """
-    return helpers.lineage(taxon_id(data))
-
-
-def common_name(data):
-    """
-    Fetches the common name of the species for the given entry.
-    """
-    return helpers.common_name(taxon_id(data))
-
-
-def primary_id(data):
-    """
-    Returns the primary id for an MGI entry. This is just the accession right
-    now.
-    """
-    return accession(data)
-
-
-def references(data):
-    """
-    Creates the default reference for all MGI data.
-    """
+def references() -> ty.List[Reference]:
     return [
         Reference(
-            accession=accession(data),
             authors=(
                 "Blake JA, Eppig JT, Kadin JA, Richardson JE, Smith CL, Bult CJ; "
                 "the Mouse Genome Database Group."
@@ -265,13 +141,71 @@ def references(data):
     ]
 
 
-def description(data):
+def longest(rows) -> ty.Dict[str, str]:
     """
-    Computes a description of the entry. This will generate a hopefully
-    useful name of the entry.
+    Collapse (key, urs, length) rows to {key: urs}, keeping the longest
+    sequence for each key.
     """
-    return "{name} ({species}) {gene}".format(
-        name=common_name(data),
-        species=species(data),
-        gene=name(data),
-    )
+
+    best: ty.Dict[str, ty.Tuple[str, int]] = {}
+    for key, urs, length in rows:
+        if key not in best or length > best[key][1]:
+            best[key] = (urs, length)
+    return {key: urs for key, (urs, _) in best.items()}
+
+
+def transcript_mapping(conn, transcript_ids: ty.List[str], dbid: int):
+    """
+    Map every transcript id to the longest mouse URS it corresponds to.
+
+    Both RefSeq and Ensembl import the transcript id as external_id, but
+    optional_id is checked too, as which of the two a database fills in has
+    moved around. Scoping to one dbid matters: without it the planner probes
+    all ~180 xref partitions, which turns seconds into minutes.
+    """
+
+    if not transcript_ids:
+        return {}
+
+    ids = sorted(set(transcript_ids))
+    query = """
+    select k, rna.urs, rna.len
+    from (
+        select acc.external_id as k, acc.accession
+        from rnc_accessions acc where acc.external_id = ANY(%s)
+      union all
+        select acc.optional_id, acc.accession
+        from rnc_accessions acc where acc.optional_id = ANY(%s)
+    ) m
+    join xref on xref.ac = m.accession
+    join rna on rna.urs = xref.urs
+    where xref.taxid = %s and xref.deleted = 'N' and xref.dbid = %s
+    """
+    with conn.cursor() as cur:
+        cur.execute(query, (ids, ids, MOUSE_TAXID, dbid))
+        return longest(cur)
+
+
+def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
+    return transcript_mapping(conn, refseq_ids, REFSEQ_DBID)
+
+
+def ensembl_mapping(conn, ensembl_ids: ty.List[str]) -> ty.Dict[str, str]:
+    return transcript_mapping(conn, ensembl_ids, ENSEMBL_DBID)
+
+
+def sequence_mapping(conn, urs_ids: ty.List[str]) -> ty.Dict[str, str]:
+    """
+    Fetch the sequence for every URS we resolved.
+    """
+
+    if not urs_ids:
+        return {}
+
+    query = """
+    select urs, coalesce(seq_short, seq_long)
+    from rna where urs = ANY(%s)
+    """
+    with conn.cursor() as cur:
+        cur.execute(query, (sorted(set(urs_ids)),))
+        return dict(cur)

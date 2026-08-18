@@ -40,12 +40,13 @@ from rnacentral_pipeline.cli import (
     lncbase,
     lncbook,
     lncipedia,
+    mgi,
     mgnify,
     mirbase,
     mirgenedb,
     mirtrondb,
-    modomics,
     misc,
+    modomics,
     ncbi,
     notify,
     ols,
@@ -61,9 +62,9 @@ from rnacentral_pipeline.cli import (
     rediportal,
     refseq,
     release,
-    rgd,
     repeats,
     rfam,
+    rgd,
     ribocentre,
     ribovision,
     scan_imports,
@@ -125,6 +126,7 @@ cli.add_command(japonicusdb.cli)
 cli.add_command(lncbase.cli)
 cli.add_command(lncbook.cli)
 cli.add_command(lncipedia.cli)
+cli.add_command(mgi.cli)
 cli.add_command(mgnify.cli)
 cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
