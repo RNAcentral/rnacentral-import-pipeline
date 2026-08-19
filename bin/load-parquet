@@ -193,8 +193,7 @@ def main() -> int:
     sys.stderr.write(f"matched {matched} parquet file(s)\n")
 
     if args.truncate:
-        sys.stderr.write(f"truncating pg.{quoted_qualified}\n")
-        con.execute(f"TRUNCATE pg.{quoted_qualified}")
+        _truncate(args.pg_url, quoted_qualified)
 
     # Read column names from the parquet schema so we insert only the columns
     # the parser actually produces, leaving other columns in the staging table
@@ -231,6 +230,27 @@ def main() -> int:
     if args.post_load is not None:
         return _run_post_load(args.pg_url, args.post_load, inserted, args.allow_empty)
     return 0
+
+
+def _truncate(pg_url: str, quoted_qualified: str) -> None:
+    """
+    TRUNCATE the target table over a direct psycopg2 connection.
+
+    Not through DuckDB's postgres extension: it rewrites TRUNCATE into a
+    DELETE, which leaves every dead tuple behind instead of resetting the
+    relation. That is how load_traveler_attempted reached a 1.5 GB primary key
+    over an 86k-row table (33.0M n_tup_del against 33.1M n_tup_ins) before this
+    was fixed. Committed and closed before the DuckDB INSERT runs, since that
+    uses a separate connection and would otherwise block on our lock.
+    """
+    sys.stderr.write(f"truncating {quoted_qualified}\n")
+    conn = psycopg2.connect(pg_url)
+    try:
+        conn.set_session(autocommit=True)
+        with conn.cursor() as cur:
+            cur.execute(f"TRUNCATE {quoted_qualified}")
+    finally:
+        conn.close()
 
 
 def _run_post_load(

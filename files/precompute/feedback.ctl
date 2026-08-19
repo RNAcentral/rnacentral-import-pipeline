@@ -50,5 +50,8 @@ SET
     overlapping_urs_taxids = excluded.overlapping_urs_taxids,
     no_overlaps_with = excluded.no_overlaps_with
 ;
+$$,
+$$
+TRUNCATE load_overlaps;
 $$
 ;

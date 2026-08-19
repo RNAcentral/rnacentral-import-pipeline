@@ -147,6 +147,46 @@ def test_load_table_mapping_covers_every_writer_output():
     assert not missing, f"no load target declared for: {sorted(missing)}"
 
 
+def test_truncate_issues_a_real_truncate(monkeypatch):
+    """
+    --truncate must go through psycopg2, not DuckDB's postgres extension.
+
+    The extension rewrites TRUNCATE into DELETE, which leaves the dead tuples
+    (and the index bloat) behind -- load_traveler_attempted grew a 1.5 GB pkey
+    over 86k rows that way. This pins the statement actually sent to Postgres.
+    """
+    executed = []
+
+    class FakeCursor:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def execute(self, sql):
+            executed.append(sql)
+
+    class FakeConn:
+        closed = False
+
+        def set_session(self, autocommit):
+            executed.append(f"autocommit={autocommit}")
+
+        def cursor(self):
+            return FakeCursor()
+
+        def close(self):
+            FakeConn.closed = True
+
+    monkeypatch.setattr(load_parquet.psycopg2, "connect", lambda url: FakeConn())
+
+    load_parquet._truncate("postgresql://ignored", '"rnacen"."load_x"')
+
+    assert executed == ["autocommit=True", 'TRUNCATE "rnacen"."load_x"']
+    assert FakeConn.closed, "connection must be closed before the DuckDB INSERT"
+
+
 def test_count_file_records_rows_loaded(tmp_path):
     """
     load-data.nf reads this file to decide whether the name goes on to select

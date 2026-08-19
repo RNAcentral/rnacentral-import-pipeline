@@ -158,6 +158,9 @@ process publish_layout {
 
   output:
   val 'done', emit: flag
+  // Only written when an upload failed and was tolerated, so the channel stays
+  // empty on a clean run.
+  path 'upload-failures.txt', optional: true, emit: failures
 
   script:
   // prepare-s3 opens its file list with 'w', so each chunk needs its own to concatenate.
@@ -170,7 +173,27 @@ process publish_layout {
   done
 
   cat file-list.* > file-list
-  rnac r2dt upload-s3 --env $params.r2dt.s3.env file-list
+  rnac r2dt upload-s3 --env $params.r2dt.s3.env \\
+    --allow-failures ${params.r2dt.allow_upload_failures} \\
+    --failure-list upload-failures.txt \\
+    file-list
+  """
+}
+
+process record_upload_failures {
+  queue 'datamover'
+  memory '1 GB'
+
+  input:
+  path(failures, stageAs: 'run-failures.txt')
+
+  script:
+  """
+  mkdir -p $params.r2dt.publish
+  {
+    echo "# ${workflow.runName} ${workflow.start}"
+    cat run-failures.txt
+  } >> $params.r2dt.publish/upload-failures.txt
   """
 }
 
@@ -212,10 +235,12 @@ process store_secondary_structures {
   path(ctl)
   path("attempted*.${params.writer_format}")
   path(attempted_ctl)
+  path(attempted_schema)
   path(attempted_post_load)
   path(urs_sql)
   path(model)
   path(should_show_ctl)
+  path(upload_failures)
   val(_flag)
 
   output:
@@ -224,14 +249,23 @@ process store_secondary_structures {
   script:
   // Hits side (data*.csv) and should-show stay on the legacy pgloader path
   // for now; only the attempted side has been migrated to parquet.
+  //
+  // The parquet branch creates its own staging table: load-parquet does not
+  // run the ctl's BEFORE LOAD DO, so without the psql step the table would
+  // only exist if a previous import-data release had run create_load.sql.
+  // Recreating it also makes the load self-cleaning, so --truncate is not
+  // needed here.
   def attempted_cmd = (params.writer_format == 'parquet') ?
     """
+    psql -v ON_ERROR_STOP=1 -f $attempted_schema "\$PGDATABASE"
     load-parquet load_traveler_attempted 'attempted*.parquet' \\
-      --truncate \\
       --post-load $attempted_post_load
     """ :
     "split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted"
   """
+  rnac r2dt drop-failed-uploads --max-failures ${params.r2dt.max_upload_failures} \\
+    $upload_failures data*.csv attempted*.${params.writer_format}
+
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
   $attempted_cmd
 
@@ -263,6 +297,7 @@ workflow r2dt {
       channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
       channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
       channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
+      channel.fromPath('files/r2dt/attempted-schema.sql') | set { attempted_schema }
       channel.fromPath('files/r2dt/attempted-post-load.sql') | set { attempted_post_load }
 
       model_info(ready) | set { models_ready }
@@ -302,7 +337,25 @@ workflow r2dt {
 
       publish_layout.out.flag | collect | map { _flags -> 'ready' } | set { uploaded }
 
-      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_post_load, ss_query, ss_model, ss_ctl, uploaded) | set { done }
+      // Every URS that could not be uploaded, in one file next to the SVGs.
+      // store_secondary_structures drops those rows before loading, so a
+      // tolerated upload failure leaves the sequence undone rather than
+      // recorded with an SVG that is not in S3. The placeholder keeps the
+      // input satisfied on a clean run, where the channel is empty.
+      publish_layout.out.failures \
+      | collectFile(name: 'upload-failures.txt') \
+      | set { run_failures }
+
+      // Published by appending, so the history of every run survives; the
+      // channel keeps this run's file alone, since max_upload_failures counts
+      // the failures of one run.
+      run_failures | record_upload_failures
+
+      run_failures \
+      | ifEmpty(file('files/r2dt/no-upload-failures.txt')) \
+      | set { upload_failures }
+
+      store_secondary_structures(data, load_ctl, attempted, attempted_ctl, attempted_schema, attempted_post_load, ss_query, ss_model, ss_ctl, upload_failures, uploaded) | set { done }
     } else {
       channel.of('r2dt skipped') | set { done }
     }

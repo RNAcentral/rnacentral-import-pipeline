@@ -263,16 +263,66 @@ def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
 @click.option("--workers", default=32, help="parallel uploads")
 @click.option("--endpoint", default=r2dt_s3.ENDPOINT)
 @click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option(
+    "--allow-failures",
+    default=0,
+    help="tolerate up to this many failed objects instead of failing the batch",
+)
+@click.option(
+    "--failure-list",
+    default=None,
+    type=click.Path(dir_okay=False),
+    help="write the URS of each failed upload here, for later reconciliation",
+)
 @click.argument("file_list", type=click.Path(exists=True, dir_okay=False))
-def r2dt_upload_s3(file_list, env, workers, endpoint, bucket):
+def r2dt_upload_s3(
+    file_list, env, workers, endpoint, bucket, allow_failures, failure_list
+):
     """
     Upload the gzipped SVGs listed in FILE_LIST (produced by prepare-s3) to S3.
 
     Replaces update-svg.sh: uploads via boto3 with server-side Content-MD5
     verification and fails loudly if any object does not upload, rather than
     silently swallowing HTTP errors.
+
+    --allow-failures lets a stray unwritable object through rather than losing
+    the batch; anything beyond the cap still fails. Use --failure-list to record
+    what was skipped.
     """
-    r2dt_s3.upload(file_list, env, endpoint=endpoint, bucket=bucket, workers=workers)
+    r2dt_s3.upload(
+        file_list,
+        env,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        allow_failures=allow_failures,
+        failure_list=failure_list,
+    )
+
+
+@cli.command("drop-failed-uploads")
+@click.option(
+    "--max-failures",
+    default=None,
+    type=int,
+    help="fail if FAILURE_LIST holds more URS than this (a run-wide cap)",
+)
+@click.argument("failure_list", type=click.Path(dir_okay=False))
+@click.argument("data_files", nargs=-1, type=click.Path(exists=True, dir_okay=False))
+def r2dt_drop_failed_uploads(failure_list, data_files, max_failures):
+    """
+    Remove rows for URS listed in FAILURE_LIST from DATA_FILES, in place.
+
+    Keeps the database honest when upload-s3 tolerated a failure: the URS would
+    otherwise get a structure row pointing at an object that is not in S3. Pass
+    the hits and the attempted files both, so the sequence is left undone rather
+    than recorded as attempted and never retried.
+
+    A missing or empty FAILURE_LIST is a no-op, so callers can pass it
+    unconditionally. --max-failures caps the whole run, since upload-s3's own
+    tolerance is per batch.
+    """
+    r2dt_s3.drop_failed(failure_list, data_files, max_failures=max_failures)
 
 
 @cli.command("verify-s3")
@@ -293,7 +343,9 @@ def r2dt_verify_s3(file_list, output, env, workers, endpoint, bucket):
         file_list, env, endpoint=endpoint, bucket=bucket, workers=workers, out=output
     )
     if problems:
-        raise click.ClickException(f"{problems} files missing or mismatched in {bucket}")
+        raise click.ClickException(
+            f"{problems} files missing or mismatched in {bucket}"
+        )
 
 
 @cli.command("list-s3")
@@ -311,6 +363,82 @@ def r2dt_list_s3(output, env, workers, depth, endpoint, bucket):
     """
     r2dt_s3.list_svgs(
         env, output, endpoint=endpoint, bucket=bucket, workers=workers, depth=depth
+    )
+
+
+@cli.command("sync-s3")
+@click.option("--env", default="prod")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.option("--workers", default=32)
+@click.option("--depth", default=2, help="delimiter levels to shard on")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option("--missing-list", default="missing-svgs.txt")
+@click.option("--orphan-list", default="orphan-svgs.txt")
+@click.option(
+    "--delete",
+    is_flag=True,
+    default=False,
+    help="actually remove the orphans; without it this is a dry run",
+)
+def r2dt_sync_s3(
+    env, db_url, workers, depth, endpoint, bucket, missing_list, orphan_list, delete
+):
+    """
+    Reconcile the bucket against the database should-show set.
+
+    Writes MISSING-LIST (should show, but no SVG in S3 -- feed this back through
+    r2dt) and ORPHAN-LIST (in S3, but no longer should show). Nothing is removed
+    unless --delete is given: check the orphan list first, since a mis-set --env
+    would prune the wrong environment.
+    """
+    counts = r2dt_s3.sync(
+        env,
+        db_url,
+        missing_list,
+        orphan_list,
+        delete=delete,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        depth=depth,
+    )
+    click.echo(
+        f"in_s3={counts['in_s3']} missing={counts['missing']} "
+        f"orphan={counts['orphan']}"
+    )
+
+
+@cli.command("download-s3")
+@click.option("--env", default="prod")
+@click.option("--workers", default=32)
+@click.option("--depth", default=2, help="delimiter levels to shard on")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option(
+    "--urs-list",
+    default=None,
+    type=click.Path(exists=True, dir_okay=False),
+    help="URS to fetch, one per line; defaults to everything in the bucket",
+)
+@click.argument("directory", type=click.Path(file_okay=False))
+def r2dt_download_s3(directory, env, workers, depth, endpoint, bucket, urs_list):
+    """
+    Download every SVG into DIRECTORY, ready to tar + gzip for distribution.
+
+    Files are written decompressed as URS/xx/xx/xx/xx/<urs>.svg, mirroring the S3
+    layout, with a manifest.tsv of urs/path/size/md5 alongside. Re-running skips
+    files already on disk, so an interrupted run can just be repeated; the
+    manifest is appended to, so it may then hold duplicate rows.
+    """
+    r2dt_s3.download(
+        directory,
+        env,
+        urs_list=urs_list,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        depth=depth,
     )
 
 

@@ -17,3 +17,7 @@ SET
   model_source = EXCLUDED.model_source,
   source_version = EXCLUDED.source_version,
   last_run = EXCLUDED.last_run;
+
+-- Clear the staging table now that it is merged; nothing else empties it
+-- between runs.
+TRUNCATE load_qa_rfam_attempted;

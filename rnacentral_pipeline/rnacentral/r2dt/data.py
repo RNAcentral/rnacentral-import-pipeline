@@ -156,6 +156,10 @@ SO_RNA_NAME_LOOKUP = {
 """
 
 
+RIBOVISION_LSU = {"LSU", "23S", "25S", "28S"}
+RIBOVISION_SSU = {"SSU", "12S", "16S", "18S"}
+
+
 @enum.unique
 class Source(enum.Enum):
     crw = enum.auto()
@@ -292,12 +296,7 @@ class R2DTResultInfo(object):
     def source_directory(self) -> Path:
         base = (self.path / "..").resolve()
         if self.source == Source.ribovision:
-            parts = self.model_name.split("_", 3)
-            if parts[1] == "LSU":
-                return base / "ribovision-lsu"
-            elif parts[1] == "SSU":
-                return base / "ribovision-ssu"
-            raise ValueError("Could not find correct data path: %s" % parts)
+            return self.__ribovision_directory__(base)
 
         if self.source == Source.rfam and self.model_name in {"RF00005", "tRNA"}:
             return base / "RF00005"
@@ -352,6 +351,19 @@ class R2DTResultInfo(object):
 
     def has_hit_info(self):
         return self.has_ribovore()
+
+    def __ribovision_directory__(self, base: Path) -> Path:
+        # Names are mostly {species}_{LSU,SSU}_3D but some name the rRNA instead
+        # (cSO_23S_3D), so match the subunit then fall back to what's on disk.
+        parts = set(self.model_name.split("_"))
+        if parts & RIBOVISION_LSU:
+            return base / "ribovision-lsu"
+        if parts & RIBOVISION_SSU:
+            return base / "ribovision-ssu"
+        for name in ["ribovision-lsu", "ribovision-ssu"]:
+            if any((base / name).glob(f"{self.urs}*.overlaps")):
+                return base / name
+        raise ValueError("Could not find correct data path: %s" % self.model_name)
 
     def __filename__(self, extension):
         if self.source == Source.gtrnadb and extension == "fasta":

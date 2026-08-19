@@ -307,10 +307,13 @@ workflow {
   main:
     precompute(channel.of(true))
 
+  // See analyze.nf: an onError section crashes on Nextflow 26.04.
   onComplete:
     try {
       if (workflow.success) {
         slack_closure("Precompute workflow completed. Data import complete")
+      } else {
+        slack_closure("Precompute workflow encountered an error and crashed")
       }
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"

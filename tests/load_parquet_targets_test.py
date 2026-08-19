@@ -33,10 +33,16 @@ STAGING_TABLES = {
 }
 
 
+# Prose mentioning load-parquet otherwise scans as an invocation. Only whole-line
+# comments are dropped: `//` also appears mid-line inside URLs.
+COMMENT = re.compile(r"^\s*//.*$", re.M)
+
+
 def workflow_targets():
     found = set()
     for workflow in sorted((ROOT / "workflows").rglob("*.nf")):
-        for match in INVOCATION.finditer(workflow.read_text()):
+        text = COMMENT.sub("", workflow.read_text())
+        for match in INVOCATION.finditer(text):
             found.add((match.group(1), workflow.relative_to(ROOT)))
     return sorted(found)
 
