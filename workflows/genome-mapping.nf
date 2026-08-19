@@ -76,14 +76,21 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  path("${species}.${assembly}.ensembl.gff3.gz")
+  path("${species}.${assembly}.ensembl.gff3.gz"), optional: true
 
   script:
   """
   set -o pipefail
 
-  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}.${assembly}.gff3.gz '{}'
+  status=0
+  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly url.txt || status=\$?
+  if [[ "\$status" -eq 3 ]]; then
+    exit 0
+  elif [[ "\$status" -ne 0 ]]; then
+    exit "\$status"
+  fi
+
+  wget -O ${species}.${assembly}.gff3.gz "\$(cat url.txt)"
   gzip -d "${species}.${assembly}.gff3.gz"
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
@@ -117,7 +124,7 @@ process download_genome {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple val(species), val(assembly), path("${species}.${assembly}.fa")
+  tuple val(species), val(assembly), path("${species}.${assembly}.fa"), optional: true
 
   script:
   """
@@ -125,8 +132,15 @@ process download_genome {
 
   psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" \$PGDATABASE
 
-  rnac genome-mapping url-for --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
+  status=0
+  rnac genome-mapping url-for --host=$division $species $assembly url.txt || status=\$?
+  if [[ "\$status" -eq 3 ]]; then
+    exit 0
+  elif [[ "\$status" -ne 0 ]]; then
+    exit "\$status"
+  fi
+
+  wget -O ${species}.${assembly}.fa.gz "\$(cat url.txt)"
 
   gzip -d ${species}.${assembly}.fa.gz
   """
@@ -173,9 +187,14 @@ process index_genome_for_browser {
 
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
-  memory { params.genome_mapping.blat.directives.memory }
-  errorStrategy { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
-  time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 24.h }
+  // blat holds the target in memory and these assemblies run from 12Mb yeast to
+  // hexaploid oat. Without the attempt factor an OOM retries at the same size
+  // until maxRetries kills the run; once retries are spent, drop the chunk.
+  memory { (params.genome_mapping.blat.directives.memory + (genome.size() / 1e9).toInteger() * 8.GB) * task.attempt }
+  errorStrategy { task.exitStatus in [137, 140, 143] && task.attempt <= 3 ? 'retry' : 'ignore' }
+  // Measured over a full run: chunks take 14m to 4h46 and the old 15m/60m rungs
+  // timed out 532 attempts before reaching the 24h one that always succeeded.
+  time { task.attempt == 1 ? 6.h : 24.h }
   maxRetries 3
 
   input:

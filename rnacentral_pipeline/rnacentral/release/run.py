@@ -18,6 +18,7 @@ import logging
 
 import psycopg2
 
+from rnacentral_pipeline import db
 from rnacentral_pipeline.rnacentral.release import functions
 
 LOGGER = logging.getLogger(__name__)
@@ -30,13 +31,19 @@ _BASE_CONNECT = {
 }
 
 # Conservative default: allows spilling to disk rather than OOM-killing the backend.
-_CONNECT_DEFAULT = {**_BASE_CONNECT, "options": "-c statement_timeout=0 -c work_mem=64MB"}
+_CONNECT_DEFAULT = {
+    **_BASE_CONNECT,
+    "options": "-c statement_timeout=0 -c work_mem=64MB",
+}
 # Higher memory only for DDL-heavy steps (index builds, partition exchange).
-_CONNECT_HIGH_MEM = {**_BASE_CONNECT, "options": "-c statement_timeout=0 -c work_mem=256MB"}
+_CONNECT_HIGH_MEM = {
+    **_BASE_CONNECT,
+    "options": "-c statement_timeout=0 -c work_mem=256MB",
+}
 
 
 def _connect(db_url, high_mem=False):
-    return psycopg2.connect(db_url, **(_CONNECT_HIGH_MEM if high_mem else _CONNECT_DEFAULT))
+    return db.connect(db_url, **(_CONNECT_HIGH_MEM if high_mem else _CONNECT_DEFAULT))
 
 
 def _run(db_url, sql, params=None, label="query", high_mem=False):
@@ -72,7 +79,7 @@ ORDER BY id
 COUNT_QUERY = """
 SELECT
     db.descr,
-    count(distinct xref.upi)
+    count(distinct xref.urs)
 from xref
 join rnc_database db
 on
@@ -100,8 +107,16 @@ def run(db_url):
     # release logic runs. Replaces the per-function CREATE OR REPLACE patches that
     # used to live here inline.
     functions.apply(db_url)
-    _run(db_url, "SELECT rnc_update.update_rnc_accessions()", label="update_rnc_accessions")
-    _run(db_url, "SELECT rnc_update.update_literature_references()", label="update_literature_references")
+    _run(
+        db_url,
+        "SELECT rnc_update.update_rnc_accessions()",
+        label="update_rnc_accessions",
+    )
+    _run(
+        db_url,
+        "SELECT rnc_update.update_literature_references()",
+        label="update_literature_references",
+    )
     _run(db_url, CREATE_INDEX_SQL, label="create_index", high_mem=True)
     _run(db_url, LOAD_MD5_INDEX_SQL, label="create_load_md5_index", high_mem=True)
     _run(db_url, "SELECT rnc_update.prepare_releases('F')", label="prepare_releases")
@@ -113,8 +128,12 @@ def run(db_url):
 
     for (dbid, rid) in releases:
         LOGGER.info("Executing release %i from database %i", rid, dbid)
-        _run(db_url, "SELECT rnc_update.new_update_release(%s, %s)", params=(dbid, rid),
-             label=f"new_update_release(dbid={dbid}, rid={rid})")
+        _run(
+            db_url,
+            "SELECT rnc_update.new_update_release(%s, %s)",
+            params=(dbid, rid),
+            label=f"new_update_release(dbid={dbid}, rid={rid})",
+        )
 
     # do_pel_exchange adds each partition's upi->rna foreign key (fk4) NOT VALID to keep the
     # full-partition validation scan off the load's critical path. Validate them now, after
@@ -124,17 +143,23 @@ def run(db_url):
     # committed at this point, so this is detection, not a pre-commit gate.
     for (dbid, rid) in releases:
         for suffix in ("deleted", "not_deleted"):
-            _run(db_url,
-                 f"ALTER TABLE xref_p{dbid}_{suffix} "
-                 f"VALIDATE CONSTRAINT xref_p{dbid}_{suffix}_fk4",
-                 label=f"validate fk4 xref_p{dbid}_{suffix}")
+            _run(
+                db_url,
+                f"ALTER TABLE xref_p{dbid}_{suffix} "
+                f"VALIDATE CONSTRAINT xref_p{dbid}_{suffix}_fk4",
+                label=f"validate fk4 xref_p{dbid}_{suffix}",
+            )
 
     # Verify xref primary key uniqueness once, after all databases are loaded,
     # rather than once per database inside load_xref. The check is global (it
     # ignores its argument), so a single run covers every partition.
     if releases:
-        _run(db_url, "SELECT rnc_load_xref.do_checks(NULL::bigint)",
-             label="do_checks (once, post-loop)", high_mem=True)
+        _run(
+            db_url,
+            "SELECT rnc_load_xref.do_checks(NULL::bigint)",
+            label="do_checks (once, post-loop)",
+            high_mem=True,
+        )
 
 
 def check(limit_file, db_url, default_allowed_change=0.30):

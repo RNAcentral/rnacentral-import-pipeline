@@ -322,19 +322,6 @@ REDIPORTAL_FEATURES = pa.schema(
 
 
 # ---------------------------------------------------------------------------
-# ensembl.metadata.karyotypes.write() -> karyotypes.parquet (ensembl metadata
-# workflow). Source: files/import-data/load/karyotypes.ctl. Loaded into
-# ``load_karyotypes``, then post-release/001__karyotypes.sql casts the
-# ``karyotype`` text column to json on its way into ``ensembl_karyotype``.
-KARYOTYPES = pa.schema(
-    [
-        pa.field("assembly_id", pa.string(), nullable=False),
-        pa.field("karyotype", pa.string()),
-    ]
-)
-
-
-# ---------------------------------------------------------------------------
 # ensembl.metadata.compara.write() -> compara.parquet (ensembl metadata
 # workflow). Source: files/import-data/load/compara.ctl. Loaded into
 # ``load_compara``, then post-release/001__compara.sql resolves urs_taxids /
@@ -361,6 +348,9 @@ TAXONOMY = pa.schema(
         pa.field("lineage", pa.string(), nullable=False),
         pa.field("aliases", pa.string(), nullable=False),
         pa.field("replaced_by", pa.int64()),
+        pa.field("rank", pa.string(), nullable=False),
+        pa.field("reference_proteome", pa.bool_(), nullable=False),
+        pa.field("is_deleted", pa.bool_(), nullable=False),
     ]
 )
 
@@ -447,13 +437,18 @@ R2DT_ATTEMPTED = pa.schema(
 # SequenceUpdate.as_writeables() / GenericUpdate.as_writeables().
 #
 # Numeric/bool columns are typed; the writer adapter converts the string rows
-# from as_writeables() into typed tuples on the way in. ``taxid`` is nullable
-# because GenericUpdate emits an empty string (translated to None).
+# from as_writeables() into typed tuples on the way in. ``taxid`` is NOT NULL:
+# it used to be nullable because GenericUpdate emitted an empty string, but that
+# path was removed (a710e6f3c) and rnc_rna_precomputed.taxid now has a NOT NULL
+# constraint plus an FK to rnc_taxonomy. nullable=False makes converter_for pick
+# int() over _to_int_or_none, so an empty taxid fails loudly at write time rather
+# than becoming a NULL that only errors later, inside the load. This is the
+# parquet counterpart of dropping `[null if ""]` from files/precompute/load.ctl.
 PRECOMPUTE_DATA = pa.schema(
     [
         pa.field("id", pa.string(), nullable=False),
         pa.field("upi", pa.string(), nullable=False),
-        pa.field("taxid", pa.int64()),
+        pa.field("taxid", pa.int64(), nullable=False),
         pa.field("is_active", pa.bool_(), nullable=False),
         pa.field("description", pa.string()),
         pa.field("rna_type", pa.string()),
@@ -483,9 +478,11 @@ PRECOMPUTE_QA = pa.schema(
         pa.field("possible_contamination", pa.bool_(), nullable=False),
         pa.field("missing_rfam_match", pa.bool_(), nullable=False),
         pa.field("from_repetitive_region", pa.bool_(), nullable=False),
-        pa.field("possible_orf", pa.bool_(), nullable=False),
-        pa.field("possible_orf_stopfree", pa.bool_(), nullable=False),
-        pa.field("possible_orf_tcode", pa.bool_(), nullable=False),
+        # Nullable, like the load_qa_status columns: QaResult.null() writes ""
+        # for these three whenever a sequence has no ORF/CPAT data.
+        pa.field("possible_orf", pa.bool_()),
+        pa.field("possible_orf_stopfree", pa.bool_()),
+        pa.field("possible_orf_tcode", pa.bool_()),
         pa.field("messages", pa.string(), nullable=False),
     ]
 )
@@ -700,7 +697,6 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "terms": None,
     "go_annotations": "load_go_term_annotations",
     "go_publication_mappings": "load_go_term_publication_map",
-    "karyotypes": "load_karyotypes",
     "compara": "load_compara",
     "taxonomy": "load_taxonomy",
     "rfam_ontology_mappings": "load_rfam_go_terms",

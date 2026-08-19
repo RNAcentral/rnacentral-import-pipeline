@@ -233,12 +233,6 @@ CREATE UNLOGGED TABLE load_interactions (
   taxid int NOT NULL
 );
 
-DROP TABLE IF EXISTS load_karyotypes;
-CREATE UNLOGGED TABLE load_karyotypes (
-	assembly_id varchar(255) NOT NULL,
-    karyotype text
-);
-
 DROP TABLE IF EXISTS load_rnc_coordinates;
 CREATE UNLOGGED TABLE load_rnc_coordinates (
     accession varchar(200) NULL,
@@ -333,7 +327,8 @@ CREATE UNLOGGED TABLE load_taxonomy (
     aliases json,
     replaced_by int,
     rank text,
-    reference_proteome boolean
+    reference_proteome boolean,
+    is_deleted boolean
 );
 
 DROP TABLE IF EXISTS load_overlaps;
@@ -463,6 +458,22 @@ CREATE UNLOGGED TABLE load_dfam_model_hits (
   e_value int,
   bits int,
   dfam_model_id text
+);
+
+-- The completeness columns rfam_model_hits needs are computed by
+-- files/rfam-scan/post-load.sql, which joins against rna and rfam_models, so
+-- they are absent here.
+DROP TABLE IF EXISTS load_rfam_model_hits;
+CREATE UNLOGGED TABLE load_rfam_model_hits (
+  upi varchar(13) NOT NULL,
+  sequence_start integer NOT NULL,
+  sequence_stop integer NOT NULL,
+  rfam_model_id varchar(20) NOT NULL,
+  model_start integer NOT NULL,
+  model_stop integer NOT NULL,
+  overlap varchar(30) NOT NULL,
+  e_value double precision NOT NULL,
+  score double precision NOT NULL
 );
 
 DROP TABLE IF EXISTS load_genome_mapping;

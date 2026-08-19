@@ -10,7 +10,7 @@ BEGIN
         DBID,
         CREATED,
         LAST,
-        UPI,
+        URS,
         VERSION_I,
         VERSION,
         DELETED,
@@ -40,4 +40,3 @@ BEGIN
   END;
 
 $function$
-

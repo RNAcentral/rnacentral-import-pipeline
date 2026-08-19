@@ -35,9 +35,12 @@ def current_release(_ftp: FTP) -> str:
 
 @contextmanager
 def species_info(ftp: FTP, division: Division, release: str):
-    info_path = f"{release}/{division.name}/species_metadata_{division.division_name}.json"
+    info_path = (
+        f"{release}/{division.name}/species_metadata_{division.division_name}.json"
+    )
     print(info_path)
-    with tempfile.NamedTemporaryFile() as tmp:
+    # dir="." because singularity --contain gives us a tiny in-memory /tmp
+    with tempfile.NamedTemporaryFile(dir=".") as tmp:
         ftp.retrbinary(f"RETR {info_path}", tmp.write)
         tmp.flush()
         tmp.seek(0)
@@ -63,7 +66,9 @@ def generate_paths(
             LOGGER.warning("Skipping collection species %s", name)
             continue
 
-        gff_path = f"{base}/{release}/{division.name}/gff3/{name}/{organism_name}.gff3.gz"
+        gff_path = (
+            f"{base}/{release}/{division.name}/gff3/{name}/{organism_name}.gff3.gz"
+        )
         data_files = (
             f"{base}/{release}/{division.name}/embl/{name}/{organism_name}.*.dat.gz"
         )
@@ -82,11 +87,14 @@ def release_suffix(entry: dict[str, ty.Any]) -> str:
         match = CORE_DBNAME_PATTERN.search(dbname)
         if match:
             return match.group(1)
-    raise ValueError(f"Could not determine release suffix for {entry['organism']['name']}")
+    raise ValueError(
+        f"Could not determine release suffix for {entry['organism']['name']}"
+    )
 
 
 def urls_for(division: Division, host: str) -> ty.Iterable[FtpInfo]:
-    with FTP(host) as ftp:
+    ftp = FTP(host)
+    try:
         ftp.login()
         print("LOGIN")
         ftp.cwd("pub")
@@ -94,3 +102,6 @@ def urls_for(division: Division, host: str) -> ty.Iterable[FtpInfo]:
         with species_info(ftp, division, latest) as info:
             url_base = f"ftp://{host}/pub"
             yield from generate_paths(ftp, division, url_base, latest, info)
+    finally:
+        # close() not quit(); a failed transfer makes QUIT raise over the real error
+        ftp.close()

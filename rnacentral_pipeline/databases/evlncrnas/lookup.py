@@ -20,8 +20,8 @@ from rnacentral_pipeline import utils
 from rnacentral_pipeline.rnacentral import lookup
 
 QUERY = """
-select DISTINCT ON (pre.id)
-	pre.id as urs_taxid,
+select DISTINCT ON (pre.urs_taxid)
+	pre.urs_taxid as urs_taxid,
 	pre.rna_type,
 	ra.rna_type as so_term,
 	COALESCE(rna.seq_short, rna.seq_long) as sequence,
@@ -32,10 +32,10 @@ from xref join
 rnc_accessions ra on
 ra.accession = xref.ac
 join rna
-on rna.upi = xref.upi
+on rna.urs = xref.urs
 join rnc_rna_precomputed pre
-on rna.upi = pre.upi
-order by pre.id
+on rna.urs = pre.urs
+order by pre.urs_taxid
 """
 
 # create temp table ev_ids (
@@ -57,7 +57,7 @@ VALUES( unnest(%(taxids)s ) );
 
 with xref_cte(urs_taxid, ac) as (
 	select
-		xref.upi || '_' || xref.taxid as urs_taxid,
+		xref.urs || '_' || xref.taxid as urs_taxid,
 		xref.ac
 	from xref join ev_taxa on xref.taxid = ev_taxa.taxid
 	where xref.deleted = 'N'
@@ -87,7 +87,7 @@ DROP TABLE ev_taxa;
 EXON_QUERY = """
 select urs_taxid, exon_start, exon_stop, strand, chromosome from rnc_sequence_regions sr
 join rnc_sequence_exons ex on ex.region_id = sr.id
-join xref on xref.upi || '_' || xref.taxid = urs_taxid
+join xref on xref.urs || '_' || xref.taxid = urs_taxid
 where xref.deleted = 'N'
 """
 

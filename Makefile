@@ -7,7 +7,6 @@ rust:
 	cargo build --release
 	mv -f target/release/json2fasta bin
 	mv -f target/release/split-ena bin
-	mv -f target/release/expand-urs bin
 	mv -f target/release/precompute bin
 	mv -f target/release/search-export bin
 	mv -f target/release/ftp-export bin
@@ -21,7 +20,6 @@ rust:
 clean:
 	rm bin/json2fasta
 	rm bin/split-ena
-	rm bin/expand-urs
 	rm bin/precompute
 	rm bin/search-export
 	rm bin/ftp-export

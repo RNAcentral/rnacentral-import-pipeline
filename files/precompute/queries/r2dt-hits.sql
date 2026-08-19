@@ -23,7 +23,7 @@ on
   r2dt.id = ss.model_id
 JOIN rna
 on
-  rna.upi = ss.urs
+  rna.urs = ss.urs
 -- A sequence much longer than the model it was drawn against was force-fit to
 -- the wrong template (eg. a 2000nt RNA on a 200nt model). A manual assignment
 -- overrides this; where the ratio cannot be computed we defer to should_show.

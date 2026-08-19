@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "utils/bed-expander",
-  "utils/expand-urs",
   "utils/ftp-export",
   "utils/json2dfasta",
   "utils/json2fasta",

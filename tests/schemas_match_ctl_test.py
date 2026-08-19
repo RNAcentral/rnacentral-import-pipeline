@@ -46,6 +46,31 @@ def test_schema_columns_match_ctl(schema_name, ctl_stem):
     assert list(schema.names) == target_columns(ctl_stem)
 
 
+# Every logical name whose schema can be paired with a ctl by name. Wider than
+# CASES: this is the repo-wide drift net. The sequences pair is excluded because
+# short_sequences and long_sequences share one staging table but have separate
+# ctls whose HAVING FIELDS differ only in the seq column.
+WIDE_CASES = sorted(
+    (name, name.replace("_", "-"))
+    for name, table in schemas.ENTRY_WRITER_LOAD_TABLES.items()
+    if table is not None
+    and hasattr(schemas, name.upper().replace("-", "_"))
+    and (CTL_DIR / f"{name.replace('_', '-')}.ctl").exists()
+)
+
+
+@pytest.mark.parametrize("name,ctl_stem", WIDE_CASES, ids=[c[1] for c in WIDE_CASES])
+def test_every_mapped_schema_matches_its_ctl(name, ctl_stem):
+    """
+    A schema narrower than its ctl means the writer emits more values than the
+    schema declares, and every task dies on "Row length (8) does not match
+    schema length (5)" -- which is exactly how TAXONOMY shipped.
+    """
+    schema = getattr(schemas, name.upper().replace("-", "_"))
+    expected = [c.lower() for c in target_columns(ctl_stem)]
+    assert [n.lower() for n in schema.names] == expected
+
+
 SCHEMA_SQL = (
     Path(__file__).resolve().parents[1] / "files" / "schema" / "create_load.sql"
 ).read_text()
@@ -112,3 +137,32 @@ def test_schema_is_mapped_to_a_load_table(schema_name, ctl_stem):
         if table == into.group(1)
     ]
     assert logical, f"{into.group(1)} missing from ENTRY_WRITER_LOAD_TABLES"
+
+
+# The precompute pair is parquet-only (no ctl), so its drift risk is nullability
+# against the staging DDL rather than column names: a NOT NULL field crashes the
+# writer as soon as a producer emits "" for it.
+PRECOMPUTE_DDL = (
+    Path(__file__).resolve().parents[1] / "files" / "precompute" / "schema.sql"
+)
+
+
+def ddl_not_null(table: str) -> dict:
+    """Column name -> whether the CREATE TABLE declares it NOT NULL."""
+    body = re.search(
+        rf"CREATE TABLE {table} \((.*?)^\);", PRECOMPUTE_DDL.read_text(), re.S | re.M
+    )
+    assert body, f"no CREATE TABLE {table} in {PRECOMPUTE_DDL}"
+    columns = {}
+    for line in body.group(1).strip().splitlines():
+        line = line.strip().rstrip(",")
+        if line:
+            columns[line.split()[0]] = "not null" in line.lower()
+    return columns
+
+
+def test_precompute_qa_nullability_matches_ddl():
+    columns = ddl_not_null("load_qa_status")
+    assert list(schemas.PRECOMPUTE_QA.names) == list(columns)
+    for field in schemas.PRECOMPUTE_QA:
+        assert field.nullable != columns[field.name], field.name

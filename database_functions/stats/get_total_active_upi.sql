@@ -9,7 +9,7 @@ DECLARE
 
 BEGIN
 
-     select count(distinct(upi))
+     select count(distinct(urs))
      into v_total_active
      from xref a
      where created <= in_release_id
@@ -23,4 +23,3 @@ BEGIN
    END;
 
 $function$
-

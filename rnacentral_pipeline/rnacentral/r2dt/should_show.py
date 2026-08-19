@@ -85,7 +85,7 @@ def fetch_modeled_data(
         return (
             Query.from_(rna)
             .select(
-                rna.upi.as_("urs"),
+                rna.urs.as_("urs"),
                 rna.len.as_("sequence_length"),
                 sm.model_source,
                 ss.sequence_start.as_("diagram_sequence_start"),
@@ -98,7 +98,7 @@ def fetch_modeled_data(
                 ss.overlap_count.as_("diagram_overlap_count"),
             )
             .join(ss)
-            .on(ss.urs == rna.upi)
+            .on(ss.urs == rna.urs)
             .join(sm)
             .on(sm.id == ss.model_id)
             .where(ss.urs.isin(ids))
