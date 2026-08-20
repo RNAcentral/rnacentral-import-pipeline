@@ -348,6 +348,7 @@ CREATE UNLOGGED TABLE load_qa_status (
   incomplete_sequence bool,
   possible_contamination bool,
   missing_rfam_match bool,
+  from_repetitive_region bool,
   possible_orf bool,
   possible_orf_stopfree bool,
   possible_orf_tcode bool,
