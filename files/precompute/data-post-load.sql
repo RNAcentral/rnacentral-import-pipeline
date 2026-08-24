@@ -30,6 +30,7 @@ SET
   is_active = EXCLUDED.is_active,
   rna_type = EXCLUDED.rna_type,
   description = EXCLUDED.description,
+  update_date = CURRENT_DATE,
   databases = EXCLUDED.databases,
   has_coordinates = EXCLUDED.has_coordinates,
   short_description = EXCLUDED.short_description,
