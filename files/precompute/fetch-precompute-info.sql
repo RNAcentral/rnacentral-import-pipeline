@@ -7,7 +7,7 @@
 COPY (
 SELECT
   urs_taxid,
-  COALESCE(last_release, 0)
+  last_release
 FROM rnc_rna_precomputed
 order by urs_taxid COLLATE "C"
 ) TO STDOUT (FORMAT CSV)
