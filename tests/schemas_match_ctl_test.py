@@ -166,3 +166,21 @@ def test_precompute_qa_nullability_matches_ddl():
     assert list(schemas.PRECOMPUTE_QA.names) == list(columns)
     for field in schemas.PRECOMPUTE_QA:
         assert field.nullable != columns[field.name], field.name
+
+
+def test_create_load_qa_status_matches_the_precompute_ddl():
+    """
+    load_qa_status is defined twice: precompute/schema.sql creates it at the
+    start of a precompute run, create_load.sql re-creates it on every
+    import-data release. Whichever ran last wins, so a column in one and not
+    the other breaks the load -- create_load.sql predated
+    from_repetitive_region, and a finished 1844-range precompute died on
+    "Table load_qa_status does not have a column with name
+    from_repetitive_region" right after load_precomputed had gone in.
+    """
+    body = re.search(
+        r"CREATE UNLOGGED TABLE load_qa_status \((.*?)^\);", SCHEMA_SQL, re.S | re.M
+    )
+    assert body, "load_qa_status not found in create_load.sql"
+    names = [l.strip().split()[0] for l in body.group(1).strip().splitlines()]
+    assert names == list(ddl_not_null("load_qa_status"))
