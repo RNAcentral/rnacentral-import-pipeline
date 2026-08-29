@@ -46,7 +46,7 @@ def extract_mapping(raw: ty.IO) -> ty.Dict[ty.Tuple[str, str], ty.Tuple[str, str
 
 def build_query(pdb_id: str, chain_id: str) -> str:
     rna = Table("rna")
-    xref = Table("xref_p11_not_deleted")
+    xref = Table("xref")
     pre = Table("rnc_rna_precomputed")
     acc = Table("rnc_accessions")
 
@@ -64,7 +64,12 @@ def build_query(pdb_id: str, chain_id: str) -> str:
         .on(rna.urs == xref.urs)
         .join(acc)
         .on(acc.accession == xref.ac)
-        .where((acc.external_id == pdb_id) & (acc.optional_id == chain_id))
+        .where(
+            (acc.external_id == pdb_id)
+            & (acc.optional_id == chain_id)
+            & (xref.dbid == 11)  # Added: was implicit in partition
+            & (xref.deleted == "N")  # Added: was implicit in partition
+        )
     )
     return str(query)
 
