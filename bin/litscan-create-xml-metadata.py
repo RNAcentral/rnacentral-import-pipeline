@@ -71,7 +71,7 @@ def fetch_hit_counts(cursor, job_ids):
         "SELECT job_id, hit_count FROM litscan_job WHERE job_id = ANY(%s)",
         (list(job_ids),),
     )
-    return {row[0]: str(row[1]) for row in cursor.fetchall()}
+    return {row[0].lower(): str(row[1]) for row in cursor.fetchall()}
 
 
 def flush_batch(batch, cursor, output):
