@@ -11,7 +11,6 @@ from xml.etree.ElementTree import ParseError
 import aiohttp
 import polars as pl
 import psycopg2
-import requests
 from aiolimiter import AsyncLimiter
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -25,61 +24,16 @@ class _RetryableError(Exception):
         self.delay = delay
 
 
-def search_article(
-    job_id: str, date: datetime.date, search_limit: int
-) -> dict[str, list]:
-    page = "*"
-    articles_list = []
-    search_date = (
-        f" AND FIRST_PDATE:[{date.strftime('%Y-%m-%d')} TO {datetime.date.today().strftime('%Y-%m-%d')}]"
-        if date
-        else ""
-    )
-
-    while len(articles_list) < search_limit and page:
-        query = (
-            f'search?query=("{job_id}" AND IN_EPMC:Y AND OPEN_ACCESS:Y AND NOT SRC:PPR{search_date})'
-            f"&pageSize=500&cursorMark={page}"
-        )
-        print(query)
-        try:
-            response = requests.get(EUROPE_PMC + query, timeout=60)
-            response.raise_for_status()
-            articles = response.text
-        except requests.exceptions.RequestException as e:
-            logger.warning("Error fetching article list from Europe PMC: %s", e)
-            return {"pmcids": [], "cite_counts": []}
-        print(articles)
-        try:
-            root = ET.fromstring(articles)
-        except ParseError:
-            logger.warning(f"parse failure for {job_id}")
-            logger.warning(articles)
-            return {"pmcids": [], "cite_counts": []}
-
-        articles_list.extend(
-            [
-                (item.find("pmcid").text, int(item.find("citedByCount").text))
-                for item in root.findall("./resultList/result")
-                if item.find("pmcid") is not None
-                and item.find("citedByCount") is not None
-            ]
-        )
-
-        try:
-            next_page = root.find("nextCursorMark").text
-        except AttributeError:
-            next_page = None
-
-        page = next_page
-
-    if not articles_list:
-        logger.warning(f"No articles found for {job_id}")
-        return {"pmcids": [], "cite_counts": []}
-
-    pmcids, hit_counts = zip(*articles_list)
-
-    return {"pmcids": list(pmcids), "cite_counts": list(hit_counts)}
+def _failed_result() -> dict[str, list]:
+    """A search that could not be completed (network/parse failure), distinct
+    from a search that completed with 0 hits. The caller drops these rows so
+    the job is retried on the next run instead of being recorded as done."""
+    return {
+        "hit_count": [None],
+        "pmcids": [None],
+        "cite_counts": [None],
+        "status": ["failed"],
+    }
 
 
 async def search_article_async(
@@ -143,17 +97,17 @@ async def search_article_async(
                     max_retries,
                     e,
                 )
-                return {"hit_count": [], "pmcids": [], "cite_counts": []}
+                return _failed_result()
             else:
                 break
         if articles is None:
-            return {"hit_count": [], "pmcids": [], "cite_counts": []}
+            return _failed_result()
 
         try:
             root = ET.fromstring(articles)
         except ParseError:
             logger.warning(f"Parse failure for {job_id}")
-            return {"hit_count": [], "pmcids": [], "cite_counts": []}
+            return _failed_result()
         hit_count_el = root.find("hitCount")
         if hit_count_el is None:
             logger.warning("No hitCount in response for %s, skipping page", job_id)
@@ -182,7 +136,12 @@ async def search_article_async(
 
     if not articles_list:
         logger.info("Search for %s completed - 0 hits", job_id)
-        return {"hit_count": [], "pmcids": [], "cite_counts": []}
+        return {
+            "hit_count": [0],
+            "pmcids": [None],
+            "cite_counts": [None],
+            "status": ["success"],
+        }
 
     hit_counts, pmcids, cite_counts = zip(*articles_list)
 
@@ -191,6 +150,7 @@ async def search_article_async(
         "hit_count": list(hit_counts),
         "pmcids": list(pmcids),
         "cite_counts": list(cite_counts),
+        "status": ["success"],
     }
 
 
@@ -269,6 +229,16 @@ def main():
     conn.close()
 
     search_results = articles_list(last_search, search_limit=1_000_000)
+
+    n_searched = search_results.height
+    search_results = search_results.filter(
+        pl.col("status").list.first() == "success"
+    ).drop("status")
+    n_failed = n_searched - search_results.height
+    if n_failed:
+        logger.warning(
+            "%d job(s) failed to search and will be retried next run", n_failed
+        )
 
     search_results = search_results.explode("pmcids", "cite_counts", "hit_count")
 
