@@ -1,6 +1,6 @@
 COPY(
 SELECT
-  upi || '_' || taxid AS urs_taxid,
+  urs || '_' || taxid AS urs_taxid,
   start AS sequence_location,
   concat(metadata->'genomic_location'->>'chromosome', ':', metadata->'genomic_location'->'start', '-', metadata->'genomic_location'->'stop') AS genomic_location,
   metadata->'reference' AS reference,

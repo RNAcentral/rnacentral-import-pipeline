@@ -98,7 +98,7 @@ process parse {
   tuple val(family), path(sequence_info), path(families_info)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """

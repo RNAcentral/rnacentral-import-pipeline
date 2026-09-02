@@ -102,5 +102,8 @@ INSERT INTO rnc_text_mining_matches (
       patt.pattern_group = load.pattern_group
       AND patt.pattern_name = load.pattern
 ) ON CONFLICT (matching_word, pattern_id, sentence_id) DO NOTHING;
+$$,
+$$
+TRUNCATE load_rnc_text_mining;
 $$
 ;

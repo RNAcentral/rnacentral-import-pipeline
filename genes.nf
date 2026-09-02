@@ -2,6 +2,8 @@
 
 nextflow.enable.dsl=2
 
+include { qc_genes } from './workflows/utils/qc'
+
 process fetch_taxids {
 
   input:
@@ -285,6 +287,9 @@ workflow genes {
   | process_metadata \
   | store_metadata \
   | set { done }
+
+  // QC: summarise genes created/updated this run once every taxon is stored.
+  done | qc_genes
 
   emit: done
 }

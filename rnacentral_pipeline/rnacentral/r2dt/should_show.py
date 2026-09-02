@@ -85,7 +85,7 @@ def fetch_modeled_data(
         return (
             Query.from_(rna)
             .select(
-                rna.upi.as_("urs"),
+                rna.urs.as_("urs"),
                 rna.len.as_("sequence_length"),
                 sm.model_source,
                 ss.sequence_start.as_("diagram_sequence_start"),
@@ -98,7 +98,7 @@ def fetch_modeled_data(
                 ss.overlap_count.as_("diagram_overlap_count"),
             )
             .join(ss)
-            .on(ss.urs == rna.upi)
+            .on(ss.urs == rna.urs)
             .join(sm)
             .on(sm.id == ss.model_id)
             .where(ss.urs.isin(ids))
@@ -166,15 +166,6 @@ def train(handle, db_url, cross_validation=5, test_size=0.4) -> RandomForestClas
     clf.fit(X_train, y_train)
     LOGGER.info("Test data (%f) scoring %s", test_size, clf.score(X_test, y_test))
     return clf
-
-
-def from_result(clf, result) -> bool:
-    predictable = {}
-    for attribute in Attributes:
-        value = attribute.r2dt_result_value(result)
-        predictable[attribute.column_name()] = [value]
-    predictable = pd.DataFrame.from_records(predictable)
-    return clf.predict(predictable)[0]
 
 
 def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):

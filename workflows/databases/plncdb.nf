@@ -23,7 +23,7 @@ process parse_data {
   path data
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.plncdb?.run
 

@@ -21,11 +21,11 @@ BEGIN
     perform rnc_test.assertequals(l_test_id, 2, l_count);
 
     SELECT count(*) INTO l_count FROM xref
-    WHERE upi = current_setting('RNC_TEST.FIRST_UPI')::varchar(13) AND deleted = 'Y' AND created = 1 AND LAST = 1 AND ac = 'id1';
+    WHERE urs = current_setting('RNC_TEST.FIRST_UPI')::varchar(13) AND deleted = 'Y' AND created = 1 AND LAST = 1 AND ac = 'id1';
     perform rnc_test.assertequals(l_test_id, 1, l_count);
 
     SELECT count(*) INTO l_count FROM xref
-    WHERE upi = current_setting('RNC_TEST.FIRST_UPI')::varchar(13) AND deleted = 'N' AND created = 2 AND LAST = 2 AND ac = 'id2';
+    WHERE urs = current_setting('RNC_TEST.FIRST_UPI')::varchar(13) AND deleted = 'N' AND created = 2 AND LAST = 2 AND ac = 'id2';
     perform rnc_test.assertequals(l_test_id, 1, l_count);
 
 
@@ -33,4 +33,3 @@ BEGIN
   END;
 
 $function$
-

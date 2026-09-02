@@ -1,6 +1,6 @@
 process snodb {
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.snodb?.run
 

@@ -7,7 +7,7 @@ BEGIN
 
     INSERT
       INTO rnacen.rna(ID,
-         UPI,
+         URS,
          TIMESTAMP,
          USERSTAMP,
 
@@ -32,4 +32,3 @@ BEGIN
   END;
 
 $function$
-

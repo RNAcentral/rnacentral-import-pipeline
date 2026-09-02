@@ -76,14 +76,21 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  path("${species}.${assembly}.ensembl.gff3.gz")
+  path("${species}.${assembly}.ensembl.gff3.gz"), optional: true
 
   script:
   """
   set -o pipefail
 
-  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}.${assembly}.gff3.gz '{}'
+  status=0
+  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly url.txt || status=\$?
+  if [[ "\$status" -eq 3 ]]; then
+    exit 0
+  elif [[ "\$status" -ne 0 ]]; then
+    exit "\$status"
+  fi
+
+  wget -O ${species}.${assembly}.gff3.gz "\$(cat url.txt)"
   gzip -d "${species}.${assembly}.gff3.gz"
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
@@ -117,7 +124,7 @@ process download_genome {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple val(species), val(assembly), path("${species}.${assembly}.fa")
+  tuple val(species), val(assembly), path("${species}.${assembly}.fa"), optional: true
 
   script:
   """
@@ -125,8 +132,15 @@ process download_genome {
 
   psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" \$PGDATABASE
 
-  rnac genome-mapping url-for --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
+  status=0
+  rnac genome-mapping url-for --host=$division $species $assembly url.txt || status=\$?
+  if [[ "\$status" -eq 3 ]]; then
+    exit 0
+  elif [[ "\$status" -ne 0 ]]; then
+    exit "\$status"
+  fi
+
+  wget -O ${species}.${assembly}.fa.gz "\$(cat url.txt)"
 
   gzip -d ${species}.${assembly}.fa.gz
   """
@@ -173,9 +187,14 @@ process index_genome_for_browser {
 
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
-  memory { params.genome_mapping.blat.directives.memory }
-  errorStrategy { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
-  time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 24.h }
+  // blat holds the target in memory and these assemblies run from 12Mb yeast to
+  // hexaploid oat. Without the attempt factor an OOM retries at the same size
+  // until maxRetries kills the run; once retries are spent, drop the chunk.
+  memory { (params.genome_mapping.blat.directives.memory + (genome.size() / 1e9).toInteger() * 8.GB) * task.attempt }
+  errorStrategy { task.exitStatus in [137, 140, 143] && task.attempt <= 3 ? 'retry' : 'ignore' }
+  // Measured over a full run: chunks take 14m to 4h46 and the old 15m/60m rungs
+  // timed out 532 attempts before reaching the 24h one that always succeeded.
+  time { task.attempt == 1 ? 6.h : 24.h }
   maxRetries 3
 
   input:
@@ -183,9 +202,10 @@ process blat {
 
   output:
   tuple val(species), path('selected.json'), emit: hits
-  path 'attempted.csv', emit: attempted
+  path "attempted.${params.writer_format}", emit: attempted
 
   script:
+  def attempted_out = "attempted.${params.writer_format}"
   """
   set -o pipefail
 
@@ -203,7 +223,7 @@ process blat {
     rnac genome-mapping blat serialize $assembly - - |\
     rnac genome-mapping blat select - selected.json
 
-  rnac genome-mapping create-attempted $chunk $assembly attempted.csv
+  rnac genome-mapping create-attempted $chunk $assembly $attempted_out
   """
 }
 
@@ -215,16 +235,17 @@ process select_mapped_locations {
   tuple val(species), path('selected*.json')
 
   output:
-  path('locations.csv')
+  path("locations.${params.writer_format}")
 
   script:
+  def out = "locations.${params.writer_format}"
   """
   set -o pipefail
 
   find . -name 'selected*.json' |\
     xargs cat |\
     rnac genome-mapping blat select --sort - - |\
-    rnac genome-mapping blat as-importable - locations.csv
+    rnac genome-mapping blat as-importable - $out
   """
 }
 
@@ -233,19 +254,32 @@ process load_mapping {
   maxForks 1
 
   input:
-  path('raw*.csv')
+  path("raw*.${params.writer_format}")
   path(ctl)
-  path('attempted*.csv')
+  path(post_load)
+  path("attempted*.${params.writer_format}")
   path(attempted_ctl)
+  path(attempted_post_load)
 
   output:
   val('done')
 
   script:
-  """
-  split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
-  split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
-  """
+  if (params.writer_format == 'parquet') {
+    """
+    load-parquet load_genome_mapping 'raw*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    load-parquet load_genome_mapping_attempted 'attempted*.parquet' \\
+      --truncate \\
+      --post-load $attempted_post_load
+    """
+  } else {
+    """
+    split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
+    split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
+    """
+  }
 }
 
 workflow genome_mapping {
@@ -256,7 +290,9 @@ workflow genome_mapping {
     channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
     channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
     channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
+    channel.fromPath('files/genome-mapping/post-load.sql').set { post_load }
     channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
+    channel.fromPath('files/genome-mapping/attempted-post-load.sql').set { attempted_post_load }
 
     if (params.genome_mapping.run) {
       setup(ready, find_species) \
@@ -296,7 +332,7 @@ workflow genome_mapping {
       blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
       blat.out.attempted | collect | set { attempted }
 
-      load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
+      load_mapping(hits, hits_ctl, post_load, attempted, attempted_ctl, attempted_post_load) | set { done }
     } else {
       channel.of('genome-mapping skipped') | set { done }
     }

@@ -1,6 +1,6 @@
 process five_s_rrnadb {
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases["5srrnadb"]?.run
 

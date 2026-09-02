@@ -16,8 +16,17 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
-from rnacentral_pipeline.rnacentral.genome_mapping import blat, urls, igv, update_assemblies
+from rnacentral_pipeline.rnacentral.genome_mapping import (
+    blat,
+    igv,
+    update_assemblies,
+    urls,
+)
+
+# Exit status meaning "Ensembl has no such file", as opposed to a real failure.
+NO_REMOTE_FILE = 3
 
 
 @click.group("genome-mapping")
@@ -52,11 +61,13 @@ def hits_json(assembly_id, hits, output):
 
 @hits.command("as-importable")
 @click.argument("hits", default="-", type=click.File("rb"))
-@click.argument("output", default="-", type=click.File("w", lazy=False))
+@click.argument("output", type=click.Path())
+@format_option
 def as_importable(hits, output):
     """
-    Convert a json-line file into a CSV that can be used for import by pgloader.
-    This is lossy as it only keeps the things needed for the database.
+    Convert a json-line file into a CSV/Parquet file that can be loaded into
+    Postgres. Format is governed by ``--format``/``RNAC_OUTPUT_FORMAT``
+    (CSV by default). Lossy: only keeps the columns the loader needs.
     """
     blat.write_importable(hits, output)
 
@@ -85,8 +96,18 @@ def find_remote_url(species, assembly_id, output, host=None, kind=None):
     """
     Determine the remote URL to fetch the genome or coordinates for a given species/assembly.
     The url is written to the output file and may include '*'.
+
+    Exits with status 3 if Ensembl does not serve the file. Many assemblies in
+    ensembl_assembly are no longer on the current FTP, so callers treat that as
+    a species to skip rather than as a failure.
     """
-    url = urls.url_for(species, assembly_id, kind=kind, host=host)
+    try:
+        url = urls.url_for(species, assembly_id, kind=kind, host=host)
+    except urls.NoTopLevelFiles:
+        click.echo(
+            "No %s for %s/%s on %s" % (kind, species, assembly_id, host), err=True
+        )
+        raise SystemExit(NO_REMOTE_FILE)
     output.write(url)
 
 
@@ -105,7 +126,7 @@ def find_remote_urls(filename, output):
 @cli.command("create-attempted")
 @click.argument("filename", type=click.File("r"))
 @click.argument("assembly_id")
-@click.argument("output", type=click.File("w"))
+@click.argument("output", type=click.Path())
 def parse_attempted_sequences(filename, assembly_id, output):
     attempted.genome_mapping(filename, assembly_id, output)
 

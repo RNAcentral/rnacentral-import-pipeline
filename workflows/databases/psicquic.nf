@@ -1,6 +1,6 @@
 process psicquic {
   output:
-  path("*.csv")
+  path('*.{csv,parquet}')
 
   when: params.databases.psicquic?.run
 

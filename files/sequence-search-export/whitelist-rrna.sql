@@ -1,12 +1,12 @@
 COPY (
 SELECT
   json_build_object(
-    'id', pre.id,
+    'id', pre.urs_taxid,
     'sequence', COALESCE(rna.seq_short, rna.seq_long)
   )
 FROM rnc_rna_precomputed pre
 JOIN rna
-ON rna.upi = pre.upi
+ON rna.urs = pre.urs
 WHERE
   pre.rna_type = 'rRNA'
   and pre.is_active = true

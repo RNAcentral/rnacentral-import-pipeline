@@ -3,7 +3,7 @@ process fetch_and_process {
   path(metadata_query)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.crw?.run
 

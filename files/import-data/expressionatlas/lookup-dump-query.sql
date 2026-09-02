@@ -6,7 +6,7 @@ CREATE TEMP TABLE taxids_to_fetch (
 
 
 COPY(
-  SELECT xref.upi || '_' || xref.taxid as urs_taxid,
+  SELECT xref.urs || '_' || xref.taxid as urs_taxid,
     xref.taxid as taxid,
     split_part(gene, '.', 1) as gene,
     external_id,
@@ -18,7 +18,7 @@ COPY(
     COALESCE(seq_short, seq_long) as seq
   FROM rna
   JOIN xref
-  ON xref.upi = rna.upi
+  ON xref.urs = rna.urs
   join rnc_accessions
   ON xref.ac = rnc_accessions.accession
   JOIN rnc_database

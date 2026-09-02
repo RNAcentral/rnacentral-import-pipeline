@@ -3,7 +3,7 @@ process zwd {
   path(context)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.zwd?.run
 

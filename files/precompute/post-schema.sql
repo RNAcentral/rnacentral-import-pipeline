@@ -1,6 +1,6 @@
 ALTER TABLE :tablename
   ADD COLUMN id BIGSERIAL PRIMARY KEY,
-  ADD CONSTRAINT fk_to_precompute__upi FOREIGN KEY (urs) REFERENCES rna(upi)
+  ADD CONSTRAINT fk_to_precompute__upi FOREIGN KEY (urs) REFERENCES rna(urs)
 ;
 
 CREATE INDEX ix_to_precompute__urs ON :tablename(urs);

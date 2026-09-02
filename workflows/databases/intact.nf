@@ -1,6 +1,6 @@
 process intact {
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.intact?.run
 

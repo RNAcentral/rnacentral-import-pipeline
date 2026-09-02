@@ -91,7 +91,6 @@ nix
 target/
 bin/json2fasta
 bin/split-ena
-bin/expand-urs
 bin/ftp-export
 bin/kv
 bin/precompute
@@ -111,3 +110,4 @@ bin/bed-expander
 .projections.json
 *.slurm
 tmp/*
+.serena

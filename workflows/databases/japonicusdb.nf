@@ -1,6 +1,6 @@
 process japonicusdb {
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.japonicusdb?.run
 
