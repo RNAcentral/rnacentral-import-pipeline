@@ -35,7 +35,7 @@ def main():
         open(output_file, "w").close()
         return
 
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(datetime.timezone.utc)
     rows = [(job_id.lower(), job_id, now) for job_id in ids]
 
     conn = psycopg2.connect(conn_str)
