@@ -18,6 +18,7 @@ import gzip
 import logging
 import os
 import re
+import sys
 from contextlib import ExitStack
 from functools import partial
 from pathlib import Path
@@ -587,4 +588,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)
