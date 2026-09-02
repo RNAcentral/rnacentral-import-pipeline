@@ -4,7 +4,7 @@ select
     'id', todo.id,
     'urs_id', todo.precompute_urs_id,
     'urs_taxid', todo.urs_taxid,
-    'upi', prev.upi,
+    'upi', prev.urs,
     'taxid', prev.taxid,
     'databases', prev.databases,
     'has_coordinates', prev.has_coordinates,
@@ -17,6 +17,6 @@ select
 FROM precompute_urs_taxid todo
 JOIN rnc_rna_precomputed prev
 ON
-  prev.id = todo.urs_taxid
+  prev.urs_taxid = todo.urs_taxid
 order by todo.precompute_urs_id, todo.id
 ) TO STDOUT

@@ -11,6 +11,6 @@ SELECT
 FROM precompute_urs_taxid todo
 JOIN rna
 ON
-  rna.upi = todo.urs
+  rna.urs = todo.urs
 ORDER BY todo.precompute_urs_id, todo.id
 ) TO STDOUT

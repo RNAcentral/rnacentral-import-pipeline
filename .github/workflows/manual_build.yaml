@@ -54,6 +54,10 @@ jobs:
 
   wait-for-rust-build:
     runs-on: ubuntu-latest
+    needs: trigger-rust-build
+    # always() because trigger-rust-build is skipped when force_rust_build is
+    # false, and a skipped dependency would otherwise skip this job too.
+    if: always() && needs.trigger-rust-build.result != 'failure' && needs.trigger-rust-build.result != 'cancelled'
     outputs:
       rust_changed: ${{ steps.check-rust.outputs.changed }}
     steps:

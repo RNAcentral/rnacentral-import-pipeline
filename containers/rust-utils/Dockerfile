@@ -4,8 +4,10 @@
 # Stage 1: Builder - compiles Rust utilities AND maturin Python extension
 FROM python:3.11.14-trixie AS builder
 
-# Install Rust toolchain
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+# Install Rust toolchain. Pinned: unpinned, rustup takes whatever stable is
+# current that day, and a std change broke a transitive dep with no commit of
+# ours in between.
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain 1.97.1
 ENV PATH="/root/.cargo/bin:$PATH"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 

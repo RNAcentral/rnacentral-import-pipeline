@@ -13,7 +13,7 @@
 DELETE FROM rnc_sequence_features WHERE feature_name = 'rna_editing_event';
 
 INSERT INTO rnc_sequence_features (
-    upi,
+    urs,
     taxid,
     accession,
     start,

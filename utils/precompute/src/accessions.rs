@@ -86,6 +86,61 @@ impl grouper::HasIndex for RawAccessionEntry {
     }
 }
 
+/// AnyNumber, not AtleastOne: a pair whose xrefs are gone has no accessions,
+/// and failing here would abandon the other 25,000 pairs in the range.
+/// Normalize drops the empty groups.
 pub fn group(path: &Path, min: usize, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<RawAccessionEntry>(grouper::Criteria::AtleastOne, &path, min, max, &output)
+    grouper::group::<RawAccessionEntry>(grouper::Criteria::AnyNumber, &path, min, max, &output)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{
+        fs,
+        path::PathBuf,
+        sync::atomic::{
+            AtomicUsize,
+            Ordering as AtomicOrdering,
+        },
+    };
+
+    fn temp_path(name: &str) -> PathBuf {
+        static COUNTER: AtomicUsize = AtomicUsize::new(0);
+        let n = COUNTER.fetch_add(1, AtomicOrdering::Relaxed);
+        std::env::temp_dir().join(format!(
+            "precompute-accessions-{}-{}-{}",
+            std::process::id(),
+            n,
+            name
+        ))
+    }
+
+    fn raw(id: usize) -> String {
+        format!(
+            r#"{{"id":{id},"urs_id":{id},"urs_taxid":"URS000000000{id}_9606","accession":"A{id}","last_release":1,"is_active":true,"description":"An RNA","gene":null,"optional_id":null,"database":"ENA","species":null,"common_name":null,"feature_name":null,"ncrna_class":null,"locus_tag":null,"organelle":null,"lineage":null,"all_species":[],"all_common_names":[],"so_rna_type":null}}"#,
+            id = id
+        )
+    }
+
+    /// A urs_taxid with no accessions at all (its xrefs are gone, so
+    /// insert-chunk.sql built nothing) must group to an empty entry rather than
+    /// failing the whole range with "Missing data for id".
+    #[test]
+    fn allows_ids_without_any_accessions() -> Result<()> {
+        let input = temp_path("raw.json");
+        let output = temp_path("grouped.json");
+        fs::write(&input, format!("{}\n{}\n", raw(1), raw(3)))?;
+
+        group(&input, 1, 4, &output)?;
+
+        let written = fs::read_to_string(&output)?;
+        let lines: Vec<&str> = written.lines().collect();
+        assert_eq!(lines.len(), 3);
+        assert_eq!(lines[1], r#"{"Multiple":{"id":2,"data":[]}}"#);
+
+        fs::remove_file(&input)?;
+        fs::remove_file(&output)?;
+        Ok(())
+    }
 }

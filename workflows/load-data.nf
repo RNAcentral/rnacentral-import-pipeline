@@ -29,7 +29,7 @@ process merge_and_import {
   tuple val(name), path(ctl), path("raw*.${params.writer_format}")
 
   output:
-  val(name)
+  tuple val(name), path('rows.count')
 
   script:
   if (params.writer_format == 'parquet') {
@@ -41,11 +41,14 @@ process merge_and_import {
     // --truncate would wipe load_rnacentral_all between the short_sequences
     // and long_sequences runs (both map to it).
     """
-    load-parquet $name 'raw*.parquet'
+    load-parquet $name 'raw*.parquet' --count-file rows.count
     """
   } else {
+    // pgloader reports no usable count, but a csv that reached here was
+    // non-empty by the isEmpty filter below, which is the csv path's gate.
     """
     split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
+    echo 1 > rows.count
     """
   }
 }
@@ -119,6 +122,8 @@ workflow load_data {
     | combine(create_load_tables(schema)) \
     | map { n, ctl, fs, _ready -> [n, ctl, fs] } \
     | merge_and_import \
+    | filter { _n, rows -> rows.text.trim().toInteger() > 0 } \
+    | map { n, _rows -> n } \
     | set { imported_names }
 
     imported_names

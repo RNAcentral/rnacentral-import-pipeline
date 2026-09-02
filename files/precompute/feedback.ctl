@@ -20,9 +20,9 @@ WITH
 AFTER LOAD DO
 $$
 insert into rnc_feedback_overlap (
-    upi_taxid,
+    urs_taxid,
     overlaps_with,
-    overlapping_upis,
+    overlapping_urs_taxids,
     no_overlaps_with,
     assembly_id
 ) (
@@ -42,12 +42,12 @@ select
     ),
     load.assembly_id
 from load_overlaps load
-join rnc_rna_precomputed pre on pre.id = load.upi_taxid
+join rnc_rna_precomputed pre on pre.urs_taxid = load.upi_taxid
 group by load.upi_taxid
-) ON CONFLICT (upi_taxid, assembly_id) DO UPDATE
+) ON CONFLICT (urs_taxid, assembly_id) DO UPDATE
 SET
     overlaps_with = excluded.overlaps_with,
-    overlapping_upis = excluded.overlapping_upis,
+    overlapping_urs_taxids = excluded.overlapping_urs_taxids,
     no_overlaps_with = excluded.no_overlaps_with
 ;
 $$,

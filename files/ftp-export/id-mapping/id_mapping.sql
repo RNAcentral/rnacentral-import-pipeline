@@ -6,7 +6,7 @@ SET max_parallel_workers_per_gather = 0;
 COPY (
 SELECT
     json_build_object(
-        'upi', xref.upi,
+        'upi', xref.urs,
         'accession', xref.ac,
         'taxid', xref.taxid,
         'external_id', acc.external_id,
@@ -22,5 +22,5 @@ join rnc_database db on db.id = xref.dbid
 join rnc_rna_precomputed pre on pre.id = xref.urs_taxid
 where
     xref.deleted = 'N'
-    AND right(xref.upi, 1) = ANY (string_to_array(:'chunk', ','))
+    AND right(xref.urs, 1) = ANY (string_to_array(:'chunk', ','))
 ) TO STDOUT

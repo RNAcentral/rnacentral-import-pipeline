@@ -84,22 +84,6 @@ process coordinate_systems {
   """
 }
 
-process karyotypes {
-  errorStrategy 'retry'
-  maxRetries 10
-
-  output:
-  path("karyotypes.${params.writer_format}")
-
-  when: params.databases.ensembl?.vertebrates?.run
-
-  script:
-  def out = "karyotypes.${params.writer_format}"
-  """
-  rnac ensembl karyotypes $out
-  """
-}
-
 workflow compara {
   main:
     fetch_compara | flatten | process_compara | set { data }
@@ -122,7 +106,6 @@ workflow ensembl {
       assemblies(conn, assemblies_sql, examples, known),
       coordinate_systems(conn, coordinate_systems_sql),
       proteins(conn, protein_sql),
-      karyotypes(),
       compara(),
     ) \
     | flatten \

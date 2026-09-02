@@ -24,7 +24,7 @@ CREATE TABLE load_gene_status (
 CREATE TABLE IF NOT EXISTS rnc_gene_status (
   id bigserial primary key,
   assembly_id text not null references ensembl_assembly(assembly_id),
-  urs_taxid text not null references rnc_rna_precomputed(id) ON DELETE CASCADE,
+  urs_taxid text not null references rnc_rna_precomputed(urs_taxid) ON DELETE CASCADE,
   region_id int not null UNIQUE references rnc_sequence_regions(id) ON DELETE CASCADE,
   status text NOT NULL
 );
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS rnc_locus (
 
 CREATE TABLE IF NOT EXISTS rnc_locus_members (
   id bigserial primary key,
-  urs_taxid text not null references rnc_rna_precomputed(id) ON DELETE CASCADE,
+  urs_taxid text not null references rnc_rna_precomputed(urs_taxid) ON DELETE CASCADE,
   region_id int not null UNIQUE references rnc_sequence_regions(id) ON DELETE CASCADE,
   locus_id bigint not null references rnc_locus(id) ON DELETE CASCADE,
   membership_status text NOT NULL

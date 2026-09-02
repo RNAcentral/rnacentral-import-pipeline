@@ -102,7 +102,7 @@ def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
 
     ids = sorted(set(refseq_ids))
     query = """
-    select k, rna.upi, rna.len
+    select k, rna.urs, rna.len
     from (
         select acc.parent_ac as k, acc.accession
         from rnc_accessions acc where acc.parent_ac = ANY(%s)
@@ -114,7 +114,7 @@ def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
         from rnc_accessions acc where acc.optional_id = ANY(%s)
     ) m
     join xref on xref.ac = m.accession
-    join rna on rna.upi = xref.upi
+    join rna on rna.urs = xref.urs
     where xref.taxid = %s and xref.deleted = 'N' and xref.dbid = %s
     """
     with conn.cursor() as cur:
@@ -130,10 +130,10 @@ def gtrnadb_mapping(conn, gtrnadb_ids: ty.List[str]) -> ty.Dict[str, str]:
         return {}
 
     query = """
-    select acc.optional_id, rna.upi, rna.len
+    select acc.optional_id, rna.urs, rna.len
     from xref
     join rnc_accessions acc on acc.accession = xref.ac
-    join rna on rna.upi = xref.upi
+    join rna on rna.urs = xref.urs
     where xref.taxid = %s and xref.deleted = 'N' and xref.dbid = %s
       and acc.database = 'GTRNADB' and acc.optional_id = ANY(%s)
     """
@@ -228,7 +228,7 @@ def ensembl_mapping(conn, gene_ids: ty.List[str]) -> ty.Dict[str, str]:
 
     with conn.cursor() as cur:
         cur.execute(
-            "select md5, upi, len from rna where md5 = ANY(%s)", (list(digests),)
+            "select md5, urs, len from rna where md5 = ANY(%s)", (list(digests),)
         )
         rows = [
             (gene_id, upi, length)
@@ -246,8 +246,8 @@ def sequence_mapping(conn, urs_ids: ty.List[str]) -> ty.Dict[str, str]:
         return {}
 
     query = """
-    select upi, coalesce(seq_short, seq_long)
-    from rna where upi = ANY(%s)
+    select urs, coalesce(seq_short, seq_long)
+    from rna where urs = ANY(%s)
     """
     with conn.cursor() as cur:
         cur.execute(query, (sorted(set(urs_ids)),))

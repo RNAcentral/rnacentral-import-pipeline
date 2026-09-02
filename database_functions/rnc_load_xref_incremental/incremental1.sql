@@ -23,7 +23,7 @@ BEGIN
           /*+ PARALLEL (L 4) */
           CASE
             WHEN(
-                U.UPI = L.COMPARABLE_PROT_UPI
+                U.URS = L.COMPARABLE_PROT_UPI
               AND (
                   U."VERSION" = L.IN_VERSION
                 OR (
@@ -37,7 +37,7 @@ BEGIN
           END,
           CASE
             WHEN(
-                U.UPI = L.COMPARABLE_PROT_UPI
+                U.URS = L.COMPARABLE_PROT_UPI
 
               AND (
                   U."VERSION" = L.IN_VERSION
@@ -53,7 +53,7 @@ BEGIN
 
           CASE
             WHEN(
-                U.UPI = L.COMPARABLE_PROT_UPI
+                U.URS = L.COMPARABLE_PROT_UPI
               AND (
                   U."VERSION" = L.IN_VERSION
                 OR (
@@ -97,4 +97,3 @@ BEGIN
   END;
 
 $function$
-
