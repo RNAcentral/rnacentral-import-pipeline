@@ -409,7 +409,10 @@ def add_xml_shard(pmcid: str, xml_lookup: dict[int, Path]) -> str:
     if not xml_lookup:
         raise ValueError("xml_lookup is empty — no XML shards available")
     keys = sorted(xml_lookup.keys())
-    pmc_number = int(re.match(r"PMC(\d+)", pmcid).group(1))
+    match = re.match(r"PMC(\d+)", pmcid or "")
+    if not match:
+        raise ValueError(f"Invalid PMCID format: {pmcid!r}")
+    pmc_number = int(match.group(1))
     candidates = [x for x in keys if pmc_number > x]
     if not candidates:
         xml_to_use = keys[0]
