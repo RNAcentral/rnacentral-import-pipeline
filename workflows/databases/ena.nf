@@ -44,12 +44,32 @@ process fetch_directory {
     ${remotes.join(' ')} "copied"
 
   find copied -type f -empty -delete
-  find copied -type f -name '*.gz' | xargs -r -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -r -I {} rm {}.gz
+
+  # A truncated archive in the snapshot must not cost the whole batch, so unpack each
+  # one on its own and carry on, rewinding ${name}.ncr over whatever a failed member
+  # managed to write. Piping the lot into one xargs aborts everything with exit 123.
+  skipped=0
 
   pushd copied
-  find . -type f -name '*.tar' | xargs -r -I {} tar -xvf {}
+  while IFS= read -r archive; do
+    if ! tar -xvf "\$archive"; then
+      echo "WARN: unreadable tar, skipping \$archive" >&2
+      skipped=\$(( skipped + 1 ))
+    fi
+  done < <(find . -type f -name '*.tar')
   popd
-  find copied -type f -name '*.ncr.gz' | xargs -r zcat > ${name}.ncr
+
+  : > ${name}.ncr
+  while IFS= read -r archive; do
+    kept=\$(wc -c < ${name}.ncr)
+    if ! zcat "\$archive" >> ${name}.ncr; then
+      echo "WARN: unreadable archive, skipping \$archive" >&2
+      truncate -s "\$kept" ${name}.ncr
+      skipped=\$(( skipped + 1 ))
+    fi
+  done < <(find copied -type f -name '*.ncr.gz')
+
+  echo "\$skipped unreadable archives skipped in ${name}" >&2
 
   mkdir $name-chunks
   if [ -s ${name}.ncr ]; then
