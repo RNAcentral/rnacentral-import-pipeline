@@ -19,10 +19,10 @@ BEGIN
         RETURN 'F';
     END IF;
 
-    IF to_regclass('rnacen.rnc_import_manifest') IS NOT NULL THEN
+    IF to_regclass('rnacen.pipeline_tracking_import') IS NOT NULL THEN
         SELECT EXISTS (
             SELECT 1
-            FROM rnacen.rnc_import_manifest m
+            FROM rnacen.pipeline_tracking_import m
             JOIN rnacen.rnc_database d ON d.descr = m.database
             WHERE d.id = in_dbid
         ) INTO v_is_delta;

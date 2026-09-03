@@ -21,7 +21,7 @@ include { qc_import } from './workflows/utils/qc'
 include { slack_message } from './workflows/utils/slack'
 include { slack_closure } from './workflows/utils/slack'
 
-// Promote a delta parse's manifest into rnc_import_manifest, once the release has
+// Promote a delta parse's manifest into pipeline_tracking_import, once the release has
 // committed. Gated on should_release so a run that does not release never advances
 // the manifest ahead of the database. See docs/incremental-parsing.md.
 process apply_manifest {

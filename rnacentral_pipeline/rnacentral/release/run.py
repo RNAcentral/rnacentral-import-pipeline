@@ -234,9 +234,9 @@ def check(limit_file, db_url, default_allowed_change=0.30):
             # Databases loaded via delta parsing (an import manifest exists for them);
             # exempt from the shrink check below. Guard the lookup: the manifest table
             # may not exist on older schemas.
-            cur.execute("SELECT to_regclass('rnacen.rnc_import_manifest')")
+            cur.execute("SELECT to_regclass('rnacen.pipeline_tracking_import')")
             if cur.fetchone()[0] is not None:
-                cur.execute("SELECT database FROM rnacen.rnc_import_manifest")
+                cur.execute("SELECT database FROM rnacen.pipeline_tracking_import")
                 delta_dbs = {row[0] for row in cur}
 
     problems = False

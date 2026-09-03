@@ -98,7 +98,7 @@ in `D` mode, and only changed records are parsed.
 ## DB-side diff
 
 `ena_delta_diff` `COPY`s the collected `(accession, signature)` into a temp table
-and computes, in SQL against `rnc_import_manifest` scoped to ENA:
+and computes, in SQL against `pipeline_tracking_import` scoped to ENA:
 
 - **to_parse** — temp rows with no matching stored row, or a differing signature;
 - **deletions** — stored ENA rows absent from temp;

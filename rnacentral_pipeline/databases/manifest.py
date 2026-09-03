@@ -9,26 +9,30 @@ of ``accession -> signature`` (a hash of the raw record) from the last successfu
 import, diff the new input against it, and only fully parse the new/changed
 records. Records that vanished from the input become an explicit deletion list.
 
-This module is database-agnostic: signature/diff are pure, and the manifest table
-is a single generic ``rnc_import_manifest`` keyed by (database, accession). See
-docs/incremental-parsing.md.
+This module is database-agnostic: signature/diff are pure, and the manifest table is
+a generic ``pipeline_tracking_import`` keyed by (database, accession), LIST-partitioned
+on ``database`` so ENA's bulk never drives another database's vacuum or bloat.
+See docs/incremental-parsing.md.
 """
 
 import csv
 import hashlib
 import json
-from pathlib import Path
 import typing as ty
+from pathlib import Path
 
 import attr
 import psycopg2
+from psycopg2 import sql
 from psycopg2.extras import execute_values
 
-MANIFEST_TABLE = "rnacen.rnc_import_manifest"
+MANIFEST_TABLE = "rnacen.pipeline_tracking_import"
 
 MANIFEST_CSV = "manifest.csv"
 DELETIONS_CSV = "deletions.csv"
 
+# database leads the PK because every query scopes to one, and a partition key must
+# be part of it.
 CREATE_MANIFEST_SQL = f"""
 CREATE TABLE IF NOT EXISTS {MANIFEST_TABLE} (
     database   text        NOT NULL,
@@ -36,8 +40,17 @@ CREATE TABLE IF NOT EXISTS {MANIFEST_TABLE} (
     signature  text        NOT NULL,
     updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
     PRIMARY KEY (database, accession)
-)
+) PARTITION BY LIST (database)
 """
+
+
+def partition_name(database: str) -> str:
+    """
+    Partition identifier for a database, e.g. ENA -> pipeline_tracking_import_ena.
+    Normalised here because Postgres lower-cases identifiers and caps them at 63 bytes.
+    """
+    safe = "".join(c if c.isalnum() else "_" for c in database.lower())
+    return f"pipeline_tracking_import_{safe}"[:63]
 
 
 def record_signature(raw: ty.Any) -> str:
@@ -102,9 +115,28 @@ def compute_diff(
 
 
 def ensure_table(conn) -> None:
-    """Create the manifest table if it does not exist yet."""
+    """Create the partitioned parent table if it does not exist yet."""
     with conn.cursor() as cur:
         cur.execute(CREATE_MANIFEST_SQL)
+    conn.commit()
+
+
+def ensure_partition(conn, database: str) -> None:
+    """
+    Create this database's partition if missing. Required before any write; reads are
+    fine without one, matching nothing, which is the right answer for a new database.
+    """
+    ensure_table(conn)
+    with conn.cursor() as cur:
+        cur.execute(
+            sql.SQL(
+                "CREATE TABLE IF NOT EXISTS rnacen.{} PARTITION OF {} FOR VALUES IN (%s)"
+            ).format(
+                sql.Identifier(partition_name(database)),
+                sql.SQL(MANIFEST_TABLE),
+            ),
+            (database,),
+        )
     conn.commit()
 
 
@@ -139,7 +171,7 @@ def store_signatures(
     remove dropped accessions. Call this only after the database's load succeeds,
     so a failed load leaves the previous manifest intact.
     """
-    ensure_table(conn)
+    ensure_partition(conn, database)
     dropped = list(dropped)
     with conn.cursor() as cur:
         if dropped:
@@ -149,15 +181,21 @@ def store_signatures(
             )
         # Batched upsert: a per-row INSERT loop is fine for a few thousand HGNC rows
         # but hopeless for ENA's millions, so send them in pages.
-        rows = ((database, accession, signature) for accession, signature in signatures.items())
+        rows = (
+            (database, accession, signature)
+            for accession, signature in signatures.items()
+        )
+        # Without the WHERE, every run rewrites every row -- at ENA scale hundreds of
+        # millions of dead tuples for a handful of changed signatures.
         execute_values(
             cur,
             f"""
-            INSERT INTO {MANIFEST_TABLE} (database, accession, signature)
+            INSERT INTO {MANIFEST_TABLE} AS m (database, accession, signature)
             VALUES %s
             ON CONFLICT (database, accession)
             DO UPDATE SET signature = excluded.signature,
                           updated_at = clock_timestamp()
+            WHERE m.signature IS DISTINCT FROM excluded.signature
             """,
             rows,
             page_size=5000,
@@ -193,7 +231,7 @@ def apply_artifacts(
     deletions_csv: ty.Optional[ty.Union[str, Path]] = None,
 ) -> None:
     """
-    Promote a delta parse's manifest into rnc_import_manifest. Call only after the
+    Promote a delta parse's manifest into pipeline_tracking_import. Call only after the
     database's load/release has committed. Reads the (database, accession, signature)
     rows from manifest_csv and the dropped (database, accession) rows from
     deletions_csv, then replaces each database's stored signatures.
@@ -256,9 +294,9 @@ class _CopySource:
 class DbDiff:
     """Result of a database-side diff (see :func:`diff_via_db`)."""
 
-    to_parse = attr.ib(type=ty.List[str])   # accessions new or changed since last import
+    to_parse = attr.ib(type=ty.List[str])  # accessions new or changed since last import
     deletions = attr.ib(type=ty.List[str])  # accessions present last import, now absent
-    is_bootstrap = attr.ib(type=bool)       # True when there was no prior manifest
+    is_bootstrap = attr.ib(type=bool)  # True when there was no prior manifest
 
 
 def diff_via_db(

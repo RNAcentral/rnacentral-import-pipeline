@@ -7,7 +7,7 @@ import pytest
 from rnacentral_pipeline.databases import manifest
 
 # A database key no real import uses, so the db-backed tests can seed and scrub it
-# without touching live rnc_import_manifest rows.
+# without touching live pipeline_tracking_import rows.
 TEST_DB = "__manifest_dup_test__"
 
 
@@ -24,8 +24,8 @@ def test_signature_changes_with_content():
 
 
 def test_diff_partitions_accessions():
-    old = {"a": "1", "b": "1", "c": "1"}          # a unchanged, b changed, c dropped
-    new = {"a": "1", "b": "2", "d": "1"}          # b changed, d new
+    old = {"a": "1", "b": "1", "c": "1"}  # a unchanged, b changed, c dropped
+    new = {"a": "1", "b": "2", "d": "1"}  # b changed, d new
     diff = manifest.compute_diff(new, old)
 
     assert diff.new == frozenset({"d"})
@@ -91,10 +91,11 @@ def conn():
         yield connection
     finally:
         connection.rollback()
+        # Drop the partition, not just its rows, so a real test DB does not
+        # accumulate one per run.
         with connection.cursor() as cur:
             cur.execute(
-                f"DELETE FROM {manifest.MANIFEST_TABLE} WHERE database = %s",
-                (TEST_DB,),
+                f"DROP TABLE IF EXISTS rnacen.{manifest.partition_name(TEST_DB)}"
             )
         connection.commit()
         connection.close()
@@ -129,9 +130,9 @@ def test_diff_via_db_diffs_correctly_despite_duplicates(conn):
     )
 
     signatures = [
-        ("acc1", "sig1"),      # unchanged
+        ("acc1", "sig1"),  # unchanged
         ("acc2", "sig2-new"),  # changed
-        ("acc4", "sig4"),      # new, and arrives twice
+        ("acc4", "sig4"),  # new, and arrives twice
         ("acc4", "sig4"),
         # acc3 is absent -> dropped
     ]
@@ -141,3 +142,76 @@ def test_diff_via_db_diffs_correctly_despite_duplicates(conn):
     assert result.is_bootstrap is False
     assert set(result.to_parse) == {"acc2", "acc4"}
     assert set(result.deletions) == {"acc3"}
+
+
+def test_partition_name_is_a_safe_identifier():
+    """Must stay a valid unquoted identifier for any database name."""
+    assert manifest.partition_name("ENA") == "pipeline_tracking_import_ena"
+    assert manifest.partition_name("HGNC") == "pipeline_tracking_import_hgnc"
+    assert manifest.partition_name("5SrRNAdb") == "pipeline_tracking_import_5srrnadb"
+    assert manifest.partition_name("snoRNA Database") == (
+        "pipeline_tracking_import_snorna_database"
+    )
+    assert len(manifest.partition_name("X" * 200)) <= 63
+
+
+@pytest.mark.db
+def test_store_signatures_creates_the_databases_partition(conn):
+    """Writes need a partition; the parent holds no rows itself."""
+    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1"})
+
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT count(*)
+            FROM pg_class c
+            JOIN pg_inherits i ON i.inhrelid = c.oid
+            JOIN pg_class p ON p.oid = i.inhparent
+            WHERE p.relname = 'pipeline_tracking_import' AND c.relname = %s
+            """,
+            (manifest.partition_name(TEST_DB),),
+        )
+        assert cur.fetchone()[0] == 1
+
+    assert manifest.load_signatures(conn, TEST_DB) == {"acc1": "sig1"}
+
+
+@pytest.mark.db
+def test_load_signatures_for_unparsed_database_is_empty(conn):
+    """A database with no partition reads as 'no prior manifest', not an error."""
+    assert manifest.load_signatures(conn, "__never_imported__") == {}
+
+
+@pytest.mark.db
+def test_restoring_identical_signatures_does_not_rewrite_rows(conn):
+    """The upsert's IS DISTINCT FROM guard; a moving xmin means a needless rewrite."""
+    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2"})
+    with conn.cursor() as cur:
+        cur.execute(
+            f"SELECT accession, xmin::text FROM {manifest.MANIFEST_TABLE} "
+            "WHERE database = %s ORDER BY accession",
+            (TEST_DB,),
+        )
+        before = cur.fetchall()
+    conn.commit()
+
+    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2"})
+    with conn.cursor() as cur:
+        cur.execute(
+            f"SELECT accession, xmin::text FROM {manifest.MANIFEST_TABLE} "
+            "WHERE database = %s ORDER BY accession",
+            (TEST_DB,),
+        )
+        assert cur.fetchall() == before
+
+
+@pytest.mark.db
+def test_changed_signature_still_updates_despite_the_guard(conn):
+    """The guard must not suppress a genuine change."""
+    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2"})
+    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "CHANGED"})
+
+    assert manifest.load_signatures(conn, TEST_DB) == {
+        "acc1": "sig1",
+        "acc2": "CHANGED",
+    }

@@ -23,7 +23,7 @@ def cli():
 @click.argument("deletions_csv", type=click.Path(), required=False)
 def apply(manifest_csv, deletions_csv=None, db_url=None):
     """
-    Promote a delta parse's manifest into rnc_import_manifest.
+    Promote a delta parse's manifest into pipeline_tracking_import.
 
     Run this only AFTER the database's load/release has committed, so a failed load
     leaves the previous manifest untouched and the next run re-emits the same delta.
