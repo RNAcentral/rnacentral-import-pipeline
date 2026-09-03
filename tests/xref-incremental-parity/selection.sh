@@ -86,11 +86,13 @@ END $$;
 
 -- 4. A delta-parsed database (one that has an import manifest) selects DELTA
 --    instead of INCREMENTAL; a database with no manifest still selects INCREMENTAL.
-create table rnacen.rnc_import_manifest (
+create table rnacen.pipeline_tracking_import (
   database text, accession text, signature text,
   updated_at timestamptz default now(), primary key (database, accession)
-);
-insert into rnacen.rnc_import_manifest (database, accession, signature)
+) partition by list (database);
+create table rnacen.pipeline_tracking_import_dbone
+  partition of rnacen.pipeline_tracking_import for values in ('DBONE');
+insert into rnacen.pipeline_tracking_import (database, accession, signature)
   values ('DBONE', 'x', 'sig');
 DO $$
 BEGIN

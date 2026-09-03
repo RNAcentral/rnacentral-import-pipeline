@@ -87,7 +87,7 @@ a pure function of the raw record; a periodic full re-import (the same
 A single generic table serves every database:
 
 ```
-rnc_import_manifest(database text, accession text, signature text,
+pipeline_tracking_import(database text, accession text, signature text,
                     updated_at timestamptz, primary key (database, accession))
 ```
 
