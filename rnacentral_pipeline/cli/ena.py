@@ -67,7 +67,7 @@ def process_ena(
         entries = parser.parse_with_context(ctx, ena_file)
         try:
             with entry_writer(Path(output)) as writer:
-                writer.write(entries)
+                writer.write(entries, allow_empty=True)
         except ValueError:
             print("No entries could be written for one of the parsed ENA files.")
             print("Sending warning to slack, but carrying on")
