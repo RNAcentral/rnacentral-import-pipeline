@@ -312,7 +312,7 @@ workflow {
     try {
       def msg = workflow.success
         ? "Precompute workflow completed. Data import complete"
-        : "Precompute workflow failed: ${workflow.errorMessage ?: "exit status ${workflow.exitStatus}"}"
+        : "Precompute workflow failed"
       slack_closure(msg)
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"

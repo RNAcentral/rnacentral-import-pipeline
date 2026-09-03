@@ -49,7 +49,7 @@ workflow {
     try {
       def msg = workflow.success
         ? "Analyze workflow completed"
-        : "Analyze workflow failed: ${workflow.errorMessage ?: "exit status ${workflow.exitStatus}"}"
+        : "Analyze workflow failed"
       slack_closure(msg)
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
