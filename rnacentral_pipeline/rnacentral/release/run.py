@@ -164,7 +164,7 @@ def run(db_url, force_full=False):
             label=f"new_update_release(dbid={dbid}, rid={rid}) [{n}/{len(releases)}]",
         )
 
-    # do_pel_exchange adds each partition's upi->rna foreign key (fk4) NOT VALID to keep the
+    # do_pel_exchange adds each partition's urs->rna foreign key (fk4) NOT VALID to keep the
     # full-partition validation scan off the load's critical path. Validate them now, after
     # the per-database loads have committed: VALIDATE CONSTRAINT takes only
     # ShareUpdateExclusiveLock (does not block readers/writers), marks the constraint valid,

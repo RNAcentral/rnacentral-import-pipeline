@@ -18,12 +18,12 @@ insert into rnacen.rnc_release (id, dbid, release_type, status) values
   (1, 1, 'F', 'D'),   -- previous release (done)
   (2, 1, 'F', 'L');   -- current release being loaded
 
-create table rnacen.rna (upi varchar(30) primary key, len int);
+create table rnacen.rna (urs varchar(30) primary key, len int);
 
 -- xref: declarative partitioning dbid LIST -> deleted LIST
 create table rnacen.xref (
   id bigserial,
-  ac varchar(200), dbid smallint, version bigint, version_i bigint, upi varchar(30),
+  ac varchar(200), dbid smallint, version bigint, version_i bigint, urs varchar(30),
   created bigint, last bigint, deleted varchar(1), taxid bigint,
   "timestamp" timestamp default clock_timestamp(), userstamp text default current_user
 ) partition by list (dbid);

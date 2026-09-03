@@ -81,18 +81,18 @@ and the previous release `P`:
 
 | Case | Condition | Required end state |
 |---|---|---|
-| 1. Unchanged active | active row `X`, `X.upi = L.upi`, `X.version = L.version` | keep row; `last = in_load_release`; `deleted='N'`; `taxid = COALESCE(L.taxid, X.taxid)`; `version_i`, `created` unchanged |
-| 2. Changed active | active `X`, `X.ac=L.ac` but upi/version differ | retire `X` in place (`deleted='Y'`, `last = P`); **insert** new active row: `upi=L.upi`, `version_i = X.version_i (+1 if upi changed)`, `created=last=in_load_release`, `deleted='N'` |
-| 3. New sequence for existing accession | accession has active rows but none with `upi=L.upi` (PEL "Gap A") | insert active row, `version_i = max(version_i)+1` |
-| 4. Brand-new accession / previously fully deleted | no active row for `(ac,dbid)` | insert active row, `version_i = 1` if none ever, else `max+1` (keep if same upi) |
-| 5. Disappeared | active `X` whose `(ac[,upi])` is **not** in new load | retire in place: `deleted='Y'`, `last = COALESCE(P, X.last)` — **missing from current incremental** |
+| 1. Unchanged active | active row `X`, `X.urs = L.urs`, `X.version = L.version` | keep row; `last = in_load_release`; `deleted='N'`; `taxid = COALESCE(L.taxid, X.taxid)`; `version_i`, `created` unchanged |
+| 2. Changed active | active `X`, `X.ac=L.ac` but urs/version differ | retire `X` in place (`deleted='Y'`, `last = P`); **insert** new active row: `urs=L.urs`, `version_i = X.version_i (+1 if urs changed)`, `created=last=in_load_release`, `deleted='N'` |
+| 3. New sequence for existing accession | accession has active rows but none with `urs=L.urs` (PEL "Gap A") | insert active row, `version_i = max(version_i)+1` |
+| 4. Brand-new accession / previously fully deleted | no active row for `(ac,dbid)` | insert active row, `version_i = 1` if none ever, else `max+1` (keep if same urs) |
+| 5. Disappeared | active `X` whose `(ac[,urs])` is **not** in new load | retire in place: `deleted='Y'`, `last = COALESCE(P, X.last)` — **missing from current incremental** |
 | 6. Already deleted | `X.deleted='Y'` | leave untouched (do **not** rewrite — this is the win) |
 
 Field rules:
 - **`version_i`** — monotonic per `(ac, dbid)`. New → 1; same `comparable_prot_upi`
   → unchanged; changed → `max+1`.
   ⚠️ **Divergence to reconcile:** `incremental2` bumps `version_i` on *version*
-  change too, whereas `populate_pel_tables2` bumps only on *upi* change. Pick one
+  change too, whereas `populate_pel_tables2` bumps only on *urs* change. Pick one
   (match PEL) and apply consistently.
 - **`deleted`** — `'N'` active / `'Y'` retired; at most one active row per generation.
 - **`taxid`** — refresh = `COALESCE(incoming, existing)`; otherwise unchanged.
@@ -131,7 +131,7 @@ type selection — `'I'` when a prior completed release exists for the dbid and
    under the `run.py` autocommit-per-statement driver.
 6. **Downstream.** `populate_precompute` and `do_checks` read the active set / PK
    uniqueness — both must hold identically after incremental.
-7. **fk4 (`upi → rna`).** Full validates fk4 per partition post-swap; incremental
+7. **fk4 (`urs → rna`).** Full validates fk4 per partition post-swap; incremental
    inserts into an already-valid partition (checked at insert). Safe as long as
    `store_new_sequences` runs first (it does).
 
@@ -148,7 +148,7 @@ type selection — `'I'` when a prior completed release exists for the dbid and
   rebuilt partition gets fresh ids for every carried-forward row. `xref.id` is thus
   **not stable across full releases today**; incremental keeps ids stable, which is
   strictly better. ⇒ **Parity must be compared on the business key**
-  `(ac, dbid, version, version_i, upi, deleted, last, taxid)`, never on `id`. The
+  `(ac, dbid, version, version_i, urs, deleted, last, taxid)`, never on `id`. The
   only uniqueness invariant [`do_checks`](../database_functions/rnc_load_xref/do_checks.sql)
   enforces is `id` uniqueness, trivially preserved (new rows take the default id).
 - **`check_function_bodies` is effectively off** in the deploy path
@@ -174,7 +174,7 @@ Run order (helper snapshot first, then inserts, then in-place updates):
 1. `load_upi_max_versions_table(dbid)` + `load_max_versions_table()` — snapshot of
    the *original* xref (must precede all mutations).
 2. **A1** `incremental_new_versions` ⇐ `populate_pel_tables2`: INSERT a new active
-   generation for accessions whose sequence version changed (same upi).
+   generation for accessions whose sequence version changed (same urs).
 3. **A2/A3** `incremental_new_accessions` ⇐ `populate_pel_tables3` (main + Gap A):
    INSERT active rows for brand-new / previously-fully-deleted accessions and for a
    new sequence variant of an already-active accession.
@@ -183,7 +183,7 @@ Run order (helper snapshot first, then inserts, then in-place updates):
 5. **B2** `incremental_retire_changed` ⇐ `populate_pel_tables1` (deleted='Y'
    branch): in-place UPDATE retiring matched-but-changed rows.
 6. **B3** `incremental_retire_dropped` ⇐ `populate_pel_tables4` (second `UNION ALL`
-   arm): in-place UPDATE retiring active rows whose `(ac, upi)` vanished from the
+   arm): in-place UPDATE retiring active rows whose `(ac, urs)` vanished from the
    load. **This is the step with no counterpart in the old Oracle incremental path**
    — the "become inactive" behaviour.
 

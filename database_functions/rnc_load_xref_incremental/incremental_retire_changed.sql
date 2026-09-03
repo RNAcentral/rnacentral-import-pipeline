@@ -15,7 +15,7 @@ BEGIN
     WHERE u.deleted = 'N'
       AND u.ac   = l.in_ac
       AND u.dbid = l.in_dbid
-      AND u.upi  = l.comparable_prot_upi
+      AND u.urs  = l.comparable_prot_upi
       AND l.comparable_prot_upi IS NOT NULL
       AND u.last < l.in_load_release
       AND NOT (u.version = l.in_version OR (u.version IS NULL AND l.in_version IS NULL));

@@ -10,7 +10,7 @@ BEGIN
 
     -- Case D: accessions with no current active row (brand new or previously deleted).
     INSERT INTO rnacen.xref (
-        ac, dbid, version, version_i, upi,
+        ac, dbid, version, version_i, urs,
         created, last, deleted, taxid, timestamp, userstamp
     )
     SELECT
@@ -19,9 +19,9 @@ BEGIN
         t.in_version,
         CASE
             WHEN t.max_previous_xref_version_i = 0 THEN 1   -- new xref
-            WHEN lumv.upi = t.comparable_prot_upi           -- same UPI, keep version_i
+            WHEN lumv.upi = t.comparable_prot_upi           -- same URS, keep version_i
                 THEN t.max_previous_xref_version_i
-            ELSE t.max_previous_xref_version_i + 1          -- updated UPI, bump version_i
+            ELSE t.max_previous_xref_version_i + 1          -- updated URS, bump version_i
         END,
         t.comparable_prot_upi,
         t.in_load_release,
@@ -51,9 +51,9 @@ BEGIN
       AND lumv.dbid          = t.in_dbid;
 
     -- Gap A: a new sequence variant for an accession that already has active rows but
-    -- none with this upi. version_i = max(version_i) + 1, matching populate_pel_tables3.
+    -- none with this urs. version_i = max(version_i) + 1, matching populate_pel_tables3.
     INSERT INTO rnacen.xref (
-        ac, dbid, version, version_i, upi,
+        ac, dbid, version, version_i, urs,
         created, last, deleted, taxid, timestamp, userstamp
     )
     SELECT
@@ -84,7 +84,7 @@ BEGIN
       AND NOT EXISTS (
             SELECT 1 FROM rnacen.xref x
             WHERE x.ac = l.in_ac AND x.dbid = p_in_dbid AND x.deleted = 'N'
-              AND x.upi = l.comparable_prot_upi
+              AND x.urs = l.comparable_prot_upi
           );
 END;
 $function$
