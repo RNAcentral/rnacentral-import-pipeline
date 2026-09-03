@@ -33,11 +33,11 @@ P -d "$DB" <<'SQL'
 set search_path = rnacen, public;
 set client_min_messages = warning;
 
-insert into rnacen.rna (upi, len) values
+insert into rnacen.rna (urs, len) values
   ('UPI_K',100),('UPI_C',100),('UPI_N',100),('UPI_D',100),('UPI_O',100);
 
 -- Initial state from release 1 (created=last=1).
-insert into rnacen.xref (ac, dbid, version, version_i, upi, created, last, deleted, taxid) values
+insert into rnacen.xref (ac, dbid, version, version_i, urs, created, last, deleted, taxid) values
   ('ACC_KEEP', 1, 1, 1, 'UPI_K', 1, 1, 'N', 9606),  -- unchanged AND absent from delta load
   ('ACC_CHG',  1, 1, 1, 'UPI_C', 1, 1, 'N', 9606),  -- version changes
   ('ACC_DEL',  1, 1, 1, 'UPI_D', 1, 1, 'N', 9606),  -- explicitly deleted

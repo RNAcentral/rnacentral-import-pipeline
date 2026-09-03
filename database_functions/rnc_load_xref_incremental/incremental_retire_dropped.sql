@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION rnc_load_xref_incremental.incremental_retire_dropped(
 AS $function$
 BEGIN
     -- In-place analogue of populate_pel_tables4's second arm (case 5): mark inactive an
-    -- active (ac, upi) that vanished from the load -- the step the old Oracle path lacked.
+    -- active (ac, urs) that vanished from the load -- the step the old Oracle path lacked.
     -- Its first arm (carry deleted history forward) has no analogue: leaving those rows
     -- untouched is the whole win. NOT EXISTS spares this release's inserts (all in-load).
     UPDATE rnacen.xref u
@@ -19,7 +19,7 @@ BEGIN
             WHERE l.comparable_prot_upi IS NOT NULL
               AND l.in_ac   = u.ac
               AND l.in_dbid = u.dbid
-              AND l.comparable_prot_upi = u.upi
+              AND l.comparable_prot_upi = u.urs
           );
 END;
 $function$

@@ -42,8 +42,8 @@ setup_db () {
 }
 
 DUMP="set search_path=rnacen,public;
-      select ac,dbid,version,version_i,upi,created,last,deleted,coalesce(taxid,-1) as taxid
-      from xref order by ac,upi,version,deleted,created;"
+      select ac,dbid,version,version_i,urs,created,last,deleted,coalesce(taxid,-1) as taxid
+      from xref order by ac,urs,version,deleted,created;"
 
 setup_db parity_full
 setup_db parity_incr
