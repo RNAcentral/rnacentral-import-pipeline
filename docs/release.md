@@ -107,6 +107,7 @@ params {
     intact.run = true
     lncipedia.run = true
     malacards.run = true
+    mgi.run = true
     pdbe.run = true
     pombase.run = true
     quickgo.run = true

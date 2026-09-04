@@ -24,9 +24,11 @@ from rnacentral_pipeline.databases.gtrnadb import parser
 
 
 @pytest.fixture(scope="module")
-def other_euk():
+def other_euk(tmp_path_factory):
+    # SqliteDict creates the file it is pointed at, so this has to be somewhere
+    # disposable or the run leaves a taxonomy.db in the repo root.
+    tax_file = tmp_path_factory.mktemp("gtrnadb") / "taxonomy.db"
     with open("data/gtrnadb/other_eukaryotes_export_1.json", "r") as raw:
-        tax_file = Path("taxonomy.db")
         yield list(parser.parse(raw, tax_file))
 
 
@@ -59,9 +61,8 @@ def test_it_generates_correct_entries(other_euk):
                 pub.reference("PMID:26673694"),
             ],
             chromosome="scaffold00844",
-            species="Aplysia californica",
-            # common_name=None,
-            lineage="Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; Gastropoda; Heterobranchia; Euthyneura; Tectipleura; Aplysiida; Aplysioidea; Aplysiidae; Aplysia; Aplysia californica",
+            # species and lineage are not set on the entry; they are derived
+            # from the taxid downstream. Only the description carries the name.
             gene="tRNA-Ala-AGC-1-1",
             gene_synonyms=["scaffold00844.trna1-AlaAGC"],
             optional_id="tRNA-Ala-AGC-1-1",
@@ -75,6 +76,7 @@ def test_it_generates_correct_entries(other_euk):
                     feature_type="anticodon",
                     location=[34, 35, 36],
                     sequence="AGC",
+                    provider="GTRNADB",
                     metadata={
                         "isotype": "Ala",
                         "sequence": "AGC",

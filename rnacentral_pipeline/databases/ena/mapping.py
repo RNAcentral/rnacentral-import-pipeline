@@ -121,11 +121,6 @@ class UrlBuilder:
     def sgd(self, entry) -> str:
         return "http://www.yeastgenome.org/locus/%s/overview" % entry.primary_id
 
-    def srpdb(self, entry: Entry) -> str:
-        return (
-            "http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/%s" % entry.primary_id
-        )
-
     def wormbase(self, entry: Entry) -> str:
         return "http://www.wormbase.org/species/c_elegans/gene/%s" % entry.primary_id
 

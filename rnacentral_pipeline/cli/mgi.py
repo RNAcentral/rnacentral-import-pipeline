@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,23 +16,21 @@ limitations under the License.
 from pathlib import Path
 
 import click
-from Bio import SeqIO
 
-from rnacentral_pipeline.databases.crw import helpers, parser
+from rnacentral_pipeline.databases.mgi import parser
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group("crw")
+@click.group("mgi")
 def cli():
     """
-    Commands for dealing with CRW data.
+    Commands for MGI data.
     """
-    pass
 
 
 @cli.command("parse")
-@click.argument("metadata_file", type=click.File("r"))
-@click.argument("sequence_file", type=click.Path(dir_okay=False))
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("filename", type=click.Path())
 @click.argument(
     "output",
     default=".",
@@ -42,16 +40,10 @@ def cli():
         file_okay=False,
     ),
 )
-def process_crw(metadata_file, sequence_file, output):
-    """Build entries from R2DT's crw-metadata.tsv and the model sequences."""
-    entries = parser.parse(metadata_file, Path(sequence_file))
+def process_mgi(filename, output, db_url=None):
+    """
+    Process the MGI MRK_Sequence.rpt file into importable files.
+    """
+    entries = parser.parse(Path(filename), db_url)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
-
-
-@cli.command("r2dt-to-fasta")
-@click.argument("directory", type=click.Path())
-@click.argument("output", type=click.File("w"))
-def generate_r2dt_fasta(directory, output):
-    entries = helpers.fasta_entries(Path(directory))
-    SeqIO.write(entries, output, "fasta")

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -27,9 +27,11 @@ from rnacentral_pipeline.rnacentral.r2dt.data import SO_RNA_NAME_LOOKUP
 
 LOGGER = logging.getLogger(__name__)
 
+URL = "https://ribovision2.chemistry.gatech.edu/"
+
 
 def primary_id(info) -> str:
-    return "CRW:" + info.model_name
+    return "RIBOVISION:" + info.model_name
 
 
 def sequence(info, sequences) -> str:
@@ -45,27 +47,26 @@ def description(info) -> str:
 
 def as_entry(info, sequences) -> ty.Optional[data.Entry]:
     """
-    Build an entry from the ModelInfo r2dt.models.crw parses out of R2DT's
-    crw-metadata.tsv. No organelle: the metadata has no such column and
-    r2dt_models never stored one either.
+    Build an entry from the ModelInfo r2dt.models.ribovision parses out of
+    R2DT's metadata.tsv files. No organelle: nothing stored one before.
     """
     try:
         return data.Entry(
             primary_id=primary_id(info),
             accession=primary_id(info),
             ncbi_tax_id=info.taxid,
-            database="CRW",
+            database="RIBOVISION",
             regions=[],
             rna_type=info.so_rna_type,
             sequence=sequence(info, sequences),
-            url="",
+            url=URL,
             seq_version="1",
             description=description(info),
             species=phy.species(info.taxid),
             common_name=phy.common_name(info.taxid),
             lineage=phy.lineage(info.taxid),
             references=[
-                pub.reference(11869452),
+                pub.reference(39237196),
             ],
         )
     except Exception as err:
@@ -75,4 +76,8 @@ def as_entry(info, sequences) -> ty.Optional[data.Entry]:
 
 
 def fasta_entries(directory: Path) -> ty.Iterable[SeqRecord]:
-    return r2dt.fasta_entries([directory])
+    """
+    RiboVision models are split across an LSU and an SSU directory, each keeping
+    its sequences alongside the bpseq they were generated from.
+    """
+    return r2dt.fasta_entries(sorted(directory.glob("ribovision-*/bpseq")))

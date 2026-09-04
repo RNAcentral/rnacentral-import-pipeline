@@ -1,2 +1,1 @@
-https://www.ebi.ac.uk/ena/xref/rest/tsv/search?source=SRPDB&target=sequence&expanded=true
 https://www.ebi.ac.uk/ena/xref/rest/tsv/search?source=WormBase&target=sequence&expanded=true

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,23 +16,28 @@ limitations under the License.
 from pathlib import Path
 
 import click
-from Bio import SeqIO
 
-from rnacentral_pipeline.databases.crw import helpers, parser
+from rnacentral_pipeline.databases.noncode import parser
+from rnacentral_pipeline.databases.noncode.data import SPECIES, species
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group("crw")
+@click.group("noncode")
 def cli():
     """
-    Commands for dealing with CRW data.
+    Commands for NONCODE data.
     """
-    pass
 
 
 @cli.command("parse")
-@click.argument("metadata_file", type=click.File("r"))
-@click.argument("sequence_file", type=click.Path(dir_okay=False))
+@click.argument("species_key", type=click.Choice(sorted(SPECIES)))
+@click.argument("fasta_file", type=click.File("r"))
+@click.option(
+    "--bed",
+    default=None,
+    type=click.File("r"),
+    help="lncAndGene BED12 to place the transcripts with; human and mouse only",
+)
 @click.argument(
     "output",
     default=".",
@@ -42,16 +47,10 @@ def cli():
         file_okay=False,
     ),
 )
-def process_crw(metadata_file, sequence_file, output):
-    """Build entries from R2DT's crw-metadata.tsv and the model sequences."""
-    entries = parser.parse(metadata_file, Path(sequence_file))
+def process_noncode(species_key, fasta_file, output, bed=None):
+    """
+    Process one NONCODE species FASTA into importable files.
+    """
+    entries = parser.parse(fasta_file, species(species_key), bed)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
-
-
-@cli.command("r2dt-to-fasta")
-@click.argument("directory", type=click.Path())
-@click.argument("output", type=click.File("w"))
-def generate_r2dt_fasta(directory, output):
-    entries = helpers.fasta_entries(Path(directory))
-    SeqIO.write(entries, output, "fasta")
