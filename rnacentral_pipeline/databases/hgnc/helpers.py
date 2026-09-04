@@ -89,6 +89,22 @@ def _longest(rows) -> ty.Dict[str, str]:
     return {key: urs for key, (urs, _) in best.items()}
 
 
+def known_urs(conn, urs_ids: ty.List[str]) -> ty.Set[str]:
+    """
+    The subset of the given URS ids that we actually hold.
+
+    HGNC curates a URS for most of its ncRNAs, which is a better answer than
+    anything we can re-derive. Trusting one we do not have would produce an
+    xref pointing at nothing, so unknown ids fall through to the lookups.
+    """
+    if not urs_ids:
+        return set()
+
+    with conn.cursor() as cur:
+        cur.execute("select upi from rna where upi = ANY(%s)", (sorted(set(urs_ids)),))
+        return {upi for (upi,) in cur}
+
+
 def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
     """
     Map every RefSeq id to the longest URS it corresponds to.
