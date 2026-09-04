@@ -16,9 +16,12 @@ limitations under the License.
 import datetime
 import json
 import logging
+import select
 import time
 
 import psycopg2
+import psycopg2.extensions
+from retry import retry
 
 from rnacentral_pipeline import db
 from rnacentral_pipeline.rnacentral.release import functions
@@ -44,6 +47,14 @@ _CONNECT_HIGH_MEM = {
 }
 
 
+# Seconds to block in select() between polls, and how often to log a liveness
+# line while a statement is still running. The release functions can go hours
+# between notices, so without the heartbeat a running step is indistinguishable
+# from a hung one.
+_POLL_TIMEOUT = 5.0
+_HEARTBEAT_SECONDS = 15 * 60
+
+
 def _connect(db_url, high_mem=False):
     return db.connect(db_url, **(_CONNECT_HIGH_MEM if high_mem else _CONNECT_DEFAULT))
 
@@ -52,13 +63,84 @@ def _elapsed(started):
     return datetime.timedelta(seconds=round(time.monotonic() - started))
 
 
+def _log_notices(conn, label):
+    """
+    Drain server-side messages (the RAISE NOTICE progress lines in the release
+    functions) into the log. Returns True if anything was logged.
+    """
+    logged = False
+    notices = getattr(conn, "notices", None)
+    while notices:
+        notice = notices.pop(0).strip()
+        if notice:
+            LOGGER.info("%s | %s", label, notice)
+            logged = True
+    return logged
+
+
+def _wait(conn, label):
+    """
+    Drive an async connection to completion, logging notices as they arrive.
+
+    psycopg2 only converts pending notices into conn.notices when the connection
+    is polled, and a synchronous execute() polls nothing until the statement has
+    finished -- so a multi-hour function's progress notices all arrive at once,
+    at the end, which is useless. Polling by hand surfaces each one as the server
+    sends it.
+    """
+    started = time.monotonic()
+    last_beat = started
+    while True:
+        state = conn.poll()
+        if _log_notices(conn, label):
+            # A notice is itself proof of life; don't follow it with a heartbeat
+            # saying the same thing.
+            last_beat = time.monotonic()
+        if state == psycopg2.extensions.POLL_OK:
+            return
+        if state == psycopg2.extensions.POLL_READ:
+            select.select([conn.fileno()], [], [], _POLL_TIMEOUT)
+        elif state == psycopg2.extensions.POLL_WRITE:
+            select.select([], [conn.fileno()], [], _POLL_TIMEOUT)
+        else:
+            raise psycopg2.OperationalError("Unexpected poll state %s" % state)
+        now = time.monotonic()
+        if now - last_beat >= _HEARTBEAT_SECONDS:
+            last_beat = now
+            LOGGER.info("STILL  %s (%s)", label, _elapsed(started))
+
+
+@retry(
+    psycopg2.OperationalError, tries=6, delay=5, backoff=2, max_delay=120, jitter=(0, 5)
+)
+def _connect_async(db_url, high_mem=False, label="connect"):
+    """
+    Open an async connection. Async mode has no implicit transaction, so each
+    statement commits on its own -- the same behaviour the old autocommit
+    connection had. The handshake finishes inside _wait, not inside connect(),
+    which is why the retry lives here as well as in db.connect.
+    """
+    options = _CONNECT_HIGH_MEM if high_mem else _CONNECT_DEFAULT
+    conn = db.connect(db_url, async_=1, **options)
+    try:
+        _wait(conn, label)
+    except Exception:
+        conn.close()
+        raise
+    return conn
+
+
 def _run(db_url, sql, params=None, label="query", high_mem=False):
     LOGGER.info("START  %s", label)
     started = time.monotonic()
-    with _connect(db_url, high_mem=high_mem) as conn:
-        conn.autocommit = True
+    conn = _connect_async(db_url, high_mem=high_mem, label=label)
+    try:
         with conn.cursor() as cur:
             cur.execute(sql, params)
+            _wait(conn, label)
+    finally:
+        _log_notices(conn, label)
+        conn.close()
     LOGGER.info("DONE   %s (%s)", label, _elapsed(started))
 
 

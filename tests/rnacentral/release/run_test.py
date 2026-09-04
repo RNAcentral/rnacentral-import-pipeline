@@ -1,14 +1,20 @@
+import psycopg2.extensions
+
 from rnacentral_pipeline.rnacentral.release import run
 
 
 class FakeCursor:
-    def __init__(self):
+    def __init__(self, conn):
+        self.conn = conn
         self.calls = []
         self._last = ""
 
     def execute(self, sql, params=None):
         self.calls.append((sql, params))
         self._last = sql
+        # Stand in for a RAISE NOTICE arriving from the running function.
+        if sql == "SELECT rnc_update.update_rnc_accessions()":
+            self.conn.notices.append("NOTICE:  Upserting rn [1, 15000000)\n")
 
     def executemany(self, sql, seq_of_params):
         # _record_pending_stats batch-inserts the loaded dbids this way.
@@ -35,9 +41,12 @@ class FakeCursor:
 
 class FakeConnection:
     def __init__(self):
-        self.cursor_obj = FakeCursor()
+        self.cursor_obj = FakeCursor(self)
         self.commits = 0
         self.autocommit = False
+        self.notices = []
+        self.connect_kwargs = []
+        self.closed = 0
 
     def __enter__(self):
         return self
@@ -54,13 +63,31 @@ class FakeConnection:
     def rollback(self):
         pass
 
+    def poll(self):
+        return psycopg2.extensions.POLL_OK
+
+    def fileno(self):
+        raise AssertionError("select() reached even though poll() said POLL_OK")
+
+    def close(self):
+        self.closed += 1
+
+
+def _run_release(monkeypatch, **kwargs):
+    conn = FakeConnection()
+
+    # _connect passes keepalive/options kwargs, so the stub must accept them.
+    def fake_connect(*args, **opts):
+        conn.connect_kwargs.append(opts)
+        return conn
+
+    monkeypatch.setattr(run.psycopg2, "connect", fake_connect)
+    run.run("postgres://example", **kwargs)
+    return conn
+
 
 def _run_capture(monkeypatch, **kwargs):
-    conn = FakeConnection()
-    # _connect passes keepalive/options kwargs, so the stub must accept them.
-    monkeypatch.setattr(run.psycopg2, "connect", lambda *a, **k: conn)
-    run.run("postgres://example", **kwargs)
-    return conn.cursor_obj.calls
+    return _run_release(monkeypatch, **kwargs).cursor_obj.calls
 
 
 def test_run_patches_functions_and_checks_once(monkeypatch):
@@ -158,3 +185,23 @@ def test_run_logs_progress_for_every_step(monkeypatch, caplog):
         assert any(m.startswith(f"DONE   {step} (") for m in messages), step
 
     assert "DONE   release run" in messages[-1]
+
+
+def test_run_streams_server_notices_into_the_log(monkeypatch, caplog):
+    """
+    The RAISE NOTICE lines inside the release functions are the only view into a
+    step that runs for hours, and a synchronous execute() hides them until the
+    step finishes.
+    """
+    with caplog.at_level("INFO", logger=run.LOGGER.name):
+        conn = _run_release(monkeypatch)
+
+    messages = [r.getMessage() for r in caplog.records]
+
+    # Tagged with the step it came from, so an interleaved log stays readable.
+    assert "update_rnc_accessions | NOTICE:  Upserting rn [1, 15000000)" in messages
+
+    # Notices only materialise on a polled (async) connection, and every one of
+    # them is drained rather than left to pile up.
+    assert any(opts.get("async_") == 1 for opts in conn.connect_kwargs)
+    assert conn.notices == []
