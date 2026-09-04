@@ -76,7 +76,7 @@ jobs:
           fi
 
           # Otherwise check for actual changes
-          if git diff --name-only HEAD^ HEAD | grep -qE '\.(rs|toml|lock)$'; then
+          if git diff --name-only HEAD^ HEAD | grep -qE '^(utils/|Cargo\.(toml|lock))'; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "Rust files changed, waiting for rust-container workflow..."
           else
