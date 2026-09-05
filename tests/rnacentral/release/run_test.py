@@ -7,10 +7,14 @@ class FakeCursor:
     def __init__(self, conn):
         self.conn = conn
         self.calls = []
+        self.opts_calls = []
         self._last = ""
 
     def execute(self, sql, params=None):
         self.calls.append((sql, params))
+        # Each step opens its own connection, so the options recorded at connect
+        # time are the budget this statement runs under.
+        self.opts_calls.append((sql, self.conn.current_options))
         self._last = sql
         # Stand in for a RAISE NOTICE arriving from the running function.
         if sql == "SELECT rnc_update.update_rnc_accessions()":
@@ -46,6 +50,7 @@ class FakeConnection:
         self.autocommit = False
         self.notices = []
         self.connect_kwargs = []
+        self.current_options = None
         self.closed = 0
 
     def __enter__(self):
@@ -79,6 +84,7 @@ def _run_release(monkeypatch, **kwargs):
     # _connect passes keepalive/options kwargs, so the stub must accept them.
     def fake_connect(*args, **opts):
         conn.connect_kwargs.append(opts)
+        conn.current_options = opts.get("options")
         return conn
 
     monkeypatch.setattr(run.psycopg2, "connect", fake_connect)
@@ -205,3 +211,34 @@ def test_run_streams_server_notices_into_the_log(monkeypatch, caplog):
     # them is drained rather than left to pile up.
     assert any(opts.get("async_") == 1 for opts in conn.connect_kwargs)
     assert conn.notices == []
+
+
+def _options_for(conn, predicate):
+    # Match what run() issues, not function-deployment SQL: those sources mention
+    # the same table and index names, so a substring search finds them first.
+    return next(opts for sql, opts in conn.cursor_obj.opts_calls if predicate(sql))
+
+
+def test_high_mem_steps_get_maintenance_work_mem(monkeypatch):
+    """The tier used to set only work_mem, which CREATE INDEX ignores."""
+    conn = _run_release(monkeypatch)
+
+    for step in ("load_rnacentral_all$database", "load_md5_new_sequences$in_md5"):
+        opts = _options_for(
+            conn,
+            lambda sql, step=step: sql.startswith("\nCREATE INDEX") and step in sql,
+        )
+        assert opts is not None and "maintenance_work_mem=" in opts, step
+
+
+def test_fk4_validation_runs_on_the_high_mem_connection(monkeypatch):
+    """It joins a whole xref partition against rna, so not on the default budget."""
+    conn = _run_release(monkeypatch)
+
+    default_opts = _options_for(
+        conn, lambda sql: sql == "SELECT rnc_update.update_rnc_accessions()"
+    )
+    validate_opts = _options_for(conn, lambda sql: sql.startswith("ALTER TABLE xref_p"))
+
+    assert validate_opts != default_opts
+    assert "work_mem=1GB" in validate_opts
