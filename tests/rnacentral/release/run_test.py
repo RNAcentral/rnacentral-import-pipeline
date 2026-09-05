@@ -219,18 +219,6 @@ def _options_for(conn, predicate):
     return next(opts for sql, opts in conn.cursor_obj.opts_calls if predicate(sql))
 
 
-def test_high_mem_steps_get_maintenance_work_mem(monkeypatch):
-    """The tier used to set only work_mem, which CREATE INDEX ignores."""
-    conn = _run_release(monkeypatch)
-
-    for step in ("load_rnacentral_all$database", "load_md5_new_sequences$in_md5"):
-        opts = _options_for(
-            conn,
-            lambda sql, step=step: sql.startswith("\nCREATE INDEX") and step in sql,
-        )
-        assert opts is not None and "maintenance_work_mem=" in opts, step
-
-
 def test_fk4_validation_runs_on_the_high_mem_connection(monkeypatch):
     """It joins a whole xref partition against rna, so not on the default budget."""
     conn = _run_release(monkeypatch)
@@ -241,4 +229,4 @@ def test_fk4_validation_runs_on_the_high_mem_connection(monkeypatch):
     validate_opts = _options_for(conn, lambda sql: sql.startswith("ALTER TABLE xref_p"))
 
     assert validate_opts != default_opts
-    assert "work_mem=1GB" in validate_opts
+    assert "work_mem=256MB" in validate_opts

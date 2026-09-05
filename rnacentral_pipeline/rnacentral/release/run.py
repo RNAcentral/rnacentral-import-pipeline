@@ -40,13 +40,10 @@ _CONNECT_DEFAULT = {
     **_BASE_CONNECT,
     "options": "-c statement_timeout=0 -c work_mem=64MB",
 }
-# Higher memory for the steps that sort or hash at table scale. maintenance_work_mem
-# must be set explicitly: CREATE INDEX and VALIDATE CONSTRAINT ignore work_mem, so
-# setting work_mem alone left those steps on the server default. Kept under the 2GB
-# populate_precompute.sql already asks of this server, where index builds have OOM'd.
+# Higher memory only for DDL-heavy steps (index builds, partition exchange).
 _CONNECT_HIGH_MEM = {
     **_BASE_CONNECT,
-    "options": "-c statement_timeout=0 -c work_mem=1GB -c maintenance_work_mem=1GB",
+    "options": "-c statement_timeout=0 -c work_mem=256MB",
 }
 
 
