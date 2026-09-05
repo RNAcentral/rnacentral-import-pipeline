@@ -96,13 +96,73 @@ def _extension_home() -> Path:
     return home
 
 
-def _connect(pg_url: str) -> duckdb.DuckDBPyConnection:
+def _resource_settings(threads: int | None, memory_limit: str | None) -> list[str]:
+    """
+    SET statements constraining DuckDB to the resources the task actually has.
+
+    Left alone, DuckDB sizes itself from the machine: hardware_concurrency()
+    threads and ~80% of system RAM. Neither sees the SLURM allocation, so a task
+    declaring `cpus 4` and `memory 9.GB` runs dozens of workers oversubscribing
+    four cores and may claim far more memory than the cgroup allows.
+
+    This bounds the task, not the server: the INSERT is one transaction and a
+    Postgres transaction cannot span connections, so the COPY goes over a single
+    one however many threads DuckDB has.
+
+    preserve_insertion_order stays off because the row order of a staging table
+    does not matter and holding it costs memory proportional to the whole load.
+    """
+    settings = ["SET preserve_insertion_order = false"]
+    if threads:
+        settings.append(f"SET threads = {int(threads)}")
+    if memory_limit:
+        settings.append(f"SET memory_limit = '{memory_limit}'")
+    return settings
+
+
+def _connect(
+    pg_url: str, threads: int | None = None, memory_limit: str | None = None
+) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
     con.execute(f"SET home_directory = '{_extension_home()}'")
+    for statement in _resource_settings(threads, memory_limit):
+        con.execute(statement)
     con.execute("INSTALL postgres")
     con.execute("LOAD postgres")
     con.execute(f"ATTACH '{pg_url}' AS pg (TYPE postgres)")
     return con
+
+
+def target_row_count(pg_url: str, quoted_qualified: str) -> int | None:
+    """
+    Row count of the target table, over a plain psycopg2 connection.
+
+    Not through the DuckDB attachment: the postgres extension has no aggregate
+    pushdown, so ``SELECT count(*) FROM pg.<table>`` is answered by streaming
+    the whole table back with ``COPY ... TO STDOUT``, in parallel over several
+    connections. On the ENA load that meant pulling a freshly written staging
+    table of hundreds of millions of rows across the socket purely to print a
+    log line, and the resulting burst of dirty-buffer writes took the server
+    down with::
+
+        IO Error: Failed to fetch header for COPY: ERROR: failed to
+        initialize hash table "CompactCheckpointerRequestQueue"
+
+    -- i.e. the INSERT had already committed and the run still failed. The
+    count is informational, so a failure here is logged and swallowed rather
+    than losing a load that succeeded.
+    """
+    try:
+        conn = psycopg2.connect(pg_url)
+        try:
+            with conn.cursor() as cur:
+                cur.execute(f"SELECT count(*) FROM {quoted_qualified}")
+                return cur.fetchone()[0]
+        finally:
+            conn.close()
+    except Exception as exc:
+        sys.stderr.write(f"warning: could not count {quoted_qualified}: {exc}\n")
+        return None
 
 
 def main() -> int:
@@ -135,6 +195,24 @@ def main() -> int:
             "Optional SQL file to run after the COPY completes. Runs via "
             "psycopg2 in a single transaction; rolls back on any error. "
             "Skipped when zero rows were loaded unless --allow-empty is set."
+        ),
+    )
+    parser.add_argument(
+        "--threads",
+        type=int,
+        default=int(os.environ.get("DUCKDB_THREADS", 0)) or None,
+        help=(
+            "Cap DuckDB worker threads. Defaults to $DUCKDB_THREADS, else "
+            "DuckDB's own machine-wide default. Pass the task's cpu allocation: "
+            "each thread can hold its own Postgres connection open."
+        ),
+    )
+    parser.add_argument(
+        "--memory-limit",
+        default=os.environ.get("DUCKDB_MEMORY_LIMIT") or None,
+        help=(
+            "Cap DuckDB memory, e.g. '8GB'. Defaults to $DUCKDB_MEMORY_LIMIT, "
+            "else ~80%% of system RAM, which ignores the task's allocation."
         ),
     )
     parser.add_argument(
@@ -180,7 +258,7 @@ def main() -> int:
     qualified = target if "." in target else f"{args.schema}.{target}"
     quoted_qualified = ".".join(f'"{p}"' for p in qualified.split("."))
 
-    con = _connect(args.pg_url)
+    con = _connect(args.pg_url, threads=args.threads, memory_limit=args.memory_limit)
 
     # Quick sanity check that the glob matches at least one file before we
     # touch Postgres, so a typo doesn't accidentally truncate a populated table.
@@ -217,15 +295,20 @@ def main() -> int:
         [args.parquet_glob],
     )
 
-    total = con.execute(f"SELECT count(*) FROM pg.{quoted_qualified}").fetchone()[0]
-    sys.stderr.write(
-        f"loaded {inserted} row(s); pg.{quoted_qualified} now has {total} row(s)\n"
-    )
     write_count(args.count_file, inserted)
 
     # The attachment holds TRUNCATE's ACCESS EXCLUSIVE lock until it closes, so
-    # _run_post_load's own connection would deadlock against it forever.
+    # _run_post_load's own connection would deadlock against it forever. The
+    # count below opens its own connection too, so it has to come after this.
     con.close()
+
+    total = target_row_count(args.pg_url, quoted_qualified)
+    if total is None:
+        sys.stderr.write(f"loaded {inserted} row(s) into pg.{qualified}\n")
+    else:
+        sys.stderr.write(
+            f"loaded {inserted} row(s); pg.{quoted_qualified} now has {total} row(s)\n"
+        )
 
     if args.post_load is not None:
         return _run_post_load(args.pg_url, args.post_load, inserted, args.allow_empty)

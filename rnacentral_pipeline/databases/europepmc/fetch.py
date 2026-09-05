@@ -46,18 +46,44 @@ class TooManyPublications(Exception):
     pass
 
 
+class TransientError(Exception):
+    """
+    This is raised when EuropePMC fails in a way that is worth retrying, such
+    as a gateway timeout.
+    """
+
+    pass
+
+
+RETRYABLE_STATUSES = frozenset([408, 429, 500, 502, 503, 504])
+
+
+## The retry must wrap the synchronous request. Wrapping the coroutine function
+## only guards building the coroutine, so the failure, which happens when it is
+## awaited, would escape untried.
+@retry(TransientError, tries=8, delay=10, backoff=2, max_delay=120)
+def fetch_url(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except (requests.ConnectionError, requests.Timeout) as err:
+        raise TransientError(url) from err
+    except requests.HTTPError as err:
+        status = getattr(err.response, "status_code", None)
+        if status in RETRYABLE_STATUSES:
+            raise TransientError(url) from err
+        raise
+
+    return response.json()
+
+
 ## Split the actualy async request bit away from the other
 ## bits to facilitate caching with coroutines
-@retry(requests.HTTPError, tries=8, delay=10, backoff=2, max_delay=120)
 @throttle(rate_limit=5, period=1.0)
 @lru_cache()
 @cacheable
 async def get_data(id_reference):
-    url = id_reference.external_url()
-    response = requests.get(url)
-    response.raise_for_status()
-
-    data = response.json()
+    data = fetch_url(id_reference.external_url())
     assert data, "Somehow got no data"
     return data
 

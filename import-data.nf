@@ -21,6 +21,27 @@ include { qc_import } from './workflows/utils/qc'
 include { slack_message } from './workflows/utils/slack'
 include { slack_closure } from './workflows/utils/slack'
 
+// Promote a delta parse's manifest into pipeline_tracking_import, once the release has
+// committed. Gated on should_release so a run that does not release never advances
+// the manifest ahead of the database. See docs/incremental-parsing.md.
+process apply_manifest {
+  cache false
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple path(manifest), val(_ready)
+
+  output:
+  val('done')
+
+  when: params.get('should_release', false)
+
+  script:
+  """
+  rnac manifest apply $manifest
+  """
+}
+
 workflow import_data {
   take: _flag
   main:
@@ -34,6 +55,7 @@ workflow import_data {
     | branch { r ->
       terms: r.name == "terms.csv" || r.name == "terms.parquet"
       ref_ids: r.name == "ref_ids.csv" || r.name == "ref_ids.parquet"
+      manifest: r.name == "manifest.csv"
       csv: true
     } \
     | set { results }
@@ -49,6 +71,12 @@ workflow import_data {
     // Final import step: QC — per-database rows imported this release.
     post_release | qc_import
 
+    // deletions.csv rides the normal csv stream into load_data (staged via
+    // deletions.ctl). manifest.csv is applied only after the release completes.
+    results.manifest \
+    | combine(post_release) \
+    | apply_manifest
+
   emit: post_release
 }
 
@@ -59,7 +87,10 @@ workflow {
   // See analyze.nf: an onError section crashes on Nextflow 26.04.
   onComplete:
     try {
-      slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+      def msg = workflow.success
+        ? "Import workflow completed Ok"
+        : "Import workflow failed"
+      slack_closure(msg)
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }

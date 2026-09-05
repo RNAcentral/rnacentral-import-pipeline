@@ -18,7 +18,7 @@ process create_load_tables {
 process merge_and_import {
   tag { name }
   memory 9.GB
-  maxForks 2
+  maxForks params.import_data.load_max_forks
   cpus 4
   cache false
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -40,8 +40,14 @@ process merge_and_import {
     // at the start of load_data, so targets are empty when we append. Keeping
     // --truncate would wipe load_rnacentral_all between the short_sequences
     // and long_sequences runs (both map to it).
+    //
+    // DuckDB otherwise sizes itself from the machine, not the allocation: it
+    // would oversubscribe the cpus and can claim more than the cgroup allows.
+    // The memory limit leaves a GB for the Python process.
     """
-    load-parquet $name 'raw*.parquet' --count-file rows.count
+    load-parquet $name 'raw*.parquet' --count-file rows.count \\
+      --threads ${task.cpus} \\
+      --memory-limit ${Math.max(1, task.memory.toGiga() - 1)}GB
     """
   } else {
     // pgloader reports no usable count, but a csv that reached here was
@@ -82,18 +88,26 @@ process release {
     if [[ -s "\$fn" ]]; then
       while IFS='' read -r "script" || [[ -n "\$script" ]]; do
         if [[ ! -z "\$script" ]]; then
-          echo "Running: \$fn/\$script"
+          echo "TIMING \$(date +%T) start-sql \$script"
           psql -v ON_ERROR_STOP=1 -f \$script "\$PGDATABASE"
         fi
       done < "\$fn"
     fi
   }
 
-  ${should_release ? '' : '# ' }rnac release check $limits
+  # 2>&1 so the per-step `rnac` progress logs (which go to stderr) land in
+  # .command.out next to the TIMING markers instead of in .command.err.
+  echo "TIMING \$(date +%T) start release-check"
+  ${should_release ? '' : '# ' }rnac --log-level info release check $limits 2>&1
+  echo "TIMING \$(date +%T) start pre-release-sql"
   run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
-  ${should_release ? '' : '# ' }rnac release run
+  echo "TIMING \$(date +%T) start release-run"
+  ${should_release ? '' : '# ' }rnac --log-level info release run 2>&1
+  echo "TIMING \$(date +%T) start post-release-sql"
   run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
-  ${should_release ? '' : '# ' }rnac release update-stats
+  echo "TIMING \$(date +%T) start update-stats"
+  ${should_release ? '' : '# ' }rnac --log-level info release update-stats 2>&1
+  echo "TIMING \$(date +%T) done"
   """
 }
 
