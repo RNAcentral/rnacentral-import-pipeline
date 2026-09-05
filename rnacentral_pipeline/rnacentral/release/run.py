@@ -40,10 +40,13 @@ _CONNECT_DEFAULT = {
     **_BASE_CONNECT,
     "options": "-c statement_timeout=0 -c work_mem=64MB",
 }
-# Higher memory only for DDL-heavy steps (index builds, partition exchange).
+# Higher memory for the steps that sort or hash at table scale. maintenance_work_mem
+# must be set explicitly: CREATE INDEX and VALIDATE CONSTRAINT ignore work_mem, so
+# setting work_mem alone left those steps on the server default. Kept under the 2GB
+# populate_precompute.sql already asks of this server, where index builds have OOM'd.
 _CONNECT_HIGH_MEM = {
     **_BASE_CONNECT,
-    "options": "-c statement_timeout=0 -c work_mem=256MB",
+    "options": "-c statement_timeout=0 -c work_mem=1GB -c maintenance_work_mem=1GB",
 }
 
 
@@ -254,11 +257,14 @@ def run(db_url, force_full=False):
     # committed at this point, so this is detection, not a pre-commit gate.
     for (dbid, rid) in releases:
         for suffix in ("deleted", "not_deleted"):
+            # Validation joins the whole partition against rna, so on ENA this is
+            # the most spill-prone statement in the release tail.
             _run(
                 db_url,
                 f"ALTER TABLE xref_p{dbid}_{suffix} "
                 f"VALIDATE CONSTRAINT xref_p{dbid}_{suffix}_fk4",
                 label=f"validate fk4 xref_p{dbid}_{suffix}",
+                high_mem=True,
             )
 
     # Verify xref primary key uniqueness once, after all databases are loaded,

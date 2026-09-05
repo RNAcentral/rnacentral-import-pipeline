@@ -25,10 +25,14 @@ BEGIN
     raise notice 'executing function: % oid: %', fcesig, fcoid;
     execute 'set application_name = ''' || fcesig || '''';
 
-    -- Sort budget for the one big DISTINCT ON dedup sort below. SET LOCAL is
-    -- txn-scoped so it doesn't leak to site connections. Kept modest (this VM is
-    -- memory-tight); the sort spills to disk rather than getting a big budget.
-    SET LOCAL work_mem = '256MB';
+    -- Sort budget for the DISTINCT ON dedup below, raised from 256MB: at that size
+    -- a ~110GB sort needs several merge passes, so the step is bound by temp I/O.
+    -- populate_precompute.sql already runs this server at 2GB. Scoped to STEP 1 and
+    -- given back before the upsert loop, whose trigger queue has OOM'd before.
+    SET LOCAL work_mem = '2GB';
+    -- CREATE INDEX reads maintenance_work_mem, not work_mem; unset it took the
+    -- server default. 256MB is the value proven safe on rnc_rna_precomputed.
+    SET LOCAL maintenance_work_mem = '256MB';
 
     -- STEP 1 - dedup once into a sorted staging table.
     -- A plain CREATE TABLE AS carries none of the FK/trigger/ON CONFLICT weight,
@@ -55,6 +59,9 @@ BEGIN
     -- rescan of the ~110 GB staging table.
     CREATE INDEX ON load_dedup(rn);
     ANALYZE load_dedup;
+
+    -- STEP 1 is done; give back the sort budget before the trigger-heavy loop.
+    SET LOCAL work_mem = '256MB';
 
     SELECT max(rn) INTO v_total FROM load_dedup;
     RAISE NOTICE 'load_dedup has % deduped rows; upserting in batches of %',
