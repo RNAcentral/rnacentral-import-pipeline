@@ -1,4 +1,8 @@
-CREATE OR REPLACE FUNCTION rnc_load_xref_incremental.incremental_new_versions(p_previous_release bigint)
+-- CREATE OR REPLACE cannot rename an input parameter, and this one goes from
+-- p_previous_release to p_in_dbid, so the old function has to be dropped first.
+DROP FUNCTION IF EXISTS rnc_load_xref_incremental.incremental_new_versions(bigint);
+
+CREATE OR REPLACE FUNCTION rnc_load_xref_incremental.incremental_new_versions(p_in_dbid bigint)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -30,7 +34,13 @@ BEGIN
       ON  x.ac   = l.in_ac
       AND x.dbid = l.in_dbid
       AND x.urs  = l.comparable_prot_upi
-    WHERE l.comparable_prot_upi IS NOT NULL
+    WHERE
+      -- Constant on the partition key. Joining xref on l.in_dbid alone compares
+      -- the key to another table's column, which prunes nothing, so the plan
+      -- reads all 59 partitions. load_retro_tmp holds only this dbid, so this
+      -- changes no rows.
+      x.dbid = p_in_dbid
+      AND l.comparable_prot_upi IS NOT NULL
       AND x.deleted = 'N'
       AND x.last < l.in_load_release
       AND NOT (
