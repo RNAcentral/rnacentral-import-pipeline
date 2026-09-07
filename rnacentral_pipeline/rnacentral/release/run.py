@@ -35,15 +35,19 @@ _BASE_CONNECT = {
     "keepalives_count": 5,
 }
 
+# The progress notices are only sent to us while client_min_messages is at notice
+# or below, and a server or role default could raise it out from under us.
+_COMMON_OPTIONS = "-c statement_timeout=0 -c client_min_messages=notice"
+
 # Conservative default: allows spilling to disk rather than OOM-killing the backend.
 _CONNECT_DEFAULT = {
     **_BASE_CONNECT,
-    "options": "-c statement_timeout=0 -c work_mem=64MB",
+    "options": f"{_COMMON_OPTIONS} -c work_mem=64MB",
 }
 # Higher memory only for DDL-heavy steps (index builds, partition exchange).
 _CONNECT_HIGH_MEM = {
     **_BASE_CONNECT,
-    "options": "-c statement_timeout=0 -c work_mem=256MB",
+    "options": f"{_COMMON_OPTIONS} -c work_mem=256MB",
 }
 
 

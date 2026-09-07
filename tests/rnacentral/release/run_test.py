@@ -230,3 +230,18 @@ def test_fk4_validation_runs_on_the_high_mem_connection(monkeypatch):
 
     assert validate_opts != default_opts
     assert "work_mem=256MB" in validate_opts
+
+
+def test_every_connection_pins_client_min_messages(monkeypatch):
+    """
+    The server only sends the progress notices while client_min_messages is at
+    notice or below; a server-side default of warning would silence the log again.
+    """
+    conn = _run_release(monkeypatch)
+
+    # functions.apply opens a plain connection to deploy the sources; it is the
+    # release steps, the ones that run for hours, that must keep their notices.
+    step_options = [o["options"] for o in conn.connect_kwargs if "options" in o]
+    assert step_options
+    for options in step_options:
+        assert "client_min_messages=notice" in options
