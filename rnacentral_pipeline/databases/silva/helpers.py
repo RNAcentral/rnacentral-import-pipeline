@@ -13,14 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import logging
-import typing as ty
 import operator as op
+import re
+import typing as ty
 
-from rnacentral_pipeline.databases import data
-import rnacentral_pipeline.databases.helpers.publications as pubs
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
+import rnacentral_pipeline.databases.helpers.publications as pubs
+from rnacentral_pipeline.databases import data
 
 url = op.itemgetter("silvaUri")
 
@@ -60,7 +60,13 @@ def primary_id(row) -> str:
 
 
 def taxid(row) -> int:
-    return int(row["ncbiTaxId"])
+    # SILVA 144 ships rows with an empty ncbiTaxId; treat them like any other
+    # unresolvable taxon so as_entry skips them instead of crashing the parse.
+    given = row["ncbiTaxId"]
+    try:
+        return int(given)
+    except ValueError:
+        raise phy.UnknownTaxonId(given)
 
 
 def sequence(row) -> str:
