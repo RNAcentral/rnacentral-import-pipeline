@@ -105,6 +105,8 @@ jobs:
           echo "pipeline=$(cat VERSION)" >> $GITHUB_OUTPUT
           echo "infernal=$(cat containers/infernal/VERSION)" >> $GITHUB_OUTPUT
           echo "samtools=$(cat containers/samtools/VERSION)" >> $GITHUB_OUTPUT
+          echo "python=$(cat .python-version)-trixie" >> $GITHUB_OUTPUT
+          echo "pytag=py$(cat .python-version | tr -d '.')" >> $GITHUB_OUTPUT
 
           RUST_VERSION=$(cat containers/rust-utils/VERSION)
           if [ "$RUST_VERSION" = "auto" ]; then
@@ -124,14 +126,15 @@ jobs:
             --build-arg INFERNAL_VERSION=${{ steps.versions.outputs.infernal }} \
             --build-arg SAMTOOLS_VERSION=${{ steps.versions.outputs.samtools }} \
             --build-arg RUST_VERSION=${{ steps.versions.outputs.rust }} \
-            -t rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pipeline }} \
-            -t rnacentral/rnacentral-import-pipeline:latest \
+            --build-arg PYTHON_VERSION=${{ steps.versions.outputs.python }} \
+            -t rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pytag }}-${{ steps.versions.outputs.pipeline }} \
+            -t rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pytag }}-experimental \
             -f Dockerfile .
 
       - name: docker push
         run: |
-          docker push rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pipeline }}
-          docker push rnacentral/rnacentral-import-pipeline:latest
+          docker push rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pytag }}-${{ steps.versions.outputs.pipeline }}
+          docker push rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pytag }}-experimental
 
   finished-notification:
     needs:

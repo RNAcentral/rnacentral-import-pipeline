@@ -5,6 +5,9 @@
 ARG INFERNAL_VERSION=1.1.5
 ARG SAMTOOLS_VERSION=1.22.1
 ARG RUST_VERSION=latest
+# Default matches .python-version at repo root; override with
+# --build-arg PYTHON_VERSION=$(cat .python-version)-trixie
+ARG PYTHON_VERSION=3.14-trixie
 
 # Stage 1: Pull pre-built Infernal container
 FROM rnacentral/infernal:${INFERNAL_VERSION} AS infernal
@@ -16,7 +19,7 @@ FROM rnacentral/samtools:${SAMTOOLS_VERSION} AS samtools
 FROM rnacentral/rust-utils:${RUST_VERSION} AS rust-utils
 
 # Stage 4: Python environment builder
-FROM python:3.14.7-trixie AS python-builder
+FROM python:${PYTHON_VERSION} AS python-builder
 
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -36,8 +39,7 @@ RUN uv pip install /tmp/wheels/*.whl
 RUN /app/.venv/bin/python3 -m nltk.downloader words
 
 # Stage 5: Final runtime image
-# FROM python:3.11.14-trixie
-FROM python:3.14.7-trixie
+FROM python:${PYTHON_VERSION}
 ARG INFERNAL_VERSION=1.1.5
 ARG SAMTOOLS_VERSION=1.22.1
 ARG RUST_VERSION=latest

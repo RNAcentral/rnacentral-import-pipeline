@@ -143,6 +143,8 @@ jobs:
           echo "pipeline=$(cat VERSION)" >> $GITHUB_OUTPUT
           echo "infernal=$(cat containers/infernal/VERSION)" >> $GITHUB_OUTPUT
           echo "samtools=$(cat containers/samtools/VERSION)" >> $GITHUB_OUTPUT
+          echo "python=$(cat .python-version)-trixie" >> $GITHUB_OUTPUT
+          echo "pytag=py$(cat .python-version | tr -d '.')" >> $GITHUB_OUTPUT
 
           RUST_VERSION=$(cat containers/rust-utils/VERSION)
           if [ "$RUST_VERSION" = "auto" ]; then
@@ -160,17 +162,19 @@ jobs:
         run: |
           TAG='${{ inputs.tag }}'
           VERSION_TAG='${{ steps.versions.outputs.pipeline }}'
+          PYTAG='${{ steps.versions.outputs.pytag }}'
           EXTRA_TAGS=""
           # Only attach the VERSION-file tag when publishing 'latest' — custom
           # tags are for isolated test builds and should not advance :VERSION.
           if [ "$TAG" = "latest" ]; then
-            EXTRA_TAGS="-t rnacentral/rnacentral-import-pipeline:${VERSION_TAG}"
+            EXTRA_TAGS="-t rnacentral/rnacentral-import-pipeline:${PYTAG}-${VERSION_TAG}"
           fi
           docker build \
             --build-arg INFERNAL_VERSION=${{ steps.versions.outputs.infernal }} \
             --build-arg SAMTOOLS_VERSION=${{ steps.versions.outputs.samtools }} \
             --build-arg RUST_VERSION=latest \
-            -t rnacentral/rnacentral-import-pipeline:${TAG} \
+            --build-arg PYTHON_VERSION=${{ steps.versions.outputs.python }} \
+            -t rnacentral/rnacentral-import-pipeline:${PYTAG}-${TAG} \
             $EXTRA_TAGS \
             -f Dockerfile .
 
@@ -178,9 +182,10 @@ jobs:
         run: |
           TAG='${{ inputs.tag }}'
           VERSION_TAG='${{ steps.versions.outputs.pipeline }}'
-          docker push rnacentral/rnacentral-import-pipeline:${TAG}
+          PYTAG='${{ steps.versions.outputs.pytag }}'
+          docker push rnacentral/rnacentral-import-pipeline:${PYTAG}-${TAG}
           if [ "$TAG" = "latest" ]; then
-            docker push rnacentral/rnacentral-import-pipeline:${VERSION_TAG}
+            docker push rnacentral/rnacentral-import-pipeline:${PYTAG}-${VERSION_TAG}
           fi
 
   finished-notification:

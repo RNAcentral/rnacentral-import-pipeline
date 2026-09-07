@@ -70,14 +70,17 @@ jobs:
       - name: Build Rust utilities container
         run: |
           VERSION=${{ steps.rust-version.outputs.version }}
+          PYTHON_VERSION="$(cat .python-version)-trixie"
           if [ "$FORCE_REBUILD" = "true" ]; then
             docker build --no-cache \
               --build-arg RUST_VERSION=${VERSION} \
+              --build-arg PYTHON_VERSION=${PYTHON_VERSION} \
               -t rnacentral/rust-utils:${VERSION} \
               -f containers/rust-utils/Dockerfile .
           else
             docker build \
               --build-arg RUST_VERSION=${VERSION} \
+              --build-arg PYTHON_VERSION=${PYTHON_VERSION} \
               -t rnacentral/rust-utils:${VERSION} \
               -f containers/rust-utils/Dockerfile .
           fi

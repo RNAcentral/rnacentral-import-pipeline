@@ -1,5 +1,6 @@
 image=rnacentral/rnacentral-import-pipeline
-tag=latest
+pytag=py$(subst .,,$(shell cat .python-version))
+tag=$(pytag)-latest
 sif=$(tag).sif
 docker=$(image):$(tag)
 
@@ -28,7 +29,7 @@ clean:
 	cargo clean
 
 docker: Dockerfile
-	docker buildx build -t "$(docker)" --platform linux/amd64 .
+	docker buildx build -t "$(docker)" --platform linux/amd64 --build-arg PYTHON_VERSION=$$(cat .python-version)-trixie .
 
 shell: docker
 	docker run -v `pwd`:/rna/import-pipeline -i -t "$(docker)"
