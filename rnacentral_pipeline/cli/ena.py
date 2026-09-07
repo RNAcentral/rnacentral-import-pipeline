@@ -110,25 +110,28 @@ def ena_signatures(ena_file, output):
 @click.argument("manifest_csv", type=click.File("w"))
 def ena_delta_diff(signatures_csv, to_parse, deletions_csv, manifest_csv, db_url=None):
     """
-    Diff the collected new signatures against the stored ENA manifest, in the
-    database, and write the three side-channel files:
+    Diff the collected new signatures against the stored ENA manifest and write the
+    three side-channel files:
 
       * to_parse    -- accessions to fully parse (new or changed), or the KEEP_ALL
                        sentinel on the first delta run (no prior manifest);
       * deletions   -- database,accession rows for records that dropped out;
       * manifest    -- database,accession,signature for every current record.
+
+    The database is only read from: the stored manifest is COPYed out and the joins
+    run in polars here, so this cannot contend with anything else on the database.
     """
 
-    def signature_rows():
-        with open(signatures_csv, "r", newline="") as handle:
-            for accession, signature in csv.reader(handle):
-                yield accession, signature
-
+    # Written beside the other work-directory files, never /tmp: a --contain
+    # container gives /tmp a few megabytes and ENA's manifest is gigabytes.
+    stored = Path("stored-manifest.csv")
     conn = psycopg2.connect(db_url)
     try:
-        result = manifest.diff_via_db(conn, DATABASE, signature_rows())
+        manifest.dump_signatures(conn, DATABASE, stored)
     finally:
         conn.close()
+
+    result = manifest.diff_via_polars(stored, Path(signatures_csv))
 
     if result.is_bootstrap:
         to_parse.write(delta.KEEP_ALL + "\n")
@@ -141,8 +144,9 @@ def ena_delta_diff(signatures_csv, to_parse, deletions_csv, manifest_csv, db_url
         deletions_writer.writerow([DATABASE, accession])
 
     manifest_writer = csv.writer(manifest_csv)
-    for accession, signature in signature_rows():
-        manifest_writer.writerow([DATABASE, accession, signature])
+    with open(signatures_csv, "r", newline="") as handle:
+        for accession, signature in csv.reader(handle):
+            manifest_writer.writerow([DATABASE, accession, signature])
 
 
 @cli.command("filter")

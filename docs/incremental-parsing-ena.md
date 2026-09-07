@@ -59,6 +59,23 @@ raw text can never produce a false "unchanged" (the dangerous direction); at wor
 cosmetic reformat causes a needless re-parse (safe, just slower). This matches the
 HGNC rule "whole record, so any change is caught".
 
+### Why not hash whole files instead
+
+Because ENA's archives are not stable between snapshots. Of the 120 `.ncr.gz`
+archives present under `std/` and `con/` in both published monthly snapshots
+(`snapshot_20260726` and `snapshot_20260826`), **none** kept the same size, let alone
+the same bytes. The archives are numbered slices of a regenerated dump
+(`STD_XXX_42`), so the slicing shifts whenever anything upstream changes: July had
+333 of them, August 120. A file-level hash would skip nothing at all.
+
+Hashing our own chunks is worse still — `fetch_directory` concatenates every archive
+into a single `.ncr` and re-splits it with `split-ena`, so chunk boundaries are
+recomputed from scratch each run.
+
+Per-record hashing over that same snapshot pair finds 96-97% of the records
+byte-identical (`STD_MAM_1`: 18832 of 19488; `STD_ENV_1`: 15908 of 16337). That is
+the ribotyper and parse work the delta skips, and only a per-record key finds it.
+
 ## Workflow
 
 ```
@@ -95,16 +112,19 @@ copies the chunk through unchanged. Deletions are empty on bootstrap. The run pa
 everything (as today) and seeds the manifest; the next run sees the manifest, loads
 in `D` mode, and only changed records are parsed.
 
-## DB-side diff
+## The diff — on the cluster, in polars
 
-`ena_delta_diff` `COPY`s the collected `(accession, signature)` into a temp table
-and computes, in SQL against `pipeline_tracking_import` scoped to ENA:
+The database is only ever read from. `ena_delta_diff` `COPY`s ENA's stored manifest
+out to `stored-manifest.csv` (`manifest.dump_signatures`, one statement against one
+partition) and does every join here in polars (`manifest.diff_via_polars`):
 
-- **to_parse** — temp rows with no matching stored row, or a differing signature;
-- **deletions** — stored ENA rows absent from temp;
-- **manifest.csv** — every temp row (the full new manifest).
+- **to_parse** — new rows with no stored match, or a differing signature;
+- **deletions** — stored ENA rows absent from the new set;
+- **manifest.csv** — every new row (the full new manifest).
 
-This keeps the millions-row set difference in Postgres instead of Python.
+Both joins run under polars' streaming engine, so the millions-row set difference
+never has to fit in memory, and a diff that lands while the database is busy cannot
+contend with anything: no temp tables, no server-side sorting, no writes.
 
 ## Load side — unchanged, already generic
 

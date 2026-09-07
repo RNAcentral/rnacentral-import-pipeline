@@ -101,47 +101,88 @@ def conn():
         connection.close()
 
 
-@pytest.mark.db
-def test_diff_via_db_tolerates_duplicate_accessions_on_bootstrap(conn):
-    """
-    ENA emits the same location-based accession twice within one snapshot; the COPY
-    into the diff's temp table must not abort on it (was a UniqueViolation). The two
-    rows even carry different signatures here, so it's the dedup -- not the input --
-    that resolves the collision.
-    """
-    signatures = [
-        ("JH668335.1:1..100:ncRNA", "sig-a"),
-        ("JH668335.1:200..300:ncRNA", "sig-b"),
-        ("JH668335.1:1..100:ncRNA", "sig-a-conflict"),
-    ]
+def _write(tmp_path, name, rows):
+    path = tmp_path / name
+    with path.open("w", newline="") as handle:
+        csv.writer(handle).writerows(rows)
+    return path
 
-    result = manifest.diff_via_db(conn, TEST_DB, signatures)
+
+def test_diff_via_polars_treats_an_empty_stored_manifest_as_bootstrap(tmp_path):
+    """
+    ENA emits the same location-based accession twice within one snapshot; the
+    duplicate must not upset the diff (it aborted the old COPY with a
+    UniqueViolation). The two rows even carry different signatures here.
+    """
+    stored = _write(tmp_path, "stored.csv", [])
+    new = _write(
+        tmp_path,
+        "new.csv",
+        [
+            ("JH668335.1:1..100:ncRNA", "sig-a"),
+            ("JH668335.1:200..300:ncRNA", "sig-b"),
+            ("JH668335.1:1..100:ncRNA", "sig-a-conflict"),
+        ],
+    )
+
+    result = manifest.diff_via_polars(stored, new)
 
     assert result.is_bootstrap is True
     assert result.to_parse == []
     assert result.deletions == []
 
 
-@pytest.mark.db
-def test_diff_via_db_diffs_correctly_despite_duplicates(conn):
+def test_diff_via_polars_diffs_correctly_despite_duplicates(tmp_path):
     """Against a stored manifest, a duplicated new accession is diffed once."""
-    manifest.store_signatures(
-        conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2", "acc3": "sig3"}
+    stored = _write(
+        tmp_path,
+        "stored.csv",
+        [("acc1", "sig1"), ("acc2", "sig2"), ("acc3", "sig3")],
+    )
+    new = _write(
+        tmp_path,
+        "new.csv",
+        [
+            ("acc1", "sig1"),  # unchanged
+            ("acc2", "sig2-new"),  # changed
+            ("acc4", "sig4"),  # new, and arrives twice
+            ("acc4", "sig4"),
+            # acc3 is absent -> dropped
+        ],
     )
 
-    signatures = [
-        ("acc1", "sig1"),  # unchanged
-        ("acc2", "sig2-new"),  # changed
-        ("acc4", "sig4"),  # new, and arrives twice
-        ("acc4", "sig4"),
-        # acc3 is absent -> dropped
-    ]
-
-    result = manifest.diff_via_db(conn, TEST_DB, signatures)
+    result = manifest.diff_via_polars(stored, new)
 
     assert result.is_bootstrap is False
     assert set(result.to_parse) == {"acc2", "acc4"}
+    assert result.to_parse.count("acc4") == 1
     assert set(result.deletions) == {"acc3"}
+
+
+@pytest.mark.db
+def test_dump_signatures_round_trips_through_the_polars_diff(conn, tmp_path):
+    """The COPY out is the only database work the diff does; it must feed the join."""
+    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2"})
+
+    stored = tmp_path / "stored.csv"
+    manifest.dump_signatures(conn, TEST_DB, stored)
+
+    assert sorted(csv.reader(stored.open())) == [["acc1", "sig1"], ["acc2", "sig2"]]
+
+    new = _write(tmp_path, "new.csv", [("acc1", "sig1"), ("acc3", "sig3")])
+    result = manifest.diff_via_polars(stored, new)
+
+    assert result.to_parse == ["acc3"]
+    assert result.deletions == ["acc2"]
+
+
+@pytest.mark.db
+def test_dump_signatures_writes_nothing_for_an_unknown_database(conn, tmp_path):
+    """A database with no manifest yet must dump empty, which is the bootstrap."""
+    stored = tmp_path / "stored.csv"
+    manifest.dump_signatures(conn, "NOT-A-DATABASE", stored)
+
+    assert stored.stat().st_size == 0
 
 
 def test_partition_name_is_a_safe_identifier():

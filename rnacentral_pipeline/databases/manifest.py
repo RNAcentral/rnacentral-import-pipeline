@@ -22,6 +22,7 @@ import typing as ty
 from pathlib import Path
 
 import attr
+import polars as pl
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
@@ -256,120 +257,80 @@ def apply_artifacts(
         )
 
 
-class _CopySource:
-    """
-    A read-only file object that serialises ``(accession, signature)`` tuples to CSV
-    lazily, one row at a time, for ``copy_expert``. At ENA scale the full signature
-    set is multiple GB, so buffering it into a single StringIO before COPY is what
-    OOM-killed the diff; this pulls rows from the iterator only as psycopg2 reads.
-    """
-
-    def __init__(self, rows: ty.Iterable[ty.Tuple[str, str]]):
-        self._writer = csv.writer(self)
-        self._rows = iter(rows)
-        self._buf = ""
-        self._out = ""
-
-    def write(self, text: str) -> int:
-        # csv.writer writes here; stash the rendered row for read() to hand out.
-        self._out += text
-        return len(text)
-
-    def read(self, size: int = -1) -> str:
-        while size < 0 or len(self._buf) < size:
-            try:
-                self._writer.writerow(next(self._rows))
-            except StopIteration:
-                break
-            self._buf += self._out
-            self._out = ""
-        if size < 0:
-            chunk, self._buf = self._buf, ""
-            return chunk
-        chunk, self._buf = self._buf[:size], self._buf[size:]
-        return chunk
-
-
 @attr.s(frozen=True)
 class DbDiff:
-    """Result of a database-side diff (see :func:`diff_via_db`)."""
+    """Result of a large-scale diff (see :func:`diff_via_polars`)."""
 
     to_parse = attr.ib(type=ty.List[str])  # accessions new or changed since last import
     deletions = attr.ib(type=ty.List[str])  # accessions present last import, now absent
     is_bootstrap = attr.ib(type=bool)  # True when there was no prior manifest
 
 
-def diff_via_db(
-    conn,
-    database: str,
-    signatures: ty.Iterable[ty.Tuple[str, str]],
-) -> DbDiff:
+def dump_signatures(conn, database: str, path: Path) -> None:
     """
-    Diff a large new signature set against the stored manifest inside Postgres.
+    Stream a database's stored manifest to a headerless ``accession,signature`` CSV.
 
-    ``signatures`` is an iterable of ``(accession, signature)`` for every record in
-    the new import. For databases the size of ENA, loading both the new and the old
-    manifest into Python to diff them is memory-hungry; instead the new set is
-    COPYed into a temp table and the set differences are computed in SQL against
-    :data:`MANIFEST_TABLE` scoped to ``database``.
-
-    Returns the accessions to parse (new or changed), the accessions to delete
-    (stored but now absent), and whether this is a bootstrap (no prior manifest for
-    the database). On bootstrap ``to_parse`` is empty and callers should parse
-    everything -- the caller, not this function, decides how to represent "all".
+    This is the only database work an incremental import needs. Keeping it to a
+    single COPY of one partition means a diff that lands while the database is busy
+    can do nothing but read: no temp tables, no server-side set arithmetic, nothing
+    another job can contend with. :func:`diff_via_polars` does the joins.
     """
     ensure_table(conn)
+    select = cursor_mogrify(
+        conn,
+        f"COPY (SELECT accession, signature FROM {MANIFEST_TABLE} WHERE database = %s) TO STDOUT WITH CSV",
+        (database,),
+    )
+    with conn.cursor() as cur, Path(path).open("w") as out:
+        cur.copy_expert(select, out)
+
+
+def cursor_mogrify(conn, statement: str, params: ty.Tuple) -> str:
+    """Render a statement with its parameters; COPY cannot take them separately."""
     with conn.cursor() as cur:
-        # Stream into an unconstrained staging table first: ENA can emit the same
-        # location-based accession twice within one snapshot, which would abort a
-        # COPY straight into a PRIMARY KEY table. Collapse the duplicates on the way
-        # in, the same last-wins way store_signatures/apply_artifacts already do.
-        cur.execute(
-            "CREATE TEMP TABLE _new_manifest_raw (accession text NOT NULL, signature text NOT NULL) ON COMMIT DROP"
-        )
+        return cur.mogrify(statement, params).decode()
 
-        cur.copy_expert(
-            "COPY _new_manifest_raw (accession, signature) FROM STDIN WITH CSV",
-            _CopySource(signatures),
-        )
 
-        cur.execute(
-            "CREATE TEMP TABLE _new_manifest (accession text PRIMARY KEY, signature text NOT NULL) ON COMMIT DROP"
-        )
-        cur.execute(
-            "INSERT INTO _new_manifest (accession, signature) "
-            "SELECT DISTINCT ON (accession) accession, signature "
-            "FROM _new_manifest_raw ORDER BY accession"
-        )
+def _scan_signatures(path: Path) -> pl.LazyFrame:
+    return pl.scan_csv(
+        path,
+        has_header=False,
+        new_columns=["accession", "signature"],
+        schema_overrides={"accession": pl.String, "signature": pl.String},
+    )
 
-        cur.execute(
-            f"SELECT count(*) FROM {MANIFEST_TABLE} WHERE database = %s", (database,)
+
+def diff_via_polars(stored_csv: Path, new_csv: Path) -> DbDiff:
+    """
+    Diff this import's signatures against the stored manifest, on the cluster.
+
+    Both sides are headerless ``accession,signature`` CSVs -- ``stored_csv`` from
+    :func:`dump_signatures`, ``new_csv`` collected from the import -- and the joins
+    run streaming in polars, so ENA-scale sets never have to fit in memory and the
+    database is left alone. An empty ``stored_csv`` is a bootstrap: nothing was
+    imported before, so there is nothing to delete and the caller parses everything.
+
+    ENA can emit the same location-based accession twice in one snapshot, so the new
+    side is deduplicated before the join.
+    """
+    if Path(stored_csv).stat().st_size == 0:
+        return DbDiff(to_parse=[], deletions=[], is_bootstrap=True)
+
+    new = _scan_signatures(new_csv).unique(subset="accession", keep="any")
+    stored = _scan_signatures(stored_csv)
+
+    to_parse = (
+        new.join(stored, on="accession", how="left", suffix="_stored")
+        .filter(
+            pl.col("signature_stored").is_null()
+            | (pl.col("signature_stored") != pl.col("signature"))
         )
-        is_bootstrap = cur.fetchone()[0] == 0
+        .select("accession")
+    )
+    deletions = stored.join(new, on="accession", how="anti").select("accession")
 
-        to_parse: ty.List[str] = []
-        if not is_bootstrap:
-            cur.execute(
-                f"""
-                SELECT n.accession
-                FROM _new_manifest n
-                LEFT JOIN {MANIFEST_TABLE} m
-                  ON m.database = %s AND m.accession = n.accession
-                WHERE m.accession IS NULL OR m.signature <> n.signature
-                """,
-                (database,),
-            )
-            to_parse = [row[0] for row in cur]
-
-        cur.execute(
-            f"""
-            SELECT m.accession
-            FROM {MANIFEST_TABLE} m
-            LEFT JOIN _new_manifest n ON n.accession = m.accession
-            WHERE m.database = %s AND n.accession IS NULL
-            """,
-            (database,),
-        )
-        deletions = [row[0] for row in cur]
-
-    return DbDiff(to_parse=to_parse, deletions=deletions, is_bootstrap=is_bootstrap)
+    return DbDiff(
+        to_parse=to_parse.collect(engine="streaming")["accession"].to_list(),
+        deletions=deletions.collect(engine="streaming")["accession"].to_list(),
+        is_bootstrap=False,
+    )
