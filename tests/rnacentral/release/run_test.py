@@ -107,3 +107,30 @@ def test_run_patches_functions_and_checks_once(monkeypatch):
     # do_checks runs exactly once, after the per-database loop.
     assert sql_calls[-1] == "SELECT rnc_load_xref.do_checks(NULL::bigint)"
     assert sum("do_checks(NULL::bigint)" in sql for sql in sql_calls) == 1
+
+
+def test_prepare_releases_skips_only_databases_with_a_pending_release(monkeypatch):
+    """
+    The old global bail-out meant one abandoned load blocked every later one:
+    release 27.1 staged SILVA, found ENA's pending release, created nothing for
+    SILVA, and loaded ENA's release in its place.
+    """
+    conn = FakeConnection()
+    monkeypatch.setattr(run.psycopg2, "connect", lambda *a, **k: conn)
+
+    run.run("postgres://example")
+
+    prepare = next(
+        " ".join(sql.split())
+        for sql, _ in conn.cursor_obj.calls
+        if "FUNCTION rnc_update.prepare_releases" in sql
+    )
+    assert "r.dbid = d2.id" in prepare
+    assert "Found releases to be loaded" not in prepare
+
+
+def test_to_release_only_loads_staged_databases():
+    """A pending release for a database this run did not stage must be skipped."""
+    normalised = " ".join(run.TO_RELEASE.split())
+    assert "rnacen.load_rnacentral_all l" in normalised
+    assert "JOIN rnacen.rnc_database d ON l.database = d.descr" in normalised

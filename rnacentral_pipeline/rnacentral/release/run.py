@@ -69,11 +69,19 @@ CREATE INDEX IF NOT EXISTS load_md5_new_sequences$in_md5
 ON rnacen.load_md5_new_sequences(in_md5)
 """
 
+# Restricted to databases actually staged in this run. An abandoned load leaves a
+# pending release behind, and without this filter that stale release gets loaded
+# instead of the staged one.
 TO_RELEASE = """
-SELECT dbid, id
-FROM rnacen.rnc_release
-WHERE status = 'L'
-ORDER BY id
+SELECT r.dbid, r.id
+FROM rnacen.rnc_release r
+WHERE r.status = 'L'
+AND r.dbid IN (
+    SELECT DISTINCT d.id
+    FROM rnacen.load_rnacentral_all l
+    JOIN rnacen.rnc_database d ON l.database = d.descr
+)
+ORDER BY r.id
 """
 
 COUNT_QUERY = """
