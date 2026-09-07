@@ -6,7 +6,9 @@ process fetch {
 
   script:
   """
-  wget -e robots=off -nH -r --cut-dirs 3 --no-parent -A "SILVA_*Parc.rnac.gz" $params.databases.silva.remote
+  # before SILVA 144 split SSU and LSU across releases:
+  # wget -e robots=off -nH -r --cut-dirs 3 --no-parent -A "SILVA_*Parc.rnac.gz" \$params.databases.silva.remote
+  wget ${params.databases.silva.remote.join(' ')}
   gzip -d *.gz
   """
 }
