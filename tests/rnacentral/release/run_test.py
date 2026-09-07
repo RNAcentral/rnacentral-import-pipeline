@@ -245,3 +245,25 @@ def test_every_connection_pins_client_min_messages(monkeypatch):
     assert step_options
     for options in step_options:
         assert "client_min_messages=notice" in options
+
+
+def test_prepare_releases_skips_only_databases_with_a_pending_release(monkeypatch):
+    """
+    The old global bail-out meant one abandoned load blocked every later one:
+    release 27.1 staged SILVA, found ENA's pending release, created nothing for
+    SILVA, and loaded ENA's release in its place.
+    """
+    prepare = next(
+        " ".join(sql.split())
+        for sql, _ in _run_capture(monkeypatch)
+        if "FUNCTION rnc_update.prepare_releases" in sql
+    )
+    assert "r.dbid = d2.id" in prepare
+    assert "Found releases to be loaded" not in prepare
+
+
+def test_to_release_only_loads_staged_databases():
+    """A pending release for a database this run did not stage must be skipped."""
+    normalised = " ".join(run.TO_RELEASE.split())
+    assert "rnacen.load_rnacentral_all l" in normalised
+    assert "JOIN rnacen.rnc_database d ON l.database = d.descr" in normalised
