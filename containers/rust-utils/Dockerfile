@@ -1,8 +1,8 @@
 # Multi-stage build for Rust utilities
-# This container provides all 8 Rust command-line tools used by the pipeline
+# This container provides all 7 Rust command-line tools used by the pipeline
 
 # Stage 1: Builder - compiles Rust utilities AND maturin Python extension
-FROM python:3.11.14-trixie AS builder
+FROM python:3.14.7-trixie AS builder
 
 # Install Rust toolchain. Pinned: unpinned, rustup takes whatever stable is
 # current that day, and a std change broke a transitive dep with no commit of
