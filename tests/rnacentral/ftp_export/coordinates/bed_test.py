@@ -28,6 +28,7 @@ def fetch_data(rna_id, assembly):
     return data[0]
 
 
+@pytest.mark.db
 def test_can_build_bed_from_region():
     data = fetch_data("URS000082BE64_9606", "GRCh38")
     assert attr.asdict(data) == attr.asdict(
@@ -46,6 +47,7 @@ def test_can_build_bed_from_region():
     )
 
 
+@pytest.mark.db
 def test_can_build_entry_with_several_databases():
     data = fetch_data("URS0000368518_9606", "GRCh38")
     assert attr.asdict(data) == attr.asdict(
@@ -64,6 +66,7 @@ def test_can_build_entry_with_several_databases():
     )
 
 
+@pytest.mark.db
 def test_can_build_entry_from_pig():
     data = fetch_data("URS000099C6E5_9598", "Pan_tro_3.0")
     assert attr.asdict(data) == attr.asdict(
@@ -82,6 +85,7 @@ def test_can_build_entry_from_pig():
     )
 
 
+@pytest.mark.db
 def test_can_build_entry_with_several_exons():
     data = fetch_data("URS0000000055_9606", "GRCh38")
     assert attr.asdict(data) == attr.asdict(
@@ -114,6 +118,7 @@ def test_can_build_entry_with_several_exons():
         ),
     ],
 )
+@pytest.mark.db
 def test_gets_correct_chromosome(upi, assembly, expected):
     assert fetch_data(upi, assembly).bed_chromosome == expected
 
@@ -127,6 +132,7 @@ def test_gets_correct_chromosome(upi, assembly, expected):
         ("URS0000000055_9606", "GRCh38", [94, 105, 500]),
     ],
 )
+@pytest.mark.db
 def test_gets_correct_bed_sizes(upi, assembly, expected):
     assert fetch_data(upi, assembly).sizes() == expected
 
@@ -140,6 +146,7 @@ def test_gets_correct_bed_sizes(upi, assembly, expected):
         ("URS0000000055_9606", "GRCh38", [0, 2371, 2732]),
     ],
 )
+@pytest.mark.db
 def test_gets_correct_bed_starts(upi, assembly, expected):
     assert fetch_data(upi, assembly).starts() == expected
 
@@ -234,6 +241,7 @@ def test_gets_correct_bed_starts(upi, assembly, expected):
         ),
     ],
 )
+@pytest.mark.db
 def test_gets_generates_expected_writeable(upi, assembly, expected):
     assert fetch_data(upi, assembly).writeable() == expected
 

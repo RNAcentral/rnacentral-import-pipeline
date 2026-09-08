@@ -22,7 +22,7 @@ from gffutils import Feature
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3
 
-from .helpers import fetch_coord, fetch_all
+from .helpers import fetch_all, fetch_coord
 
 
 def fetch_data(rna_id, assembly):
@@ -41,6 +41,7 @@ def assert_features_equal(val, ans):
     assert v == a
 
 
+@pytest.mark.db
 def test_can_produce_features():
     data = fetch_data("URS000082BE64_9606", "GRCh38")
     ans = [
@@ -84,6 +85,7 @@ def test_can_produce_features():
     assert_features_equal(data, ans)
 
 
+@pytest.mark.db
 def test_can_produce_features_with_identity():
     data = fetch_data("URS0000563942_9606", "GRCh38")
     ans = [
@@ -128,6 +130,7 @@ def test_can_produce_features_with_identity():
     assert_features_equal(data, ans)
 
 
+@pytest.mark.db
 def test_can_build_feature_for_mapped():
     data = fetch_data("URS0000000098_9606", "GRCh38")
     ans = [

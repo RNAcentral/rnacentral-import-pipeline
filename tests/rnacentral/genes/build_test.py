@@ -13,15 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import io
+import os
 
-import pytest
 import psycopg2
+import pytest
 import yaml
 from yaml import Loader
 
 from rnacentral_pipeline.rnacentral.genes import build
+
+pytestmark = pytest.mark.db
 
 
 ENDPOINT_QUERY = """

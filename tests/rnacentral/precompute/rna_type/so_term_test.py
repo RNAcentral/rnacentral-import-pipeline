@@ -323,6 +323,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ),
     ],
 )
+@pytest.mark.db
 def test_computes_correct_rna_types(rna_id, rna_type):
     context, data = load_data(rna_id)
     result = so_term.rna_type_of(context, data)

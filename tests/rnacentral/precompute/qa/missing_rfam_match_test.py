@@ -15,10 +15,12 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 import rnacentral_pipeline.rnacentral.precompute.qa.missing_rfam_match as miss
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 
 from .. import helpers
+
+pytestmark = pytest.mark.db
 
 
 @pytest.mark.parametrize(
@@ -45,9 +47,9 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
             "URS00007D23E5_6239",
             "tRNA",
             (
-                u"No match to a tRNA Rfam model "
-                u'(<a href="http://rfam.org/family/RF00005">RF00005</a>,'
-                u' <a href="http://rfam.org/family/RF01852">RF01852</a>)'
+                "No match to a tRNA Rfam model "
+                '(<a href="http://rfam.org/family/RF00005">RF00005</a>,'
+                ' <a href="http://rfam.org/family/RF01852">RF01852</a>)'
             ),
         ),
     ],

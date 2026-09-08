@@ -15,10 +15,11 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 import rnacentral_pipeline.rnacentral.precompute.qa.incomplete_sequence as inco
-
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 from tests.rnacentral.precompute import helpers
+
+pytestmark = pytest.mark.db
 
 
 @pytest.mark.parametrize(

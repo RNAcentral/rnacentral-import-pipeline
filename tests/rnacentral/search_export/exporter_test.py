@@ -31,6 +31,8 @@ import six
 from rnacentral_pipeline.rnacentral.search_export import exporter
 from tests.helpers import run_range_as_single, run_with_replacements
 
+pytestmark = pytest.mark.db
+
 # Parse out all UPIs
 # Create temp table of UPI to get metadata for
 # Run queries generating all metadata for those UPIs
@@ -356,7 +358,7 @@ def test_assigns_md5_correctly(upi, ans):
             "Caenorhabditis elegans piwi-interacting RNA 21ur-13325",
         ),
         ("URS0000005F8E_9685", "Felis catus mir-103/107 microRNA precursor"),
-        ("URS000058FFCF_7729", u"Halocynthia roretzi tRNA Gly ÊCU"),
+        ("URS000058FFCF_7729", "Halocynthia roretzi tRNA Gly ÊCU"),
     ],
 )
 def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
@@ -548,16 +550,16 @@ def test_can_create_document_with_unicode():
     val = sorted(load_and_get_additional("URS000009EE82_562", "product"), key=key)
     assert val == sorted(
         [
-            {"attrib": {"name": "product"}, "text": u"tRNA-Asp(gtc)"},
-            {"attrib": {"name": "product"}, "text": u"P-site tRNA Aspartate"},
-            {"attrib": {"name": "product"}, "text": u"transfer RNA-Asp"},
-            {"attrib": {"name": "product"}, "text": u"tRNA_Asp_GTC"},
-            {"attrib": {"name": "product"}, "text": u"tRNA-asp"},
-            {"attrib": {"name": "product"}, "text": u"tRNA Asp ⊄UC"},
-            {"attrib": {"name": "product"}, "text": u"tRNA-Asp"},
-            {"attrib": {"name": "product"}, "text": u"tRNA-Asp-GTC"},
-            {"attrib": {"name": "product"}, "text": u"ASPARTYL TRNA"},
-            {"attrib": {"name": "product"}, "text": u"tRNA-Asp (GTC)"},
+            {"attrib": {"name": "product"}, "text": "tRNA-Asp(gtc)"},
+            {"attrib": {"name": "product"}, "text": "P-site tRNA Aspartate"},
+            {"attrib": {"name": "product"}, "text": "transfer RNA-Asp"},
+            {"attrib": {"name": "product"}, "text": "tRNA_Asp_GTC"},
+            {"attrib": {"name": "product"}, "text": "tRNA-asp"},
+            {"attrib": {"name": "product"}, "text": "tRNA Asp ⊄UC"},
+            {"attrib": {"name": "product"}, "text": "tRNA-Asp"},
+            {"attrib": {"name": "product"}, "text": "tRNA-Asp-GTC"},
+            {"attrib": {"name": "product"}, "text": "ASPARTYL TRNA"},
+            {"attrib": {"name": "product"}, "text": "tRNA-Asp (GTC)"},
         ],
         key=key,
     )
@@ -567,7 +569,7 @@ def test_it_can_handle_a_list_in_ontology():
     data = load_data("URS00003B5CA5_559292")
     results = data.findall("./cross_references/ref")
     xrefs = {as_xml_dict(r)["attrib"]["dbkey"] for r in results}
-    assert {"ECO:0000202", u"GO:0030533", "SO:0000253"} & xrefs
+    assert {"ECO:0000202", "GO:0030533", "SO:0000253"} & xrefs
 
 
 # @pytest.mark.skip()

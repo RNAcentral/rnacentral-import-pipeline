@@ -18,11 +18,13 @@ from functools import lru_cache
 import attr
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute.data.update import SequenceUpdate
-from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute import process
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from rnacentral_pipeline.rnacentral.precompute.data.update import SequenceUpdate
 
 from . import helpers
+
+pytestmark = pytest.mark.db
 
 
 def load_data(upi):

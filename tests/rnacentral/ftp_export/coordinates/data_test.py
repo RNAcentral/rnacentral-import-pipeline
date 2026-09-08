@@ -16,13 +16,14 @@ limitations under the License.
 """
 
 import attr
-
 import pytest
 
 from rnacentral_pipeline.databases.data import regions
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import data
 
 from .helpers import fetch_coord
+
+pytestmark = pytest.mark.db
 
 
 def fetch_one(rna_id, assembly):

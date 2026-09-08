@@ -19,6 +19,8 @@ import pytest
 
 from rnacentral_pipeline.rnacentral.release import database_stats as stats
 
+pytestmark = pytest.mark.db
+
 
 @pytest.fixture(scope="module")
 def connection():

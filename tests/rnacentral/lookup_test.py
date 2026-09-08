@@ -18,9 +18,10 @@ import tempfile
 
 import pytest
 
+from rnacentral_pipeline.databases.genecards_suite.core import lookup as gc
 from rnacentral_pipeline.rnacentral import lookup as lk
 
-from rnacentral_pipeline.databases.genecards_suite.core import lookup as gc
+pytestmark = pytest.mark.db
 
 
 @pytest.fixture(scope="module")

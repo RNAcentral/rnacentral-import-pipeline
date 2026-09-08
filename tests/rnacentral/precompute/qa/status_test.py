@@ -20,6 +20,8 @@ from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
 
 from .. import helpers
 
+pytestmark = pytest.mark.db
+
 
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
