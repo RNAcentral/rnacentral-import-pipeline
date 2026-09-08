@@ -1,6 +1,5 @@
-from pathlib import Path
 import re
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PARSE_DATABASES_WORKFLOW = ROOT / "workflows" / "parse-databases.nf"
@@ -12,12 +11,15 @@ DATABASE_INCLUDE_RE = re.compile(
 DATABASE_RUN_GUARD_RE = re.compile(
     r"^\s*when:\s*(?:\{[^\n]*params\.databases[^\n]*\.run[^\n]*\}|"
     r"params\.databases[^\n]*\.run)\s*$"
-    r"|^\s*when:\s*\n\s*params\.databases[^\n]*\.run",
+    r"|^\s*when:\s*\n\s*params\.databases[^\n]*\.run"
+    # Some workflows guard the whole workflow body instead of a per-process
+    # `when:` (eg. pirbase.nf, quickgo.nf): `if (params.databases.X?.run) {
+    # ... } else { channel.empty() | set { data } }`.
+    r"|^\s*if\s*\(\s*params\.databases[^\n]*\.run[^\n]*\)",
     re.MULTILINE,
 )
 UNSAFE_DATABASE_RUN_RE = re.compile(
-    r"params\.databases(?:\.[A-Za-z_][A-Za-z0-9_]*|\[[^\]]+\])+"
-    r"(?<!\?)\.run"
+    r"params\.databases(?:\.[A-Za-z_][A-Za-z0-9_]*|\[[^\]]+\])+" r"(?<!\?)\.run"
 )
 
 
@@ -53,4 +55,4 @@ def test_taxonomy_context_uses_global_config_flag():
 
     assert "if (params.get('needs_taxonomy', false))" in workflow
     assert "build_context | set { context }" in workflow
-    assert "Channel.empty() | set { context }" in workflow
+    assert "channel.empty() | set { context }" in workflow
