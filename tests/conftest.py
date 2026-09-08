@@ -108,8 +108,10 @@ def pytest_unconfigure(config):
 
 
 def pytest_runtest_setup(item):
-    """Skip tests marked ``network`` unless live access is explicitly enabled."""
-    if item.get_closest_marker("network") and not ALLOW_NETWORK:
+    """Skip tests marked ``network`` or ``preflight`` unless live access is explicitly enabled."""
+    if (
+        item.get_closest_marker("network") or item.get_closest_marker("preflight")
+    ) and not ALLOW_NETWORK:
         pytest.skip("requires network access (set RNAC_TEST_ALLOW_NETWORK to run)")
 
 
