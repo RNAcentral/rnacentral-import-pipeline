@@ -78,6 +78,7 @@ process release {
 
   script:
   def should_release = params.should_release
+  def force = params.force_full_import ? '--force-full' : ''
   def pre = file("work/pre-release")
   def post = file("work/post-release")
   """
@@ -102,7 +103,7 @@ process release {
   echo "TIMING \$(date +%T) start pre-release-sql"
   run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   echo "TIMING \$(date +%T) start release-run"
-  ${should_release ? '' : '# ' }rnac --log-level info release run 2>&1
+  ${should_release ? '' : '# ' }rnac --log-level info release run $force 2>&1
   echo "TIMING \$(date +%T) start post-release-sql"
   run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   echo "TIMING \$(date +%T) start update-stats"

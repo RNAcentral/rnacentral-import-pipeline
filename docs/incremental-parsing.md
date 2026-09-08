@@ -79,8 +79,26 @@ Signature = sha256 of the canonicalised raw record (whole record, so any change 
 caught). The mapping HGNC produces also depends on RNAcentral's *own* data (e.g.
 the NONCODE/RefSeq → URS lookups), so an unchanged raw record could in principle
 map differently after the DB changes. Signature-by-raw-hash assumes the mapping is
-a pure function of the raw record; a periodic full re-import (the same
-`--force-full` escape hatch as the loader) reconciles any drift.
+a pure function of the raw record; a periodic full re-import
+(`--force_full_import`, below) reconciles any drift.
+
+## Forcing a normal import
+
+`--force-full` on `rnac release run` only sets the *release* type; the parse has
+already happened by then, so on its own it would rebuild a partition from a delta
+parse's partial staging table and retire everything that was not re-parsed.
+
+The pipeline-level switch is `params.force_full_import`:
+
+```sh
+nextflow run main.nf --force_full_import
+```
+
+It ignores the stored manifest in every delta parse (so every record is parsed and
+staged) *and* passes `--force-full` to `rnac release run`, giving a run identical to
+the pre-delta behaviour. The manifest is rewritten at the end as usual, so the next
+run is a normal delta again. Combine it with the per-database `run` flags to force
+just one database.
 
 ## Manifest storage & transactionality
 
@@ -129,7 +147,7 @@ manifest from `manifest.csv`.
 2. Second run with only a few records changed → the parse should map only those
    records (watch the `HGNC delta: N new, M changed, ...` log line), the load runs as
    `D`, and untouched HGNC xrefs stay active. Confirm with the row counts / timings.
-3. `--force-full` (on `rnac release run`) still forces a full rebuild if needed.
+3. `nextflow run main.nf --force_full_import` still does the old thing end to end.
 
 Until the manifest exists the system safely degrades to full-parse-every-time +
 incremental load (correct, just not sped up), so partial wiring cannot corrupt data.

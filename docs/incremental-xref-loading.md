@@ -4,8 +4,10 @@
 **Status:** incremental xref functions written and **parity-validated**, and the
 **per-database FULL/INCREMENTAL selection is now wired in** (default: auto). The
 remaining work is **staging-scale validation + benchmarking** (step 5) before this
-is trusted on production volumes. `rnac release run --force-full` reverts to the
-old all-full behaviour at any time.
+is trusted on production volumes. `rnac release run --force-full` reverts the
+release to the old all-full behaviour at any time; `--force_full_import` on the
+pipeline does that *and* forces a full parse, which is what a delta-parsed database
+needs (see docs/incremental-parsing.md).
 
 ## Problem
 

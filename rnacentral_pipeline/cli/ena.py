@@ -104,11 +104,18 @@ def ena_signatures(ena_file, output):
 
 @cli.command("delta-diff")
 @click.option("--db-url", envvar="PGDATABASE")
+@click.option(
+    "--force-full",
+    is_flag=True,
+    help="Ignore the stored manifest and parse every record.",
+)
 @click.argument("signatures_csv", type=click.Path(exists=True))
 @click.argument("to_parse", type=click.File("w"))
 @click.argument("deletions_csv", type=click.File("w"))
 @click.argument("manifest_csv", type=click.File("w"))
-def ena_delta_diff(signatures_csv, to_parse, deletions_csv, manifest_csv, db_url=None):
+def ena_delta_diff(
+    signatures_csv, to_parse, deletions_csv, manifest_csv, force_full=False, db_url=None
+):
     """
     Diff the collected new signatures against the stored ENA manifest and write the
     three side-channel files:
@@ -120,28 +127,36 @@ def ena_delta_diff(signatures_csv, to_parse, deletions_csv, manifest_csv, db_url
 
     The database is only read from: the stored manifest is COPYed out and the joins
     run in polars here, so this cannot contend with anything else on the database.
+
+    --force-full skips the diff and parses everything, for when the tracking table
+    and the loaded data have drifted apart. Nothing is listed for deletion: a forced
+    full run releases with FULL, which retires by absence from the load.
     """
 
-    # Written beside the other work-directory files, never /tmp: a --contain
-    # container gives /tmp a few megabytes and ENA's manifest is gigabytes.
-    stored = Path("stored-manifest.csv")
-    conn = psycopg2.connect(db_url)
-    try:
-        manifest.dump_signatures(conn, DATABASE, stored)
-    finally:
-        conn.close()
+    deletions_writer = csv.writer(deletions_csv)
 
-    result = manifest.diff_via_polars(stored, Path(signatures_csv))
-
-    if result.is_bootstrap:
+    if force_full:
         to_parse.write(delta.KEEP_ALL + "\n")
     else:
-        for accession in result.to_parse:
-            to_parse.write(accession + "\n")
+        # Written beside the other work-directory files, never /tmp: a --contain
+        # container gives /tmp a few megabytes and ENA's manifest is gigabytes.
+        stored = Path("stored-manifest.csv")
+        conn = psycopg2.connect(db_url)
+        try:
+            manifest.dump_signatures(conn, DATABASE, stored)
+        finally:
+            conn.close()
 
-    deletions_writer = csv.writer(deletions_csv)
-    for accession in result.deletions:
-        deletions_writer.writerow([DATABASE, accession])
+        result = manifest.diff_via_polars(stored, Path(signatures_csv))
+
+        if result.is_bootstrap:
+            to_parse.write(delta.KEEP_ALL + "\n")
+        else:
+            for accession in result.to_parse:
+                to_parse.write(accession + "\n")
+
+        for accession in result.deletions:
+            deletions_writer.writerow([DATABASE, accession])
 
     manifest_writer = csv.writer(manifest_csv)
     with open(signatures_csv, "r", newline="") as handle:

@@ -132,8 +132,9 @@ Nothing new is needed on the load side. `get_load_release_type(dbid)` already
 returns `D` for *any* database that has manifest rows, and `load_xref_delta` +
 `incremental_retire_explicit` + `load_deletions` already retire only explicitly
 listed accessions. ENA becomes a delta database purely by producing a manifest.
-`rnac release run --force-full` remains the escape hatch (forces `F`, ignores the
-manifest) and reconciles any signature/mapping drift.
+`nextflow run main.nf --force_full_import` remains the escape hatch: the diff is
+skipped, every chunk is parsed, and the release forces `F`, so a run reconciles any
+signature/mapping drift.
 
 ## Safety / rollout
 
@@ -150,6 +151,6 @@ path is selected only when a manifest is actually present.
   confirmed on real data.
 - **Mapping drift.** Like HGNC, the signature hashes only the raw record, so a record
   whose *mapping* depends on RNAcentral's own data could in principle map differently
-  without its signature changing. `--force-full` periodically reconciles.
+  without its signature changing. `--force_full_import` periodically reconciles.
 - **Not yet benchmarked at production volume.** The real question — what fraction of
   ENA changes between snapshots — is unmeasured; that fraction is the whole payoff.

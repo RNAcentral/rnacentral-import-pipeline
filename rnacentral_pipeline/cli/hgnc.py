@@ -17,9 +17,9 @@ from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.writers import entry_writer
 from rnacentral_pipeline.databases import manifest
 from rnacentral_pipeline.databases.hgnc import parser
+from rnacentral_pipeline.writers import entry_writer
 
 DATABASE = "HGNC"
 
@@ -33,6 +33,11 @@ def cli():
 
 @cli.command("map")
 @click.option("--db-url", envvar="PGDATABASE")
+@click.option(
+    "--force-full",
+    is_flag=True,
+    help="Ignore the stored manifest and parse every record.",
+)
 @click.argument("filename", type=click.Path())
 @click.argument(
     "output",
@@ -43,15 +48,18 @@ def cli():
         file_okay=False,
     ),
 )
-def process_hgnc(filename, output, db_url=None):
+def process_hgnc(filename, output, force_full=False, db_url=None):
     """
     Process the raw HGNC file into importable CSV files.
 
     Only records that are new or changed since the last import are mapped and
     written; dropped records go to deletions.csv and the full signature set to
     manifest.csv, both consumed by the load step. See docs/incremental-parsing.md.
+
+    --force-full ignores the stored manifest and parses everything, for when the
+    tracking table and the loaded data have drifted apart.
     """
-    previous = manifest.load_signatures_for(db_url, DATABASE)
+    previous = {} if force_full else manifest.load_signatures_for(db_url, DATABASE)
     result = parser.parse(Path(filename), db_url, previous)
     with entry_writer(Path(output)) as writer:
         # A delta parse legitimately yields no entries when nothing changed; that is

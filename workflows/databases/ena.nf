@@ -142,7 +142,7 @@ process ena_signatures {
   output:
   path('signatures.csv')
 
-  when: { params.databases.ena?.run }
+  when: params.databases.ena?.run
 
   script:
   """
@@ -164,12 +164,13 @@ process ena_delta_diff {
   path('deletions.csv'), emit: deletions
   path('manifest.csv'), emit: manifest
 
-  when: { params.databases.ena?.run }
+  when: params.databases.ena?.run
 
   script:
+  def force = params.force_full_import ? '--force-full' : ''
   """
   cat signatures*.csv > all-signatures.csv
-  rnac ena delta-diff all-signatures.csv to_parse.txt deletions.csv manifest.csv
+  rnac ena delta-diff $force all-signatures.csv to_parse.txt deletions.csv manifest.csv
   """
 }
 
