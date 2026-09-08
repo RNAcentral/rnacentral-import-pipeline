@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 
+import logging
 import tempfile
 from functools import lru_cache
 from pathlib import Path
@@ -23,9 +24,8 @@ from pathlib import Path
 import gene_preprocessing as gpp
 import numpy as np
 import polars as pl
-from gensim.models import Word2Vec
 from tqdm import tqdm
-import logging
+
 LOGGER = logging.getLogger(__name__)
 
 empty_features = pl.DataFrame(
@@ -49,34 +49,37 @@ empty_features = pl.DataFrame(
     },
 )
 
-obsolete_so_terms = {
-    "SO:0001171": "SO:0002345"
-}
+obsolete_so_terms = {"SO:0001171": "SO:0002345"}
 
 _SO_MODEL = None
 
 
 def init_so_model(path: str) -> None:
     global _SO_MODEL
-    _SO_MODEL = _load_so_model(path)
+    _SO_MODEL = load_so_model(path)
 
 
-def _load_so_model(path: str) -> dict:
-    so_model = Word2Vec.load(path)
-    so_vec_normalised = {
-        key: so_model.wv[key] / np.linalg.norm(so_model.wv[key])
-        for key in so_model.wv.key_to_index
-    }
+def load_so_model(path: str) -> dict:
+    """Load the SO Node2Vec embedding table (so_term, vector parquet)."""
+    table = pl.read_parquet(path)
+    so_vec_normalised = {}
+    for term, vector in zip(table["so_term"], table["vector"]):
+        vector = np.array(vector, dtype=np.float32)
+        so_vec_normalised[term] = vector / np.linalg.norm(vector)
     return so_vec_normalised
 
 
 @lru_cache(maxsize=1024)
 def get_type_similarity(type_a: str, type_b: str) -> float:
     if type_a in obsolete_so_terms:
-        LOGGER.warning(f"Obsolete SO term {type_a} replaced with {obsolete_so_terms[type_a]}")
+        LOGGER.warning(
+            f"Obsolete SO term {type_a} replaced with {obsolete_so_terms[type_a]}"
+        )
         type_a = obsolete_so_terms[type_a]
     if type_b in obsolete_so_terms:
-        LOGGER.warning(f"Obsolete SO term {type_b} replaced with {obsolete_so_terms[type_b]}")
+        LOGGER.warning(
+            f"Obsolete SO term {type_b} replaced with {obsolete_so_terms[type_b]}"
+        )
         type_b = obsolete_so_terms[type_b]
     if _SO_MODEL is None:
         raise RuntimeError("SO model not initialized - call init_so_model(path) first")
@@ -499,8 +502,7 @@ def _work_plan(transcripts, nearby_distance=1000):
     )
 
     pair_keys = pl.concat([same_bucket, adj_bucket]).filter(
-        (pl.col("region_start_right") - pl.col("region_start")).abs()
-        <= nearby_distance
+        (pl.col("region_start_right") - pl.col("region_start")).abs() <= nearby_distance
     )
 
     ## Rejoin the per-transcript attributes (including the exon lists) by idx,

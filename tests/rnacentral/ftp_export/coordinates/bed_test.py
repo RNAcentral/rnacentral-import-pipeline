@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import attr
-
 import pytest
 
 from rnacentral_pipeline.databases.data import regions
@@ -237,3 +236,54 @@ def test_gets_correct_bed_starts(upi, assembly, expected):
 )
 def test_gets_generates_expected_writeable(upi, assembly, expected):
     assert fetch_data(upi, assembly).writeable() == expected
+
+
+def test_exploded_produces_one_row_per_exon():
+    entry = bed.BedEntry(
+        rna_id="URS0000000055_9606",
+        rna_type="lncRNA",
+        databases="Ensembl,GENCODE,LNCipedia,NONCODE",
+        region=regions.SequenceRegion(
+            assembly_id="GRCh38",
+            chromosome="6",
+            strand=-1,
+            exons=[
+                regions.Exon(start=57171004, stop=57171098),
+                regions.Exon(start=57173375, stop=57173480),
+                regions.Exon(start=57173736, stop=57174236),
+            ],
+            coordinate_system=regions.CoordinateSystem.zero_based(),
+        ),
+    )
+    assert list(entry.exploded()) == [
+        [
+            "chr6",
+            57171004,
+            57171098,
+            "URS0000000055_9606",
+            699,
+            "-",
+            57171004,
+            57174236,
+        ],
+        [
+            "chr6",
+            57173375,
+            57173480,
+            "URS0000000055_9606",
+            699,
+            "-",
+            57171004,
+            57174236,
+        ],
+        [
+            "chr6",
+            57173736,
+            57174236,
+            "URS0000000055_9606",
+            699,
+            "-",
+            57171004,
+            57174236,
+        ],
+    ]

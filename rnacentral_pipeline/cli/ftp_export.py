@@ -127,14 +127,23 @@ def export_coordinates():
 
 
 @export_coordinates.command("as-bed")
+@click.option(
+    "--exploded",
+    is_flag=True,
+    default=False,
+    help="Write one row per exon instead of a BED12 block, for genomic intersects.",
+)
 @click.argument("json_file", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
-def format_as_bed(json_file, output):
+def format_as_bed(json_file, output, exploded):
     """
     This will turn the json file produced by the coordiantes query into a BED
     file.
     """
-    bed.from_json(json_file, output)
+    if exploded:
+        bed.from_json_exploded(json_file, output)
+    else:
+        bed.from_json(json_file, output)
 
 
 @export_coordinates.command("as-gff3")
