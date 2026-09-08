@@ -26,6 +26,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 QC_WORKFLOW = ROOT / "workflows" / "utils" / "qc.nf"
 MAIN_WORKFLOW = ROOT / "main.nf"
+ENSEMBL_DIVISIONS = ROOT / "workflows" / "utils" / "ensembl-divisions.nf"
 QC_SQL_DIR = ROOT / "files" / "qc"
 
 PROCESS_RE = re.compile(r"^process\s+(\w+)\s*\{", re.MULTILINE)
@@ -37,14 +38,19 @@ SQL_VAR_RE = re.compile(r"(?<!:):'?([a-z_][a-z0-9_]*)'?")
 SQL_IF_RE = re.compile(r"^\s*\\if\s+:\{\?(\w+)\}")
 SQL_SET_RE = re.compile(r"^\s*\\set\s+(\w+)")
 ENSEMBL_DIVISION_RE = re.compile(r"(\w+):\s*'ensembl\w*'")
-MAIN_DIVISION_LIST_RE = re.compile(r"\[((?:'\w+',?\s*)+)\]\.any\s*\{\s*d\s*->")
+# The list moved out of main.nf into a helper, so entry scripts that never
+# evaluate main.nf can still derive the gate.
+DIVISION_LIST_RE = re.compile(
+    r"def\s+ensembl_divisions\(\)\s*\{\s*\[((?:'\w+',?\s*)+)\]", re.MULTILINE
+)
 
 
 def blocks(text, pattern):
     """Split a Nextflow file into {name: body} on the given top-level pattern."""
     starts = [(m.group(1), m.start()) for m in pattern.finditer(text)]
     boundaries = sorted(
-        m.start() for m in list(PROCESS_RE.finditer(text)) + list(WORKFLOW_RE.finditer(text))
+        m.start()
+        for m in list(PROCESS_RE.finditer(text)) + list(WORKFLOW_RE.finditer(text))
     )
     found = {}
     for name, start in starts:
@@ -172,8 +178,8 @@ def test_qc_knows_every_ensembl_division_main_runs(qc_nf):
     to main.nf but not here goes missing from the import report without error.
     """
     qc_divisions = set(ENSEMBL_DIVISION_RE.findall(qc_nf))
-    main_lists = MAIN_DIVISION_LIST_RE.findall(MAIN_WORKFLOW.read_text())
-    assert main_lists, "could not find the ensembl division list in main.nf"
+    lists = DIVISION_LIST_RE.findall(ENSEMBL_DIVISIONS.read_text())
+    assert lists, "could not find the ensembl division list"
 
-    for raw in main_lists:
+    for raw in lists:
         assert set(re.findall(r"'(\w+)'", raw)) == qc_divisions

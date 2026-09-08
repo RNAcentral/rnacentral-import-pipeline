@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2022] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -11,93 +11,59 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+RiboVision used to be imported by scraping rnacentral_mapping.html from
+apollo.chemistry.gatech.edu, which keyed entries on PDB chains. That host is
+gone and RiboVision2 serves a JavaScript app with no equivalent page, so the
+models are taken from the copy R2DT ships instead, the same way CRW works.
+
+The metadata lives in the repo rather than r2dt_models because that table
+carries neither taxid nor cellular_location -- files/r2dt/load-models.ctl drops
+both on the way in.
 """
 
-import re
+import logging
 import typing as ty
+from pathlib import Path
 
-import psycopg2
-import psycopg2.extras
-from bs4 import BeautifulSoup
-from pypika import Query, Table
-from pypika import functions as fn
+from Bio import SeqIO
 
-from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.ribovision import helpers
+from rnacentral_pipeline.rnacentral.r2dt.models import ribovision as models
 
-PATTERN = re.compile(r"^(.+?)\s+\((.+?)\)\s+(http.+?)\s*$")
-
-
-def extract_mapping(raw: ty.IO) -> ty.Dict[ty.Tuple[str, str], ty.Tuple[str, str]]:
-    html = BeautifulSoup(raw.read(), "html.parser")
-    text = html.get_text()
-    data = {}
-    for line in text.splitlines():
-        match = re.search(PATTERN, line)
-        if not match:
-            continue
-        name = match.group(1)
-        structures = match.group(2)
-        url = match.group(3)
-        for structure in structures.split(","):
-            structure, chain = structure.strip().split("_", 1)
-            data[(structure, chain)] = (name, url)
-    return data
+LOGGER = logging.getLogger(__name__)
 
 
-def build_query(pdb_id: str, chain_id: str) -> str:
-    rna = Table("rna")
-    xref = Table("xref_p11_not_deleted")
-    pre = Table("rnc_rna_precomputed")
-    acc = Table("rnc_accessions")
+def parse(directory: Path, sequences: Path) -> ty.Iterable[Entry]:
+    """
+    Read every metadata.tsv under an R2DT data directory. RiboVision splits its
+    models across a large and a small subunit directory.
 
-    query = (
-        Query.from_(xref)
-        .select(
-            acc.parent_ac.as_("id"),
-            fn.Coalesce(rna.seq_short, rna.seq_long).as_("sequence"),
-            pre.taxid,
-            pre.so_rna_type,
-        )
-        .join(pre)
-        .on((pre.urs == xref.urs) & (pre.taxid == xref.taxid))
-        .join(rna)
-        .on(rna.urs == xref.urs)
-        .join(acc)
-        .on(acc.accession == xref.ac)
-        .where((acc.external_id == pdb_id) & (acc.optional_id == chain_id))
+    Models with no sequence are counted apart from models that failed to build:
+    the first is a gap in what R2DT ships, the second means something is wrong.
+    """
+    indexed = SeqIO.index(str(sequences), "fasta")
+    total = no_sequence = failed = 0
+    for metadata in sorted(directory.glob("ribovision-*/metadata.tsv")):
+        with metadata.open("r") as handle:
+            for info in models.parse(handle):
+                total += 1
+                if info.model_name not in indexed:
+                    no_sequence += 1
+                    continue
+                entry = helpers.as_entry(info, indexed)
+                if entry is None:
+                    failed += 1
+                    continue
+                yield entry
+
+    LOGGER.info(
+        "%i models: %i written, %i without a sequence, %i failed to build",
+        total,
+        total - no_sequence - failed,
+        no_sequence,
+        failed,
     )
-    return str(query)
-
-
-def parse(raw: ty.IO, database: str) -> ty.Iterable[data.Entry]:
-
-    missing = set()
-    mapping = extract_mapping(raw)
-    with psycopg2.connect(database) as conn:
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        for ((pdb_id, chain), info) in mapping.items():
-            query = build_query(pdb_id, chain)
-            cursor.execute(query)
-            result = cursor.fetchall()
-            if result == []:
-                missing.add((pdb_id, chain))
-                continue
-            if len(result) != 1:
-                raise ValueError(f"Query for {pdb_id}_{chain} was not unique")
-            result = result[0]
-
-            yield data.Entry(
-                primary_id=f"ribovision:{pdb_id}_{chain}",
-                accession=f"ribovision:{pdb_id}_{chain}",
-                ncbi_tax_id=result["taxid"],
-                database="RIBOVISION",
-                sequence=result["sequence"],
-                regions=[],
-                rna_type=result["so_rna_type"],
-                url=info[1],
-                seq_version="1",
-                description=f"{info[0]} rRNA",
-            )
-
-    if missing:
-        raise ValueError(f"Did not load all ids, missed: {missing}")
+    if total and no_sequence + failed == total:
+        raise ValueError(f"Could not build an entry for any of {total} models")

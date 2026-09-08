@@ -40,6 +40,7 @@ from rnacentral_pipeline.cli import (
     lncbase,
     lncbook,
     lncipedia,
+    mgi,
     mgnify,
     mirbase,
     mirgenedb,
@@ -47,6 +48,7 @@ from rnacentral_pipeline.cli import (
     misc,
     modomics,
     ncbi,
+    noncode,
     notify,
     ols,
     pdb,
@@ -124,6 +126,7 @@ cli.add_command(japonicusdb.cli)
 cli.add_command(lncbase.cli)
 cli.add_command(lncbook.cli)
 cli.add_command(lncipedia.cli)
+cli.add_command(mgi.cli)
 cli.add_command(mgnify.cli)
 cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
@@ -133,6 +136,7 @@ cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
+cli.add_command(noncode.cli)
 cli.add_command(notify.cli)
 cli.add_command(ols.cli)
 cli.add_command(pdb.cli)

@@ -21,12 +21,10 @@ from rnacentral_pipeline.databases.gtrnadb import urls as fetch
 REMOTE = furl("http://trna.ucsc.edu/download/RNAcentral/export2019/")
 
 
-def test_gets_correct_urls():
-    assert fetch.urls_for(REMOTE) == [
-        "http://trna.ucsc.edu/download/RNAcentral/export2019/archaea_tRNAs.json.gz",
-        "http://trna.ucsc.edu/download/RNAcentral/export2019/bacteria_tRNAs.tar.gz",
-        "http://trna.ucsc.edu/download/RNAcentral/export2019/eukaryotes_tRNAs.tar.gz",
-    ]
+# urls_for is a GET wrapped around extract_urls, and the export2019 directory
+# it pointed at now 404s -- GtRNAdb reaches us through provided-data, not this
+# path. The extraction it wraps is covered below, against a local copy of the
+# listing.
 
 
 def test_can_extract_ursl_from_text():

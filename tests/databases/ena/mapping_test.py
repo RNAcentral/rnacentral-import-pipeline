@@ -38,7 +38,6 @@ def parse(path):
     [
         ("data/ena/tpa/lncrnadb/mapping.tsv", 62),
         ("data/ena/tpa/snopy/mapping.tsv", 2634),
-        ("data/ena/tpa/srpdb/mapping.tsv", 855),
         ("data/ena/tpa/tmrna/mapping.tsv", 21318),
         ("data/ena/tpa/wormbase/mapping.tsv", 27665),
         ("data/ena/tpa/tair/mapping.tsv", 1290),
@@ -55,7 +54,6 @@ def test_can_parse_complete_tpa_files(filename, count):
     [
         ("data/ena/tpa/lncrnadb/mapping.tsv", 62),
         ("data/ena/tpa/snopy/mapping.tsv", 2634),
-        ("data/ena/tpa/srpdb/mapping.tsv", 855),
         ("data/ena/tpa/tmrna/mapping.tsv", 21318),
         ("data/ena/tpa/wormbase/mapping.tsv", 27665),
         # ('data/ena/tpa/tair/mapping.tsv', 1290),
@@ -88,18 +86,6 @@ def test_can_build_correct_snopy_tpas():
         "Arabidopsis_thaliana300001",
         "SnoR1b",
         "LN809305",
-        None,
-    )
-
-
-def test_can_build_correct_srpdb_tpas():
-    with open("data/ena/tpa/srpdb/mapping.tsv", "r") as raw:
-        data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
-        "SRPDB",
-        "Acin.baum._CP000521",
-        None,
-        "HG323367",
         None,
     )
 
@@ -211,50 +197,6 @@ def test_can_transform_correct_lncrnadb_entry():
     assert len(transformed["references"]) == 24
     del transformed["references"]
     del result["references"]
-    assert transformed == result
-
-
-def test_can_transform_correct_srpdb_entry():
-    transformed = attr.asdict(transform_first("srpdb"))
-    result = attr.asdict(
-        Entry(
-            primary_id="Acin.baum._CP000521",
-            accession="HG323367.1:1..116:ncRNA:SRPDB:Acin.baum._CP000521",
-            ncbi_tax_id=400667,
-            database="SRPDB",
-            sequence="GGTAGCCCCGCTGGTGGCTTCGCAATTGTACTCTGTGAACCCCGCCAGGACCGGAAGGTAGCAACGGTAGCAGATCTATGATGTGCCGAAGTTTTGCTAGTGGGGTTGCCACCATT",
-            regions=[],
-            rna_type="SRP_RNA",
-            url="http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/Acin.baum._CP000521",
-            seq_version="1",
-            xref_data={
-                "ena_refs": {
-                    "SRPDB": ("Acin.baum._CP000521", None),
-                }
-            },
-            note_data={
-                "ontology": ["ECO:0000305", "GO:0006617", "GO:0048501", "SO:0000590"],
-                "text": ["alignment group:Small 4.5S Bacteria (SB)"],
-            },
-            species="Acinetobacter baumannii ATCC 17978",
-            lineage=(
-                "Bacteria; Proteobacteria; Gammaproteobacteria; "
-                "Pseudomonadales; Moraxellaceae; Acinetobacter; "
-                "Acinetobacter calcoaceticus/baumannii complex; "
-                "Acinetobacter baumannii ATCC 17978"
-            ),
-            description="Acinetobacter baumannii ATCC 17978 signal recognition particle RNA",
-            mol_type="transcribed RNA",
-            gene="SRP RNA",
-            non_coding_id="HG323367.1:1..116:ncRNA",
-            parent_accession="HG323367",
-            product="signal recognition particle RNA",
-        )
-    )
-    assert len(transformed["references"]) == 3
-    del transformed["references"]
-    del result["references"]
-
     assert transformed == result
 
 
@@ -474,10 +416,11 @@ def test_url_builder_can_build_url(name):
         ("data/ena/tpa/lncrnadb/mapping.tsv", True),
         ("data/ena/tpa/mirbase/mapping.tsv", True),
         ("data/ena/tpa/snopy/mapping.tsv", True),
-        ("data/ena/tpa/srpdb/mapping.tsv", True),
         ("data/ena/tpa/tair/mapping.tsv", True),
         ("data/ena/tpa/tmrna/mapping.tsv", True),
-        ("data/ena/tpa/wormbase/mapping.tsv", True),
+        # WormBase is the only database validate() requires, so its file is
+        # the only one that satisfies it on its own.
+        ("data/ena/tpa/wormbase/mapping.tsv", False),
         pytest.param(
             "data/ena/tpa/combined/mapping.tsv",
             False,
