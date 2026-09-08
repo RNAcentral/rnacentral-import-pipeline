@@ -75,8 +75,9 @@ def test_can_generate_hosts_correctly(name, expected):
         ),
     ],
 )
+@pytest.mark.network
 def test_can_find_correct_url_for_species(species, assembly_id, host, expected):
-    assert urls.url_for(species, assembly_id, host=host) == expected
+    assert urls.url_for(species, assembly_id, "fa", host=host) == expected
 
 
 @pytest.mark.parametrize(
@@ -120,8 +121,12 @@ def test_can_find_correct_url_for_species(species, assembly_id, host, expected):
         ),
     ],
 )
+@pytest.mark.network
 def test_can_find_correct_urls_for_soft_masked(species, assembly_id, host, expected):
-    assert urls.url_for(species, assembly_id, host=host, soft_masked=True) == expected
+    assert (
+        urls.url_for(species, assembly_id, "fa", host=host, soft_masked=True)
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -130,11 +135,13 @@ def test_can_find_correct_urls_for_soft_masked(species, assembly_id, host, expec
         ("anas_platyrhynchos", "CAU_duck1.0"),
     ],  # Different species on FTP only
 )
+@pytest.mark.network
 def test_raises_exceptions_for_weird_url_cases(species, assembly_id):
     with pytest.raises(urls.NoTopLevelFiles):
-        urls.url_for(species, assembly_id)
+        urls.url_for(species, assembly_id, "fa", urls.FtpHost.ensembl)
 
 
+@pytest.mark.network
 def test_can_get_all_paths_for_a_csv():
     data = six.StringIO()
     data.write("drosophila_sechellia,dsec_caf1,unknown\n")
