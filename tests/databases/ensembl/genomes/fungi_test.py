@@ -17,8 +17,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.ensembl import fungi
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from . import helpers
 
@@ -26,14 +26,14 @@ from . import helpers
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def asp_1():
     return helpers.parse(
-        fungi.parse, "data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat"
+        fungi.parse, "test-data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat"
     )
 
 
 @pytest.mark.parametrize(
     "filename,count",
     [
-        ("data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat", 24),
+        ("test-data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat", 24),
     ],
 )
 def test_can_parse_all_entries(filename, count):

@@ -17,8 +17,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.ensembl import plants
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from . import helpers
 
@@ -579,33 +579,38 @@ def test_can_parse_barley_antisense(hordeum_pt):
 
 
 def test_can_parse_zea_lincrna(zea_7):
-    val = attr.asdict(helpers.entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001"))
+    # Zea mays moved from assembly B73_RefGen_v4 to Zm-B73-REFERENCE-NAM-5.0
+    # (gene ids Zm00001d... -> Zm00001eb...) since this fixture was recorded;
+    # re-pointed at a current misc_RNA gene from the new assembly.
+    val = attr.asdict(helpers.entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001eb302990_T001"))
     assert val == attr.asdict(
         dat.Entry(
-            primary_id="Zm00001d001070_T001",
-            accession="ENSEMBL_PLANTS:Zm00001d001070_T001",
+            primary_id="Zm00001eb302990_T001",
+            accession="ENSEMBL_PLANTS:Zm00001eb302990_T001",
             ncbi_tax_id=4577,
             database="ENSEMBL_PLANTS",
             sequence=(
-                "GTATGGAACACGGCCGACCCCAGGCATTGGCTTCTGGAGGTTGAAGATGGGCGCATGTCC"
-                "GAGCGATCGGATGTGAATGGCTGTGGATAGTTGCGTGGTAGTGGTGGATGGCCAATCACT"
-                "GGCGTAGCCATCGCCCTGGGTGCAGAACGTGGTCCGTATGGGGTCAGCTATGGCGCCGCC"
-                "GCGCCGGACCCTGTTCACCTCCGTGGTTGCGGCCAGTGTGGGAAGATGGGCGAGCGCCGT"
-                "TGGTATGGCCTGGAGCGGCTAGGATTAGGTGAGCACCTGGGTTGGGCGGGTTAAGTCCTG"
-                "GGCGGTTAGAT"
+                "ACAAATTTCAATTGTGCCAATTTTTGTGGGTATGCAAAGGAAAGGAGAAATAGAGGAAAT"
+                "GATTATGGAGTCGAAGCATGCCATGGAGCTTTCATTGTATATTACATATGTTGGATGGA"
+                "CGATAGAGGTGATAGGCAGTAAGCTAGTAGGTAGCTATGAATATTTGTTCTATAATTAA"
+                "GTTTCTCACAGTTTTTGCATTTATGTTCTTGGATAAGAGTTGAAAAGATTGCTACTGCT"
+                "ACTTCAGTTTTCAGTAGATTCTGCATAGAAGATCATTATGTTAATGTAGTGCAAATCC"
+                "TTTGGGATTTAGGTGATAGAATTATATTTGCTTTGAAGATGCTAAAAATCTACCTGTA"
+                "TTTCTTTCCTCCC"
             ),
             regions=[
                 dat.SequenceRegion(
                     chromosome="7",
                     strand=-1,
-                    exons=[dat.Exon(start=359423, stop=359733)],
-                    assembly_id="B73_RefGen_v4",
+                    exons=[dat.Exon(start=31, stop=396)],
+                    assembly_id="Zm-B73-REFERENCE-NAM-5.0",
                     coordinate_system=dat.CoordinateSystem.one_based(),
                 )
             ],
-            rna_type="lncRNA",
+            rna_type="SO:0000673",
             url="",
             seq_version="1",
+            xref_data={"RNAcentral": ["URS00021F5853"]},
             species="Zea mays",
             common_name="maize",
             lineage=(
@@ -614,16 +619,16 @@ def test_can_parse_zea_lincrna(zea_7):
                 "Liliopsida; Poales; Poaceae; PACMAD clade; Panicoideae; "
                 "Andropogonodae; Andropogoneae; Tripsacinae; Zea; Zea mays"
             ),
-            gene="Zm00001d001070",
-            description="Zea mays (maize) lncRNA Zm00001d001070",
+            gene="Zm00001eb302990",
+            description="Zea mays (maize) misc RNA Zm00001eb302990",
             references=[pubs.reference(29092050)],
         )
     )
 
 
 def test_does_not_generate_tair_for_others(zea_7):
-    assert helpers.has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False
-    assert helpers.has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001") is True
+    assert helpers.has_entry_for(zea_7, "TAIR:Zm00001eb302990_T001") is False
+    assert helpers.has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001eb302990_T001") is True
 
 
 def test_does_not_create_ncRNA_rna_type_zea_7(zea_7):

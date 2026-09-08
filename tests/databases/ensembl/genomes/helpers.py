@@ -14,9 +14,12 @@ limitations under the License.
 """
 
 
-def parse(parser, filename):
+EMPTY_GFF_FILE = "data/gencode/empty.gff3"
+
+
+def parse(parser, filename, gff_file=EMPTY_GFF_FILE):
     with open(filename, "r") as raw:
-        return list(parser(raw))
+        return list(parser(raw, gff_file))
 
 
 def entries_for(entries, accession):

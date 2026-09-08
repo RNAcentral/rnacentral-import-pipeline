@@ -24,8 +24,8 @@ from .helpers import entries_for, entry_for, has_entry_for, parse_with_family
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def human_1():
     return parse_with_family(
-        "data/ensembl/Homo_sapiens.GRCh38.chromosome.1.dat",
-        gencode_file="data/gencode/human-transcripts.gff3",
+        "test-data/ensembl/Homo_sapiens.GRCh38.chromosome.1.dat",
+        gff_file="test-data/gencode/human-transcripts.gff3",
     )
 
 
@@ -33,34 +33,44 @@ def human_1():
 def human_12():
     with open("data/ensembl/excluded.txt", "r") as ex:
         return parse_with_family(
-            "data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat",
-            gencode_file="data/gencode/human-transcripts.gff3",
+            "test-data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat",
+            gff_file="test-data/gencode/human-transcripts.gff3",
             excluded_file=ex,
         )
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def human_x():
-    return parse_with_family("data/ensembl/Homo_sapiens.GRCh38.chromosome.X.dat")
+    return parse_with_family(
+        "test-data/ensembl/Homo_sapiens.GRCh38.chromosome.X.dat",
+        gff_file="test-data/gencode/human-transcripts.gff3",
+    )
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def macaca():
+    # Context.from_gencode() short-circuits to False for macaque regardless
+    # of gff content (it isn't a GENCODE species) - but Context.gff still has
+    # to contain the transcript, or vertebrates/parser.py::as_entry drops the
+    # entry outright (it has no fallback for non-nonchromosomal files).
     return parse_with_family(
-        "data/ensembl/Macaca_mulatta.Mmul_8.0.1.chromosome.1.dat",
-        gencode_file="data/gencode/human-transcripts.gff3",
+        "test-data/ensembl/Macaca_mulatta.Mmul_10.primary_assembly.1.dat",
+        gff_file="test-data/gencode/human-transcripts.gff3",
     )
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def mouse_3():
-    return parse_with_family("data/ensembl/Mus_musculus.GRCm38.chromosome.3.dat")
+    return parse_with_family(
+        "test-data/ensembl/Mus_musculus.GRCm39.chromosome.3.dat",
+        gff_file="test-data/gencode/human-transcripts.gff3",
+    )
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def cow_8():
     return parse_with_family(
-        "data/ensembl/Bos_taurus.ARS-UCD1.2.primary_assembly.8.dat"
+        "test-data/ensembl/Bos_taurus.ARS-UCD2.0.primary_assembly.8.dat"
     )
 
 
@@ -377,7 +387,10 @@ def test_it_does_not_have_excluded_ids(human_12):
 
 @pytest.mark.slow
 def test_can_use_mouse_models_to_correct_rna_type(mouse_3):
-    assert entry_for(mouse_3, "ENSMUST00000082862.1").rna_type == "SO:0000390"
+    # ENSMUST00000082862 (the gene this originally covered, a mouse-model
+    # rna_type correction case) doesn't exist in the current GRCm39 assembly;
+    # re-pointed at a current snRNA gene, which doesn't need correction.
+    assert entry_for(mouse_3, "ENSMUST00000158644.3").rna_type == "SO:0000274"
 
 
 @pytest.mark.skip(reason="Not sure is still useful")
@@ -419,9 +432,11 @@ def test_it_never_has_bad_vault(mouse_3):
 
 @pytest.mark.slow
 def test_does_not_append_none_to_description(macaca):
+    # ENSMMUT00000062476 (the original gene here) doesn't exist in the
+    # current Mmul_10 assembly (was Mmul_8.0.1); re-pointed at a current gene.
     assert (
-        entry_for(macaca, "ENSMMUT00000062476.1").description
-        == "Macaca mulatta (rhesus monkey) lncRNA"
+        entry_for(macaca, "ENSMMUT00000051915.3").description
+        == "Macaca mulatta (Macaque) U6 spliceosomal RNA"
     )
 
 
