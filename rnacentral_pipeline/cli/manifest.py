@@ -33,3 +33,20 @@ def apply(manifest_csv, deletions_csv=None, db_url=None):
         manifest.apply_artifacts(conn, manifest_csv, deletions_csv)
     finally:
         conn.close()
+
+
+@cli.command("apply-sources")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("sources_csv", type=click.Path(exists=True))
+def apply_sources(sources_csv, db_url=None):
+    """
+    Promote the per-source signatures that decide what a later import fetches at all.
+
+    Same rule as the record manifest: only AFTER the load has committed, so a failed
+    run re-fetches those sources rather than skipping them as unchanged.
+    """
+    conn = psycopg2.connect(db_url)
+    try:
+        manifest.apply_source_artifacts(conn, sources_csv)
+    finally:
+        conn.close()

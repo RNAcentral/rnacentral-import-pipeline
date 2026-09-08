@@ -42,6 +42,26 @@ process apply_manifest {
   """
 }
 
+// Same rule for the per-source signatures that decide what ENA fetches at all: a run
+// that has not released must not leave them saying those sources are up to date.
+process apply_sources {
+  cache false
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple path(sources), val(_ready)
+
+  output:
+  val('done')
+
+  when: params.get('should_release', false)
+
+  script:
+  """
+  rnac manifest apply-sources $sources
+  """
+}
+
 workflow import_data {
   take: _flag
   main:
@@ -56,6 +76,7 @@ workflow import_data {
       terms: r.name == "terms.csv" || r.name == "terms.parquet"
       ref_ids: r.name == "ref_ids.csv" || r.name == "ref_ids.parquet"
       manifest: r.name == "manifest.csv"
+      sources: r.name == "sources.csv"
       csv: true
     } \
     | set { results }
@@ -76,6 +97,10 @@ workflow import_data {
     results.manifest \
     | combine(post_release) \
     | apply_manifest
+
+    results.sources \
+    | combine(post_release) \
+    | apply_sources
 
   emit: post_release
 }

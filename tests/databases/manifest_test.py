@@ -58,7 +58,10 @@ def test_write_artifacts_round_trip(tmp_path):
     )
     with (tmp_path / manifest.MANIFEST_CSV).open() as handle:
         rows = list(csv.reader(handle))
-    assert rows == [["HGNC", "HGNC:1", "s1"], ["HGNC", "HGNC:2", "s2"]]  # sorted
+    assert rows == [  # sorted, with an empty source: HGNC reads one file
+        ["HGNC", "HGNC:1", "s1", ""],
+        ["HGNC", "HGNC:2", "s2", ""],
+    ]
     with (tmp_path / manifest.DELETIONS_CSV).open() as handle:
         assert list(csv.reader(handle)) == [["HGNC", "HGNC:9"], ["HGNC", "HGNC:8"]]
 
@@ -73,7 +76,9 @@ def test_apply_artifacts_groups_by_database(tmp_path, monkeypatch):
     monkeypatch.setattr(
         manifest,
         "store_signatures",
-        lambda conn, db, sigs, dropped: calls.append((db, sigs, list(dropped))),
+        lambda conn, db, sigs, dropped, sources: calls.append(
+            (db, sigs, list(dropped))
+        ),
     )
     manifest.apply_artifacts(
         None, tmp_path / manifest.MANIFEST_CSV, tmp_path / manifest.DELETIONS_CSV
@@ -82,6 +87,38 @@ def test_apply_artifacts_groups_by_database(tmp_path, monkeypatch):
     by_db = {db: (sigs, dropped) for db, sigs, dropped in calls}
     assert by_db["HGNC"] == ({"HGNC:1": "s1"}, ["HGNC:9"])
     assert by_db["PDBE"] == ({"1ABC": "sp"}, [])
+
+
+def test_write_artifacts_records_the_source_of_each_record(tmp_path):
+    """ENA's manifest carries the source so a later run can skip it safely."""
+    manifest.write_artifacts(
+        tmp_path,
+        "ENA",
+        {"AB1.1": "s1", "AB2.1": "s2"},
+        [],
+        {"AB1.1": "/ena/wgs/aaa", "AB2.1": "/ena/wgs/aab"},
+    )
+    with (tmp_path / manifest.MANIFEST_CSV).open() as handle:
+        assert list(csv.reader(handle)) == [
+            ["ENA", "AB1.1", "s1", "/ena/wgs/aaa"],
+            ["ENA", "AB2.1", "s2", "/ena/wgs/aab"],
+        ]
+
+
+def test_apply_artifacts_passes_the_sources_through(tmp_path, monkeypatch):
+    manifest.write_artifacts(
+        tmp_path, "ENA", {"AB1.1": "s1"}, [], {"AB1.1": "/ena/wgs/aaa"}
+    )
+
+    calls = []
+    monkeypatch.setattr(
+        manifest,
+        "store_signatures",
+        lambda conn, db, sigs, dropped, sources: calls.append(sources),
+    )
+    manifest.apply_artifacts(None, tmp_path / manifest.MANIFEST_CSV)
+
+    assert calls == [{"AB1.1": "/ena/wgs/aaa"}]
 
 
 @pytest.fixture
@@ -96,6 +133,9 @@ def conn():
         with connection.cursor() as cur:
             cur.execute(
                 f"DROP TABLE IF EXISTS rnacen.{manifest.partition_name(TEST_DB)}"
+            )
+            cur.execute(
+                f"DELETE FROM {manifest.FILES_TABLE} WHERE database = %s", (TEST_DB,)
             )
         connection.commit()
         connection.close()
@@ -119,9 +159,9 @@ def test_diff_via_polars_treats_an_empty_stored_manifest_as_bootstrap(tmp_path):
         tmp_path,
         "new.csv",
         [
-            ("JH668335.1:1..100:ncRNA", "sig-a"),
-            ("JH668335.1:200..300:ncRNA", "sig-b"),
-            ("JH668335.1:1..100:ncRNA", "sig-a-conflict"),
+            ("src", "JH668335.1:1..100:ncRNA", "sig-a"),
+            ("src", "JH668335.1:200..300:ncRNA", "sig-b"),
+            ("src", "JH668335.1:1..100:ncRNA", "sig-a-conflict"),
         ],
     )
 
@@ -137,16 +177,16 @@ def test_diff_via_polars_diffs_correctly_despite_duplicates(tmp_path):
     stored = _write(
         tmp_path,
         "stored.csv",
-        [("acc1", "sig1"), ("acc2", "sig2"), ("acc3", "sig3")],
+        [("acc1", "sig1", "src"), ("acc2", "sig2", "src"), ("acc3", "sig3", "src")],
     )
     new = _write(
         tmp_path,
         "new.csv",
         [
-            ("acc1", "sig1"),  # unchanged
-            ("acc2", "sig2-new"),  # changed
-            ("acc4", "sig4"),  # new, and arrives twice
-            ("acc4", "sig4"),
+            ("src", "acc1", "sig1"),  # unchanged
+            ("src", "acc2", "sig2-new"),  # changed
+            ("src", "acc4", "sig4"),  # new, and arrives twice
+            ("src", "acc4", "sig4"),
             # acc3 is absent -> dropped
         ],
     )
@@ -159,6 +199,37 @@ def test_diff_via_polars_diffs_correctly_despite_duplicates(tmp_path):
     assert set(result.deletions) == {"acc3"}
 
 
+def test_diff_via_polars_never_deletes_records_of_a_skipped_source(tmp_path):
+    """
+    The whole point of skipping an unchanged source: its records are not signatured
+    this run, and must not therefore look dropped.
+    """
+    stored = _write(
+        tmp_path,
+        "stored.csv",
+        [("acc1", "sig1", "scanned"), ("acc2", "sig2", "skipped")],
+    )
+    new = _write(tmp_path, "new.csv", [("scanned", "acc1", "sig1")])
+
+    result = manifest.diff_via_polars(stored, new, ["scanned"])
+
+    assert result.deletions == []
+
+
+def test_diff_via_polars_deletes_records_of_a_vanished_source(tmp_path):
+    """A source that has gone from the snapshot is scanned, so its records retire."""
+    stored = _write(
+        tmp_path,
+        "stored.csv",
+        [("acc1", "sig1", "scanned"), ("acc2", "sig2", "gone")],
+    )
+    new = _write(tmp_path, "new.csv", [("scanned", "acc1", "sig1")])
+
+    result = manifest.diff_via_polars(stored, new, ["scanned", "gone"])
+
+    assert result.deletions == ["acc2"]
+
+
 @pytest.mark.db
 def test_dump_signatures_round_trips_through_the_polars_diff(conn, tmp_path):
     """The COPY out is the only database work the diff does; it must feed the join."""
@@ -167,9 +238,12 @@ def test_dump_signatures_round_trips_through_the_polars_diff(conn, tmp_path):
     stored = tmp_path / "stored.csv"
     manifest.dump_signatures(conn, TEST_DB, stored)
 
-    assert sorted(csv.reader(stored.open())) == [["acc1", "sig1"], ["acc2", "sig2"]]
+    assert sorted(csv.reader(stored.open())) == [
+        ["acc1", "sig1", ""],
+        ["acc2", "sig2", ""],
+    ]
 
-    new = _write(tmp_path, "new.csv", [("acc1", "sig1"), ("acc3", "sig3")])
+    new = _write(tmp_path, "new.csv", [("", "acc1", "sig1"), ("", "acc3", "sig3")])
     result = manifest.diff_via_polars(stored, new)
 
     assert result.to_parse == ["acc3"]
@@ -256,3 +330,65 @@ def test_changed_signature_still_updates_despite_the_guard(conn):
         "acc1": "sig1",
         "acc2": "CHANGED",
     }
+
+
+def test_diff_via_polars_retires_a_vanished_source_with_no_new_signatures(tmp_path):
+    """
+    Every source unchanged bar one that has gone: there are no chunks and so no new
+    signatures at all, and the records of the gone source still have to retire.
+    """
+    stored = _write(
+        tmp_path,
+        "stored.csv",
+        [("acc1", "sig1", "kept"), ("acc2", "sig2", "gone")],
+    )
+    new = _write(tmp_path, "new.csv", [])
+
+    result = manifest.diff_via_polars(stored, new, ["gone"])
+
+    assert result.to_parse == []
+    assert result.deletions == ["acc2"]
+
+
+@pytest.mark.db
+def test_store_signatures_records_the_source_of_each_record(conn, tmp_path):
+    """The source has to survive into the dump, since that is what scopes deletion."""
+    manifest.store_signatures(
+        conn,
+        TEST_DB,
+        {"acc1": "sig1", "acc2": "sig2"},
+        sources={"acc1": "/src/aaa", "acc2": "/src/aab"},
+    )
+
+    stored = tmp_path / "stored.csv"
+    manifest.dump_signatures(conn, TEST_DB, stored)
+
+    assert sorted(csv.reader(stored.open())) == [
+        ["acc1", "sig1", "/src/aaa"],
+        ["acc2", "sig2", "/src/aab"],
+    ]
+
+
+@pytest.mark.db
+def test_forgetting_a_source_forgets_its_records_too(conn):
+    """
+    A source that has gone takes its manifest rows with it. Left behind, they would
+    still match on signature if the source ever returned, so its records would be
+    recognised as unchanged and never re-parsed -- while their xrefs stayed retired.
+    """
+    manifest.store_signatures(
+        conn,
+        TEST_DB,
+        {"acc1": "sig1", "acc2": "sig2"},
+        sources={"acc1": "/src/kept", "acc2": "/src/gone"},
+    )
+    manifest.store_file_signatures(
+        conn, TEST_DB, {"/src/kept": "s1", "/src/gone": "s2"}
+    )
+
+    manifest.store_file_signatures(
+        conn, TEST_DB, {"/src/kept": "s1"}, dropped=["/src/gone"]
+    )
+
+    assert manifest.load_signatures(conn, TEST_DB) == {"acc1": "sig1"}
+    assert manifest.load_file_signatures(conn, TEST_DB) == {"/src/kept": "s1"}

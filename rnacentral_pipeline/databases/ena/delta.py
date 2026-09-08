@@ -19,6 +19,7 @@ uses (see :mod:`rnacentral_pipeline.databases.ena.parser` and
 explicit deletion list all agree byte-for-byte. See docs/incremental-parsing-ena.md.
 """
 
+import hashlib
 import io
 import typing as ty
 from pathlib import Path
@@ -31,6 +32,22 @@ from rnacentral_pipeline.databases import manifest
 # to-parse file, meaning "keep every record" -- avoids materialising a to-parse set
 # of every accession on the first delta run. Kept in sync with ena_delta_diff.
 KEEP_ALL = "__ALL__"
+
+
+def source_label(path: str) -> str:
+    """
+    A short, filename-safe stand-in for a source directory. ``fetch_directory`` names
+    each source's chunks after it, which is how a chunk still knows where its records
+    came from once the fetch is over. Sixteen hex digits of sha1: short enough to
+    leave room in a filename, wide enough that a collision across a few thousand
+    sources is not a real risk.
+    """
+    return hashlib.sha1(path.encode("utf-8")).hexdigest()[:16]
+
+
+def chunk_source_label(chunk: Path) -> str:
+    """The label out of a ``<label>-chunk<N>.ncr`` name written by split-ena."""
+    return Path(chunk).stem.rsplit("-chunk", 1)[0]
 
 
 def _record_id(block: str) -> ty.Optional[str]:
@@ -77,16 +94,18 @@ def iter_signatures(path: Path) -> ty.Iterator[ty.Tuple[str, str]]:
 
 def write_signatures(path: Path, output: ty.IO[str]) -> int:
     """
-    Write ``accession,signature`` CSV rows for a chunk to ``output``. Returns the
-    number of records written. No database column here -- the diff step adds it once,
-    so the per-chunk files stay small.
+    Write ``source,accession,signature`` CSV rows for a chunk to ``output``. Returns
+    the number of records written. The source is the label the chunk's own name
+    carries; no database column here -- the diff step adds it once, so the per-chunk
+    files stay small.
     """
     import csv
 
+    label = chunk_source_label(path)
     writer = csv.writer(output)
     count = 0
     for accession, signature in iter_signatures(path):
-        writer.writerow([accession, signature])
+        writer.writerow([label, accession, signature])
         count += 1
     return count
 

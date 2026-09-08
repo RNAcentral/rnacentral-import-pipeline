@@ -6,6 +6,8 @@ signature/diff behaviour. The database-side diff (manifest.diff_via_db) needs a 
 Postgres and is exercised by tests/xref-incremental-parity, not here.
 """
 
+import csv
+import io
 from pathlib import Path
 
 from rnacentral_pipeline.databases import manifest
@@ -98,3 +100,36 @@ def test_version_bump_is_new_plus_dropped(tmp_path):
     diff = manifest.compute_diff(new_sigs, old_sigs)
     assert diff.new == frozenset({"AB111111.2"})
     assert diff.dropped == frozenset({"AB111111.1"})
+
+
+def test_chunk_name_round_trips_the_source_label(tmp_path):
+    """
+    fetch_directory names a source's chunks after it and the signatures step reads
+    that name back; if the two ever disagree the diff loses a record's origin.
+    """
+    source = "/nfs/ftp/public/databases/ena/non-coding/snapshot_latest/wgs/public/aaa"
+    label = delta.source_label(source)
+
+    assert delta.chunk_source_label(Path(f"{label}-chunk0.ncr")) == label
+    assert delta.chunk_source_label(Path(f"/work/xx/{label}-chunk1234.ncr")) == label
+
+
+def test_source_labels_are_distinct_and_filename_safe():
+    labels = {delta.source_label(f"/ena/wgs/public/{name}") for name in ("aaa", "aab")}
+
+    assert len(labels) == 2
+    assert all(label.isalnum() and len(label) == 16 for label in labels)
+
+
+def test_signatures_carry_the_source_label(tmp_path):
+    """Every signature row names the source, so a skipped source can be recognised."""
+    label = delta.source_label("/ena/wgs/public/aaa")
+    path = tmp_path / f"{label}-chunk0.ncr"
+    path.write_text(_record("AB111111", 1) + _record("AB222222", 3))
+
+    out = io.StringIO()
+    assert delta.write_signatures(path, out) == 2
+
+    rows = list(csv.reader(io.StringIO(out.getvalue())))
+    assert [row[0] for row in rows] == [label, label]
+    assert [row[1] for row in rows] == ["AB111111.1", "AB222222.3"]

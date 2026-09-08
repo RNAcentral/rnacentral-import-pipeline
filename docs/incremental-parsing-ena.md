@@ -59,33 +59,77 @@ raw text can never produce a false "unchanged" (the dangerous direction); at wor
 cosmetic reformat causes a needless re-parse (safe, just slower). This matches the
 HGNC rule "whole record, so any change is caught".
 
-### Why not hash whole files instead
+## Source signature — the prefilter
 
-Because ENA's archives are not stable between snapshots. Of the 120 `.ncr.gz`
-archives present under `std/` and `con/` in both published monthly snapshots
-(`snapshot_20260726` and `snapshot_20260826`), **none** kept the same size, let alone
-the same bytes. The archives are numbered slices of a regenerated dump
-(`STD_XXX_42`), so the slicing shifts whenever anything upstream changes: July had
-333 of them, August 120. A file-level hash would skip nothing at all.
+Records are the finest level, but most of the work happens before we ever see one:
+rsyncing the archives, decompressing them, concatenating and splitting them, and the
+signature pass itself. So there is a coarser level above the records:
 
-Hashing our own chunks is worse still — `fetch_directory` concatenates every archive
-into a single `.ncr` and re-splits it with `split-ena`, so chunk boundaries are
-recomputed from scratch each run.
+`source signature = sha256(sorted "relative path, size, mtime" of every archive under
+the source)`, where a **source** is one project subdirectory of `wgs/`, `tls/` or
+`tsa/`, or the whole of `con/` or `std/`. It is computed from the directory listing
+alone, so it costs a `find` and no data is read; a source whose signature has not
+moved is not copied, not decompressed, not split and not signatured.
 
-Per-record hashing over that same snapshot pair finds 96-97% of the records
-byte-identical (`STD_MAM_1`: 18832 of 19488; `STD_ENV_1`: 15908 of 16337). That is
-the ribotyper and parse work the delta skips, and only a per-record key finds it.
+The two parts of the tree behave completely differently, which is why both levels
+earn their place:
+
+- **`wgs/`, `tls/`, `tsa/`** are per-project archives that are written once and then
+  left alone — `wgs/public/aaa/AAAABA02.ncr.gz` was last modified in October 2024.
+  Whole subdirectories are identical between snapshots, and the source signature
+  skips them outright.
+- **`con/` and `std/`** are numbered slices of a regenerated dump (`STD_XXX_42`), so
+  the slicing shifts whenever anything upstream changes. Of the 120 `.ncr.gz`
+  archives present under both published monthly snapshots (`snapshot_20260726` and
+  `snapshot_20260826`), **none** kept the same size, let alone the same bytes; July
+  had 333 of them, August 120. The source signature never skips these, and only the
+  per-record key finds anything: hashing records over that same snapshot pair finds
+  96-97% of them byte-identical (`STD_MAM_1`: 18832 of 19488; `STD_ENV_1`: 15908 of
+  16337).
+
+Hashing our own chunks would work at neither level — `fetch_directory` splits each
+source with `split-ena`, so a chunk boundary moves whenever a record ahead of it is
+added or removed.
+
+### Skipping a source without losing its records
+
+The record diff retires accessions by absence from the new signature set, so a
+skipped source — which contributes no signatures — would retire everything it holds.
+Two things prevent that:
+
+* `pipeline_tracking_import.source_id` records which source each accession came from,
+  pointing at `pipeline_tracking_import_files(id, database, path, signature)`. It is a
+  surrogate id rather than the path itself because at ENA row counts 8 bytes per row
+  beats repeating a ~60 byte path in every one of them.
+* `ena source-diff` writes `scanned.txt` — the sources fetched this run plus the ones
+  that have gone from the snapshot — and `diff_via_polars` will only delete records
+  belonging to those. A skipped source is in neither set, so its records are left
+  exactly as they are.
+
+This is also why `--force_full_import` forces every source to be fetched: that run
+releases with `F`, which retires by absence from the load.
+
+Chunks carry their origin in their own name: `fetch_directory` handles one source at a
+time and names its output `<label>-chunk<N>.ncr`, where the label is the first 16 hex
+digits of `sha1(source path)`. That is the only thing tying a chunk back to the
+directory it came from once the fetch is over.
 
 ## Workflow
 
 ```
-fetch_directory ─▶ .ncr chunks
+list_subdirs ─▶ stat_sources (parallel: path,signature from the listing only)
+     └─ collect ─▶ ena_source_diff(db)
+                        ├─▶ to_fetch.txt  (sources new or changed: the only fetches)
+                        ├─▶ scanned.txt   (those plus vanished: retirable sources)
+                        └─▶ sources.csv   (ENA,path,signature: all current)
+
+fetch_directory(to_fetch) ─▶ .ncr chunks, one source at a time
      │
      ├─▶ ena_signatures(chunk)         (cheap, parallel: record.id,signature)
-     │        └─ collect ─▶ ena_delta_diff(db)   (single reduce, DB-side)
+     │        └─ collect ─▶ ena_delta_diff(db, scanned.txt)   (single reduce)
      │                          ├─▶ to_parse.txt   (accessions: new + changed)
      │                          ├─▶ deletions.csv  (ENA,accession for dropped)
-     │                          └─▶ manifest.csv   (ENA,accession,signature: all current)
+     │                          └─▶ manifest.csv   (ENA,accession,signature,source)
      │
      └─▶ process_file(chunk, to_parse, metadata)   (parallel)
               rnac ena filter --only to_parse.txt chunk → filtered.ncr
@@ -97,8 +141,9 @@ fetch_directory ─▶ .ncr chunks
 `manifest.csv` and `deletions.csv` ride the existing generic wiring
 ([import-data.nf](../import-data.nf)): `deletions.csv` is loaded into
 `load_deletions` via `deletions.ctl`; `manifest.csv` is promoted post-release by
-`rnac manifest apply`. No import-data.nf change is needed — ENA just emits the same
-two side-channel files HGNC does, keyed by the `database` column.
+`rnac manifest apply`. `sources.csv` is promoted the same way and for the same
+reason, by `rnac manifest apply-sources` — a run that never released must not leave
+the files table claiming those sources are up to date.
 
 ### Bootstrap (first delta run)
 
@@ -119,8 +164,9 @@ out to `stored-manifest.csv` (`manifest.dump_signatures`, one statement against 
 partition) and does every join here in polars (`manifest.diff_via_polars`):
 
 - **to_parse** — new rows with no stored match, or a differing signature;
-- **deletions** — stored ENA rows absent from the new set;
-- **manifest.csv** — every new row (the full new manifest).
+- **deletions** — stored ENA rows absent from the new set, restricted to rows whose
+  source was scanned this run;
+- **manifest.csv** — every new row, with the source it was read from.
 
 Both joins run under polars' streaming engine, so the millions-row set difference
 never has to fit in memory, and a diff that lands while the database is busy cannot

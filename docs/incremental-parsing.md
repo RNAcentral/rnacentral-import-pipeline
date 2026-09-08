@@ -106,8 +106,32 @@ A single generic table serves every database:
 
 ```
 pipeline_tracking_import(database text, accession text, signature text,
-                    updated_at timestamptz, primary key (database, accession))
+                    source_id bigint, updated_at timestamptz,
+                    primary key (database, accession))
+
+pipeline_tracking_import_files(id bigserial primary key, database text, path text,
+                    signature text, updated_at timestamptz, unique (database, path))
 ```
+
+Both tables are created on demand by `manifest.ensure_table`, but `source_id` was
+added to an existing `pipeline_tracking_import`, so a database that predates it needs
+this run once by hand — the ALTER takes an exclusive lock on the parent and every
+partition, which is not something to do implicitly mid-import:
+
+```sql
+ALTER TABLE rnacen.pipeline_tracking_import ADD COLUMN IF NOT EXISTS source_id bigint;
+```
+
+Adding a nullable column with no default is a catalogue-only change, so it is quick,
+but it still waits for the lock. Rows written before it exists have a null source and
+are never selected for deletion, which is the safe direction; the first run after the
+change re-fetches every source anyway and fills them in.
+
+`source_id` is only used by a database that reads its input from many files. It names
+the file or directory a record came from, so an import that skips an unchanged source
+does not mistake that source's records for deleted ones; `pipeline_tracking_import_files`
+holds one signature per source, which is what decides whether to read it at all. See
+docs/incremental-parsing-ena.md.
 
 The manifest represents "signatures of what is currently loaded". It must be
 updated **only after the database's load/release commits**, so a failed load

@@ -28,9 +28,11 @@ from psycopg2 import sql
 from psycopg2.extras import execute_values
 
 MANIFEST_TABLE = "rnacen.pipeline_tracking_import"
+FILES_TABLE = "rnacen.pipeline_tracking_import_files"
 
 MANIFEST_CSV = "manifest.csv"
 DELETIONS_CSV = "deletions.csv"
+SOURCES_CSV = "sources.csv"
 
 # database leads the PK because every query scopes to one, and a partition key must
 # be part of it.
@@ -40,8 +42,23 @@ CREATE TABLE IF NOT EXISTS {MANIFEST_TABLE} (
     accession  text        NOT NULL,
     signature  text        NOT NULL,
     updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    source_id  bigint,
     PRIMARY KEY (database, accession)
 ) PARTITION BY LIST (database)
+"""
+
+# A surrogate id rather than this convention's usual natural key: the manifest holds
+# hundreds of millions of ENA rows, and 8 bytes per row beats repeating a ~60 byte
+# path in every one of them.
+CREATE_FILES_SQL = f"""
+CREATE TABLE IF NOT EXISTS {FILES_TABLE} (
+    id         bigserial   PRIMARY KEY,
+    database   text        NOT NULL,
+    path       text        NOT NULL,
+    signature  text        NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    UNIQUE (database, path)
+)
 """
 
 
@@ -116,9 +133,100 @@ def compute_diff(
 
 
 def ensure_table(conn) -> None:
-    """Create the partitioned parent table if it does not exist yet."""
+    """
+    Create the tracking tables if they do not exist yet. A database that predates the
+    source_id column needs the one-off ALTER in docs/incremental-parsing.md: it takes
+    an exclusive lock on every partition, which is not something to do implicitly in
+    the middle of an import.
+    """
     with conn.cursor() as cur:
         cur.execute(CREATE_MANIFEST_SQL)
+        cur.execute(CREATE_FILES_SQL)
+    conn.commit()
+
+
+def load_file_signatures(conn, database: str) -> ty.Dict[str, str]:
+    """The stored ``source path -> signature`` map for a database (empty if none)."""
+    ensure_table(conn)
+    with conn.cursor() as cur:
+        cur.execute(
+            f"SELECT path, signature FROM {FILES_TABLE} WHERE database = %s",
+            (database,),
+        )
+        return dict(cur.fetchall())
+
+
+def resolve_source_ids(
+    conn, database: str, paths: ty.Iterable[str]
+) -> ty.Dict[str, int]:
+    """Ids for these source paths, inserting any the files table has not seen."""
+    paths = sorted(set(paths))
+    if not paths:
+        return {}
+    with conn.cursor() as cur:
+        execute_values(
+            cur,
+            f"""
+            INSERT INTO {FILES_TABLE} (database, path, signature)
+            VALUES %s
+            ON CONFLICT (database, path) DO NOTHING
+            """,
+            [(database, path, "") for path in paths],
+            page_size=5000,
+        )
+        cur.execute(
+            f"SELECT path, id FROM {FILES_TABLE} WHERE database = %s AND path = ANY(%s)",
+            (database, paths),
+        )
+        return dict(cur.fetchall())
+
+
+def store_file_signatures(
+    conn,
+    database: str,
+    signatures: ty.Mapping[str, str],
+    dropped: ty.Iterable[str] = (),
+) -> None:
+    """
+    Replace the stored source signatures for a database. Like the record manifest
+    this must run only after the load succeeds, so a failed run re-fetches the same
+    sources rather than skipping them as unchanged.
+    """
+    ensure_table(conn)
+    dropped = list(dropped)
+    with conn.cursor() as cur:
+        if dropped:
+            # The records go with the source. Leaving them would strand rows whose
+            # signature still matches, so a source that came back would be recognised
+            # as unchanged and never re-parsed -- while its xrefs stayed retired.
+            cur.execute(
+                f"""
+                DELETE FROM {MANIFEST_TABLE}
+                WHERE database = %s
+                  AND source_id IN (
+                    SELECT id FROM {FILES_TABLE}
+                    WHERE database = %s AND path = ANY(%s)
+                  )
+                """,
+                (database, database, dropped),
+            )
+            cur.execute(
+                f"DELETE FROM {FILES_TABLE} WHERE database = %s AND path = ANY(%s)",
+                (database, dropped),
+            )
+        execute_values(
+            cur,
+            f"""
+            INSERT INTO {FILES_TABLE} AS f (database, path, signature)
+            VALUES %s
+            ON CONFLICT (database, path)
+            DO UPDATE SET signature = excluded.signature,
+                          updated_at = clock_timestamp()
+            WHERE f.signature IS DISTINCT FROM excluded.signature
+            """,
+            [(database, path, sig) for path, sig in signatures.items()],
+            page_size=5000,
+        )
     conn.commit()
 
 
@@ -161,19 +269,34 @@ def load_signatures_for(db_url: str, database: str) -> ty.Dict[str, str]:
         conn.close()
 
 
+def load_file_signatures_for(db_url: str, database: str) -> ty.Dict[str, str]:
+    """Convenience wrapper that opens its own connection."""
+    conn = psycopg2.connect(db_url)
+    try:
+        return load_file_signatures(conn, database)
+    finally:
+        conn.close()
+
+
 def store_signatures(
     conn,
     database: str,
     signatures: ty.Mapping[str, str],
     dropped: ty.Iterable[str] = (),
+    sources: ty.Optional[ty.Mapping[str, str]] = None,
 ) -> None:
     """
     Replace the stored manifest for a database: upsert every current signature and
     remove dropped accessions. Call this only after the database's load succeeds,
     so a failed load leaves the previous manifest intact.
+
+    ``sources`` maps an accession to the source it was read from; it is what lets a
+    later import skip an unchanged source without its records looking dropped.
     """
     ensure_partition(conn, database)
     dropped = list(dropped)
+    sources = sources or {}
+    source_ids = resolve_source_ids(conn, database, sources.values())
     with conn.cursor() as cur:
         if dropped:
             cur.execute(
@@ -183,7 +306,7 @@ def store_signatures(
         # Batched upsert: a per-row INSERT loop is fine for a few thousand HGNC rows
         # but hopeless for ENA's millions, so send them in pages.
         rows = (
-            (database, accession, signature)
+            (database, accession, signature, source_ids.get(sources.get(accession)))
             for accession, signature in signatures.items()
         )
         # Without the WHERE, every run rewrites every row -- at ENA scale hundreds of
@@ -191,12 +314,14 @@ def store_signatures(
         execute_values(
             cur,
             f"""
-            INSERT INTO {MANIFEST_TABLE} AS m (database, accession, signature)
+            INSERT INTO {MANIFEST_TABLE} AS m (database, accession, signature, source_id)
             VALUES %s
             ON CONFLICT (database, accession)
             DO UPDATE SET signature = excluded.signature,
+                          source_id = excluded.source_id,
                           updated_at = clock_timestamp()
             WHERE m.signature IS DISTINCT FROM excluded.signature
+               OR m.source_id IS DISTINCT FROM excluded.source_id
             """,
             rows,
             page_size=5000,
@@ -209,17 +334,23 @@ def write_artifacts(
     database: str,
     signatures: ty.Mapping[str, str],
     deletions: ty.Iterable[str],
+    sources: ty.Optional[ty.Mapping[str, str]] = None,
 ) -> None:
     """
     Write the two side-channel files a delta parse produces, for the load step:
-      * manifest.csv  -- database,accession,signature for every current record;
+      * manifest.csv  -- database,accession,signature,source for every current record;
       * deletions.csv -- database,accession for every dropped record.
+
+    The source column is empty for a database that reads one file per import.
     """
     out = Path(output_dir)
+    sources = sources or {}
     with (out / MANIFEST_CSV).open("w", newline="") as handle:
         writer = csv.writer(handle)
         for accession, signature in sorted(signatures.items()):
-            writer.writerow([database, accession, signature])
+            writer.writerow(
+                [database, accession, signature, sources.get(accession, "")]
+            )
     with (out / DELETIONS_CSV).open("w", newline="") as handle:
         writer = csv.writer(handle)
         for accession in deletions:
@@ -233,14 +364,19 @@ def apply_artifacts(
 ) -> None:
     """
     Promote a delta parse's manifest into pipeline_tracking_import. Call only after the
-    database's load/release has committed. Reads the (database, accession, signature)
-    rows from manifest_csv and the dropped (database, accession) rows from
+    database's load/release has committed. Reads the (database, accession, signature,
+    source) rows from manifest_csv and the dropped (database, accession) rows from
     deletions_csv, then replaces each database's stored signatures.
     """
     signatures: ty.Dict[str, ty.Dict[str, str]] = {}
+    sources: ty.Dict[str, ty.Dict[str, str]] = {}
     with Path(manifest_csv).open("r", newline="") as handle:
-        for database, accession, signature in csv.reader(handle):
+        for row in csv.reader(handle):
+            database, accession, signature = row[:3]
             signatures.setdefault(database, {})[accession] = signature
+            source = row[3] if len(row) > 3 else ""
+            if source:
+                sources.setdefault(database, {})[accession] = source
 
     dropped: ty.Dict[str, ty.List[str]] = {}
     if deletions_csv is not None and Path(deletions_csv).exists():
@@ -254,6 +390,28 @@ def apply_artifacts(
             database,
             signatures.get(database, {}),
             dropped.get(database, []),
+            sources.get(database, {}),
+        )
+
+
+def apply_source_artifacts(conn, sources_csv: ty.Union[str, Path]) -> None:
+    """
+    Promote the per-source signatures that decide what gets fetched next run. The
+    file lists every source seen this run, so a stored source missing from it has
+    gone from the input and is forgotten, to be re-fetched if it ever comes back.
+    """
+    current: ty.Dict[str, ty.Dict[str, str]] = {}
+    with Path(sources_csv).open("r", newline="") as handle:
+        for database, path, signature in csv.reader(handle):
+            current.setdefault(database, {})[path] = signature
+
+    for database, signatures in current.items():
+        stored = load_file_signatures(conn, database)
+        store_file_signatures(
+            conn,
+            database,
+            signatures,
+            dropped=[path for path in stored if path not in signatures],
         )
 
 
@@ -268,7 +426,8 @@ class DbDiff:
 
 def dump_signatures(conn, database: str, path: Path) -> None:
     """
-    Stream a database's stored manifest to a headerless ``accession,signature`` CSV.
+    Stream a database's stored manifest to a headerless ``accession,signature,source``
+    CSV.
 
     This is the only database work an incremental import needs. Keeping it to a
     single COPY of one partition means a diff that lands while the database is busy
@@ -278,7 +437,14 @@ def dump_signatures(conn, database: str, path: Path) -> None:
     ensure_table(conn)
     select = cursor_mogrify(
         conn,
-        f"COPY (SELECT accession, signature FROM {MANIFEST_TABLE} WHERE database = %s) TO STDOUT WITH CSV",
+        f"""
+        COPY (
+            SELECT m.accession, m.signature, coalesce(f.path, '')
+            FROM {MANIFEST_TABLE} m
+            LEFT JOIN {FILES_TABLE} f ON f.id = m.source_id
+            WHERE m.database = %s
+        ) TO STDOUT WITH CSV
+        """,
         (database,),
     )
     with conn.cursor() as cur, Path(path).open("w") as out:
@@ -291,24 +457,33 @@ def cursor_mogrify(conn, statement: str, params: ty.Tuple) -> str:
         return cur.mogrify(statement, params).decode()
 
 
-def _scan_signatures(path: Path) -> pl.LazyFrame:
+def _scan_signatures(path: Path, columns: ty.List[str]) -> pl.LazyFrame:
     return pl.scan_csv(
         path,
         has_header=False,
-        new_columns=["accession", "signature"],
-        schema_overrides={"accession": pl.String, "signature": pl.String},
+        new_columns=columns,
+        schema_overrides={column: pl.String for column in columns},
     )
 
 
-def diff_via_polars(stored_csv: Path, new_csv: Path) -> DbDiff:
+def diff_via_polars(
+    stored_csv: Path,
+    new_csv: Path,
+    scanned_sources: ty.Optional[ty.Collection[str]] = None,
+) -> DbDiff:
     """
     Diff this import's signatures against the stored manifest, on the cluster.
 
-    Both sides are headerless ``accession,signature`` CSVs -- ``stored_csv`` from
-    :func:`dump_signatures`, ``new_csv`` collected from the import -- and the joins
-    run streaming in polars, so ENA-scale sets never have to fit in memory and the
-    database is left alone. An empty ``stored_csv`` is a bootstrap: nothing was
-    imported before, so there is nothing to delete and the caller parses everything.
+    ``stored_csv`` is a headerless ``accession,signature,source`` CSV from
+    :func:`dump_signatures` and ``new_csv`` a ``source,accession,signature`` one
+    collected from the import; the joins run streaming in polars, so ENA-scale sets never have
+    to fit in memory and the database is left alone. An empty ``stored_csv`` is a
+    bootstrap: nothing was imported before, so there is nothing to delete and the
+    caller parses everything.
+
+    ``scanned_sources`` restricts deletion to records whose source was actually read
+    this run. Without it an import that skips an unchanged source would see every one
+    of that source's records as absent, and retire the lot.
 
     ENA can emit the same location-based accession twice in one snapshot, so the new
     side is deduplicated before the join.
@@ -316,8 +491,17 @@ def diff_via_polars(stored_csv: Path, new_csv: Path) -> DbDiff:
     if Path(stored_csv).stat().st_size == 0:
         return DbDiff(to_parse=[], deletions=[], is_bootstrap=True)
 
-    new = _scan_signatures(new_csv).unique(subset="accession", keep="any")
-    stored = _scan_signatures(stored_csv)
+    if Path(new_csv).stat().st_size == 0:
+        # Every source was skipped as unchanged. Nothing to parse, but a source that
+        # has gone still has records to retire, so the anti-join must still run.
+        new = pl.LazyFrame(schema={"accession": pl.String, "signature": pl.String})
+    else:
+        new = (
+            _scan_signatures(new_csv, ["source", "accession", "signature"])
+            .select("accession", "signature")
+            .unique(subset="accession", keep="any")
+        )
+    stored = _scan_signatures(stored_csv, ["accession", "signature", "source"])
 
     to_parse = (
         new.join(stored, on="accession", how="left", suffix="_stored")
@@ -327,7 +511,10 @@ def diff_via_polars(stored_csv: Path, new_csv: Path) -> DbDiff:
         )
         .select("accession")
     )
-    deletions = stored.join(new, on="accession", how="anti").select("accession")
+    deletions = stored
+    if scanned_sources is not None:
+        deletions = deletions.filter(pl.col("source").is_in(list(scanned_sources)))
+    deletions = deletions.join(new, on="accession", how="anti").select("accession")
 
     return DbDiff(
         to_parse=to_parse.collect(engine="streaming")["accession"].to_list(),

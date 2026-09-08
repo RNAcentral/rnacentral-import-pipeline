@@ -45,8 +45,12 @@ def test_hgnc_force_full_ignores_the_stored_manifest(tmp_path, monkeypatch):
 
 
 def test_ena_force_full_keeps_everything_without_a_diff(tmp_path, monkeypatch):
+    label = delta.source_label("/ena/wgs/aaa")
     signatures = tmp_path / "signatures.csv"
-    signatures.write_text("AB111111.1,sig-one\nAB222222.3,sig-two\n")
+    signatures.write_text(f"{label},AB111111.1,sig-one\n{label},AB222222.3,sig-two\n")
+
+    scanned = tmp_path / "scanned.txt"
+    scanned.write_text("/ena/wgs/aaa\n")
 
     monkeypatch.setattr(ena_cli.manifest, "dump_signatures", _boom)
     monkeypatch.setattr(ena_cli.manifest, "diff_via_polars", _boom)
@@ -61,6 +65,7 @@ def test_ena_force_full_keeps_everything_without_a_diff(tmp_path, monkeypatch):
             "delta-diff",
             "--force-full",
             str(signatures),
+            str(scanned),
             str(to_parse),
             str(deletions),
             str(manifest_csv),
@@ -71,6 +76,6 @@ def test_ena_force_full_keeps_everything_without_a_diff(tmp_path, monkeypatch):
     assert to_parse.read_text().strip() == delta.KEEP_ALL
     assert deletions.read_text() == ""
     assert manifest_csv.read_text().splitlines() == [
-        "ENA,AB111111.1,sig-one",
-        "ENA,AB222222.3,sig-two",
+        "ENA,AB111111.1,sig-one,/ena/wgs/aaa",
+        "ENA,AB222222.3,sig-two,/ena/wgs/aaa",
     ]
