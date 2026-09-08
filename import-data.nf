@@ -62,6 +62,28 @@ process apply_sources {
   """
 }
 
+// The weekly run picks which databases to import by comparing remote checksums against
+// rnc_import_tracker. Recording a checksum before the import has run would mark a
+// failed import as done and skip that database every week after, so the update waits
+// for the release, like the manifests above.
+process update_import_tracker {
+  cache false
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple path(latest_md5s), val(_ready)
+
+  output:
+  val('done')
+
+  when: params.get('should_release', false)
+
+  script:
+  """
+  rnac scan-imports update-tracker $latest_md5s
+  """
+}
+
 workflow import_data {
   take: _flag
   main:
@@ -101,6 +123,14 @@ workflow import_data {
     results.sources \
     | combine(post_release) \
     | apply_sources
+
+    // Written by select_databases.nf. fromPath emits a literal path whether or not it
+    // exists, so the filter is what stops a run that skipped the selection failing here;
+    // the tracker then keeps what it had and those databases import again next week.
+    channel.fromPath("$projectDir/latest_md5s.csv") \
+    | filter { md5s -> md5s.exists() } \
+    | combine(post_release) \
+    | update_import_tracker
 
   emit: post_release
 }

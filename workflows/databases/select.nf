@@ -38,17 +38,6 @@ process make_selection {
 }
 
 
-process update_tracker_table {
-  input:
-    path latest_md5s
-
-  script:
-  """
-  rnac scan-imports update-tracker $latest_md5s
-  """
-}
-
-
 workflow select {
 
   channel.fromPath(params.import_selection_remotes) \
@@ -56,7 +45,7 @@ workflow select {
   | map { row -> tuple(row[0], row[1])}
   | check_db_md5
   | collectFile
-  | ( make_selection & update_tracker_table )
+  | make_selection
 
 }
 
