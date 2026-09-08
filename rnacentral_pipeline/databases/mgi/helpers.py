@@ -31,9 +31,9 @@ REFSEQ_DBID = 9
 ENSEMBL_DBID = 25
 
 # MGI's 'Feature Type' is an SO term by another name, so this is a rename, not
-# an inference. Anything mapping to None is not RNA and is dropped; anything
-# absent is new since the last import and raises, because silently skipping a
-# new ncRNA feature type is how a database quietly stops importing.
+# an inference. None means not RNA, dropped even where SO does have a term for
+# it (CpG island is SO:0000307); a type absent here is new since the last
+# import and raises, because silently skipping one quietly stops the import.
 SO_TERMS: ty.Dict[str, ty.Optional[str]] = {
     "BAC/YAC end": None,
     "CpG island": None,
