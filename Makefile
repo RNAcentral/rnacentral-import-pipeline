@@ -27,7 +27,7 @@ clean:
 	cargo clean
 
 docker: Dockerfile
-	docker buildx build -t "$(docker)" --platform linux/amd64 --build-arg PYTHON_VERSION=$$(cat .python-version)-trixie .
+	docker buildx build -t "$(docker)" --platform linux/amd64 --build-arg PYTHON_VERSION=$$(cat .python-version)-trixie --build-arg RUST_VERSION=$(pytag)-latest .
 
 shell: docker
 	docker run -v `pwd`:/rna/import-pipeline -i -t "$(docker)"

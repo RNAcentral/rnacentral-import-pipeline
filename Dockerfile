@@ -4,7 +4,11 @@
 # Build arguments for tool versions
 ARG INFERNAL_VERSION=1.1.5
 ARG SAMTOOLS_VERSION=1.22.1
-ARG RUST_VERSION=latest
+# rust-utils images are tagged py<version>-<rust-version>; default matches
+# .python-version at repo root so a plain `docker build` can't pull a wheel
+# built for a different Python. Override with
+# --build-arg RUST_VERSION=py$(cat .python-version | tr -d .)-latest
+ARG RUST_VERSION=py314-latest
 # Default matches .python-version at repo root; override with
 # --build-arg PYTHON_VERSION=$(cat .python-version)-trixie
 ARG PYTHON_VERSION=3.14-trixie
@@ -42,7 +46,7 @@ RUN /app/.venv/bin/python3 -m nltk.downloader words
 FROM python:${PYTHON_VERSION}
 ARG INFERNAL_VERSION=1.1.5
 ARG SAMTOOLS_VERSION=1.22.1
-ARG RUST_VERSION=latest
+ARG RUST_VERSION=py314-latest
 ENV RNA=/rna
 WORKDIR $RNA
 

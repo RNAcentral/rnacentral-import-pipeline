@@ -106,13 +106,16 @@ jobs:
           echo "infernal=$(cat containers/infernal/VERSION)" >> $GITHUB_OUTPUT
           echo "samtools=$(cat containers/samtools/VERSION)" >> $GITHUB_OUTPUT
           echo "python=$(cat .python-version)-trixie" >> $GITHUB_OUTPUT
-          echo "pytag=py$(cat .python-version | tr -d '.')" >> $GITHUB_OUTPUT
+          PYTAG="py$(cat .python-version | tr -d '.')"
+          echo "pytag=$PYTAG" >> $GITHUB_OUTPUT
 
           RUST_VERSION=$(cat containers/rust-utils/VERSION)
           if [ "$RUST_VERSION" = "auto" ]; then
             RUST_VERSION=$(git rev-parse --short=8 HEAD)
           fi
-          echo "rust=$RUST_VERSION" >> $GITHUB_OUTPUT
+          # rust-utils images are tagged py<version>-<rust-version> so a build
+          # can never silently pull a wheel built for a different Python.
+          echo "rust=${PYTAG}-${RUST_VERSION}" >> $GITHUB_OUTPUT
 
       - name: docker login
         env:
