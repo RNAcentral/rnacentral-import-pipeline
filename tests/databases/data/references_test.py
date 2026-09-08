@@ -196,6 +196,11 @@ def test_ignores_missing_id_references():
     }
 
 
+# PMID:30715521 genuinely has 3 hits (two near-duplicate LncBook records plus
+# lncHUB2); every other case here has exactly 1.
+_MULTI_HIT_CASES = {"PMID:30715521"}
+
+
 @pytest.mark.parametrize(
     "raw_data,title",
     [
@@ -268,5 +273,6 @@ def test_ignores_missing_id_references():
 def test_can_query_for_expected_data(raw_data, title):
     ref = IdReference.build(raw_data)
     response = requests.get(ref.external_url())
-    assert response.json()["hitCount"] == 3
+    expected_hit_count = 3 if raw_data in _MULTI_HIT_CASES else 1
+    assert response.json()["hitCount"] == expected_hit_count
     assert response.json()["resultList"]["result"][0]["title"] == title
