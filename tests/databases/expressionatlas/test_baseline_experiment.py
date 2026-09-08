@@ -34,9 +34,10 @@ class TestParseBaseline(unittest.TestCase):
         )
 
         # Create sample lookup data
+        # No "CREATE TABLE"/"COPY N" preamble here - the real pipeline's
+        # fetch_lookup process (workflows/databases/expressionatlas.nf) greps
+        # those psql status lines out before parser.py ever sees the file.
         self.lookup_content = (
-            "CREATE TABLE\n"
-            "COPY 5\n"  # Skip these two lines
             "urs_taxid,taxid,gene\n"
             "URS000123_9606,9606,ENSG00000001\n"
             "URS000124_9606,9606,ENSG00000002\n"
@@ -51,7 +52,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file
-            tpms_path = Path(temp_dir) / "E-MTAB-123-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-123-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(self.tpms_content)
 
@@ -97,7 +100,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file with alternative column name
-            tpms_path = Path(temp_dir) / "E-MTAB-123-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-123-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(tpms_content_alt)
 
@@ -133,7 +138,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file
-            tpms_path = Path(temp_dir) / "E-MTAB-123-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-123-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(tpms_content_filtered)
 
@@ -164,7 +171,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file
-            tpms_path = Path(temp_dir) / "E-MTAB-123-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-123-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(tpms_content_empty)
 
@@ -198,7 +207,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file
-            tpms_path = Path(temp_dir) / "E-MTAB-123-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-123-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(tpms_content_single)
 
@@ -229,7 +240,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file with a different experiment name
-            tpms_path = Path(temp_dir) / "E-MTAB-456-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-456"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-456-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(self.tpms_content)
 
@@ -265,7 +278,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file
-            tpms_path = Path(temp_dir) / "E-MTAB-123-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-123-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(self.tpms_content)
 
@@ -297,7 +312,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file
-            tpms_path = Path(temp_dir) / "E-MTAB-123-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-123-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(tpms_content_large)
 
@@ -331,7 +348,9 @@ class TestParseBaseline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create tpms file
-            tpms_path = Path(temp_dir) / "E-MTAB-123-tpms.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            tpms_path = exp_dir / "E-MTAB-123-tpms.tsv"
             with open(tpms_path, "w") as f:
                 f.write(tpms_content_negative)
 
