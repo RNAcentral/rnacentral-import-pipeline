@@ -32,7 +32,7 @@ def load_data(rna_id: str) -> ty.Tuple[Context, Sequence]:
         (":tablename", "rna"),
         (
             "todo.id BETWEEN :min AND :max",
-            "xref.upi ='%s' AND xref.taxid = %i" % (upi, int(taxid)),
+            "xref.urs ='%s' AND xref.taxid = %i" % (upi, int(taxid)),
         ),
     )
     return (Context(so_tree=SO_TREE), Sequence.build(SO_TREE, data))
@@ -44,7 +44,7 @@ def load_for_upi(upi: str) -> ty.List[Sequence]:
         run_with_replacements(
             path,
             (":tablename", "rna"),
-            ("todo.id BETWEEN :min AND :max", "xref.upi ='%s'" % upi),
+            ("todo.id BETWEEN :min AND :max", "xref.urs ='%s'" % upi),
             take_all=True,
         )
     )
