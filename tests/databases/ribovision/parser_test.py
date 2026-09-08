@@ -10,6 +10,7 @@ Entries carry no organelle, since nothing stored one before.
 """
 
 import pytest
+from Bio import SeqIO
 
 from rnacentral_pipeline.databases.helpers import r2dt
 from rnacentral_pipeline.databases.ribovision import helpers, parser
@@ -43,9 +44,38 @@ def test_reads_both_subunits(r2dt_data):
     }
 
 
-def test_drops_the_structure_line(r2dt_data):
+def test_keeps_the_structure_out_of_the_sequence(r2dt_data):
     for record in helpers.fasta_entries(r2dt_data):
         assert "(" not in str(record.seq)
+
+
+def test_structure_survives_a_fasta_round_trip(r2dt_data, tmp_path):
+    """
+    The dot-bracket rides on the description line because the parse step reads
+    sequences back from a fasta, not from the bpseq directory.
+    """
+    written = tmp_path / "sequences.fasta"
+    with written.open("w") as out:
+        SeqIO.write(helpers.fasta_entries(r2dt_data), out, "fasta")
+
+    indexed = SeqIO.index(str(written), "fasta")
+    found = {
+        name: r2dt.secondary_structure(indexed[name]).dot_bracket for name in indexed
+    }
+    assert found == {
+        "EC_LSU_3D": "..((((((......((((((((((.....(((",
+        "HS_SSU_3D": ".....((((((...((((((((((((....((",
+    }
+
+
+def test_structure_is_empty_without_one(tmp_path):
+    directory = tmp_path / "bpseq"
+    directory.mkdir(parents=True)
+    (directory / "x.fasta").write_text(
+        "> generated from a/b/EC_LSU_3D.bpseq by bpseq2fasta\nACGU\n"
+    )
+    (record,) = r2dt.fasta_entries([directory])
+    assert not r2dt.secondary_structure(record)
 
 
 def test_rejects_a_header_without_a_model_id(tmp_path):

@@ -59,6 +59,7 @@ def as_entry(info, sequences) -> ty.Optional[data.Entry]:
             regions=[],
             rna_type=info.so_rna_type,
             sequence=sequence(info, sequences),
+            secondary_structure=r2dt.secondary_structure(sequences[info.model_name]),
             url=URL,
             seq_version="1",
             description=description(info),

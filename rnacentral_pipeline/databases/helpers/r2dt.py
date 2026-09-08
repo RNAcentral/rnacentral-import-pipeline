@@ -20,6 +20,8 @@ from pathlib import Path
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
+from rnacentral_pipeline.databases.data import SecondaryStructure
+
 # Both CRW and RiboVision ship bpseq2fasta output, whose header names the bpseq
 # it came from. The paths differ between the two, so match only the basename.
 MODEL_ID = re.compile(r"([^/\s]+)\.bpseq")
@@ -29,7 +31,8 @@ def fasta_entries(directories: ty.Iterable[Path]) -> ty.Iterable[SeqRecord]:
     """
     Read the model sequences R2DT ships as bpseq2fasta output: a header naming
     the source bpseq, the sequence, then the dot-bracket structure. The
-    structure is dropped -- only the sequence is imported.
+    structure travels on the description line so it survives being written to
+    and read back from a fasta; secondary_structure takes it off again.
     """
     for directory in directories:
         for path in sorted(directory.glob("*.fasta")):
@@ -43,4 +46,16 @@ def fasta_entries(directories: ty.Iterable[Path]) -> ty.Iterable[SeqRecord]:
             if match is None:
                 raise ValueError(f"Could not get model id from {lines[0]}")
 
-            yield SeqRecord(Seq(lines[1]), id=match.group(1))
+            structure = lines[2] if len(lines) > 2 else ""
+            yield SeqRecord(Seq(lines[1]), id=match.group(1), description=structure)
+
+
+def secondary_structure(record: SeqRecord) -> SecondaryStructure:
+    """
+    Recover the dot-bracket fasta_entries parked on the description line.
+    Biopython puts the id back at the front on the way in, so drop it.
+    """
+    parts = record.description.split(None, 1)
+    if len(parts) < 2:
+        return SecondaryStructure.empty()
+    return SecondaryStructure(dot_bracket=parts[1])
