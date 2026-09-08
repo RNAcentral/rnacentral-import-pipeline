@@ -127,17 +127,27 @@ def references() -> ty.List[Reference]:
     return [
         Reference(
             authors=(
-                "Blake JA, Eppig JT, Kadin JA, Richardson JE, Smith CL, Bult CJ; "
-                "the Mouse Genome Database Group."
+                "Blake JA, Baldarelli R, Kadin JA, Richardson JE, Smith CL, "
+                "Bult CJ; Mouse Genome Database Group."
             ),
-            location="Nucleic Acids Res. 2017 Jan 4;",
+            location="Nucleic Acids Res. 2021 Jan 8;49(D1):D981-D987",
             title=(
-                "Mouse Genome Database (MGD)-2017: community knowledge resource "
-                "for the laboratory mouse"
+                "Mouse Genome Database (MGD): Knowledgebase for mouse-human "
+                "comparative biology"
             ),
-            pmid=27899570,
-            doi="10.1093/nar/gkw1040",
-        )
+            pmid=33231642,
+            doi="10.1093/nar/gkaa1083",
+        ),
+        Reference(
+            authors=(
+                "Ringwald M, Richardson JE, Baldarelli RM, Blake JA, "
+                "Kadin JA, Smith C, Bult CJ."
+            ),
+            location="Mamm Genome. 2022 Mar;33(1):4-18",
+            title="Mouse Genome Informatics (MGI): latest news from MGD and GXD",
+            pmid=34698891,
+            doi="10.1007/s00335-021-09921-0",
+        ),
     ]
 
 
