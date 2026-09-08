@@ -115,9 +115,7 @@ def ftp(host):
         LOGGER.exception(err)
 
 
-def toplevel_file(
-    host, species, assembly_id, directory, files, kind, dna_type="dna"
-):
+def toplevel_file(host, species, assembly_id, directory, files, kind, dna_type="dna"):
     upper_species = species[0].upper() + species[1:]
     if kind == "fa":
         base = f"{upper_species}.{assembly_id}.{dna_type}.{{type}}.fa.gz"
@@ -211,7 +209,7 @@ def urls_for(handle):
 
     reader = csv.reader(handle)
     for (species, assembly_id, host) in reader:
-        yield (species, assembly_id, url_for(species, assembly_id, host))
+        yield (species, assembly_id, url_for(species, assembly_id, "fa", host))
 
 
 def write_urls_for(handle, output):
