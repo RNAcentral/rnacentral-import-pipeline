@@ -13,7 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.ensembl import helpers, vertebrates
+from rnacentral_pipeline.databases.ensembl import vertebrates
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers
 from rnacentral_pipeline.databases.helpers import embl
 
 EMPTY_GFF_FILE = "data/gencode/empty.gff3"
