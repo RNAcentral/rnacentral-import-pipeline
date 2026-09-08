@@ -19,7 +19,7 @@ process rnc_dump {
   path(query)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.evlncrnas?.run
 
@@ -37,7 +37,7 @@ process parse {
   tuple path(ev_data), path(rnc_data)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """

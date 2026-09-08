@@ -5,6 +5,9 @@ CREATE OR REPLACE FUNCTION rnc_update.prepare_releases(p_release_type character)
 AS $function$
 DECLARE
 
+    -- Bailing out whenever any release was pending let one abandoned load block
+    -- every later one: no release got created for the staged database, and the
+    -- stale pending release ran in its place.
     q CURSOR
     FOR
       SELECT distinct
@@ -13,21 +16,18 @@ DECLARE
           load_rnacentral_all d1,
           rnc_database d2
       WHERE
-        d1.DATABASE = d2.descr;
-
-    v_count_existing_releases numeric;
+        d1.DATABASE = d2.descr
+      AND NOT EXISTS (
+          SELECT
+            1
+          FROM
+            rnc_release r
+          WHERE
+            r.dbid   = d2.id
+          AND r.status = 'L'
+        );
 
 BEGIN
-
-    SELECT count(*)
-    INTO v_count_existing_releases
-    FROM rnc_release
-    WHERE status = 'L';
-
-    IF (v_count_existing_releases > 0) THEN
-      RAISE NOTICE 'Found releases to be loaded';
-      RETURN;
-    END IF;
 
     RAISE NOTICE 'Preparing the release table';
 
@@ -39,4 +39,3 @@ BEGIN
   END;
 
 $function$
-

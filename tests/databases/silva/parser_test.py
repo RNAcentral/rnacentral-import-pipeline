@@ -13,12 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+
 import attr
 import pytest
 
 import rnacentral_pipeline.databases.helpers.publications as pubs
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.silva import parser
+from rnacentral_pipeline.databases.silva import helpers, parser
 
 
 @pytest.mark.silva
@@ -120,3 +122,12 @@ def test_can_parse_lsu_data_correctly():
         ],
         description="Cytospora ceratosperma eukaryotic LSU rRNA",
     )
+
+
+@pytest.mark.silva
+def test_skips_entries_with_a_blank_taxid():
+    with open("data/silva/sample.tsv", "r") as raw:
+        row = next(csv.DictReader(raw, delimiter="\t"))
+    row["ncbiTaxId"] = ""
+
+    assert helpers.as_entry(None, row) is None

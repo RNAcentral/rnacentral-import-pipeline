@@ -1,7 +1,7 @@
 BEGIN;
 
 INSERT INTO go_term_annotations (
-    rna_id,
+    urs_taxid,
     qualifier,
     ontology_term_id,
     evidence_code,
@@ -17,7 +17,7 @@ SELECT
     extensions
 FROM load_go_term_annotations
 )
-ON CONFLICT (rna_id, qualifier, ontology_term_id, evidence_code, assigned_by)
+ON CONFLICT (urs_taxid, qualifier, ontology_term_id, evidence_code, assigned_by)
 DO UPDATE
 SET
     extensions = excluded.extensions

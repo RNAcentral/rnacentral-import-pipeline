@@ -1,8 +1,8 @@
 COPY (
   SELECT
     json_build_object(
-        'rna_id', rna.upi || '_' || xref.taxid,
-        'upi', rna.upi,
+        'rna_id', rna.urs || '_' || xref.taxid,
+        'upi', rna.urs,
         'taxid', xref.taxid,
         'first_seen', array_agg(release1.timestamp),
         'last_seen', array_agg(release2.timestamp),
@@ -53,20 +53,20 @@ COPY (
         'products', array_agg(acc.product)
     )
 FROM rna rna
-join xref xref ON xref.upi = rna.upi
-JOIN rnc_rna_precomputed pre ON xref.upi = pre.upi AND xref.taxid = pre.taxid
+join xref xref ON xref.urs = rna.urs
+JOIN rnc_rna_precomputed pre ON xref.urs = pre.urs AND xref.taxid = pre.taxid
 JOIN rnc_accessions acc ON xref.ac = acc.accession
 JOIN rnc_database db ON xref.dbid = db.id
 JOIN rnc_release release1 ON xref.created = release1.id
 JOIN rnc_release release2 ON xref.last = release2.id
-JOIN qa_status qa ON qa.rna_id = pre.id
+JOIN qa_status qa ON qa.urs_taxid = pre.urs_taxid
 LEFT JOIN rnc_reference_map ref_map ON ref_map.accession = acc.accession
 LEFT JOIN rnc_references refs ON refs.id = ref_map.reference_id
-LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
+LEFT JOIN rfam_model_hits hits ON xref.urs = hits.urs
 LEFT JOIN rfam_models models ON hits.rfam_model_id = models.rfam_model_id
 WHERE
   xref.deleted = 'N'
   AND rna.id BETWEEN :min AND :max
   AND pre.is_fragment = false
-GROUP BY rna.upi, xref.taxid
+GROUP BY rna.urs, xref.taxid
 ) TO STDOUT

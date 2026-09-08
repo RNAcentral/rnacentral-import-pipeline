@@ -1,3 +1,5 @@
+include { any_ensembl_division_runs; ensembl_divisions } from '../utils/ensembl-divisions'
+
 process fetch_metadata {
   input:
   path(query)
@@ -5,7 +7,7 @@ process fetch_metadata {
   output:
   path('families.tsv')
 
-  when: params.databases.ensembl?._any?.run
+  when: any_ensembl_division_runs()
 
   script:
   """
@@ -76,7 +78,7 @@ process parse_data {
   tuple val(division), path(embl), path(gff), path(rfam)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """
@@ -89,13 +91,7 @@ workflow ensembl {
   main:
     channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
 
-    channel.fromList([
-      'plants',
-      'fungi',
-      'protists',
-      'metazoa',
-      'vertebrates',
-    ]) \
+    channel.fromList(ensembl_divisions()) \
     | filter { division -> params.databases.ensembl[division]?.run } \
     | find_urls \
     | splitCsv \

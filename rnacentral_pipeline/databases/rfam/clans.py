@@ -14,15 +14,22 @@ limitations under the License.
 """
 
 import csv
+from pathlib import Path
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import row_writer
+
+# Rfam's TSV column names, in the order load_rfam_clans expects them.
+FIELDS = [
+    "id",
+    "name",
+    "description",
+    "family_count",
+]
 
 
 def from_file(filename, output):
     reader = csv.DictReader(filename, delimiter="\t")
-    fields = [
-        "id",
-        "name",
-        "description",
-        "family_count",
-    ]
-    writer = csv.DictWriter(output, fields)
-    writer.writerows(reader)
+    rows = ([row[f] for f in FIELDS] for row in reader)
+    with row_writer(Path(output), schemas.RFAM_CLANS) as writer:
+        writer.writerows(rows)

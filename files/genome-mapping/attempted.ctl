@@ -31,5 +31,8 @@ FROM load_genome_mapping_attempted load
 SET
         last_run = EXCLUDED.last_run
 ;
+$$,
+$$
+TRUNCATE load_genome_mapping_attempted;
 $$
 ;

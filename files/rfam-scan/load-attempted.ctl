@@ -36,10 +36,12 @@ select DISTINCT ON (urs)
   last_run
 FROM load_qa_rfam_attempted
 ) ON CONFLICT (urs, model_source) DO UPDATE
-SET 
+SET
   model_source = EXCLUDED.model_source,
   source_version = EXCLUDED.source_version,
   last_run = EXCLUDED.last_run
+$$,
+$$
+TRUNCATE load_qa_rfam_attempted;
 $$
 ;
-

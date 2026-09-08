@@ -26,10 +26,10 @@ WITH
 
 AFTER LOAD DO
 $$
-UPDATE load_secondary_should_show load
+UPDATE r2dt_results layout
 SET
-  should_show = load.should_show
-FROM r2dt_results layout
+  inferred_should_show = load.should_show
+FROM load_secondary_should_show load
 WHERE
   layout.urs = load.urs
 ;

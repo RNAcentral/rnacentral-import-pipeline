@@ -3,7 +3,7 @@ process taxonomy {
   errorStrategy 'retry'
 
   output:
-  path('*.csv')
+  path("taxonomy.${params.writer_format}")
 
   script:
   """
@@ -13,7 +13,8 @@ process taxonomy {
   tar xvf new_taxdump.tar.gz
   mkdir taxdump
   mv *.dmp taxdump
+
   wget https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/reference_proteomes/STATS
-  rnac ncbi taxonomy taxdump --ref-proteomes STATS
+  rnac ncbi taxonomy taxdump taxonomy.${params.writer_format} --ref-proteomes STATS
   """
 }

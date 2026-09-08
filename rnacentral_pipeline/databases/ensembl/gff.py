@@ -79,7 +79,8 @@ def get_assembly(path: Path) -> str:
 def load_coordinates(path: Path) -> SqliteDict:
     assembly_id = get_assembly(path)
     mapping = SqliteDict()
-    with tempfile.NamedTemporaryFile() as tmp:
+    # dir="." because singularity --contain gives us a tiny in-memory /tmp
+    with tempfile.NamedTemporaryFile(dir=".") as tmp:
         db = gffutils.create_db(str(path), tmp.name)
         for ncrna_gene in db.features_of_type("ncRNA_gene"):
             for transcript in db.children(ncrna_gene):

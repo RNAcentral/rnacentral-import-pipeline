@@ -5,7 +5,7 @@ process generic {
   tuple val(name), path(query)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.ensembl?.vertebrates?.run || params.databases.rfam?.run
 
@@ -18,7 +18,7 @@ process generic {
     --user $conn.user \
     --port $conn.port \
     < $query > raw.tsv
-  rnac rfam $name raw.tsv
+  rnac rfam $name raw.tsv rfam-${name}.${params.writer_format}
   """
 }
 

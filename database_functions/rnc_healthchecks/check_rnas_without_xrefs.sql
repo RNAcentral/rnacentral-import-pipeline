@@ -9,8 +9,8 @@ DECLARE
 
 BEGIN
     SELECT count(*) INTO v_count FROM xref x
-RIGHT OUTER JOIN rna r ON (x.upi = r.upi)
-WHERE x.upi IS NULL;
+RIGHT OUTER JOIN rna r ON (x.urs = r.urs)
+WHERE x.urs IS NULL;
 
     IF v_count != 0 THEN
       RAISE NOTICE 'not ok ... check_rnas_without_xrefs';
@@ -22,4 +22,3 @@ WHERE x.upi IS NULL;
   END;
 
 $function$
-

@@ -7,6 +7,6 @@ COPY (
       'md5', rna.md5
     )
   FROM search_export_urs todo
-  JOIN rna ON rna.upi = todo.urs
+  JOIN rna ON rna.urs = todo.urs
   ORDER BY todo.id
 ) TO STDOUT

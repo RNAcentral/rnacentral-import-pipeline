@@ -19,6 +19,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases.generic import parser as generic
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -38,6 +39,7 @@ def cli():
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
+@format_option
 def process_ribocentre(json_file, output, db_url=None):
     """
     This parses the JSON that ribocentre provides us

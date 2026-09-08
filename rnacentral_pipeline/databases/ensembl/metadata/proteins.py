@@ -13,10 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import csv
-import operator as op
 import itertools as it
+import operator as op
+import re
+from pathlib import Path
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import row_writer
 
 from . import databases as db
 
@@ -38,6 +42,15 @@ def short_description(entries):
     return description
 
 
+def pg_array(values: list) -> str:
+    """
+    Render a list as the Postgres array literal, e.g. ``{"a","b"}``. The CSV
+    path needs it verbatim; on the parquet path the typed writer parses it
+    back into a real list for load_protein_info.synonyms (text[]).
+    """
+    return "{%s}" % ",".join('"%s"' % v for v in values)
+
+
 def parse(data):
     grouped = it.groupby(data, op.itemgetter("stable_id"))
     for gene_id, entries in grouped:
@@ -50,13 +63,11 @@ def parse(data):
             if value and value != "NULL":
                 synonyms.add(value.replace('"', ""))
 
-        synonyms = ",".join('"%s"' % s for s in synonyms)
-        synonyms = "{%s}" % synonyms
         yield [
             "ENSEMBL:%s" % gene_id,
             description,
             symbol,
-            synonyms,
+            pg_array(sorted(synonyms)),
         ]
 
 
@@ -69,4 +80,5 @@ def fetch(connections, query_handle):
 
 def write(connections, query, output):
     data = fetch(connections, query)
-    csv.writer(output).writerows(data)
+    with row_writer(Path(output), schemas.PROTEINS) as writer:
+        writer.writerows(data)

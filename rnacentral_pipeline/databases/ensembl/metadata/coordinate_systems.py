@@ -14,10 +14,14 @@ limitations under the License.
 """
 
 import csv
-import operator as op
 import itertools as it
+import operator as op
+from pathlib import Path
 
 import more_itertools as more
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import row_writer
 
 from . import databases as db
 
@@ -84,4 +88,5 @@ def fetch(connections, query_handle):
 
 def write(connections, query, output):
     data = fetch(connections, query)
-    csv.writer(output).writerows(data)
+    with row_writer(Path(output), schemas.COORDINATE_SYSTEMS) as writer:
+        writer.writerows(data)

@@ -15,6 +15,8 @@ include { query as orf_query} from './workflows/precompute/utils'
 include { query as stopfree_query} from './workflows/precompute/utils'
 include { query as tcode_query} from './workflows/precompute/utils'
 
+include { qc_precompute } from './workflows/utils/qc'
+
 include { slack_closure } from './workflows/utils/slack'
 include { slack_message } from './workflows/utils/slack'
 
@@ -111,15 +113,22 @@ process query_accession_range {
 
 process process_range {
   tag { "$min-$max" }
-  memory params.precompute.range.memory
+  // A cgroup OOM kill on this cluster reaches nextflow with no exit status at
+  // all ("terminated for an unknown reason"), so the usual `task.exitStatus in
+  // 137..140` guard never fires - retry on the attempt count instead. Ranges
+  // are not uniform: a range holding a few heavily-annotated URS costs far more
+  // than 25,000 average ones, so the retry has to raise the request.
+  memory { params.precompute.range.memory * task.attempt }
+  errorStrategy { task.attempt <= 3 ? 'retry' : 'terminate' }
+  maxRetries 3
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   tuple val(min), val(max), path(accessions), path(metadata)
 
   output:
-  path 'precompute.csv', emit: data
-  path 'qa.csv', emit: qa
+  path "precompute.${params.writer_format}", emit: data
+  path "qa.${params.writer_format}", emit: qa
 
   script:
   """
@@ -129,21 +138,83 @@ process process_range {
   """
 }
 
+process reconcile_taxonomy {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  val(_flag)
+  path(missing_sql)
+  path(tax_ctl)
+  path(tax_upsert)
+
+  output:
+  val('done')
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f $missing_sql "\$PGDATABASE" > missing-taxids.csv
+  if [ -s missing-taxids.csv ]; then
+    rnac ncbi fill-missing-taxonomy missing-taxids.csv taxonomy.csv
+    split-and-load $tax_ctl 'taxonomy.csv' ${params.import_data.chunk_size} taxonomy
+    psql -v ON_ERROR_STOP=1 -f $tax_upsert "\$PGDATABASE"
+  fi
+  """
+}
+
 process load_data {
   memory 9.GB
 
   input:
-  path('precompute*.csv')
-  path('qa*.csv')
+  val(_taxonomy_ready)
+  path("precompute*.${params.writer_format}")
+  path("qa*.${params.writer_format}")
   path(pre_ctl)
   path(qa_ctl)
+  path(data_post_load)
+  path(qa_post_load)
   path(post)
 
+  output:
+  val('done')
+
   script:
+  if (params.writer_format == 'parquet')
+    """
+    load-parquet load_precomputed 'precompute*.parquet' \\
+      --truncate \\
+      --post-load $data_post_load
+    load-parquet load_qa_status 'qa*.parquet' \\
+      --truncate \\
+      --post-load $qa_post_load
+    psql -v ON_ERROR_STOP=1 -f $post "\$PGDATABASE"
+    """
+  else
+    """
+    split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
+    split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
+    psql -v ON_ERROR_STOP=1 -f $post "\$PGDATABASE"
+    """
+}
+
+// Pairs with no active xref are not selected for recompute, so nothing in the
+// fan-out can flip them to inactive. Sweep them here. Only meaningful after a
+// full rebuild, hence the method check.
+process deactivate_stale {
+  input:
+  val(_flag)
+  path(sql)
+
+  output:
+  val('done')
+
+  script:
+  def sweep = params.precompute.method == 'all'
   """
-  split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
-  split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
-  psql -v ON_ERROR_STOP=1 -f $post "\$PGDATABASE"
+  if [ "${sweep}" = "true" ]; then
+    psql -v ON_ERROR_STOP=1 -f $sql "\$PGDATABASE"
+  else
+    echo "Skipping stale sweep, selection method is ${params.precompute.method}"
+  fi
   """
 }
 
@@ -156,7 +227,14 @@ workflow precompute {
     channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
     channel.fromPath('files/precompute/load.ctl') | set { data_ctl }
     channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
+    channel.fromPath('files/precompute/data-post-load.sql') | set { data_post_load }
+    channel.fromPath('files/precompute/qa-post-load.sql') | set { qa_post_load }
     channel.fromPath('files/precompute/post-load.sql') | set { post_load }
+    channel.fromPath('files/precompute/deactivate-stale.sql') | set { stale_sql }
+
+    channel.fromPath('files/precompute/missing-taxids.sql') | set { missing_taxids_sql }
+    channel.fromPath('files/import-data/load/taxonomy.ctl') | set { taxonomy_ctl }
+    channel.fromPath('files/import-data/pre-release/000__taxonomy.sql') | set { taxonomy_upsert }
 
     channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
     channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
@@ -170,6 +248,17 @@ workflow precompute {
     // repeats | build_precompute_context | set { context }
     channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
     urs_counts | build_precompute_accessions | set { accessions_ready }
+
+    // Resolve any taxids the load will reference but that are missing from
+    // rnc_taxonomy (ENA runs ahead of the NCBI taxdump) before loading the
+    // precompute data, so the rnc_rna_precomputed.taxid FK always holds.
+    reconcile_taxonomy(
+      urs_counts,
+      missing_taxids_sql,
+      taxonomy_ctl,
+      taxonomy_upsert,
+    ) \
+    | set { taxonomy_ready }
 
     build_metadata(
       basic_query(urs_counts, basic_sql),
@@ -206,25 +295,26 @@ workflow precompute {
     process_range.out.data | collect | set { data }
     process_range.out.qa | collect | set { qa }
 
-    load_data(data, qa, data_ctl, qa_ctl, post_load)
+    load_data(taxonomy_ready, data, qa, data_ctl, qa_ctl, data_post_load, qa_post_load, post_load)
+
+    deactivate_stale(load_data.out, stale_sql) | set { swept }
+
+    // Final precompute step: QC — active-sequence counts + flags.
+    swept | qc_precompute
 }
 
 workflow {
   main:
     precompute(channel.of(true))
 
+  // See analyze.nf: an onError section crashes on Nextflow 26.04.
   onComplete:
     try {
       if (workflow.success) {
         slack_closure("Precompute workflow completed. Data import complete")
+      } else {
+        slack_closure("Precompute workflow encountered an error and crashed")
       }
-    } catch (Exception e) {
-      log.warn "Could not send Slack notification: ${e}"
-    }
-
-  onError:
-    try {
-      slack_closure("Precompute workflow encountered an error and crashed")
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }

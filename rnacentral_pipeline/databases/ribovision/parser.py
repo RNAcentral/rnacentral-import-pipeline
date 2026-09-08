@@ -16,14 +16,13 @@ limitations under the License.
 import re
 import typing as ty
 
-from bs4 import BeautifulSoup
 import psycopg2
 import psycopg2.extras
+from bs4 import BeautifulSoup
 from pypika import Query, Table
 from pypika import functions as fn
 
 from rnacentral_pipeline.databases import data
-
 
 PATTERN = re.compile(r"^(.+?)\s+\((.+?)\)\s+(http.+?)\s*$")
 
@@ -60,9 +59,9 @@ def build_query(pdb_id: str, chain_id: str) -> str:
             pre.so_rna_type,
         )
         .join(pre)
-        .on((pre.upi == xref.upi) & (pre.taxid == xref.taxid))
+        .on((pre.urs == xref.urs) & (pre.taxid == xref.taxid))
         .join(rna)
-        .on(rna.upi == xref.upi)
+        .on(rna.urs == xref.urs)
         .join(acc)
         .on(acc.accession == xref.ac)
         .where((acc.external_id == pdb_id) & (acc.optional_id == chain_id))

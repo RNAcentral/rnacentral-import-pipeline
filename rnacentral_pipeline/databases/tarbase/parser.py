@@ -157,7 +157,7 @@ def parse(filepath: str) -> ty.List[Entry]:
 
     sequence_query = """
     WITH temp_xref_data AS (
-        SELECT upi, xref.ac FROM
+        SELECT urs, xref.ac FROM
         xref JOIN temp_accessions_tarbase ON xref.ac = temp_accessions_tarbase.ac
         WHERE deleted = 'N'
     )
@@ -165,7 +165,7 @@ def parse(filepath: str) -> ty.List[Entry]:
         SPLIT_PART(ac, ':', 2) AS mirna_id,
         COALESCE(seq_short, seq_long) AS sequence
     FROM rna
-    JOIN temp_xref_data ON rna.upi = temp_xref_data.upi
+    JOIN temp_xref_data ON rna.urs = temp_xref_data.urs
     """
 
     sequence_results = pl.read_database(

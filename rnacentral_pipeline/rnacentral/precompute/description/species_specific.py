@@ -341,7 +341,10 @@ def select_with_several_genes(
     """
 
     getter = op.attrgetter(attribute)
-    candidate = min(accessions, key=getter)
+    # Sort accessions missing the attribute last: several can share a null
+    # gene/locus_tag, and min() cannot compare None with None. Doing so also
+    # keeps the pattern below off a candidate whose value is None.
+    candidate = min(accessions, key=lambda a: (getter(a) is None, getter(a) or ""))
     genes = set(getter(a) for a in accessions if getter(a))
     if not genes or len(genes) == 1:
         description = candidate.description

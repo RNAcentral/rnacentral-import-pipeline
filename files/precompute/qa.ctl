@@ -51,8 +51,8 @@ ALTER TABLE qa_status
 $$,
 $$
 insert into qa_status (
-  rna_id,
-  upi,
+  urs_taxid,
+  urs,
   taxid,
   has_issue,
   incomplete_sequence,
@@ -79,7 +79,7 @@ SELECT distinct on (rna_id)
   messages
 FROM load_qa_status
 )
-ON CONFLICT (rna_id) DO UPDATE
+ON CONFLICT (urs_taxid) DO UPDATE
 SET
   has_issue = EXCLUDED.has_issue,
   incomplete_sequence = EXCLUDED.incomplete_sequence,

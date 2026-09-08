@@ -24,26 +24,20 @@ def description_of(rna_type: str, sequence: Sequence) -> str:
     The entry point for using the rule based approach for descriptions. This
     approach works in two stages, first it determines the rna_type of the
     sequence and then it will select the description from all xrefs of the
-    sequence which match the given rna_type.
-
-    If a taxid is given then a species specific name is generated, otherwise a
-    more general cross species name is created.
+    sequence which match the given rna_type. A species specific name is always
+    generated; every sequence is processed per (URS, taxid).
 
     Parameters
     ----------
-    sequence : Rna
+    rna_type : str
+        The current rna_type for the sequence.
+
+    sequence : Sequence
         The sequence to create a description for.
-
-    xrefs : iterable
-        A list of xrefs to use for determining the rna_type as well as the
-        description.
-
-    taxid : int, None
-        The taxon id for the sequence.
 
     Returns
     -------
-    description : str, None
+    description : str
         The description of the sequence
     """
 

@@ -6,7 +6,7 @@ FROM (
     json_build_object(
         'assembly_id', :'assembly_id',
         'region_id', regions.region_name,
-        'rna_id', pre.id,
+        'rna_id', pre.urs_taxid,
         'description', pre.short_description,
         'rna_type', pre.rna_type,
         'databases', regexp_split_to_array(pre."databases", ','),
@@ -25,7 +25,7 @@ FROM (
     regions.id,
     'transcript'::text as record_type
   FROM rnc_rna_precomputed pre
-  JOIN rnc_sequence_regions_active regions ON regions.urs_taxid = pre.id 
+  JOIN rnc_sequence_regions_active regions ON regions.urs_taxid = pre.urs_taxid
     AND regions.assembly_id = :'assembly_id'
   JOIN rnc_sequence_exons exons ON exons.region_id = regions.id
   LEFT JOIN rnc_gene_members gm ON gm.locus_id = regions.id
@@ -33,8 +33,8 @@ FROM (
   LEFT JOIN rnc_accession_sequence_region sra ON sra.region_id = regions.id
   LEFT JOIN rnc_accessions ac ON sra.accession = ac.accession
   WHERE pre.is_active = true
-  GROUP BY regions.id, regions.region_name, regions.chromosome, regions.strand, 
-           regions.identity, regions.was_mapped, regions.region_start, pre.id, 
+  GROUP BY regions.id, regions.region_name, regions.chromosome, regions.strand,
+           regions.identity, regions.was_mapped, regions.region_start, pre.urs_taxid,
            pre.short_description, pre.rna_type, pre.databases, genes.public_name, genes.start, genes.stop
 
   UNION ALL

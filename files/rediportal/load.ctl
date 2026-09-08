@@ -33,7 +33,7 @@ delete from rnc_sequence_features where feature_name = 'rna_editing_event';
 $$,
 $$
 INSERT INTO rnc_sequence_features (
-    upi,
+    urs,
     taxid,
     accession,
     start,

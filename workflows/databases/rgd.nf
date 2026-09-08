@@ -1,6 +1,6 @@
 process rgd {
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.rgd?.run
 

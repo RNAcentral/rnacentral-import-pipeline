@@ -135,9 +135,6 @@ enum Subcommand {
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
-        #[structopt(short = "s", long = "streaming")]
-        /// Should we use streaming mode to minimize memory?
-        streaming: bool,
     },
 }
 
@@ -230,8 +227,7 @@ fn main() -> anyhow::Result<()> {
             xrefs,
             known,
             output,
-            streaming,
-        } => releases::select_new(&xrefs, &known, &output, streaming)?,
+        } => releases::select_new(&xrefs, &known, &output)?,
     }
 
     Ok(())

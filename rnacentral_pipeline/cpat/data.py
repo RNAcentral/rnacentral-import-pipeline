@@ -17,12 +17,16 @@ limitations under the License.
 
 import json
 import typing as ty
+from contextlib import contextmanager
+from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
+from rnacentral_pipeline import schemas, writers
 from rnacentral_pipeline.databases.data.regions import Strand
+from rnacentral_pipeline.parquet_writers import TypedParquetWrapper
 
 
 @attr.s()
@@ -118,3 +122,22 @@ class CpatWriter:
             self.results.writerow(result.writeable())
             if result.orf:
                 self.orfs.writerow(result.orf.writeable(result.urs_taxid))
+
+
+_FIELD_SCHEMAS = {
+    "results": schemas.CPAT_RESULTS,
+    "orfs": schemas.CPAT_ORFS,
+}
+
+
+@contextmanager
+def parquet_writer(path: Path) -> ty.Iterator[CpatWriter]:
+    """
+    Open a :class:`CpatWriter` whose ``results`` and ``orfs`` tables stream
+    typed Parquet files under ``path``.
+    """
+    with writers.build_parquet(CpatWriter, path, _FIELD_SCHEMAS) as raw:
+        yield CpatWriter(
+            results=TypedParquetWrapper(raw.results, schemas.CPAT_RESULTS),
+            orfs=TypedParquetWrapper(raw.orfs, schemas.CPAT_ORFS),
+        )

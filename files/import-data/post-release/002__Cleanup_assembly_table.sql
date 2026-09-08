@@ -45,7 +45,7 @@ ON
 	regions.assembly_id = assem.assembly_id
 JOIN rnc_rna_precomputed pre
 ON
-	pre.id = regions.urs_taxid
+	pre.urs_taxid = regions.urs_taxid
 WHERE
 	assem.example_chromosome is NULL
 	AND pre.is_active = true

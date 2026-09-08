@@ -12,7 +12,7 @@ BEGIN
         L.IN_AC,
         L.IN_DBID,
         MAX(coalesce(PREVIOUS_XREF.VERSION_I, 0)) MAX_VERSION_I, -- VERSION_I set to 0 at first
-        PREVIOUS_XREF.UPI
+        PREVIOUS_XREF.URS
       FROM rnacen.xref previous_xref RIGHT OUTER JOIN load_retro_tmp l ON (PREVIOUS_XREF.DBID = p_in_dbid AND PREVIOUS_XREF.AC = L.IN_AC)
      WHERE L.COMPARABLE_PROT_UPI IS NOT NULL AND L.IN_DBID = p_in_dbid   -- outer join, left side can be NULL
      -- outer join, left side can be NULL
@@ -26,7 +26,7 @@ BEGIN
       GROUP BY
         L.IN_AC,
         L.IN_DBID,
-        PREVIOUS_XREF.UPI;
+        PREVIOUS_XREF.URS;
 
     --COMMIT;
 
@@ -34,4 +34,3 @@ BEGIN
 
   END;
 $function$
-

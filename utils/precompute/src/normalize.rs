@@ -1,4 +1,7 @@
-use std::path::Path;
+use std::{
+    cell::Cell,
+    path::Path,
+};
 
 use serde::{
     Deserialize,
@@ -85,6 +88,17 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Resu
         } => (id, data),
         _ => panic!("Illegal data format for accessions file {:?}", &group),
     });
+
+    // A pair with no accessions left cannot be described, so skip it instead of
+    // tripping the assert in Normalized::new.
+    let skipped = Cell::new(0usize);
+    let accessions = accessions.filter(|(_id, data)| {
+        if data.is_empty() {
+            skipped.set(skipped.get() + 1);
+            return false;
+        }
+        true
+    });
     let accessions = accessions.into_iter().assume_sorted_by_key();
 
     let metadata = PsqlJsonIterator::from_path(metadata_file)?;
@@ -100,5 +114,88 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Resu
         writeln!(&mut output)?;
     }
 
+    if skipped.get() > 0 {
+        log::warn!("Skipped {} urs_taxid with no accessions", skipped.get());
+    }
+
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{
+        fs,
+        path::PathBuf,
+        sync::atomic::{
+            AtomicUsize,
+            Ordering as AtomicOrdering,
+        },
+    };
+
+    fn temp_path(name: &str) -> PathBuf {
+        static COUNTER: AtomicUsize = AtomicUsize::new(0);
+        let n = COUNTER.fetch_add(1, AtomicOrdering::Relaxed);
+        std::env::temp_dir().join(format!(
+            "precompute-normalize-{}-{}-{}",
+            std::process::id(),
+            n,
+            name
+        ))
+    }
+
+    fn accession_group(id: usize, count: usize) -> String {
+        let entries: Vec<String> = (0..count)
+            .map(|n| {
+                format!(
+                    r#"{{"id":{id},"urs_id":{id},"urs_taxid":"URS00000000{id:02}_9606","accession":"A{id}{n}","last_release":1,"is_active":true,"description":"An RNA","gene":null,"optional_id":null,"database":"ENA","species":null,"common_name":null,"feature_name":null,"ncrna_class":null,"locus_tag":null,"organelle":null,"lineage":null,"all_species":[],"all_common_names":[],"so_rna_type":null}}"#,
+                    id = id,
+                    n = n
+                )
+            })
+            .collect();
+        format!(r#"{{"Multiple":{{"id":{},"data":[{}]}}}}"#, id, entries.join(","))
+    }
+
+    fn metadata(id: usize) -> String {
+        format!(
+            r#"{{"id":{id},"urs_id":{id},"urs_taxid":"URS00000000{id:02}_9606","upi":"URS00000000{id:02}","taxid":9606,"length":100,"coordinates":[],"previous":null,"rfam_hits":[],"r2dt_hits":null,"orf_info":null,"possible_orf":null,"possible_orf_stopfree":null,"possible_orf_tcode":null}}"#,
+            id = id
+        )
+    }
+
+    /// An empty accession group is dropped instead of tripping the
+    /// "Must given accessions to normalize" assert; the pairs around it still
+    /// come through.
+    #[test]
+    fn skips_urs_taxid_without_accessions() -> Result<()> {
+        let accessions = temp_path("accessions.json");
+        let meta = temp_path("metadata.json");
+        let output = temp_path("merged.json");
+
+        fs::write(
+            &accessions,
+            format!(
+                "{}\n{}\n{}\n",
+                accession_group(1, 1),
+                accession_group(2, 0),
+                accession_group(3, 2)
+            ),
+        )?;
+        fs::write(&meta, format!("{}\n{}\n{}\n", metadata(1), metadata(2), metadata(3)))?;
+
+        write(&accessions, &meta, &output)?;
+
+        let written = fs::read_to_string(&output)?;
+        let upis: Vec<String> = written
+            .lines()
+            .map(|l| serde_json::from_str::<serde_json::Value>(l).unwrap()["upi"].to_string())
+            .collect();
+        assert_eq!(upis, vec!["\"URS0000000001\"", "\"URS0000000003\""]);
+
+        fs::remove_file(&accessions)?;
+        fs::remove_file(&meta)?;
+        fs::remove_file(&output)?;
+        Ok(())
+    }
 }

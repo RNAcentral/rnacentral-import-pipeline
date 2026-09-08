@@ -1,6 +1,6 @@
 process lncbook {
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.lncbook?.run
 

@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.rnacentral import attempted, r2dt
+from rnacentral_pipeline.rnacentral.r2dt import s3 as r2dt_s3
 
 
 @click.group("r2dt")
@@ -93,7 +94,7 @@ def fetch_inspect_data(filename, output, db_url=None):
     to evaluate a diagram and decide if it should be true/false in the training
     set.
     """
-    r2dt.write_training_data(filename, db_url, output)
+    r2dt.write_inspect_data(filename, db_url, output)
 
 
 @should_show.command("build-model")
@@ -102,14 +103,27 @@ def fetch_inspect_data(filename, output, db_url=None):
 @click.argument("model", type=click.Path())
 def build_model(training_info, model, db_url=None):
     """
-    This builds a model given then training information. The training
-    information should be a csv file of:
-        URS,flag
-    The flag must be 1 or 0 to indicate if the URS should be shown or not. THis
-    will fetch the data like the fetch-data command but will then build a model
-    and write it out the the output file directly.
+    This builds a model given the training information, which can be either:
+
+    \b
+    - a pre-featured, labelled corpus (eg data/r2dt/should-show/labelled-corpus.csv,
+      as produced by fetch-data plus hand labelling, with a 'label' column) - used
+      directly, no database needed; or
+    - a plain URS,flag csv, in which case --db-url is required to fetch the
+      features for each URS.
+
+    The model is trained with 5-fold cross validation on a held-out split of
+    the data to estimate F1/accuracy, then refit on the full training split
+    and scored on the held-out test split; both sets of metrics are printed.
     """
-    r2dt.build_model(training_info, db_url, Path(model))
+    metrics = r2dt.build_model(training_info, db_url, Path(model))
+    click.echo(
+        "{cv_folds}-fold CV: f1={cv_f1_mean:.4f} (+/- {cv_f1_std:.4f}) "
+        "accuracy={cv_accuracy_mean:.4f} (+/- {cv_accuracy_std:.4f})".format(**metrics)
+    )
+    click.echo(
+        "Test set: f1={test_f1:.4f} accuracy={test_accuracy:.4f}".format(**metrics)
+    )
 
 
 @should_show.command("compute")
@@ -197,7 +211,7 @@ def rnase_p_model_info(filename, db_url, output):
 @cli.command("create-attempted")
 @click.argument("filename", type=click.File("r"))
 @click.argument("version", type=click.File("r"))
-@click.argument("output", default="-", type=click.File("w"))
+@click.argument("output", type=click.Path())
 def r2dt_create_attempted(filename, version, output):
     version_string = version.read().strip()
     attempted.r2dt(filename, version_string, output)
@@ -254,6 +268,190 @@ def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
     output = Path(output)
     r2dt.prepare_s3(
         model_info, directory, output, file_list, allow_missing=allow_missing
+    )
+
+
+@cli.command("upload-s3")
+@click.option("--env", default="prod", help="top-level prefix / environment")
+@click.option("--workers", default=32, help="parallel uploads")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option(
+    "--allow-failures",
+    default=0,
+    help="tolerate up to this many failed objects instead of failing the batch",
+)
+@click.option(
+    "--failure-list",
+    default=None,
+    type=click.Path(dir_okay=False),
+    help="write the URS of each failed upload here, for later reconciliation",
+)
+@click.argument("file_list", type=click.Path(exists=True, dir_okay=False))
+def r2dt_upload_s3(
+    file_list, env, workers, endpoint, bucket, allow_failures, failure_list
+):
+    """
+    Upload the gzipped SVGs listed in FILE_LIST (produced by prepare-s3) to S3.
+
+    Replaces update-svg.sh: uploads via boto3 with server-side Content-MD5
+    verification and fails loudly if any object does not upload, rather than
+    silently swallowing HTTP errors.
+
+    --allow-failures lets a stray unwritable object through rather than losing
+    the batch; anything beyond the cap still fails. Use --failure-list to record
+    what was skipped.
+    """
+    r2dt_s3.upload(
+        file_list,
+        env,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        allow_failures=allow_failures,
+        failure_list=failure_list,
+    )
+
+
+@cli.command("drop-failed-uploads")
+@click.option(
+    "--max-failures",
+    default=None,
+    type=int,
+    help="fail if FAILURE_LIST holds more URS than this (a run-wide cap)",
+)
+@click.argument("failure_list", type=click.Path(dir_okay=False))
+@click.argument("data_files", nargs=-1, type=click.Path(exists=True, dir_okay=False))
+def r2dt_drop_failed_uploads(failure_list, data_files, max_failures):
+    """
+    Remove rows for URS listed in FAILURE_LIST from DATA_FILES, in place.
+
+    Keeps the database honest when upload-s3 tolerated a failure: the URS would
+    otherwise get a structure row pointing at an object that is not in S3. Pass
+    the hits and the attempted files both, so the sequence is left undone rather
+    than recorded as attempted and never retried.
+
+    A missing or empty FAILURE_LIST is a no-op, so callers can pass it
+    unconditionally. --max-failures caps the whole run, since upload-s3's own
+    tolerance is per batch.
+    """
+    r2dt_s3.drop_failed(failure_list, data_files, max_failures=max_failures)
+
+
+@cli.command("verify-s3")
+@click.option("--env", default="prod")
+@click.option("--workers", default=32)
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.argument("file_list", type=click.Path(exists=True, dir_okay=False))
+@click.argument("output", default="-", type=click.File("w"))
+def r2dt_verify_s3(file_list, output, env, workers, endpoint, bucket):
+    """
+    Checksum the files in FILE_LIST against what is actually in the bucket.
+
+    Writes one line per problem (MISSING / SIZE / CHECKSUM / ERROR) to OUTPUT and
+    exits non-zero if anything is missing or does not match.
+    """
+    problems = r2dt_s3.verify(
+        file_list, env, endpoint=endpoint, bucket=bucket, workers=workers, out=output
+    )
+    if problems:
+        raise click.ClickException(
+            f"{problems} files missing or mismatched in {bucket}"
+        )
+
+
+@cli.command("list-s3")
+@click.option("--env", default="prod")
+@click.option("--workers", default=32)
+@click.option("--depth", default=2, help="delimiter levels to shard on")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.argument("output", default="-", type=click.File("w"))
+def r2dt_list_s3(output, env, workers, depth, endpoint, bucket):
+    """
+    List the bare URS of every SVG in the bucket (one per line) to OUTPUT.
+
+    Used to reconcile what is in S3 against the DB should_show set.
+    """
+    r2dt_s3.list_svgs(
+        env, output, endpoint=endpoint, bucket=bucket, workers=workers, depth=depth
+    )
+
+
+@cli.command("sync-s3")
+@click.option("--env", default="prod")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.option("--workers", default=32)
+@click.option("--depth", default=2, help="delimiter levels to shard on")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option("--missing-list", default="missing-svgs.txt")
+@click.option("--orphan-list", default="orphan-svgs.txt")
+@click.option(
+    "--delete",
+    is_flag=True,
+    default=False,
+    help="actually remove the orphans; without it this is a dry run",
+)
+def r2dt_sync_s3(
+    env, db_url, workers, depth, endpoint, bucket, missing_list, orphan_list, delete
+):
+    """
+    Reconcile the bucket against the database should-show set.
+
+    Writes MISSING-LIST (should show, but no SVG in S3 -- feed this back through
+    r2dt) and ORPHAN-LIST (in S3, but no longer should show). Nothing is removed
+    unless --delete is given: check the orphan list first, since a mis-set --env
+    would prune the wrong environment.
+    """
+    counts = r2dt_s3.sync(
+        env,
+        db_url,
+        missing_list,
+        orphan_list,
+        delete=delete,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        depth=depth,
+    )
+    click.echo(
+        f"in_s3={counts['in_s3']} missing={counts['missing']} "
+        f"orphan={counts['orphan']}"
+    )
+
+
+@cli.command("download-s3")
+@click.option("--env", default="prod")
+@click.option("--workers", default=32)
+@click.option("--depth", default=2, help="delimiter levels to shard on")
+@click.option("--endpoint", default=r2dt_s3.ENDPOINT)
+@click.option("--bucket", default=r2dt_s3.BUCKET)
+@click.option(
+    "--urs-list",
+    default=None,
+    type=click.Path(exists=True, dir_okay=False),
+    help="URS to fetch, one per line; defaults to everything in the bucket",
+)
+@click.argument("directory", type=click.Path(file_okay=False))
+def r2dt_download_s3(directory, env, workers, depth, endpoint, bucket, urs_list):
+    """
+    Download every SVG into DIRECTORY, ready to tar + gzip for distribution.
+
+    Files are written decompressed as URS/xx/xx/xx/xx/<urs>.svg, mirroring the S3
+    layout, with a manifest.tsv of urs/path/size/md5 alongside. Re-running skips
+    files already on disk, so an interrupted run can just be repeated; the
+    manifest is appended to, so it may then hold duplicate rows.
+    """
+    r2dt_s3.download(
+        directory,
+        env,
+        urs_list=urs_list,
+        endpoint=endpoint,
+        bucket=bucket,
+        workers=workers,
+        depth=depth,
     )
 
 

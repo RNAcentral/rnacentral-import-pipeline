@@ -149,9 +149,7 @@ class Sequence:
         Build the RNA id which is {upi}_{taxid}.
         """
 
-        if self.taxid is not None:
-            return f"{self.upi}_{self.taxid}"
-        return self.upi
+        return f"{self.upi}_{self.taxid}"
 
     @property
     def has_coordinates(self) -> bool:

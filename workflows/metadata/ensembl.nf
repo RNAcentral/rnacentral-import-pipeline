@@ -6,14 +6,14 @@ process assemblies {
   path(known)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when:
   params.databases.ensembl?.vertebrates?.run
 
   script:
   """
-  rnac ensembl assemblies $connections $query $examples $known
+  rnac ensembl assemblies $connections $query $examples $known assemblies.${params.writer_format}
   """
 }
 
@@ -40,11 +40,12 @@ process process_compara {
   path(gz)
 
   output:
-  path('compara.csv')
+  path("compara.${params.writer_format}")
 
   script:
+  def out = "compara.${params.writer_format}"
   """
-  zcat $gz | rnac ensembl compara - compara.csv
+  zcat $gz | rnac ensembl compara - $out
   """
 }
 
@@ -54,13 +55,13 @@ process proteins {
   path(query)
 
   output:
-  path('proteins.csv')
+  path("proteins.${params.writer_format}")
 
   when: params.databases.ensembl?.vertebrates?.run || params.databases.tarbase?.run || params.databases.lncbase?.run
 
   script:
   """
-  rnac ensembl proteins $connections $query proteins.csv
+  rnac ensembl proteins $connections $query proteins.${params.writer_format}
   """
 }
 
@@ -73,28 +74,13 @@ process coordinate_systems {
   path(query)
 
   output:
-  path('coordinate_systems.csv')
+  path("coordinate_systems.${params.writer_format}")
 
   when: params.databases.ensembl?.vertebrates?.run
 
   script:
   """
-  rnac ensembl coordinate-systems $connections $query coordinate_systems.csv
-  """
-}
-
-process karyotypes {
-  errorStrategy 'retry'
-  maxRetries 10
-
-  output:
-  path('karyotypes.csv')
-
-  when: params.databases.ensembl?.vertebrates?.run
-
-  script:
-  """
-  rnac ensembl karyotypes karyotypes.csv
+  rnac ensembl coordinate-systems $connections $query coordinate_systems.${params.writer_format}
   """
 }
 
@@ -120,7 +106,6 @@ workflow ensembl {
       assemblies(conn, assemblies_sql, examples, known),
       coordinate_systems(conn, coordinate_systems_sql),
       proteins(conn, protein_sql),
-      karyotypes(),
       compara(),
     ) \
     | flatten \

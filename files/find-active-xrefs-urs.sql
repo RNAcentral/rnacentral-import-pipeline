@@ -1,6 +1,6 @@
 COPY (
   SELECT
-    upi
+    urs
   FROM xref
   where
     xref.deleted = 'N'

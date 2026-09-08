@@ -18,19 +18,18 @@ import operator as op
 
 from rnacentral_pipeline.rnacentral import lookup
 
-from .data import Context
-from .data import KnownSequence
+from .data import Context, KnownSequence
 
 QUERY = """
 SELECT
-    pre.id as rna_id,
+    pre.urs_taxid as rna_id,
     pre.rna_type,
     COALESCE(rna.seq_short, rna.seq_long) as sequence,
     pre.description
 from rnc_rna_precomputed pre
-join rna on rna.upi = pre.upi
+join rna on rna.urs = pre.urs
 where
-    pre.id in %s
+    pre.urs_taxid in %s
 """
 
 

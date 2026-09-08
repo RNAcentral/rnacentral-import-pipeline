@@ -2,6 +2,8 @@
 
 nextflow.enable.dsl=2
 
+include { qc_genes } from './workflows/utils/qc'
+
 process fetch_taxids {
 
   input:
@@ -37,11 +39,11 @@ process fetch_so_model{
     val(_flag)
 
   output:
-    path("so_embedding_model.emb")
+    path("so_embedding_model.parquet")
 
   script:
   """
-  wget -O so_embedding_model.emb ${params.genes.so_model_url}
+  wget -O so_embedding_model.parquet ${params.genes.so_model_url}
   """
 }
 
@@ -285,6 +287,9 @@ workflow genes {
   | process_metadata \
   | store_metadata \
   | set { done }
+
+  // QC: summarise genes created/updated this run once every taxon is stored.
+  done | qc_genes
 
   emit: done
 }

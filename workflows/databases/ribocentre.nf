@@ -20,7 +20,7 @@ process parse_ribocentre {
   input:
   path ribocentre_json
   output:
-  path("*.csv")
+  path('*.{csv,parquet}')
 
   when: params.databases.ribocentre?.run
 

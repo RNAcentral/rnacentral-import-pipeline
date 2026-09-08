@@ -44,8 +44,8 @@ from rnacentral_pipeline.cli import (
     mirbase,
     mirgenedb,
     mirtrondb,
-    modomics,
     misc,
+    modomics,
     ncbi,
     notify,
     ols,
@@ -61,9 +61,9 @@ from rnacentral_pipeline.cli import (
     rediportal,
     refseq,
     release,
-    rgd,
     repeats,
     rfam,
+    rgd,
     ribocentre,
     ribovision,
     scan_imports,
@@ -96,10 +96,9 @@ def cli(log_level):
     pipeline. This handles individual python parts, and the overall pipeline is
     coordinated by nextflow.
     """
-    level = getattr(logging, log_level.upper())
-    logger = logging.getLogger()
-    logger.setLevel(level=level)
-    pass
+    # setLevel alone left the root logger without a handler, so logging.lastResort
+    # served every record and silently dropped everything below warning.
+    logging.basicConfig(level=getattr(logging, log_level.upper()))
 
 
 cli.add_command(circatlas.cli)

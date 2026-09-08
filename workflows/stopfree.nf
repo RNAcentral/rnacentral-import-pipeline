@@ -45,7 +45,7 @@ process stopfree_scan {
   path(sequences)
 
   output:
-  path("results.csv")
+  path("results.${params.writer_format}")
 
   script:
   """
@@ -57,15 +57,23 @@ process store_results {
   memory 9.GB
 
   input:
-  path('results*.csv')
+  path("results*.${params.writer_format}")
   path(result_ctl)
+  path(post_load)
 
   when: params.stopfree?.load
 
   script:
-  """
-  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} stopfree-results
-  """
+  if (params.writer_format == 'parquet')
+    """
+    load-parquet load_stopfree 'results*.parquet' \\
+      --truncate \\
+      --post-load $post_load
+    """
+  else
+    """
+    split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} stopfree-results
+    """
 }
 
 workflow stopfree {
@@ -77,6 +85,7 @@ workflow stopfree {
 
     def query = file(params.stopfree.query)
     def load_ctl = file('files/stopfree/stopfree.ctl')
+    def post_load = file('files/stopfree/post-load.sql')
 
     def fasta_ch = channel.of('ready') \
       | build_ranges \
@@ -90,7 +99,7 @@ workflow stopfree {
 
     stopfree_scan.out | collect | set { data }
 
-    store_results(data, load_ctl)
+    store_results(data, load_ctl, post_load)
     data | map { _v -> 'stopfree done' } | set { done }
     }
   emit: done

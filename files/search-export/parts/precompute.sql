@@ -12,6 +12,6 @@ COPY (
   FROM search_export_urs todo
   JOIN rnc_rna_precomputed pre
   ON
-    pre.id = todo.urs_taxid
+    pre.urs_taxid = todo.urs_taxid
   ORDER BY todo.id
 ) TO STDOUT

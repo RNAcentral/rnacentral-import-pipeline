@@ -32,7 +32,7 @@ process parse {
   path tsv_file
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.tarbase?.run
 

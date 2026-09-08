@@ -107,7 +107,7 @@ def generic_query(gpi_filter: GpiFilter = GpiFilter.NONE) -> Query:
     so_rna_type = fn.Coalesce(pre.assigned_so_rna_type, pre.so_rna_type)
     query = (
         Query.from_(pre)
-        .select(pre.id, pre.taxid, pre.description, ont.name.as_("rna_type"))
+        .select(pre.urs_taxid, pre.taxid, pre.description, ont.name.as_("rna_type"))
         .join(ont)
         .on(ont.ontology_term_id == so_rna_type)
         .where((pre.taxid.notnull()) & (pre.is_active == True))

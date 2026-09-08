@@ -20,7 +20,7 @@ process parse {
   path(data)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   when: params.databases.circatlas?.run
 

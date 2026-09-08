@@ -1,4 +1,4 @@
 COPY(
-  SELECT xref.upi as urs
+  SELECT xref.urs as urs
   FROM :tablename as xref
 ) TO STDOUT CSV

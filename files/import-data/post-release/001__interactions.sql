@@ -18,7 +18,7 @@ select distinct on (load.intact_id)
 from load_interactions load
 join rnc_rna_precomputed pre
 on
-  pre.id = load.urs_taxid
+  pre.urs_taxid = load.urs_taxid
 )
 ON CONFLICT (intact_id) DO UPDATE
 SET

@@ -20,6 +20,7 @@ import click
 from rnacentral_pipeline.databases.ncbi import taxonomy
 from rnacentral_pipeline.databases.ncbi.gene import fetch as gene_fetch
 from rnacentral_pipeline.databases.ncbi.gene import parser as gene_parser
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -41,10 +42,26 @@ def cli():
         file_okay=False,
     ),
 )
-@click.argument("output", default="taxonomy.csv", type=click.File("w"))
+@click.argument("output", default="taxonomy.csv")
 @click.option("--ref-proteomes", default=None, type=click.Path(exists=True))
+@format_option
 def parse_taxonomy(ncbi, output, ref_proteomes):
     taxonomy.write(ncbi, output, ref_proteomes_path=ref_proteomes)
+
+
+@cli.command("fill-missing-taxonomy")
+@click.argument("taxids", type=click.File("r"))
+@click.argument("output", default="taxonomy.csv", type=click.File("w"))
+def fill_missing_taxonomy(taxids, output):
+    """Resolve taxids that are referenced by RNAcentral but missing from
+    rnc_taxonomy against the ENA taxonomy API, writing rows in the rnc_taxonomy
+    load format (load with files/import-data/load/taxonomy.ctl + the upsert in
+    files/import-data/pre-release/000__taxonomy.sql).
+
+    TAXIDS is a file with one taxid per line. Fails loudly if any taxid cannot
+    be resolved against ENA or the UniProt fallback.
+    """
+    taxonomy.write_missing(taxids, output)
 
 
 @cli.group("genes")
@@ -71,6 +88,7 @@ def fetch_genes(output):
         file_okay=False,
     ),
 )
+@format_option
 def process_ncbi_gene(data_file, output):
     entries = gene_parser.parse(data_file)
     with entry_writer(Path(output)) as writer:

@@ -9,8 +9,8 @@ BEGIN
     -- for dbid, ac where xref:
     -- a) does not exists at all (VERSION_I = 1)
     -- b) does not exists because has been deleted
-    --    1) and was having the same UPI, Version (VERSION_I = OLD_VERSION_I)
-    --    2) and was having a dferent UPI, VERSION (VERSION_I = OLD_VERSION_I
+    --    1) and was having the same URS, Version (VERSION_I = OLD_VERSION_I)
+    --    2) and was having a dferent URS, VERSION (VERSION_I = OLD_VERSION_I
     -- + 1)
     INSERT
       /*+ PARALLEL (XREF 4) */
@@ -21,7 +21,7 @@ BEGIN
         dbid,
         version,
         version_i,
-        upi,
+        urs,
         created,
         last,
         deleted,
@@ -34,7 +34,7 @@ BEGIN
       T.IN_VERSION,
       CASE T.COMPARABLE_PROT_UPI
         WHEN (
-            SELECT DISTINCT (PREVIOUS_XREF.UPI)
+            SELECT DISTINCT (PREVIOUS_XREF.URS)
             FROM
               RNACEN.XREF PREVIOUS_XREF
             WHERE
@@ -104,4 +104,3 @@ BEGIN
   END;
 
 $function$
-

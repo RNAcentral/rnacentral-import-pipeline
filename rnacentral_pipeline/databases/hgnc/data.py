@@ -13,17 +13,46 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
+import operator as op
+import logging
 import re
 import typing as ty
-import operator as op
-import collections as coll
 
 import attr
+import psycopg2
 from attr.validators import instance_of as is_a
 from attr.validators import optional
+from pypika import Query, Table
 
-from pypika import Table, Query
-import psycopg2
+LOGGER = logging.getLogger(__name__)
+
+
+ONE_TO_THREE = {
+    "A": "Ala",
+    "C": "Cys",
+    "D": "Asp",
+    "E": "Glu",
+    "F": "Phe",
+    "G": "Gly",
+    "H": "His",
+    "I": "Ile",
+    "K": "Lys",
+    "L": "Leu",
+    "M": "Met",
+    "N": "Asn",
+    "P": "Pro",
+    "Q": "Gln",
+    "R": "Arg",
+    "S": "Ser",
+    "T": "Thr",
+    "U": "SeC",
+    "V": "Val",
+    "W": "Trp",
+    "Y": "Tyr",
+    "X": "iMet",
+    "SUP": "Sup",
+}
 
 
 def maybe_first(data, name):
@@ -78,46 +107,21 @@ class HgncEntry:
         if self.hgnc_rna_type != "RNA, transfer":
             return None
         accession = self.hgnc_id
-        one_to_three = {
-            "A": "Ala",
-            "C": "Cys",
-            "D": "Asp",
-            "E": "Glu",
-            "F": "Phe",
-            "G": "Gly",
-            "H": "His",
-            "I": "Ile",
-            "K": "Lys",
-            "L": "Leu",
-            "M": "Met",
-            "N": "Asn",
-            "P": "Pro",
-            "Q": "Gln",
-            "R": "Arg",
-            "S": "Ser",
-            "T": "Thr",
-            "U": "SeC",
-            "V": "Val",
-            "W": "Trp",
-            "Y": "Tyr",
-            "X": "iMet",
-            "SUP": "Sup",
-        }
         m = re.match(r"TR(\S+)-(\S{3})(\d+-\d+)", self.symbol)
         if m:
-            if m.group(1) not in one_to_three:
+            if m.group(1) not in ONE_TO_THREE:
                 return None
             return (
-                "tRNA-" + one_to_three[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
+                "tRNA-" + ONE_TO_THREE[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
             )
         # nuclear-encoded mitochondrial tRNAs
-        m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", accession)
+        m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", self.symbol)
         if m:
-            if m.group(1) not in one_to_three:
+            if m.group(1) not in ONE_TO_THREE:
                 return None
             return (
                 "nmt-tRNA-"
-                + one_to_three[m.group(1)]
+                + ONE_TO_THREE[m.group(1)]
                 + "-"
                 + m.group(2)
                 + "-"
@@ -132,11 +136,11 @@ def ensembl_mapping(conn):
     acc = Table("rnc_accessions")
     query = (
         Query.from_(xref)
-        .select(xref.upi, acc.optional_id, rna.len)
+        .select(xref.urs, acc.optional_id, rna.len)
         .join(acc)
         .on(acc.accession == xref.ac)
         .join(rna)
-        .on(rna.upi == xref.upi)
+        .on(rna.urs == xref.urs)
         # dbid 21 == NONCODE
         .where((xref.dbid == 21) & (xref.taxid == 9606) & (xref.deleted == "N"))
     )
@@ -161,27 +165,93 @@ def ensembl_mapping(conn):
 
 @attr.s()
 class Context:
-    db_url = attr.ib()
+    """
+    Everything needed to map HGNC entries to RNAcentral, resolved up front.
+
+    All the lookups are done in bulk when this is built, so mapping an
+    individual entry is a dict lookup rather than a query or an HTTP request.
+    """
+
     conn = attr.ib()
-    ensembl_mapping = attr.ib()
+    supplied = attr.ib(factory=set)
+    refseq = attr.ib(factory=dict)
+    gtrnadb = attr.ib(factory=dict)
+    ensembl = attr.ib(factory=dict)
+    sequences = attr.ib(factory=dict)
 
     @classmethod
-    def build(cls, db_url):
+    def build(cls, db_url, entries: ty.List[HgncEntry]) -> "Context":
+        # Imported here as helpers needs HgncEntry from this module.
+        from rnacentral_pipeline.databases.hgnc import helpers
+
         conn = psycopg2.connect(db_url)
-        return cls(db_url=db_url, conn=conn, ensembl_mapping=ensembl_mapping(conn))
 
-    def ensembl_gene(self, gene_id):
-        return self.ensembl_mapping.get(gene_id, None)
+        # HGNC curates the URS itself for most entries. Deriving one from RefSeq
+        # or Ensembl instead follows whichever transcript they happen to annotate
+        # this month, so the mapping drifts every release while HGNC's is stable.
+        context = cls(
+            conn=conn,
+            supplied=helpers.known_urs(
+                conn, [e.rnacentral_id for e in entries if e.rnacentral_id]
+            ),
+        )
+        LOGGER.info(
+            "HGNC supplied a URS we hold for %i of %i entries",
+            sum(1 for e in entries if context.urs_for(e)),
+            len(entries),
+        )
 
-    def query_one(self, query):
-        sql = str(query)
+        # Everything below is a fallback, so only the entries HGNC did not
+        # already answer for are worth looking up.
+        remaining = [e for e in entries if context.urs_for(e) is None]
+        context.refseq = helpers.refseq_mapping(
+            conn, [e.refseq_id for e in remaining if e.refseq_id]
+        )
+        context.gtrnadb = helpers.gtrnadb_mapping(
+            conn, [e.gtrnadb_id for e in remaining if e.gtrnadb_id]
+        )
+        LOGGER.info(
+            "Resolved %i refseq and %i gtrnadb ids",
+            len(context.refseq),
+            len(context.gtrnadb),
+        )
 
-        with self.conn.cursor() as cur:
-            cur.execute(sql)
-            return cur.fetchone()
+        # Only the entries nothing else could map are worth asking Ensembl about.
+        pending = [
+            e.ensembl_gene_id
+            for e in remaining
+            if e.ensembl_gene_id and context.urs_for(e) is None
+        ]
+        context.ensembl = helpers.ensembl_mapping(conn, pending)
+        LOGGER.info(
+            "Resolved %i of %i ensembl genes", len(context.ensembl), len(pending)
+        )
 
-    def query_all(self, query):
-        sql = str(query)
-        with self.conn.cursor() as cur:
-            cur.execute(sql)
-            return cur.fetchall()
+        resolved = [context.urs_for(e) for e in entries]
+        context.sequences = helpers.sequence_mapping(
+            conn, [urs for urs in resolved if urs]
+        )
+        return context
+
+    def urs_for(self, entry: HgncEntry) -> ty.Optional[str]:
+        """
+        Map a single entry to a URS, preferring the one HGNC supplies and
+        falling back to RefSeq, gtRNAdb then Ensembl.
+        """
+        if entry.rnacentral_id in self.supplied:
+            return entry.rnacentral_id
+
+        if entry.refseq_id:
+            urs = self.refseq.get(entry.refseq_id)
+            if urs:
+                return urs
+
+        if entry.gtrnadb_id:
+            urs = self.gtrnadb.get(entry.gtrnadb_id)
+            if urs:
+                return urs
+
+        if entry.ensembl_gene_id:
+            return self.ensembl.get(entry.ensembl_gene_id)
+
+        return None

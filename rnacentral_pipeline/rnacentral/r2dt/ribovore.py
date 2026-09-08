@@ -15,10 +15,8 @@ limitations under the License.
 
 import os
 import re
-
-from pathlib import Path
-
 import typing as ty
+from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
@@ -31,7 +29,9 @@ def as_dict(directory: Path, allow_missing=False) -> ty.Dict[str, RibovoreResult
     try:
         results = ribovore.parse_directory(directory)
         return {p.target: p for p in results if p.status != "FAIL"}
-    except ValueError as e:
+    except (ValueError, ribovore.MissingRibotyperDataException):
+        # MissingRibotyperDataException is not a ValueError, so before this it
+        # escaped the handler and allow_missing never actually allowed anything.
         if not allow_missing:
             raise ValueError("No ribovore result file in: %s " % directory)
         return {}

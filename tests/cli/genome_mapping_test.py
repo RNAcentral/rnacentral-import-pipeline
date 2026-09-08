@@ -107,3 +107,39 @@ def test_sorting_works_correctly():
             runner.invoke(gm.cli, cmd)
             assert result.exit_code == 0
             assert os.path.exists(stored)
+
+
+@pytest.mark.cli
+def test_url_for_exits_with_a_skip_status_when_ensembl_lacks_the_file(monkeypatch):
+    """
+    Roughly a quarter of the assemblies in ensembl_assembly are not on the
+    current Ensembl FTP. Exiting 1 for those made every run print hundreds of
+    ignored-error notes, burying the failures that do matter, so they get their
+    own status that genome-mapping.nf turns into a quiet skip.
+    """
+
+    def missing(*args, **kwargs):
+        raise gm.urls.NoTopLevelFiles("nope")
+
+    monkeypatch.setattr(gm.urls, "url_for", missing)
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            gm.cli, ["url-for", "--host=ensembl_metazoa", "a_species", "ASM1", "url"]
+        )
+        assert result.exit_code == gm.NO_REMOTE_FILE
+
+
+@pytest.mark.cli
+def test_url_for_still_fails_when_the_lookup_breaks(monkeypatch):
+    def broken(*args, **kwargs):
+        raise ConnectionRefusedError("ftp is down")
+
+    monkeypatch.setattr(gm.urls, "url_for", broken)
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            gm.cli, ["url-for", "--host=ensembl_metazoa", "a_species", "ASM1", "url"]
+        )
+        assert result.exit_code != 0
+        assert result.exit_code != gm.NO_REMOTE_FILE

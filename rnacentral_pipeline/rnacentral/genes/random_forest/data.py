@@ -43,7 +43,7 @@ QUERY = """
 select
 region_name,
 sr.id as region_id,
-urs_taxid,
+sr.urs_taxid,
 assembly_id,
 chromosome,
 region_start,
@@ -56,7 +56,7 @@ so_rna_type as so_type
 
 from rnc_sequence_regions_active sr
 join rnc_sequence_exons ex on ex.region_id = sr.id
-join rnc_rna_precomputed pc on pc.id = sr.urs_taxid
+join rnc_rna_precomputed pc on pc.urs_taxid = sr.urs_taxid
 
 where pc.taxid = %s
 """
@@ -143,7 +143,9 @@ type_scores = {
 
 
 @lru_cache()
-def so_graph():
+def get_so_graph():
+    # Lazy: every `rnac` command imports this module (cli/genes -> classify ->
+    # here), so an import-time fetch broke commands that never use the ontology.
     return obo.read_obo(SO_ONTOLOGY_URL)
 
 
@@ -159,7 +161,7 @@ def normalize_so_type(so_type):
     None and any id that is not a node in so_graph collapse to the generic
     ncRNA term, which is guaranteed to be present.
     """
-    if so_type is not None and so_type in so_graph():
+    if so_type is not None and so_type in get_so_graph():
         return so_type
     return GENERIC_NCRNA
 
@@ -1007,7 +1009,7 @@ def calculate_type_specificity(so_type):
     # rather than blowing up (NodeNotFound) or being heavily penalised.
     so_type = normalize_so_type(so_type)
     try:
-        return nx.shortest_path_length(so_graph(), so_type, "SO:0000673")
+        return nx.shortest_path_length(get_so_graph(), so_type, "SO:0000673")
     except (nx.NetworkXNoPath, nx.NodeNotFound):
         return -1000
 

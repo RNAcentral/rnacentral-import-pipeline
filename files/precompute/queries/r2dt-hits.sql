@@ -21,5 +21,17 @@ on
 JOIN r2dt_models r2dt
 on
   r2dt.id = ss.model_id
+JOIN rna
+on
+  rna.urs = ss.urs
+-- A sequence much longer than the model it was drawn against was force-fit to
+-- the wrong template (eg. a 2000nt RNA on a 200nt model). A manual assignment
+-- overrides this; where the ratio cannot be computed we defer to should_show.
+where
+  ss.assigned_should_show is not null
+  or coalesce(
+       rna.len::numeric / nullif(r2dt.model_length, 0) < 1.25,
+       true
+     )
 order by todo.precompute_urs_id, todo.id
 ) TO STDOUT

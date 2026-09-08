@@ -50,6 +50,13 @@ def compare(output, results1, results2, facet):
     """
     TODO: check that keys from both facets are checked.
     """
+    # A failed request would otherwise read as zero counts, flagging every row
+    # as an infinite change; the EBI search endpoints do fail intermittently.
+    failed = [n for n, r in (("production", results1), ("dev", results2)) if r is None]
+    if failed:
+        output.write("Search request failed (%s) — no comparison\n" % ", ".join(failed))
+        return
+
     data1 = facet_counts(results1)
     data2 = facet_counts(results2)
     if not data1 and not data2:

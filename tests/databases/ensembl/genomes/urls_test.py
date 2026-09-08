@@ -13,9 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 import typing as ty
 from functools import lru_cache
 from io import StringIO
+from pathlib import Path
 
 import pytest
 
@@ -81,6 +83,24 @@ def test_can_generate_current_urls_from_species_metadata():
             ),
         )
     ]
+
+
+def test_species_info_buffers_in_cwd_not_tmp(tmp_path, monkeypatch):
+    """
+    singularity --contain gives a tiny in-memory /tmp, so the metadata download
+    must land in the task work dir instead.
+    """
+
+    class FakeFtp:
+        def retrbinary(self, _cmd, callback):
+            callback(b"[]")
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("TMPDIR", str(tmp_path / "unwritable-tmp"))
+
+    with urls.species_info(FakeFtp(), Division.fungi, "current") as info:
+        assert info.read() == b"[]"
+        assert Path(info.name).resolve().parent == Path(os.getcwd()).resolve()
 
 
 def test_can_extract_release_suffix_from_database_name():

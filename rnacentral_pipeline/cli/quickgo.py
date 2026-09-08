@@ -17,8 +17,15 @@ from pathlib import Path
 
 import click
 
+from rnacentral_pipeline import schemas, writers
 from rnacentral_pipeline.databases.quickgo import parser
-from rnacentral_pipeline import writers
+from rnacentral_pipeline.output_format import format_option, is_parquet
+
+_PARQUET_SCHEMAS = {
+    "go_annotations": schemas.GO_ANNOTATIONS,
+    "go_publication_mappings": schemas.GO_PUBLICATION_MAPPINGS,
+    "terms": schemas.TERMS,
+}
 
 
 @click.group("quickgo")
@@ -40,10 +47,17 @@ def cli():
         file_okay=False,
     ),
 )
+@format_option
 def parse_quickgo(raw_data, output):
     """
     This will process a quickgo file and output files into the given directory.
     """
     terms = parser.parse(raw_data)
+    if is_parquet():
+        with writers.build_parquet(
+            writers.OntologyAnnnotationWriter, Path(output), _PARQUET_SCHEMAS
+        ) as writer:
+            writer.write(terms)
+        return
     with writers.build(writers.OntologyAnnnotationWriter, Path(output)) as writer:
         writer.write(terms)

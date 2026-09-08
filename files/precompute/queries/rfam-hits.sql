@@ -20,7 +20,7 @@ select
 FROM precompute_urs_taxid todo
 JOIN rfam_model_hits hits
 ON
-    hits.upi = todo.urs
+    hits.urs = todo.urs
 JOIN rfam_models models
 ON
     models.rfam_model_id = hits.rfam_model_id
