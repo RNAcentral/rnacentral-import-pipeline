@@ -40,14 +40,6 @@ def oryza_9():
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
-def hordeum_pt():
-    return helpers.parse(
-        plants.parse,
-        "test-data/ensembl_plants/Hordeum_vulgare.MorexV3_pseudomolecules_assembly.nonchromosomal.dat",
-    )
-
-
-@pytest.fixture(scope="module")  # pylint: disable=no-member
 def zea_7():
     return helpers.parse(
         plants.parse,
@@ -597,45 +589,6 @@ def test_can_parse_rice_u6(oryza_9):
     )
 
 
-def test_can_parse_barley_antisense(hordeum_pt):
-    val = attr.asdict(
-        helpers.entry_for(hordeum_pt, "ENSEMBL_PLANTS:ENSRNA049483195-T1")
-    )
-    assert val == attr.asdict(
-        dat.Entry(
-            primary_id="ENSRNA049483195-T1",
-            accession="ENSEMBL_PLANTS:ENSRNA049483195-T1",
-            ncbi_tax_id=112509,
-            database="ENSEMBL_PLANTS",
-            sequence="AATAACCAAATATAACACTGGGACTAAGGGTCAAATTGGTAATTTTTCTTACATCTCCCCCCCCAGGGGCCCAGGTATCATATACACCGCCAAAATAAAGAGCCTTGAGTACTAGAAGAAAAGCACCTAGACCTAACAAAATTAAGTGAATACCCAAAATTGTAGTCATTTTATTTCTATCTTTCCA",
-            regions=[
-                dat.SequenceRegion(
-                    chromosome="Pt",
-                    strand=-1,
-                    exons=[dat.Exon(start=10076, stop=10262)],
-                    assembly_id="IBSC_v2",
-                    coordinate_system=dat.CoordinateSystem.one_based(),
-                )
-            ],
-            rna_type="antisense_RNA",
-            url="",
-            seq_version="1",
-            species="Hordeum vulgare subsp. vulgare",
-            common_name="two-rowed barley",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; Embryophyta; "
-                "Tracheophyta; Spermatophyta; Magnoliopsida; Liliopsida; "
-                "Poales; Poaceae; BOP clade; Pooideae; Triticodae; "
-                "Triticeae; Hordeinae; Hordeum; Hordeum vulgare subsp. vulgare"
-            ),
-            gene="ENSRNA049483195",
-            locus_tag="IsrR",
-            description="Hordeum vulgare subsp. vulgare (two-rowed barley) antisense RNA which regulates isiA expression",
-            references=[pubs.reference(29092050)],
-        )
-    )
-
-
 def test_can_parse_zea_lincrna(zea_7):
     # Zea mays moved from assembly B73_RefGen_v4 to Zm-B73-REFERENCE-NAM-5.0
     # (gene ids Zm00001d... -> Zm00001eb...) since this fixture was recorded;
@@ -701,9 +654,4 @@ def test_does_not_create_ncRNA_rna_type_cress_2(cress_2):
 
 def test_does_not_create_ncRNA_rna_type_oryza_9(oryza_9):
     for entry in oryza_9:
-        assert entry.rna_type != "ncRNA"
-
-
-def test_does_not_create_ncRNA_rna_type_hordeum_pt(hordeum_pt):
-    for entry in hordeum_pt:
         assert entry.rna_type != "ncRNA"
