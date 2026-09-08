@@ -12,7 +12,6 @@ rust:
 	mv -f target/release/search-export bin
 	mv -f target/release/ftp-export bin
 	mv -f target/release/json2dfasta bin
-	mv -f target/release/bed-expander bin
 	# For local Python extension development, run: cd utils/genes-preprocessing && maturin develop
 	@echo "Note: genes-preprocessing wheel is built in Docker (rust-utils container)"
 	@echo "For local dev, run: cd utils/genes-preprocessing && maturin develop"
@@ -25,7 +24,6 @@ clean:
 	rm bin/search-export
 	rm bin/ftp-export
 	rm bin/json2dfasta
-	rm bin/bed-expander
 	cargo clean
 
 docker: Dockerfile
