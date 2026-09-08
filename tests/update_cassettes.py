@@ -43,7 +43,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CASSETTE_DIR = ROOT / "tests" / "data" / "cassettes"
+CASSETTE_DIR = ROOT / "test-data" / "cassettes"
 PHYLOGENY_DIR = ROOT / "tests" / "data" / "phylogeny"
 
 # Test targets that talk to external services. Anything not listed still records

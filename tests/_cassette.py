@@ -36,7 +36,7 @@ import json
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-CASSETTE_DIR = Path(__file__).parent / "data" / "cassettes"
+CASSETTE_DIR = Path(__file__).parent.parent / "test-data" / "cassettes"
 
 # Populated by install(); restore callables are run by uninstall().
 _RESTORE = []
