@@ -94,7 +94,7 @@ def fetch_inspect_data(filename, output, db_url=None):
     to evaluate a diagram and decide if it should be true/false in the training
     set.
     """
-    r2dt.write_training_data(filename, db_url, output)
+    r2dt.write_inspect_data(filename, db_url, output)
 
 
 @should_show.command("build-model")
