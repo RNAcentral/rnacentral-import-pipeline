@@ -19,9 +19,6 @@ import tempfile
 from functools import lru_cache
 from pathlib import Path
 
-## Use rust preprocessing code
-## Must be built using the Makefile in an activated environment
-import gene_preprocessing as gpp
 import numpy as np
 import polars as pl
 from tqdm import tqdm
@@ -193,6 +190,11 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
 
     May be removed in future, in favour of a faster preprocessor
     """
+    # Lazy: rnac's cli/__init__ imports every subcommand module eagerly, so an
+    # import-time dependency here breaks every `rnac` command, not just the
+    # ones that train gene models. Must be built via the Makefile first.
+    import gene_preprocessing as gpp
+
     comparisons = set()
     similarity_comparisons = set()
     similarity_cache = {}
