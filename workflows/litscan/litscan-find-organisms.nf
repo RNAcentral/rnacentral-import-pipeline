@@ -26,7 +26,7 @@ process save_organisms {
 
     script:
     """
-    pgloader --on-error-stop $ctl
+    pgloader --on-error-stop --with "drop indexes" $ctl
     """
 }
 
