@@ -16,8 +16,15 @@ limitations under the License.
 import json
 
 import pytest
+from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases.gtrnadb import helpers
+from rnacentral_pipeline.databases.ncbi.taxonomy import TaxonomyEntry
+
+# simple.json/version2.json are two single-entry extracts from the real
+# GtRNAdb export (data/gtrnadb/other_eukaryotes_export_1.json), both for
+# Aplysia californica (taxon 6500): a plain tRNA (simple) and one whose
+# matureSequence differs from its genomic sequence (version2/"complex").
 
 
 @pytest.fixture
@@ -32,10 +39,29 @@ def data2():
         return json.load(raw)
 
 
+@pytest.fixture
+def taxonomy(tmp_path):
+    db = SqliteDict(filename=str(tmp_path / "taxonomy.db"))
+    db["6500"] = TaxonomyEntry(
+        tax_id=6500,
+        name="Aplysia californica",
+        lineage=(
+            "Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; "
+            "Gastropoda; Heterobranchia; Euthyneura; Tectipleura; "
+            "Aplysiida; Aplysioidea; Aplysiidae; Aplysia"
+        ),
+        aliases=[],
+        replaced_by=None,
+    )
+    db.commit()
+    return db
+
+
 def test_can_find_all_remote_urls():
-    assert helpers.extract_download_urls(
-        "http://google.com",
-        """
+    assert (
+        helpers.extract_download_urls(
+            "http://google.com",
+            """
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
  <head>
@@ -52,12 +78,14 @@ def test_can_find_all_remote_urls():
 <address>Apache/2.2.15 (CentOS) Server at <a href="mailto:lowe@soe.ucsc.edu">trna.ucsc.edu</a> Port 80</address>
 </body></html>
     """,
-    ) == [
-        ("archaea_tRNAs.json.gz", "http://google.com/archaea_tRNAs.json.gz"),
-        ("bacteria_tRNAs.tar.gz", "http://google.com/bacteria_tRNAs.tar.gz"),
-        ("fungi_tRNAs.tar.gz", "http://google.com/fungi_tRNAs.tar.gz"),
-        ("model_tRNAs.tar.gz", "http://google.com/model_tRNAs.tar.gz"),
-    ]
+        )
+        == [
+            ("archaea_tRNAs.json.gz", "http://google.com/archaea_tRNAs.json.gz"),
+            ("bacteria_tRNAs.tar.gz", "http://google.com/bacteria_tRNAs.tar.gz"),
+            ("fungi_tRNAs.tar.gz", "http://google.com/fungi_tRNAs.tar.gz"),
+            ("model_tRNAs.tar.gz", "http://google.com/model_tRNAs.tar.gz"),
+        ]
+    )
 
 
 def test_complains_if_no_download_urls():
@@ -87,51 +115,40 @@ def test_complains_if_no_download_urls():
 def test_url(data):
     assert (
         helpers.url(data[0])
-        == "http://gtrnadb.ucsc.edu/genomes/bacteria/Acar_mari_MBIC11017/genes/tRNA-Ala-CGC-1-1.html"
+        == "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Ala-AGC-1-1.html"
     )
 
 
 def test_anticodon(data):
-    assert helpers.anticodon(data[0]) == "CGC"
+    assert helpers.anticodon(data[0]) == "AGC"
 
 
 def test_note_data(data):
     assert helpers.note_data(data[0]) == {
-        "anticodon": "CGC",
-        "anticodon_positions": [{"relative_start": 34, "relative_stop": 36}],
-        "isotype": "Ala",
-        "score": 72.7,
-        "url": "http://gtrnadb.ucsc.edu/genomes/bacteria/Acar_mari_MBIC11017/genes/tRNA-Ala-CGC-1-1.html",
+        "url": "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Ala-AGC-1-1.html",
     }
 
 
 def test_complex_note_data(data2):
     assert helpers.note_data(data2[0]) == {
-        "anticodon": "CGC",
-        "anticodon_positions": [{"relative_start": 35, "relative_stop": 37}],
-        "isotype": "Ala",
-        "score": 82.1,
-        "url": "http://gtrnadb.ucsc.edu/genomes/archaea/Acid_MAR08_339/genes/tRNA-Ala-CGC-1-1.html",
+        "url": "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Arg-CCT-1-1.html",
     }
 
 
-def test_no_common_name(data):
-    assert helpers.common_name(data[0]) is None
-
-
-def test_lineage(data):
-    assert (
-        helpers.lineage(data[0])
-        == "Bacteria; Cyanobacteria; Synechococcales; Acaryochloridaceae; Acaryochloris; Acaryochloris marina MBIC11017"
+def test_lineage(data, taxonomy):
+    assert helpers.lineage(taxonomy, data[0]) == (
+        "Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; "
+        "Gastropoda; Heterobranchia; Euthyneura; Tectipleura; "
+        "Aplysiida; Aplysioidea; Aplysiidae; Aplysia"
     )
 
 
-def test_species(data):
-    assert helpers.species(data[0]) == "Acaryochloris marina MBIC11017"
+def test_species(data, taxonomy):
+    assert helpers.species(taxonomy, data[0]) == "Aplysia californica"
 
 
 def test_product(data):
-    assert helpers.product(data[0]) == "tRNA-Ala (CGC)"
+    assert helpers.product(data[0]) == "tRNA-Ala (AGC)"
 
 
 def test_as_dotbracket(data):
@@ -139,20 +156,20 @@ def test_as_dotbracket(data):
     assert helpers.dot_bracket(data[0]) == ans
 
 
-def test_simple_description(data):
-    assert helpers.description(data[0]) == (
-        "Acaryochloris marina MBIC11017 " "tRNA-Ala (CGC)"
+def test_simple_description(data, taxonomy):
+    assert (
+        helpers.description(taxonomy, data[0]) == "Aplysia californica tRNA-Ala (AGC)"
     )
 
 
-def test_complex_description(data2):
-    assert helpers.description(data2[0]) == (
-        "Aciduliprofundum sp. MAR08-339 " "tRNA Alanine with anticodon CGC"
+def test_complex_description(data2, taxonomy):
+    assert (
+        helpers.description(taxonomy, data2[0]) == "Aplysia californica tRNA-Arg (CCT)"
     )
 
 
 def test_as_dotbracket_detects_weird_strings():
-    data = {"secondary_structure": ">>>...A<<<"}
+    data = {"secondaryStructure": ">>>...A<<<"}
     with pytest.raises(helpers.InvalidDotBracket):
         helpers.dot_bracket(data)
 
@@ -161,7 +178,7 @@ def test_primary_id_is_always_unique(data, data2):
     seen = set()
     possible = data + data2
     for entry in possible:
-        for location in entry["genome_locations"]:
+        for location in entry["genomeLocations"]:
             pid = helpers.primary_id(entry, location)
             assert pid not in seen
             seen.add(pid)
@@ -171,25 +188,25 @@ def test_primary_id_is_always_unique(data, data2):
 def test_builds_primary_id(data):
     pids = []
     entry = data[0]
-    for location in entry["genome_locations"]:
+    for location in entry["genomeLocations"]:
         pid = helpers.primary_id(entry, location)
         pids.append(pid)
-    assert pids == ["tRNA-Ala-CGC-1-1:CP000828.1:603738-603810"]
+    assert pids == ["GTRNADB:tRNA-Ala-AGC-1-1:KB942240.1:40028-40100"]
 
 
 def test_chromosome(data):
-    assert helpers.chromosome(data[0]["genome_locations"][0]) == "chr"
+    assert helpers.chromosome(data[0]["genomeLocations"][0]) == "scaffold00844"
 
 
 def test_sequence_without_mature(data):
     assert (
         helpers.sequence(data[0])
-        == "GGGGAATTAGCTCAGCTGGTAGAGTGCTGCGATCGCACCGCAGAGGTCAGGGGTTCGAATCCCCTATTCTCCA"
+        == "GGGGCTGTAGCTCAGGTGGTAGAGCGCTCGCTTAGCATGTGAGAGGTACCGGGATCGATACCCGGCAGCTCCA"
     )
 
 
 def test_sequence_with_mature(data2):
     assert (
         helpers.sequence(data2[0])
-        == "GGGCCGGTAGATCAGACCGGAAGATCGCCACATTCGCAATGTGGAGGCCGCGGGTTCAAATCCCGCCCGGTCCA"
+        == "GCCTCCGTGGCCTAATGGATAAGGCATCGGCCTCCTAAGCCGGGGATTGCGGGTTCGAGTCCCGTCGGAGGTG"
     )
