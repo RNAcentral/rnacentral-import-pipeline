@@ -97,6 +97,7 @@ def test_can_extract_urls():
     ]
 
 
+@pytest.mark.network
 def test_can_preform_full_fetch():
     urls = fetch.find_urls(
         furl("http://www.regulatoryrna.org/database/piRNA/forJSON.html")
