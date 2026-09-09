@@ -163,7 +163,7 @@ def test_labels_feature_type_rnas_correctly(rna_type):
         "hammerhead_ribozyme",
         "lncRNA",
         "miRNA",
-        "other",
+        "ncRNA",
         "piRNA",
         "rasiRNA",
         "ribozyme",
