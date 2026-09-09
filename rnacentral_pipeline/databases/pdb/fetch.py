@@ -85,7 +85,14 @@ async def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInf
     if data["response"]["numFound"] == 0:
         raise MissingPdbs(f"Missing for '{query}', {start}")
     for raw in data["response"]["docs"]:
-        for index in range(len(raw["chain_id"])):
+        chain_ids = raw.get("chain_id")
+        if not chain_ids:
+            LOGGER.warning(
+                "No chain_id in PDBe response for %s, skipping",
+                raw.get("pdb_id", "<unknown>"),
+            )
+            continue
+        for index in range(len(chain_ids)):
             chains.append(ChainInfo.build(index, raw))
     return chains
 

@@ -13,11 +13,54 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import asyncio
 import datetime as dt
 
 import pytest
 
 from rnacentral_pipeline.databases.pdb import fetch
+
+
+class FakeResponse:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._payload
+
+
+def test_fetch_range_skips_docs_missing_chain_id(monkeypatch):
+    """
+    A PDBe search doc with no chain_id field used to crash the whole fetch
+    with a KeyError - ChainInfo has nothing to build without a chain id, so
+    it should be skipped instead of aborting every other doc in the batch.
+    """
+    payload = {
+        "response": {
+            "numFound": 2,
+            "docs": [
+                {"pdb_id": "1abc"},
+                {
+                    "pdb_id": "1s72",
+                    "chain_id": ["9"],
+                    "release_date": "2004-06-15T01:00:00Z",
+                    "experimental_method": ["X-ray diffraction"],
+                    "entity_id": 2,
+                    "title": "some title",
+                    "molecule_sequence": "ACGU",
+                },
+            ],
+        }
+    }
+    monkeypatch.setattr(fetch.requests, "get", lambda url: FakeResponse(payload))
+
+    result = asyncio.run(fetch.fetch_range("some query", 0, 1000))
+
+    assert len(result) == 1
+    assert result[0].pdb_id == "1s72"
 
 
 @pytest.mark.network
