@@ -41,7 +41,7 @@ def so_tree():
         ("ncRNA", "SO:0000655"),
         ("misc_RNA", "SO:0000673"),
         ("other", "SO:0000655"),
-        ("precursor_RNA", "SO:0000185"),
+        ("precursor_RNA", "SO:0002393"),
         ("piRNA", "SO:0001035"),
         ("rasiRNA", "SO:0000454"),
         ("ribozyme", "SO:0000374"),
