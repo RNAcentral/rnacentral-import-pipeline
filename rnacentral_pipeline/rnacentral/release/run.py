@@ -158,14 +158,16 @@ def run(db_url):
                 label=f"validate fk4 xref_p{dbid}_{suffix}",
             )
 
-    # Verify xref primary key uniqueness once, after all databases are loaded,
-    # rather than once per database inside load_xref. The check is global (it
-    # ignores its argument), so a single run covers every partition.
-    if releases:
+    # Verify xref primary key uniqueness for each database loaded this run.
+    # do_checks scopes its scan to the dbid's own partitions against the rest
+    # of xref, rather than aggregating the whole table, so a per-database call
+    # is cheap.
+    for (dbid, rid) in releases:
         _run(
             db_url,
-            "SELECT rnc_load_xref.do_checks(NULL::bigint)",
-            label="do_checks (once, post-loop)",
+            "SELECT rnc_load_xref.do_checks(%s::bigint)",
+            params=(dbid,),
+            label=f"do_checks(dbid={dbid})",
             high_mem=True,
         )
 
