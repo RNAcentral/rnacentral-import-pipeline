@@ -90,6 +90,11 @@ def _guarded_getaddrinfo(host, *args, **kwargs):
 
 
 def pytest_configure(config):
+    # db-marked tests read PGDATABASE for a real DSN; the psycopg2/psql
+    # cassette in _cassette.py ignores its content entirely on replay, but the
+    # tests still index os.environ["PGDATABASE"] directly, so it must be set
+    # to *something* or they KeyError before ever reaching the cassette.
+    os.environ.setdefault("PGDATABASE", "postgresql://cassette/cassette")
     _cassette.install(ALLOW_NETWORK)
     _install_phylogeny_cache()
     if ALLOW_NETWORK:
