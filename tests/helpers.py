@@ -83,7 +83,7 @@ def run_range_as_single(upi, path):
         path,
         (
             "rna.id BETWEEN :min AND :max",
-            "xref.upi ='%s' AND xref.taxid = %i" % (upi, taxid),
+            "xref.urs ='%s' AND xref.taxid = %i" % (upi, taxid),
         ),
     )
 
@@ -96,7 +96,7 @@ def run_with_upi_taxid_constraint(rna_id, path, **kwargs):
         (
             "where\n",
             """where
-            xref.upi = '%s' and xref.taxid = %i
+            xref.urs = '%s' and xref.taxid = %i
             and"""
             % (upi, taxid),
         ),
