@@ -16,12 +16,12 @@ limitations under the License.
 import attr
 import pytest
 
-from rnacentral_pipeline.databases.data import Reference
-
+from rnacentral_pipeline.databases.data import (
+    AnnotationExtension,
+    GoTermAnnotation,
+    Reference,
+)
 from rnacentral_pipeline.databases.helpers import publications as pub
-
-from rnacentral_pipeline.databases.data import GoTermAnnotation
-from rnacentral_pipeline.databases.data import AnnotationExtension
 from rnacentral_pipeline.databases.quickgo import parser as gpi
 
 
@@ -37,10 +37,18 @@ def test_can_parse_a_gpa_file(filename, count):
         assert len(list(gpi.parse(raw))) == count
 
 
+def find(annotations, rna_id, term_id):
+    """The parser no longer guarantees a sort order, so find by key instead."""
+    for annotation in annotations:
+        if annotation.rna_id == rna_id and annotation.term_id == term_id:
+            return annotation
+    raise AssertionError(f"No annotation for ({rna_id}, {term_id})")
+
+
 def test_can_correctly_parse_a_gpa_file():
     with open("data/quickgo/rna.gpa", "r") as raw:
-        data = attr.asdict(next(gpi.parse(raw)))
-        assert data == attr.asdict(
+        data = find(gpi.parse(raw), "URS00000064B1_559292", "GO:0030533")
+        assert attr.asdict(data) == attr.asdict(
             GoTermAnnotation(
                 rna_id="URS00000064B1_559292",
                 qualifier="enables",
@@ -55,8 +63,8 @@ def test_can_correctly_parse_a_gpa_file():
 
 def test_can_handle_duplicate_data():
     with open("data/quickgo/duplicates.gpa", "r") as raw:
-        data = list(gpi.parse(raw))
-        assert attr.asdict(data[-1]) == attr.asdict(
+        data = find(gpi.parse(raw), "URS0000783B7F_10090", "GO:0042382")
+        assert attr.asdict(data) == attr.asdict(
             GoTermAnnotation(
                 rna_id="URS0000783B7F_10090",
                 qualifier="part_of",
