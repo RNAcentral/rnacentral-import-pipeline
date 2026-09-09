@@ -1,4 +1,24 @@
 {
+  "100272": {
+    "binomial": "false",
+    "division": "ENV",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; environmental samples; ",
+    "merged": "[52016]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Eukaryota environmental sample:equivalent name",
+      "uncultured Eukaryota:equivalent name",
+      "unidentified eukaryote:equivalent name"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "uncultured eukaryote",
+    "submittable": "true",
+    "taxId": "100272"
+  },
   "10090": {
     "authority": "Linnaeus, 1758",
     "binomial": "true",
@@ -63,6 +83,33 @@
     "scientificName": "Kingella kingae Vir5453",
     "submittable": "true",
     "taxId": "1305785"
+  },
+  "140110": {
+    "authority": "Nalim, Samuels & Geiser, 2011",
+    "binomial": "true",
+    "division": "FUN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Sordariomycetes; Hypocreomycetidae; Hypocreales; Nectriaceae; Fusarium; Fusarium solani species complex; ",
+    "merged": "[140110, 57163, 108890, 5134, 29915, 108889, 356946, 5510]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Fusarium haematococcum Nalim, Samuels & Geiser, 2011:authority",
+      "Nectria haematococca Berk. & Broome, 1875:authority",
+      "Neocosmospora haematococca (Berk. & Broome) Samuels, Nalim & Geiser, 2011:authority",
+      "Haematonectria haematococca (Berk. & Broome) Samuels & Rossman, 1999:authority",
+      "Fusarium sp. FAN-2011b:includes",
+      "Fusarium sp. FRC S1832:includes",
+      "Fusarium sp. FRC S1831:includes",
+      "Neocosmospora haematococca:synonym",
+      "Nectria haematococca:synonym",
+      "Haematonectria haematococca:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Fusarium haematococcum",
+    "submittable": "true",
+    "taxId": "984957"
   },
   "1507437": {
     "authority": "Song et al. 2017",
@@ -144,6 +191,30 @@
     "submittable": "true",
     "taxId": "173247"
   },
+  "1764": {
+    "authority": "Chester 1901 (Approved Lists 1980) emend. Thorel et al. 1990",
+    "binomial": "true",
+    "division": "PRO",
+    "formalName": "true",
+    "geneticCode": "11",
+    "lineage": "Bacteria; Bacillati; Actinomycetota; Actinomycetes; Mycobacteriales; Mycobacteriaceae; Mycobacterium; Mycobacterium avium complex (MAC); ",
+    "metagenome": "false",
+    "otherNames": [
+      "\"Mycobacterium tuberculosis avium\" Lehmann and Neumann 1896:authority",
+      "\"Bacillus tuberculosis gallinarum\" Sternberg 1892:authority",
+      "Mycobacterium avium Chester 1901 (Approved Lists 1980) emend. Thorel et al. 1990:authority",
+      "\"Mycobacterium tuberculosis typus gallinaceus\" Lehmann and Neumann 1907:authority",
+      "\"Tuberculose des oiseaux\" Strauss and Gamaleia 1891:authority",
+      "Tuberculose des oiseaux:synonym",
+      "Mycobacterium tuberculosis avium:synonym",
+      "Bacillus tuberculosis gallinarum:synonym",
+      "Mycobacterium tuberculosis typus gallinaceus:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Mycobacterium avium",
+    "submittable": "true",
+    "taxId": "1764"
+  },
   "176868": {
     "authority": "Balf.f. & W.W.Sm., 1914",
     "binomial": "true",
@@ -181,6 +252,39 @@
     "scientificName": "Trypanosoma brucei brucei TREU927",
     "submittable": "true",
     "taxId": "185431"
+  },
+  "1928361": {
+    "authority": "(Tode) G.C. Adams & Rossman, 2015",
+    "binomial": "true",
+    "division": "FUN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Sordariomycetes; Sordariomycetidae; Diaporthales; Cytosporaceae; Cytospora; ",
+    "merged": "[2039746, 2233988, 117550, 3388407, 1891351]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Cytospora ceratosperma (Tode) G.C. Adams & Rossman, 2015:authority",
+      "Cytospora predappioensis Q.J. Shang, Norphanph., Camporesi & K.D. Hyde, 2018:authority",
+      "Cytospora vinacea D.P. Lawr., Travadon & Pouzoulet, 2016:authority",
+      "Cytospora ceratospermopsis C.M.Tian & X.L.Fan, 2019:authority",
+      "Sphaeria ceratosperma Tode, 1791:authority",
+      "Cytospora sp. KB-2016a:includes",
+      "Valsa ceratosperma:synonym",
+      "Cytospora ceratospermopsis:synonym",
+      "Cytospora vinaceus:synonym",
+      "Cytospora vinacea:synonym",
+      "Sphaeria ceratosperma:synonym",
+      "Cytospora predappioensis:synonym",
+      "Diatrype ceratosperma:synonym",
+      "Engizostoma ceratospermum:synonym",
+      "Hypoxylon ceratospermum:synonym",
+      "Nemania ceratosperma:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Cytospora ceratosperma",
+    "submittable": "true",
+    "taxId": "1928361"
   },
   "201611": {
     "authority": "Hagen, 1858",
@@ -225,9 +329,153 @@
     "lineage": "Bacteria; Deinococcota; Deinococci; Thermales; Thermaceae; Thermus; ",
     "scientificName": "Thermus thermophilus"
   },
+  "2829": {
+    "authority": "(Hada) Hada ex Y.Hara & Chihara, 1987",
+    "binomial": "true",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Sar; Stramenopiles; Ochrophyta; Raphidophyceae; Chattonellales; Chattonellaceae; Heterosigma; ",
+    "merged": "[28465]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Entomosigma akashiwo Y.Hada, 1967:authority",
+      "Heterosigma akashiwo (Hada) Hada ex Y.Hara & Chihara, 1987:authority",
+      "Heterosigma carterae strain=CCMP 452:includes",
+      "Entomosigma akashiwo:synonym",
+      "Heterosigma carterae:synonym",
+      "Heterosigma inlandica:synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Heterosigma akashiwo",
+    "submittable": "true",
+    "taxId": "2829"
+  },
+  "2856": {
+    "authority": "(Ehrenberg) Reimann & J.C.Lewin, 1964",
+    "binomial": "true",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Sar; Stramenopiles; Ochrophyta; Bacillariophyta; Bacillariophyceae; Bacillariophycidae; Bacillariales; Bacillariaceae; Cylindrotheca; ",
+    "merged": "[265526]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Ceratoneis closterium Ehrenberg, 1839:authority",
+      "Cylindrotheca closterium (Ehrenberg) Reimann & J.C.Lewin, 1964:authority",
+      "Ceratoneis closterium:synonym",
+      "Nitzschia closterium:synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Cylindrotheca closterium",
+    "submittable": "true",
+    "taxId": "2856"
+  },
+  "299907": {
+    "binomial": "true",
+    "division": "PLN",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Sar; Stramenopiles; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Chloromorum toxicum:equivalent name",
+      "Chattonella cf. verruculosa:synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Chloromorum sp. toxicum",
+    "submittable": "true",
+    "taxId": "299907"
+  },
+  "307513": {
+    "binomial": "true",
+    "division": "PLN",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Chlorophyta; core chlorophytes; Chlorophyceae; CS clade; Sphaeropleales; Selenastraceae; Monoraphidium; ",
+    "merged": "[641377]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [
+      "Ankistrodesmus convolutus Corda, 1838:authority",
+      "Monoraphidium convolutum (Corda) Komark-Legn.:authority",
+      "Ankistrodesmus convolutus:synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Monoraphidium convolutum",
+    "submittable": "true",
+    "taxId": "307513"
+  },
+  "310511": {
+    "binomial": "true",
+    "division": "PLN",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Viridiplantae; Chlorophyta; core chlorophytes; Trebouxiophyceae; Chlorellales; Chlorellaceae; Chlorella clade; Chlorella; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Chlorella sp. OC-1",
+    "submittable": "true",
+    "taxId": "310511"
+  },
+  "310582": {
+    "binomial": "true",
+    "division": "PLN",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Sar; Stramenopiles; Bigyra; Labyrinthulomycetes; Thraustochytrida; Thraustochytriidae; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "1",
+    "otherNames": [],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Thraustochytriidae sp. Sed1",
+    "submittable": "true",
+    "taxId": "310582"
+  },
   "32630": {
     "lineage": "Viruses; Riboviria; Orthornavirae; Kitrinoviricota; Flasuviricetes; Amarillovirales; Flaviviridae; Hepacivirus; ",
     "scientificName": "Hepatitis C virus genotype 1"
+  },
+  "32644": {
+    "binomial": "false",
+    "division": "UNC",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "unclassified sequences; ",
+    "merged": "[3346146, 3346249, 1768868, 3307533, 3307532, 3346257, 3345502, 3346008, 3307544, 1780429]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "unspecified:synonym",
+      "not shown:synonym",
+      "collection:synonym",
+      "unidentified root endophyte:synonym",
+      "not specified:synonym",
+      "other:synonym",
+      "sonstige nucleic acid:synonym",
+      "unclassified sequence:synonym",
+      "unidentified organism:synonym",
+      "unknown:synonym",
+      "unknown organism:synonym",
+      "miscellaneous nucleic acid:synonym",
+      "none:synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "unidentified",
+    "submittable": "true",
+    "taxId": "32644"
   },
   "3469": {
     "authority": "L., 1753",
@@ -283,6 +531,23 @@
     "scientificName": "Plasmodium falciparum 3D7",
     "submittable": "true",
     "taxId": "36329"
+  },
+  "369572": {
+    "binomial": "false",
+    "division": "ENV",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Sordariomycetes; Hypocreomycetidae; Hypocreales; Nectriaceae; environmental samples; ",
+    "merged": "[281694]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "uncultured Fusarium sp.:equivalent name"
+    ],
+    "rank": "species",
+    "scientificName": "uncultured Fusarium",
+    "submittable": "true",
+    "taxId": "369572"
   },
   "3702": {
     "authority": "(L.) Heynh., 1842",
@@ -437,6 +702,61 @@
     "submittable": "true",
     "taxId": "4897"
   },
+  "4924": {
+    "binomial": "true",
+    "division": "FUN",
+    "formalName": "true",
+    "geneticCode": "12",
+    "lineage": "Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Pichiomycetes; Debaryomycetaceae; Scheffersomyces; ",
+    "merged": "[2898196, 232562, 864424]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Enteroramus dimorphus M.M. White, Lichtw., J.K. Misra & Cafaro, 1999:authority",
+      "Pichia stipitis Pignal, 1967:authority",
+      "Scheffersomyces stipitis (Pignal) Kurtzman & M. Suzuki, 2010:authority",
+      "Pichia sp. D1R2:includes",
+      "Pichia sp. KS-42-W2:includes",
+      "Scheffersomyces sp. Af118-1-4:includes",
+      "Enteroramus dimorphus:synonym",
+      "Pichia stipitis:synonym",
+      "Yamadazyma stipitis:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Scheffersomyces stipitis",
+    "submittable": "true",
+    "taxId": "4924"
+  },
+  "55601": {
+    "authority": "Bergeman 1909 (Approved Lists 1980)",
+    "binomial": "true",
+    "division": "PRO",
+    "formalName": "true",
+    "geneticCode": "11",
+    "lineage": "Bacteria; Pseudomonadati; Pseudomonadota; Gammaproteobacteria; Vibrionales; Vibrionaceae; Vibrio; ",
+    "merged": "[665, 28167]",
+    "metagenome": "false",
+    "otherNames": [
+      "Vibrio anguillarum Bergeman 1909 (Approved Lists 1980):authority",
+      "\"Vibrio ichthyodermis\" (Wells and ZoBell 1934) Shewan et al. 1960:authority",
+      "Listonella anguillarum corrig. (Bergeman 1909) MacDonell and Colwell 1986:authority",
+      "\"Pseudomonas ichthyodermis\" (Wells and ZoBell 1934) ZoBell and Upham 1944:authority",
+      "\"Vibrio piscium var. japonicus\" Hoshina 1957:authority",
+      "\"Vibrio piscium\" David 1927:authority",
+      "\"Achromobacter ichthyodermis\" Wells and ZoBell 1934:authority",
+      "Pseudomonas ichthyodermis:synonym",
+      "Vibrio piscium var. japonicus:synonym",
+      "Achromobacter ichthyodermis:synonym",
+      "Listonella anguillarum:synonym",
+      "Listonella anguillara:synonym",
+      "Vibrio ichthyodermis:synonym",
+      "Vibrio piscium:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Vibrio anguillarum",
+    "submittable": "true",
+    "taxId": "55601"
+  },
   "562": {
     "lineage": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; ",
     "scientificName": "Escherichia coli"
@@ -514,6 +834,22 @@
     "submittable": "true",
     "taxId": "65489"
   },
+  "71388": {
+    "authority": "Sawabe et al. 1998",
+    "binomial": "true",
+    "division": "PRO",
+    "formalName": "true",
+    "geneticCode": "11",
+    "lineage": "Bacteria; Pseudomonadati; Pseudomonadota; Gammaproteobacteria; Vibrionales; Vibrionaceae; Vibrio; ",
+    "metagenome": "false",
+    "otherNames": [
+      "Vibrio halioticoli Sawabe et al. 1998:authority"
+    ],
+    "rank": "species",
+    "scientificName": "Vibrio halioticoli",
+    "submittable": "true",
+    "taxId": "71388"
+  },
   "7227": {
     "authority": "Meigen, 1830",
     "binomial": "true",
@@ -556,6 +892,23 @@
     "scientificName": "Apis mellifera",
     "submittable": "true",
     "taxId": "7460"
+  },
+  "762550": {
+    "binomial": "true",
+    "division": "PRO",
+    "formalName": "false",
+    "geneticCode": "11",
+    "lineage": "Bacteria; Bacillati; Bacillota; Bacilli; Lactobacillales; Lactobacillaceae; Leuconostoc; Leuconostoc gelidum group; ",
+    "metagenome": "false",
+    "otherNames": [
+      "Leuconostoc gasicomitatum CECT 5767:equivalent name",
+      "Leuconostoc gelidum subsp. gasicomitatum LMG 18811:equivalent name",
+      "Leuconostoc sp. LMG 18811:equivalent name"
+    ],
+    "rank": "strain",
+    "scientificName": "Leuconostoc gasicomitatum LMG 18811",
+    "submittable": "true",
+    "taxId": "762550"
   },
   "7668": {
     "binomial": "true",
@@ -644,6 +997,26 @@
     "scientificName": "Danio rerio",
     "submittable": "true",
     "taxId": "7955"
+  },
+  "942256": {
+    "authority": "(Taylor, 1907)",
+    "binomial": "true",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Altocrustacea; Allotriocarida; Hexapoda; Insecta; Pterygota; Neoptera; Eumetabola; Endopterygota; Aparaglossata; Panorpida; Lepidoptera; Glossata; Ditrysia; Geometroidea; Geometridae; Larentiinae; Malacodea; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "5",
+    "otherNames": [
+      "Malacodea pulchraria (Taylor, 1907):authority",
+      "Rachela pulchraria Taylor, 1907:authority",
+      "Rachela pulchraria:synonym",
+      "Epirrita pulchraria:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Malacodea pulchraria",
+    "submittable": "true",
+    "taxId": "942256"
   },
   "9544": {
     "authority": "(Zimmermann, 1780)",
