@@ -63,6 +63,36 @@ def test_fetch_range_skips_docs_missing_chain_id(monkeypatch):
     assert result[0].pdb_id == "1s72"
 
 
+def test_chains_warns_instead_of_raising_on_missing_ids(monkeypatch, caplog):
+    """
+    Rfam's .preview feed can name a PDB entry before PDBe's search index has
+    caught up to it. That used to raise ValueError and crash the whole pdbe
+    import over a handful of not-yet-indexed structures. It should warn and
+    return whatever it did find instead.
+    """
+    found = fetch.ChainInfo(
+        pdb_id="1s72",
+        chain_id="9",
+        release_date=dt.datetime(2004, 6, 15, hour=1),
+        experimental_method="X-ray diffraction",
+        entity_id=2,
+        taxids=[2238],
+        resolution=2.4,
+        sequence="ACGU",
+        title="some title",
+        molecule_names=["5S ribosomal RNA"],
+        molecule_type="RNA",
+        organism_scientific_name="Haloarcula marismortui",
+    )
+    monkeypatch.setattr(fetch, "all_chains_in_pdbs", lambda _: [found])
+
+    with caplog.at_level("WARNING"):
+        result = fetch.chains({("1s72", "9"), ("9igu", "A")})
+
+    assert result == [found]
+    assert "9igu" in caplog.text
+
+
 @pytest.mark.network
 def test_produces_correct_data():
     chains = fetch.chains({("1S72", "9")})

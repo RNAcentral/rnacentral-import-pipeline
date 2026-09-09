@@ -137,7 +137,11 @@ def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[Cha
 
     if seen != required:
         missed = required - seen
-        raise ValueError("Did not find all requested ids: %s" % missed)
+        # Rfam's .preview feed can name PDB entries before PDBe's own search
+        # index has caught up to them - not an error, just a timing gap that
+        # resolves itself once PDBe indexes the entry. Continue with what
+        # was found rather than failing the whole import over it.
+        LOGGER.warning("Did not find all requested ids: %s", missed)
     return chains
 
 
