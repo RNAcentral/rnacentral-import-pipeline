@@ -71,5 +71,6 @@ def test_parses_results_with_orfs_correctly(results):
             start=0,
             stop=3315,
             strand=Strand.forward,
+            metadata={"cutoff": 0.364, "coding_probability": 1.0},
         ),
     )

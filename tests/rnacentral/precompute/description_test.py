@@ -256,9 +256,9 @@ pytestmark = pytest.mark.db
             "Drosophila melanogaster (fruit fly) dme-bantam-3p",
         ),
         (
-            "URS00001DEEBE_562",
+            "URS00001617C4_484019",
             "tRNA",
-            "Escherichia coli tRNA Proline with anticodon CGG (tRNA-Pro-CGG-1-1)",
+            "Thermosipho africanus TCF52B tRNA-Pro (TGG) (tRNA-Pro-TGG-1-1)",
         ),
         ("URS00000AEE53_380749", "tmRNA", "Hydrogenobaculum sp. Y04AAS1 tmRNA"),
         (

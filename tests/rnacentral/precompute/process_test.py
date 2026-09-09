@@ -167,7 +167,7 @@ def load_data(upi):
         # ("URS00000F9D45_9606", "RNA, 5S ribosomal 1 (RNA5S1-8, RNA5S10-17)"),
         ("URS000018EB2E_3702", "Long non-coding antisense RNA COOLAIR"),
         # ("URS000019E0CD_9606", "HELLP associated long non-coding RNA (HELLPAR)"),
-        ("URS00001DEEBE_562", "tRNA-Pro (CGG) (tRNA-Pro-CGG-1-1)"),
+        ("URS00001617C4_484019", "tRNA-Pro (TGG) (tRNA-Pro-TGG-1-1)"),
         # ("URS00002F21DA_7227", "bantam stem-loop (dme-bantam)"),
         (
             "URS000034C5CB_7227",

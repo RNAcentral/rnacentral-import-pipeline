@@ -25,7 +25,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 QC_WORKFLOW = ROOT / "workflows" / "utils" / "qc.nf"
-MAIN_WORKFLOW = ROOT / "main.nf"
+UTILS_GROOVY = ROOT / "lib" / "Utils.groovy"
 QC_SQL_DIR = ROOT / "files" / "qc"
 
 PROCESS_RE = re.compile(r"^process\s+(\w+)\s*\{", re.MULTILINE)
@@ -37,14 +37,17 @@ SQL_VAR_RE = re.compile(r"(?<!:):'?([a-z_][a-z0-9_]*)'?")
 SQL_IF_RE = re.compile(r"^\s*\\if\s+:\{\?(\w+)\}")
 SQL_SET_RE = re.compile(r"^\s*\\set\s+(\w+)")
 ENSEMBL_DIVISION_RE = re.compile(r"(\w+):\s*'ensembl\w*'")
-MAIN_DIVISION_LIST_RE = re.compile(r"\[((?:'\w+',?\s*)+)\]\.any\s*\{\s*d\s*->")
+MAIN_DIVISION_LIST_RE = re.compile(
+    r"ENSEMBL_DIVISIONS\(\)\s*\{\s*return\s*\[((?:'\w+',?\s*)+)\]"
+)
 
 
 def blocks(text, pattern):
     """Split a Nextflow file into {name: body} on the given top-level pattern."""
     starts = [(m.group(1), m.start()) for m in pattern.finditer(text)]
     boundaries = sorted(
-        m.start() for m in list(PROCESS_RE.finditer(text)) + list(WORKFLOW_RE.finditer(text))
+        m.start()
+        for m in list(PROCESS_RE.finditer(text)) + list(WORKFLOW_RE.finditer(text))
     )
     found = {}
     for name, start in starts:
@@ -169,11 +172,12 @@ def test_analyze_snapshot_does_not_need_the_run_start_variable():
 def test_qc_knows_every_ensembl_division_main_runs(qc_nf):
     """
     qc.nf keeps its own division -> rnc_database.descr map, so a division added
-    to main.nf but not here goes missing from the import report without error.
+    to lib/Utils.groovy's ENSEMBL_DIVISIONS but not here goes missing from the
+    import report without error.
     """
     qc_divisions = set(ENSEMBL_DIVISION_RE.findall(qc_nf))
-    main_lists = MAIN_DIVISION_LIST_RE.findall(MAIN_WORKFLOW.read_text())
-    assert main_lists, "could not find the ensembl division list in main.nf"
+    main_lists = MAIN_DIVISION_LIST_RE.findall(UTILS_GROOVY.read_text())
+    assert main_lists, "could not find the ensembl division list in lib/Utils.groovy"
 
     for raw in main_lists:
         assert set(re.findall(r"'(\w+)'", raw)) == qc_divisions

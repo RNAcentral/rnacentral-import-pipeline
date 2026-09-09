@@ -477,7 +477,7 @@ def test_url_builder_can_build_url(name):
         ("data/ena/tpa/srpdb/mapping.tsv", True),
         ("data/ena/tpa/tair/mapping.tsv", True),
         ("data/ena/tpa/tmrna/mapping.tsv", True),
-        ("data/ena/tpa/wormbase/mapping.tsv", True),
+        ("data/ena/tpa/wormbase/mapping.tsv", False),
         pytest.param(
             "data/ena/tpa/combined/mapping.tsv",
             False,

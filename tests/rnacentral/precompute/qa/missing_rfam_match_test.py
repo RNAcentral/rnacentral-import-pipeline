@@ -28,7 +28,7 @@ pytestmark = pytest.mark.db
     [  # pylint: disable=no-member
         ("URS0000400378_30527", "tRNA", False),
         ("URS000058E89C_39432", "rRNA", False),
-        ("URS000061A10B_9606", "tRNA", False),
+        ("URS00001617C4_484019", "tRNA", False),
         ("URS0000866382_1000416", "tRNA", True),
         ("URS00009ED984_77133", "rRNA", False),
         ("URS0000A80D0E_60711", "rRNA", True),

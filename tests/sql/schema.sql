@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS r2dt_models;
 DROP TABLE IF EXISTS rna;
 
 CREATE TABLE rna (
-  upi text PRIMARY KEY,
+  urs text PRIMARY KEY,
   len int NOT NULL
 );
 
