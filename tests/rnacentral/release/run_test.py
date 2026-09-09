@@ -143,6 +143,68 @@ def test_to_release_only_loads_staged_databases():
     assert "JOIN rnacen.rnc_database d ON l.database = d.descr" in normalised
 
 
+class CheckCursor:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, sql, params=None):
+        self.calls.append((" ".join(sql.split()), params))
+
+    def fetchall(self):
+        sql, _ = self.calls[-1]
+        if "load_rnacentral load" in sql:
+            return [("ena", 105.0)]
+        if "JOIN rnc_database d ON d.descr = l.database" in sql:
+            return [(9,)]
+        if "count(distinct xref.urs)" in sql:
+            return [("ena", 100.0)]
+        return []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+class CheckConnection:
+    def __init__(self):
+        self.cursor_obj = CheckCursor()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def cursor(self):
+        return self.cursor_obj
+
+
+def test_check_scopes_count_query_to_loaded_dbids(monkeypatch, tmp_path):
+    """
+    COUNT_QUERY used to aggregate every xref partition every release, even
+    though only the databases actually staged this run are ever compared
+    against LOAD_COUNT_QUERY. It should filter to just those dbids.
+    """
+    conn = CheckConnection()
+    monkeypatch.setattr(run.psycopg2, "connect", lambda *a, **k: conn)
+
+    limits = tmp_path / "limits.json"
+    limits.write_text("{}")
+
+    with limits.open() as fh:
+        run.check(fh, "postgres://example")
+
+    count_sql, count_params = next(
+        (sql, params)
+        for sql, params in conn.cursor_obj.calls
+        if "count(distinct xref.urs)" in sql
+    )
+    assert "xref.dbid = ANY(%s)" in count_sql
+    assert count_params == ([9],)
+
+
 def test_do_checks_scopes_to_the_dbid_partitions_when_given_one():
     """
     do_checks used to group the whole xref table to find duplicate ids, which

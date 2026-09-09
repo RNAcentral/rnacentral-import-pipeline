@@ -19,11 +19,20 @@ BEGIN;
 SET LOCAL max_parallel_workers_per_gather = 0;
 SET LOCAL max_parallel_maintenance_workers = 0;
 
+-- Below this size, inserting into the existing indexes beats a full
+-- rebuild: a B-tree insert is O(log n) per row, vs O(n log n) for the
+-- rebuild. Threshold is a conservative guess, not measured - revisit
+-- against rnacen.release_stats over time. Same idea as 000__populate_precompute.sql.
+SELECT CASE WHEN count(*) > 1000000 THEN 'true' ELSE 'false' END AS rebuild_indexes
+FROM load_rnc_related_sequences \gset
+
 -- Drop indexes to speed up bulk inserts
+\if :rebuild_indexes
 DROP INDEX IF EXISTS rnacen.ix_rnc_related_sequences__target_ac;
 DROP INDEX IF EXISTS rnacen.rnc_related_relationship_type_idx;
 DROP INDEX IF EXISTS rnacen.rnc_related_sequences_source_urs_taxid_idx;
 DROP INDEX IF EXISTS rnacen.rnc_related_sequences_target_urs_taxid_idx;
+\endif
 
 CREATE INDEX IF NOT EXISTS ix_load_rnc_related_sequences__source_accession
   ON load_rnc_related_sequences(source_accession);
@@ -275,7 +284,7 @@ END $$;
 -- still dropped its only option is a full scan of the whole table. Building it
 -- here costs one sort we were going to pay for anyway, and turns the update
 -- into index lookups over just this load's source URSs.
-CREATE INDEX rnc_related_sequences_source_urs_taxid_idx ON rnacen.rnc_related_sequences USING btree (source_urs_taxid);
+CREATE INDEX IF NOT EXISTS rnc_related_sequences_source_urs_taxid_idx ON rnacen.rnc_related_sequences USING btree (source_urs_taxid);
 
 -- Ensure all methods are distinct
 update rnc_related_sequences related
@@ -289,8 +298,8 @@ where
 drop table load_rnc_related_sequences;
 
 -- Recreate indexes
-CREATE INDEX ix_rnc_related_sequences__target_ac ON rnacen.rnc_related_sequences USING btree (target_accession);
-CREATE INDEX rnc_related_relationship_type_idx ON rnacen.rnc_related_sequences USING btree (relationship_type);
-CREATE INDEX rnc_related_sequences_target_urs_taxid_idx ON rnacen.rnc_related_sequences USING btree (target_urs_taxid);
+CREATE INDEX IF NOT EXISTS ix_rnc_related_sequences__target_ac ON rnacen.rnc_related_sequences USING btree (target_accession);
+CREATE INDEX IF NOT EXISTS rnc_related_relationship_type_idx ON rnacen.rnc_related_sequences USING btree (relationship_type);
+CREATE INDEX IF NOT EXISTS rnc_related_sequences_target_urs_taxid_idx ON rnacen.rnc_related_sequences USING btree (target_urs_taxid);
 
 COMMIT;

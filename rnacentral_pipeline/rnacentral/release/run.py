@@ -84,6 +84,26 @@ AND r.dbid IN (
 ORDER BY r.id
 """
 
+LOAD_COUNT_QUERY = """
+SELECT
+    load.database,
+    count(distinct load.md5)
+from load_rnacentral load
+group by database
+"""
+
+# Databases staged for this run, so COUNT_QUERY below can filter to their
+# partitions instead of aggregating every xref_pN partition regardless of
+# what this run actually loaded.
+LOADED_DBIDS_QUERY = """
+SELECT DISTINCT d.id
+FROM load_rnacentral l
+JOIN rnc_database d ON d.descr = l.database
+"""
+
+# xref.dbid = ANY(%s) prunes to just this run's partitions - previously an
+# unfiltered GROUP BY over all ~43 databases' worth of xref, every release,
+# even though only the loaded ones are ever compared against LOAD_COUNT_QUERY.
 COUNT_QUERY = """
 SELECT
     db.descr,
@@ -94,15 +114,8 @@ on
     db.id = xref.dbid
 where
     xref.deleted = 'N'
+    and xref.dbid = ANY(%s)
 group by db.descr
-"""
-
-LOAD_COUNT_QUERY = """
-SELECT
-    load.database,
-    count(distinct load.md5)
-from load_rnacentral load
-group by database
 """
 
 
@@ -182,13 +195,16 @@ def check(limit_file, db_url, default_allowed_change=0.30):
     new_counts = {}
     with _connect(db_url) as conn:
         with conn.cursor() as cur:
-            cur.execute(COUNT_QUERY)
-            for (descr, raw_count) in cur.fetchall():
-                cur_counts[descr] = float(raw_count)
-
             cur.execute(LOAD_COUNT_QUERY)
             for (descr, raw_count) in cur.fetchall():
                 new_counts[descr] = float(raw_count)
+
+            cur.execute(LOADED_DBIDS_QUERY)
+            dbids = [dbid for (dbid,) in cur.fetchall()]
+
+            cur.execute(COUNT_QUERY, (dbids,))
+            for (descr, raw_count) in cur.fetchall():
+                cur_counts[descr] = float(raw_count)
 
     problems = False
     for name, previous in cur_counts.items():
