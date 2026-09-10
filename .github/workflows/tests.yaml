@@ -107,7 +107,7 @@ jobs:
       - name: Run offline test suite
         run: |
           set -o pipefail
-          uv run --frozen --no-install-project -- \
+          uv run --frozen -- \
             python -m pytest -p no:cacheprovider -q --tb=short \
             --cov --cov-report=term --cov-report=html:coverage_html \
             tests/ 2>&1 | tee pytest-output.txt
