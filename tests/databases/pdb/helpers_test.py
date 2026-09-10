@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime as dt
+
 import pytest
 
 from rnacentral_pipeline.databases.pdb import fetch, helpers
@@ -84,3 +86,28 @@ def test_can_compute_correct_rna_types(product: str, expected):
 def test_can_detect_if_is_ncrna(pdb, chain, expected):
     info = load(pdb, chain)
     assert helpers.is_ncrna(info) == expected
+
+
+def test_description_omits_source_when_organism_name_is_missing():
+    # organism_scientific_name is None whenever PDBe's API doesn't supply one
+    # (e.g. no organism recorded for some viral RNA) - description() used to
+    # interpolate that None straight into the string, producing a literal
+    # "... from None (PDB ...)" in the stored description.
+    info = ChainInfo(
+        pdb_id="3t4b",
+        chain_id="A",
+        release_date=dt.datetime(2011, 10, 12),
+        experimental_method="X-ray diffraction",
+        entity_id=1,
+        taxids=[32630],
+        resolution=3.55,
+        title="Crystal Structure of the HCV IRES pseudoknot domain",
+        sequence="CCUCCCGGG",
+        molecule_names=["HCV IRES pseudoknot domain plus crystallization module"],
+        molecule_type="RNA",
+        organism_scientific_name=None,
+    )
+    assert (
+        helpers.description(info)
+        == "HCV IRES pseudoknot domain plus crystallization module from  (PDB 3T4B, chain A)"
+    )
