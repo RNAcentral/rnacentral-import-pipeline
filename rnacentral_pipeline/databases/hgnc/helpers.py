@@ -102,8 +102,8 @@ def known_urs(conn, urs_ids: ty.List[str]) -> ty.Set[str]:
         return set()
 
     with conn.cursor() as cur:
-        cur.execute("select upi from rna where upi = ANY(%s)", (sorted(set(urs_ids)),))
-        return {upi for (upi,) in cur}
+        cur.execute("select urs from rna where urs = ANY(%s)", (sorted(set(urs_ids)),))
+        return {urs for (urs,) in cur}
 
 
 def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:

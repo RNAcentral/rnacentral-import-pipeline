@@ -76,3 +76,43 @@ def test_network_failure_raises(monkeypatch):
 
     with pytest.raises(RuntimeError):
         helpers._fetch_batch(["a", "b"])
+
+
+class FakeCursor:
+    """Records the executed query and returns fixed rows, no live database."""
+
+    def __init__(self, rows):
+        self._rows = rows
+        self.query = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        return False
+
+    def execute(self, query, params=None):
+        self.query = query
+
+    def __iter__(self):
+        return iter(self._rows)
+
+
+class FakeConn:
+    def __init__(self, rows):
+        self.cursor_obj = FakeCursor(rows)
+
+    def cursor(self):
+        return self.cursor_obj
+
+
+def test_known_urs_queries_the_urs_column_not_upi():
+    # rna's id column is `urs`; it was renamed from `upi` and this query
+    # was missed, so it 500'd with "column upi does not exist".
+    conn = FakeConn([("URS0000000001",)])
+
+    result = helpers.known_urs(conn, ["URS0000000001", "URS0000000002"])
+
+    assert "upi" not in conn.cursor_obj.query
+    assert "urs" in conn.cursor_obj.query
+    assert result == {"URS0000000001"}
