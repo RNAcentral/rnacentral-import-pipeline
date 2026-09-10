@@ -2,14 +2,20 @@
 #
 # The job runs inside the prebuilt pipeline container
 # (rnacentral/rnacentral-import-pipeline:py314-experimental), which is built
-# from this repo's own pyproject.toml/uv.lock via `uv sync --frozen` (see
-# Dockerfile and .github/workflows/main.yaml) - no dependency resolution
-# happens in this job, we just check out the code and run pytest against
-# whatever's already installed in the image. Image rebuilds only trigger on
-# push to master/dev/python-update when pyproject.toml/uv.lock/Cargo.*/
-# Dockerfile change, so a dependency added on a feature branch won't be in
-# the image yet - the coverage step below installs pytest-cov explicitly
-# rather than depending on that timing.
+# from this repo's own pyproject.toml/uv.lock via `uv sync --frozen` into
+# /rna/venv (see Dockerfile and .github/workflows/main.yaml). Image rebuilds
+# only trigger on push to master/dev/python-update when
+# pyproject.toml/uv.lock/Cargo.*/Dockerfile change, so a dependency added on
+# a feature branch (this job's own uv.lock, from checkout, not the image's)
+# won't be baked into the image yet. Tests run via `uv run --frozen`
+# (UV_PROJECT_ENVIRONMENT points it at /rna/venv below) so it syncs that
+# venv against the checked-out uv.lock first - installing anything missing
+# - without ever re-resolving versions or touching pyproject.toml/uv.lock.
+#
+# Plain `pip install` doesn't work here instead: uv doesn't seed pip into
+# the venvs it creates, so a bare `pip install` on PATH silently resolves
+# to the system apt-installed pip instead and installs somewhere the
+# venv's own python never looks.
 #
 # The image tag: main.yaml's docker push step doesn't produce a :latest tag
 # (that one is a stale, orphaned leftover from an older workflow version) -
@@ -37,6 +43,12 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: rnacentral/rnacentral-import-pipeline:py314-experimental
+    env:
+      # The image's venv lives at /rna/venv, not the project-relative
+      # .venv uv would otherwise expect next to the checked-out
+      # pyproject.toml/uv.lock - point uv at the real one so `uv run`
+      # syncs/uses it instead of building a fresh venv from scratch.
+      UV_PROJECT_ENVIRONMENT: /rna/venv
 
     steps:
       # The runtime image only installs what tests/import execution need
@@ -87,15 +99,16 @@ jobs:
 
           git submodule update --init --recursive
 
-      - name: Ensure coverage tooling is available
-        # Belt-and-suspenders: pyproject.toml's dev group already includes
-        # pytest-cov, but only images rebuilt after that change picked it up.
-        run: pip install --quiet pytest-cov
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Run offline test suite
         run: |
           set -o pipefail
-          python -m pytest -p no:cacheprovider -q --tb=short \
+          uv run --frozen --no-install-project -- \
+            python -m pytest -p no:cacheprovider -q --tb=short \
             --cov --cov-report=term --cov-report=html:coverage_html \
             tests/ 2>&1 | tee pytest-output.txt
 
