@@ -15,6 +15,7 @@ limitations under the License.
 
 import pytest
 
+from rnacentral_pipeline.rnacentral.precompute import utils
 from rnacentral_pipeline.rnacentral.precompute.description import description_of
 
 from .helpers import load_data
@@ -67,14 +68,6 @@ pytestmark = pytest.mark.db
             "tRNA (5'-D(*AP*UP*CP*CP*CP*CP*GP*UP*GP*UP*CP*CP*UP*UP*GP*GP*UP*UP*CP*G)-3') from Mitsuaria sp. 67 (PDB 4WT8, chain D2)",
         ),
         (
-            # No active accessions left for this urs_taxid - description_of()
-            # correctly returns None per its own documented contract; this
-            # case no longer covers real description-building for misc_RNA.
-            "URS000080E135_274",
-            "misc_RNA",
-            None,
-        ),
-        (
             "URS000080E10B_32630",
             "misc_RNA",
             "5'-R(*GP*CP*CP*GP*AP*AP*GP*CP*CP*(P5P)-3' from None (PDB 1XV0, chain B)",
@@ -115,13 +108,6 @@ pytestmark = pytest.mark.db
             "lncRNA",
             "Arabidopsis thaliana potential natural antisense gene, locus overlaps with AT1G44120 (AT1G44125)",
         ),
-        (
-            # No active accessions left for this urs_taxid - see the
-            # URS000080E135_274 case above.
-            "URS0000A86584_10090",
-            "ncRNA",
-            None,
-        ),
         pytest.param(
             "URS0000A98E18_9606",
             "Y_RNA",
@@ -157,13 +143,6 @@ pytestmark = pytest.mark.db
             "URS000075B196_7955",
             "pre_miRNA",
             "Danio rerio (zebrafish) microRNA dre-mir-430c precursor (dre-mir-430c 1 to 18)",
-        ),
-        (
-            # No active accessions left for this urs_taxid - see the
-            # URS000080E135_274 case above.
-            "URS0000759BEC_9606",
-            "lncRNA",
-            None,
         ),
         (
             "URS000075C808_9606",
@@ -397,3 +376,21 @@ pytestmark = pytest.mark.db
 def test_computes_correct_species_specific_descriptions(rna_id, rna_type, name):
     context, sequence = load_data(rna_id)
     assert description_of(rna_type, sequence) == name
+
+
+@pytest.mark.parametrize(
+    "rna_id,rna_type",
+    [
+        # These urs_taxids have no active accessions left at all (e.g. a
+        # since-superseded sequence), so no description can be selected.
+        # Every RNA must get a description, so this must error out of the
+        # pipeline rather than silently produce None.
+        ("URS000080E135_274", "misc_RNA"),
+        ("URS0000A86584_10090", "ncRNA"),
+        ("URS0000759BEC_9606", "lncRNA"),
+    ],
+)
+def test_raises_when_no_active_accession_can_produce_a_description(rna_id, rna_type):
+    context, sequence = load_data(rna_id)
+    with pytest.raises(utils.NoBestFoundException):
+        description_of(rna_type, sequence)
