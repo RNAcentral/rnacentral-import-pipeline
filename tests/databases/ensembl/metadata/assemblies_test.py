@@ -55,8 +55,8 @@ def test_it_can_load_known():
     assert attr.asdict(known[9606][0]) == attr.asdict(
         assem.AssemblyInfo(
             assembly_id="GRCh38",
-            assembly_full_name="GRCh38.p13",
-            gca_accession="GCA_000001405.28",
+            assembly_full_name="GRCh38.p14",
+            gca_accession="GCA_000001405.29",
             assembly_ucsc="hg38",
             common_name="human",
             taxid=9606,
@@ -75,8 +75,8 @@ def test_it_builds_a_valid_assembly(assemblies):
     assert attr.asdict(val) == attr.asdict(
         assem.AssemblyInfo(
             assembly_id="GRCh38",
-            assembly_full_name="GRCh38.p13",
-            gca_accession="GCA_000001405.28",
+            assembly_full_name="GRCh38.p14",
+            gca_accession="GCA_000001405.29",
             assembly_ucsc="hg38",
             common_name="human",
             taxid=9606,
@@ -132,9 +132,15 @@ def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
     [
         (546991, "EnsemblFungi", "EF2"),
         (559292, "EnsemblFungi", "R64-1-1"),
-        (6239, "EnsemblVertebrates", "WBcel235"),
-        (6669, "EnsemblMetazoa", "V1.0"),
-        (7227, "EnsemblVertebrates", "BDGP6.28"),
+        # 6239 and 7227 used to have a stale, EnsemblVertebrates-labeled
+        # duplicate on the main "ensembl" host that is_ignored_assembly()
+        # deliberately preferred - Ensembl has since consolidated both
+        # species onto EnsemblMetazoa on every host, including Drosophila's
+        # main-host copy, which also picked up a real assembly bump
+        # (BDGP6.28 -> BDGP6.54) in the process.
+        (6239, "EnsemblMetazoa", "WBcel235"),
+        (6669, "EnsemblMetazoa", "ASM2113471v1"),
+        (7227, "EnsemblMetazoa", "BDGP6.54"),
         (8090, "EnsemblVertebrates", "ASM223467v1"),
     ],
 )
