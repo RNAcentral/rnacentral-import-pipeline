@@ -29,7 +29,7 @@ pytestmark = pytest.mark.db
         ("URS0000400378_30527", "tRNA", False),
         ("URS000058E89C_39432", "rRNA", False),
         ("URS00001617C4_484019", "tRNA", False),
-        ("URS00008CF5BF_36987", "rRNA", True),
+        ("URS0000000037_859192", "rRNA", True),
         ("URS00009F92C9_358574", "rRNA", False),
         ("URS0000010837_7227", "misc_RNA", True),
     ],
