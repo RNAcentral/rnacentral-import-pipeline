@@ -1,0 +1,3 @@
+rfam_acc	rfam_id	type	sequence_type	description	ncbi_id	rfamseq_acc	seq_start	seq_end	dbxrefs	PMIDS	version	species	tax_string
+RF01061	RF01061	ncRNA	full	microRNA mir-548	9606	CM000677	93286238	93286321	MIPF:MIPF0000317,SO:0001244,GO:0035068,GO:0035195	16505370,17604727,20459774,20733160	2	Homo sapiens	Eukaryota Metazoa Chordata Craniata Vertebrata Euteleostomi Mammalia Eutheria Euarchontoglires Primates Haplorrhini Catarrhini Hominidae Homo.
+RF01061	RF01061	ncRNA	full	microRNA mir-548	9606	CM000677	93286321	93286238	MIPF:MIPF0000317,SO:0001244,GO:0035068,GO:0035195	16505370,17604727,20459774,20733160	2	Homo sapiens	Eukaryota Metazoa Chordata Craniata Vertebrata Euteleostomi Mammalia Eutheria Euarchontoglires Primates Haplorrhini Catarrhini Hominidae Homo.
