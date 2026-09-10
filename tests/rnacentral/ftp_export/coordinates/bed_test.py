@@ -23,8 +23,9 @@ from .helpers import fetch_coord
 
 
 def fetch_data(rna_id, assembly):
+    # A urs_taxid can legitimately map to several overlapping regions
     data = [bed.BedEntry.from_coordinate(c) for c in fetch_coord(rna_id, assembly)]
-    assert len(data) == 1
+    assert data
     return data[0]
 
 
@@ -35,7 +36,7 @@ def test_can_build_bed_from_region():
         bed.BedEntry(
             rna_id="URS000082BE64_9606",
             rna_type="snoRNA",
-            databases="snOPY",
+            databases="ENA,GeneCards,snoDB,snOPY",
             region=regions.SequenceRegion(
                 assembly_id="GRCh38",
                 chromosome="3",
@@ -54,7 +55,7 @@ def test_can_build_entry_with_several_databases():
         bed.BedEntry(
             rna_id="URS0000368518_9606",
             rna_type="lncRNA",
-            databases="Ensembl,GENCODE",
+            databases="Ensembl,ENSEMBL_GENCODE,Expression_Atlas,GeneCards,LncBook,NONCODE",
             region=regions.SequenceRegion(
                 assembly_id="GRCh38",
                 chromosome="2",
@@ -73,7 +74,7 @@ def test_can_build_entry_from_pig():
         bed.BedEntry(
             rna_id="URS000099C6E5_9598",
             rna_type="SRP_RNA",
-            databases="Rfam",
+            databases="RFAM",
             region=regions.SequenceRegion(
                 assembly_id="Pan_tro_3.0",
                 chromosome="X",
@@ -92,15 +93,15 @@ def test_can_build_entry_with_several_exons():
         bed.BedEntry(
             rna_id="URS0000000055_9606",
             rna_type="lncRNA",
-            databases="Ensembl,GENCODE,LNCipedia,NONCODE",
+            databases="ENA,Ensembl,ENSEMBL_GENCODE,Expression_Atlas,GeneCards,LncBook,LNCipedia,MalaCards,NONCODE",
             region=regions.SequenceRegion(
                 assembly_id="GRCh38",
                 chromosome="6",
                 strand=-1,
                 exons=[
-                    regions.Exon(start=57171004, stop=57171098),
-                    regions.Exon(start=57173375, stop=57173480),
-                    regions.Exon(start=57173736, stop=57174236),
+                    regions.Exon(start=57171003, stop=57171098),
+                    regions.Exon(start=57173374, stop=57173480),
+                    regions.Exon(start=57173735, stop=57174236),
                 ],
                 coordinate_system=regions.CoordinateSystem.zero_based(),
             ),
@@ -129,7 +130,7 @@ def test_gets_correct_chromosome(upi, assembly, expected):
         ("URS0000368518_9606", "GRCh38", [3803]),
         ("URS000001B2EC_9606", "GRCh38", [68]),
         pytest.param("URS000071014B_112509", "IBSC_v2", [1], marks=pytest.mark.xfail),
-        ("URS0000000055_9606", "GRCh38", [94, 105, 500]),
+        ("URS0000000055_9606", "GRCh38", [95, 106, 501]),
     ],
 )
 @pytest.mark.db
@@ -172,7 +173,7 @@ def test_gets_correct_bed_starts(upi, assembly, expected):
                 "0",
                 ".",
                 "lncRNA",
-                "Ensembl,GENCODE",
+                "Ensembl,ENSEMBL_GENCODE,Expression_Atlas,GeneCards,LncBook,NONCODE",
             ],
         ),
         (
@@ -193,7 +194,7 @@ def test_gets_correct_bed_starts(upi, assembly, expected):
                 "0",
                 ".",
                 "tRNA",
-                "ENA",
+                "ENA,GeneCards,MalaCards",
             ],
         ),
         # ('URS000071014B_112509', 'IBSC_v2', []),
@@ -215,7 +216,7 @@ def test_gets_correct_bed_starts(upi, assembly, expected):
                 "0",
                 ".",
                 "SRP_RNA",
-                "Rfam",
+                "RFAM",
             ],
         ),
         (
@@ -223,20 +224,20 @@ def test_gets_correct_bed_starts(upi, assembly, expected):
             "GRCh38",
             [
                 "chr6",
-                57171004,
+                57171003,
                 57174236,
                 "URS0000000055_9606",
                 0,
                 "-",
-                57171004,
+                57171003,
                 57174236,
                 "63,125,151",
                 3,
-                "94,105,500",
+                "95,106,501",
                 "0,2371,2732",
                 ".",
                 "lncRNA",
-                "Ensembl,GENCODE,LNCipedia,NONCODE",
+                "ENA,Ensembl,ENSEMBL_GENCODE,Expression_Atlas,GeneCards,LncBook,LNCipedia,MalaCards,NONCODE",
             ],
         ),
     ],

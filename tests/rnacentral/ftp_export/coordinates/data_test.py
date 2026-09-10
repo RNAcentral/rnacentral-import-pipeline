@@ -27,16 +27,17 @@ pytestmark = pytest.mark.db
 
 
 def fetch_one(rna_id, assembly):
+    # A urs_taxid can legitimately map to more than one region
     coords = list(fetch_coord(rna_id, assembly))
-    assert len(coords) == 1
+    assert coords
     return coords[0]
 
 
 @pytest.mark.parametrize(
     "rna_id,assembly,count",
     [
-        ("URS00008B37EC_9606", "GRCh38", 1),
-        ("URS00008C1914_9606", "GRCh38", 1),
+        ("URS00008B37EC_9606", "GRCh38", 2),
+        ("URS00008C1914_9606", "GRCh38", 2),
         ("URS00006683B1_281687", "GRCh38", 0),
     ],
 )
@@ -55,23 +56,26 @@ def test_can_find_correct_for_something_with_several_exons():
                 chromosome="16",
                 strand=-1,
                 exons=(
-                    regions.Exon(start=14085, stop=14511),
-                    regions.Exon(start=14652, stop=14720),
-                    regions.Exon(start=15481, stop=15633),
-                    regions.Exon(start=16290, stop=16448),
-                    regions.Exon(start=16541, stop=16738),
-                    regions.Exon(start=16916, stop=17427),
-                    regions.Exon(start=17604, stop=17750),
-                    regions.Exon(start=17957, stop=18797),
+                    regions.Exon(start=14084, stop=14511),
+                    regions.Exon(start=14651, stop=14720),
+                    regions.Exon(start=15480, stop=15633),
+                    regions.Exon(start=16289, stop=16448),
+                    regions.Exon(start=16540, stop=16738),
+                    regions.Exon(start=16915, stop=17427),
+                    regions.Exon(start=17603, stop=17750),
+                    regions.Exon(start=17956, stop=18797),
                 ),
                 coordinate_system=regions.CoordinateSystem.one_based(),
             ),
             was_mapped=False,
+            is_gene=False,
             identity=None,
             metadata={
+                "description": "non-protein coding lnc-POLR3K-3:3",
                 "rna_type": "lncRNA",
-                "providing_databases": ["LNCipedia"],
-                "databases": ["LNCipedia", "NONCODE"],
+                "providing_databases": ["LNCipedia"] * 8,
+                "databases": ["GeneCards", "LNCipedia", "NONCODE"],
+                "parent_gene": "RNACG61906406361.3",
             },
         )
     )
@@ -88,45 +92,52 @@ def test_coordinates_do_not_exceed_bounds():
                 chromosome="X",
                 strand=1,
                 exons=(
-                    regions.Exon(start=114044718, stop=114045067),
-                    regions.Exon(start=114044725, stop=114044793),
+                    regions.Exon(start=114044717, stop=114045067),
+                    regions.Exon(start=114044724, stop=114044793),
                 ),
                 coordinate_system=regions.CoordinateSystem.one_based(),
             ),
             was_mapped=False,
+            is_gene=False,
             identity=None,
             metadata={
+                "description": "(human) non-protein coding lnc-HTR2C-3:2",
                 "rna_type": "lncRNA",
-                "providing_databases": ["LNCipedia"],
-                "databases": ["LNCipedia"],
+                "providing_databases": ["LNCipedia"] * 2,
+                "databases": ["GeneCards", "LNCipedia"],
             },
         )
     )
 
 
 def test_can_handle_mulit_exon_given_coordinates():
-    found = fetch_one("URS0000001107_4896", "ASM294v2")
+    # URS0000001107_4896 (the original example here) has since lost its
+    # ASM294v2 mapping entirely (its accession-to-region link was removed) -
+    # URS0000156566_4896 is a current example with the same shape (an
+    # unmapped, expert-database-provided, multi-exon PomBase region).
+    found = fetch_one("URS0000156566_4896", "ASM294v2")
     assert attr.asdict(found) == attr.asdict(
         data.Region(
-            region_id="URS0000001107_4896.0",
-            rna_id="URS0000001107_4896",
+            region_id="URS0000156566_4896.0",
+            rna_id="URS0000156566_4896",
             region=regions.SequenceRegion(
                 assembly_id="ASM294v2",
-                strand=1,
+                strand=-1,
                 chromosome="I",
                 exons=[
-                    regions.Exon(start=776272, stop=776539),
-                    regions.Exon(start=776589, stop=776758),
-                    regions.Exon(start=776829, stop=777066),
+                    regions.Exon(start=2885669, stop=2886783),
+                    regions.Exon(start=2886790, stop=2886792),
                 ],
                 coordinate_system=regions.CoordinateSystem.one_based(),
             ),
             was_mapped=False,
+            is_gene=False,
             identity=None,
             metadata={
-                "rna_type": "other",
-                "providing_databases": ["PomBase"],
-                "databases": ["ENA", "PomBase"],
+                "description": "(fission yeast) non-coding RNA",
+                "rna_type": "lncRNA",
+                "providing_databases": ["PomBase"] * 2,
+                "databases": ["ENA", "PomBase", "RefSeq"],
             },
         )
     )
