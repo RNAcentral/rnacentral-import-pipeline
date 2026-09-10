@@ -39,7 +39,7 @@ pytestmark = pytest.mark.db
 )
 def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     context, sequence = helpers.load_data(rna_id)
-    assert inco.validate(context, rna_type, sequence).has_issue == flag
+    assert inco.validate(sequence).has_issue == flag
 
 
 @pytest.mark.parametrize(
@@ -59,4 +59,4 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
 )
 def test_can_produce_correct_contamination_warnings(rna_id, rna_type, message):
     context, sequence = helpers.load_data(rna_id)
-    assert inco.validate(ctx, rna_type, sequence).message == message
+    assert inco.validate(sequence).message == message
