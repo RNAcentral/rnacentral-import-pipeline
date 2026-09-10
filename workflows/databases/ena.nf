@@ -106,6 +106,7 @@ ROOTS
     label=\$(printf '%s' "\$root" | sha1sum | cut -c1-16)
 
     rm -rf copied
+    mkdir copied
     rsync \
       -aL --partial \
       --prune-empty-dirs \
