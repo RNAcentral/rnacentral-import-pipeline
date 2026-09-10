@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import json
+import os
 
 import pytest
 from click.testing import CliRunner
@@ -33,12 +34,18 @@ from rnacentral_pipeline.cli import pdb
 def test_can_fetch_expected_data(command, output):
     runner = CliRunner()
     with runner.isolated_filesystem():
-        args = [command, output]
+        # --limit keeps this to a handful of chains rather than fetching all
+        # ~184k RNA-containing PDB structures - this test only checks that
+        # the CLI runs end-to-end and writes something, not full coverage.
+        args = [command, "--limit", "10", output]
         print(args)
         # args.extend(pdbs)
         result = runner.invoke(pdb.cli, args)
         assert result.exit_code == 0, result.output
         assert not result.exception
 
-        with open(output, "rb") as raw:
-            assert raw.read()
+        # output is a directory of CSVs (accessions.csv, references.csv,
+        # ...), not a single file - writers.entry_writer's contract.
+        written = os.listdir(output)
+        assert written
+        assert any(os.path.getsize(os.path.join(output, name)) > 0 for name in written)
