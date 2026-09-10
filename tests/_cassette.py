@@ -36,6 +36,7 @@ import decimal
 import hashlib
 import io
 import json
+import re
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -133,6 +134,61 @@ def _canonical_body(body):
     if text and all(c.isalnum() or c in ",._-:" for c in text):
         return _canonical_tokens(text).encode("utf-8")
     return body
+
+
+def _canonical_params(value):
+    """
+    Sort a homogeneous list/tuple of scalars for use in a cassette key.
+
+    Several SQL callers build an id list for `= ANY(%s)`/`IN %s` from a
+    Python set (e.g. a set comprehension over parsed rows), whose iteration
+    order is hash-randomized per process - recording in one process and
+    replaying in another would otherwise almost never hit the same key. Only
+    a *homogeneous* collection is sorted (every element the same type): a
+    positional args tuple like (min_id, max_id) must keep its order, and
+    mixed-type tuples are never how this codebase builds an id list.
+    """
+    if isinstance(value, (list, tuple)):
+        items = [_canonical_params(v) for v in value]
+        if (
+            len(items) > 1
+            and len({type(v) for v in items}) == 1
+            and isinstance(items[0], (str, int, float, bool))
+        ):
+            return sorted(items)
+        return items
+    if isinstance(value, dict):
+        return {k: _canonical_params(v) for k, v in value.items()}
+    return value
+
+
+class Row(list):
+    """
+    List-like, but also supports column-name access (like DictRow/DictCursor)
+    and dict(row) (dict() treats anything with .keys() as a mapping).
+
+    Module-level rather than nested in an _install_* function: production
+    code sometimes pickles a row (e.g. rnacentral_pipeline.rnacentral.lookup's
+    write_mapping), and pickle needs a class importable by its qualified name
+    - a class local to a function isn't.
+    """
+
+    def __init__(self, values, columns):
+        super().__init__(values)
+        self._columns = columns or []
+
+    def keys(self):
+        return list(self._columns)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            return list.__getitem__(self, self._columns.index(key))
+        return list.__getitem__(self, key)
+
+    def __setitem__(self, key, value):
+        if isinstance(key, str):
+            return list.__setitem__(self, self._columns.index(key), value)
+        return list.__setitem__(self, key, value)
 
 
 # ---------------------------------------------------------------------------
@@ -371,18 +427,22 @@ def _install_pymysql():
         def execute(self, query, args=None):
             host = self._connection._cassette_host
             db = self._connection._cassette_db
-            key = _key("mysql", host, db, query, args)
+            key = _key("mysql", host, db, query, _canonical_params(args))
             record = _load("mysql", key)
             if record is None:
                 if not _ALLOW_NETWORK:
                     _miss("MySQL", f"{host}/{db}: {query}")
                 cursor = self._connection._real.cursor()
                 cursor.execute(query, args)
+                columns = (
+                    [d[0] for d in cursor.description] if cursor.description else None
+                )
                 rows = cursor.fetchall()
                 cursor.close()
-                record = {"rows": [list(r) for r in rows]}
+                record = {"columns": columns, "rows": [list(r) for r in rows]}
                 _save("mysql", key, record)
-            self._rows = [tuple(r) for r in record["rows"]]
+            columns = record.get("columns")
+            self._rows = [Row(r, columns) for r in record["rows"]]
             return len(self._rows)
 
         def fetchall(self):
@@ -491,22 +551,6 @@ def _install_psycopg2():
         except Exception:
             return ""
 
-    class Row(list):
-        """List-like, but also supports column-name access (like DictRow) and
-        dict(row) (dict() treats anything with .keys() as a mapping)."""
-
-        def __init__(self, values, columns):
-            super().__init__(values)
-            self._columns = columns or []
-
-        def keys(self):
-            return list(self._columns)
-
-        def __getitem__(self, key):
-            if isinstance(key, str):
-                return list.__getitem__(self, self._columns.index(key))
-            return list.__getitem__(self, key)
-
     class CassetteCursor:
         def __init__(self, connection):
             self._connection = connection
@@ -514,12 +558,57 @@ def _install_psycopg2():
             self._columns = None
             self._pos = 0
             self.rowcount = -1
+            # Real psycopg2 cursors always expose .description (a sequence of
+            # 7-tuples, one per column - only the first element, the name, is
+            # ever populated here) after execute(); DB-API consumers that
+            # don't go through fetchall() (e.g. polars' row-wise fallback)
+            # read this directly rather than asking the cursor for columns.
+            self.description = None
 
-        def execute(self, query, params=None):
+        def execute(self, query, params=None, *, vars=None, parameters=None):
+            # Real psycopg2's execute() is a C method, so inspect.signature()
+            # raises on it - callers that branch on introspection (e.g.
+            # polars.read_database, which decides positional-vs-keyword args
+            # this way) take a *different* branch against this pure-Python
+            # stand-in and end up calling with vars=/parameters= instead of
+            # the positional/params call real psycopg2 would receive. Accept
+            # all three spellings so either branch works the same.
+            if params is None:
+                params = vars if vars is not None else parameters
+            # execute_batch/execute_values (psycopg2.extras) mogrify() each
+            # row and pass the joined result to execute() as bytes, unlike
+            # every other caller's plain str query.
+            query_text = query.decode("utf-8") if isinstance(query, bytes) else query
+            # Writes/DDL (CREATE TEMP TABLE, INSERT, SET, ...) are never
+            # cached: their point is a session-local side effect, not a
+            # reusable result, and a fixture that recreates the same temp
+            # table per-test would otherwise get a cache hit on test 2+ that
+            # skips the real CREATE - leaving that test's session without the
+            # table it just "created", silently falling through to whatever
+            # real table of the same name exists. Always run for real while
+            # recording; a no-op offline, since replay has no live session to
+            # affect and the point was only ever to enable later real reads.
+            if not re.match(r"^\s*(SELECT|WITH)\b", query_text, re.IGNORECASE):
+                self._columns = None
+                self._rows = []
+                self.description = None
+                self.rowcount = 0
+                if self._connection._real is not None:
+                    real_cur = self._connection._real.cursor()
+                    real_cur.execute(query, params)
+                    self.rowcount = real_cur.rowcount
+                    real_cur.close()
+                # Real psycopg2 execute() always returns None (results are
+                # read back off the cursor, not off a return value) - a
+                # caller that branches on the return value (e.g. polars.
+                # read_database's "did this execute in-place" check) needs
+                # that exact contract, not our rowcount.
+                return None
+
             # No DSN in the key: replay must work with whatever (or no)
             # PGDATABASE the current environment has, not just the one used
             # to record - there is only one real target in practice.
-            key = _key("psycopg2", query, params)
+            key = _key("psycopg2", query, _canonical_params(params))
             record = _load("psycopg2", key)
             if record is None:
                 if not _ALLOW_NETWORK:
@@ -560,13 +649,18 @@ def _install_psycopg2():
                 raise exc_cls(record["message"])
 
             self._columns = record["columns"]
+            self.description = (
+                [(c, None, None, None, None, None, None) for c in self._columns]
+                if self._columns
+                else None
+            )
             self._rows = [
                 Row([_decode_cell(v) for v in row], self._columns)
                 for row in record["rows"]
             ]
             self._pos = 0
             self.rowcount = record["rowcount"]
-            return self.rowcount
+            return None
 
         def fetchall(self):
             rows = self._rows[self._pos :]
@@ -579,6 +673,39 @@ def _install_psycopg2():
             row = self._rows[self._pos]
             self._pos += 1
             return row
+
+        def copy_expert(self, sql, file, size=8192):
+            # COPY ... TO STDOUT streams raw text into a file-like object -
+            # a completely different shape of call than execute()/fetchall(),
+            # so it gets its own cache entry rather than reusing that path.
+            key = _key("psycopg2", "COPY", sql)
+            record = _load("psycopg2", key)
+            if record is None:
+                if not _ALLOW_NETWORK:
+                    _miss("Postgres", sql)
+                real_cur = self._connection._real.cursor()
+                buf = io.StringIO()
+                real_cur.copy_expert(sql, buf, size)
+                real_cur.close()
+                record = {"query": sql, "data": buf.getvalue()}
+                _save("psycopg2", key, record)
+            file.write(record["data"])
+
+        def mogrify(self, query, vars=None):
+            # Used by psycopg2.extras.execute_batch/execute_values to build a
+            # combined multi-row statement before a single execute() call.
+            # Never cached: like other writes, the point is safely interpolated
+            # SQL text to actually run while recording, not a reusable result -
+            # offline there is nothing to run it against, so the exact bytes
+            # don't matter (the caller's follow-up execute() is itself a no-op
+            # without a live connection).
+            if self._connection._real is not None:
+                real_cur = self._connection._real.cursor()
+                try:
+                    return real_cur.mogrify(query, vars)
+                finally:
+                    real_cur.close()
+            return b""
 
         def close(self):
             pass
@@ -609,6 +736,23 @@ def _install_psycopg2():
         def rollback(self):
             if self._real is not None:
                 self._real.rollback()
+
+        def set_session(self, *args, **kwargs):
+            if self._real is not None:
+                self._real.set_session(*args, **kwargs)
+
+        def set_isolation_level(self, level):
+            if self._real is not None:
+                self._real.set_isolation_level(level)
+
+        @property
+        def autocommit(self):
+            return self._real.autocommit if self._real is not None else False
+
+        @autocommit.setter
+        def autocommit(self, value):
+            if self._real is not None:
+                self._real.autocommit = value
 
         def close(self):
             if self._real is not None:
