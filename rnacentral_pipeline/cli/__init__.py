@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import logging
+import sys
 
 import click
 
@@ -101,8 +102,10 @@ def cli(log_level):
     coordinated by nextflow.
     """
     # setLevel alone left the root logger without a handler, so logging.lastResort
-    # served every record and silently dropped everything below warning.
-    logging.basicConfig(level=getattr(logging, log_level.upper()))
+    # served every record and silently dropped everything below warning. Nextflow
+    # splits stdout/stderr into separate .command files, and release progress
+    # belongs with the psql output it brackets in .command.out, not .command.err.
+    logging.basicConfig(level=getattr(logging, log_level.upper()), stream=sys.stdout)
 
 
 cli.add_command(circatlas.cli)

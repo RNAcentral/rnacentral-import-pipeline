@@ -178,6 +178,26 @@ AND r.dbid IN (
 ORDER BY r.id
 """
 
+LOAD_COUNT_QUERY = """
+SELECT
+    load.database,
+    count(distinct load.md5)
+from load_rnacentral load
+group by database
+"""
+
+# Databases staged for this run, so COUNT_QUERY below can filter to their
+# partitions instead of aggregating every xref_pN partition regardless of
+# what this run actually loaded.
+LOADED_DBIDS_QUERY = """
+SELECT DISTINCT d.id
+FROM load_rnacentral l
+JOIN rnc_database d ON d.descr = l.database
+"""
+
+# xref.dbid = ANY(%s) prunes to just this run's partitions - previously an
+# unfiltered GROUP BY over all ~43 databases' worth of xref, every release,
+# even though only the loaded ones are ever compared against LOAD_COUNT_QUERY.
 COUNT_QUERY = """
 SELECT
     db.descr,
@@ -188,16 +208,8 @@ on
     db.id = xref.dbid
 where
     xref.deleted = 'N'
-    and xref.dbid in ({dbids})
+    and xref.dbid = ANY(%s)
 group by db.descr
-"""
-
-LOAD_COUNT_QUERY = """
-SELECT
-    load.database,
-    count(distinct load.md5)
-from load_rnacentral load
-group by database
 """
 
 
@@ -276,14 +288,16 @@ def run(db_url, force_full=False):
                 high_mem=True,
             )
 
-    # Verify xref primary key uniqueness once, after all databases are loaded,
-    # rather than once per database inside load_xref. The check is global (it
-    # ignores its argument), so a single run covers every partition.
-    if releases:
+    # Verify xref primary key uniqueness for each database loaded this run.
+    # do_checks scopes its scan to the dbid's own partitions against the rest
+    # of xref, rather than aggregating the whole table, so a per-database call
+    # is cheap.
+    for (dbid, rid) in releases:
         _run(
             db_url,
-            "SELECT rnc_load_xref.do_checks(NULL::bigint)",
-            label="do_checks (once, post-loop)",
+            "SELECT rnc_load_xref.do_checks(%s::bigint)",
+            params=(dbid,),
+            label=f"do_checks(dbid={dbid})",
             high_mem=True,
         )
 
@@ -315,18 +329,12 @@ def check(limit_file, db_url, default_allowed_change=0.30):
             for (descr, raw_count) in cur.fetchall():
                 new_counts[descr] = float(raw_count)
 
-            # Only loaded databases can change; scope the xref count to their
-            # partitions (dbids spliced as literals so the partitions prune).
-            if new_counts:
-                cur.execute(
-                    "SELECT id FROM rnc_database WHERE descr = ANY(%s)",
-                    (list(new_counts),),
-                )
-                dbids = ",".join(str(int(row[0])) for row in cur)
-                if dbids:
-                    cur.execute(COUNT_QUERY.format(dbids=dbids))
-                    for (descr, raw_count) in cur.fetchall():
-                        cur_counts[descr] = float(raw_count)
+            cur.execute(LOADED_DBIDS_QUERY)
+            dbids = [dbid for (dbid,) in cur.fetchall()]
+
+            cur.execute(COUNT_QUERY, (dbids,))
+            for (descr, raw_count) in cur.fetchall():
+                cur_counts[descr] = float(raw_count)
 
             # Databases loaded via delta parsing (an import manifest exists for them);
             # exempt from the shrink check below. Guard the lookup: the manifest table
