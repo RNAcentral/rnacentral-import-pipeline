@@ -104,23 +104,7 @@ ENTRY_CASES = {
     ),
 }
 
-# Pre-existing bug, not introduced by this PR and present on dev too:
-# SecondaryStructure.md5 passes a str to helpers.hashes.md5, which calls
-# hashlib.md5() and needs bytes. Any entry carrying a secondary structure
-# raises TypeError, on the CSV path as much as the parquet one. xfail_strict
-# is on repo-wide, so this turns red the moment someone fixes it.
-BROKEN_UPSTREAM = {
-    "with_secondary_structure": pytest.mark.xfail(
-        reason="hashes.md5 needs bytes; SecondaryStructure.md5 passes str",
-        raises=TypeError,
-        strict=True,
-    )
-}
-
-ENTRY_PARAMS = [
-    pytest.param(name, marks=[BROKEN_UPSTREAM[name]] if name in BROKEN_UPSTREAM else [])
-    for name in sorted(ENTRY_CASES)
-]
+ENTRY_PARAMS = sorted(ENTRY_CASES)
 
 
 @pytest.mark.parametrize("case", ENTRY_PARAMS)

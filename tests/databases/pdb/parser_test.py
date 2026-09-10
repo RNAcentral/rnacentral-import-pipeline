@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime as dt
+
 import attr
 import pytest
 
@@ -127,6 +129,35 @@ def test_can_get_given_taxid(pdb_id, expected):
     chains = fetch.rna_chains(pdb_ids=[pdb_id])
     taxids = [entry.ncbi_tax_id for entry in parser.parse(chains, {}, set())]
     assert taxids == expected
+
+
+def test_parse_warns_instead_of_raising_on_missing_overrides(caplog):
+    """
+    An override id that never made it into rna_chains (e.g. Rfam's .preview
+    feed naming a PDB entry before PDBe's search index has caught up) used to
+    raise ValueError and crash the whole import. It should warn and yield
+    whatever it did find instead.
+    """
+    chain = fetch.ChainInfo(
+        pdb_id="1s72",
+        chain_id="9",
+        release_date=dt.datetime(2004, 6, 15, hour=1),
+        experimental_method="X-ray diffraction",
+        entity_id=2,
+        taxids=[2238],
+        resolution=2.4,
+        sequence="ACGU",
+        title="some title",
+        molecule_names=["5S ribosomal RNA"],
+        molecule_type="RNA",
+        organism_scientific_name="Haloarcula marismortui",
+    )
+
+    with caplog.at_level("WARNING"):
+        entries = list(parser.parse([chain], {}, {("1s72", "9"), ("9igu", "a")}))
+
+    assert len(entries) == 1
+    assert "9igu" in caplog.text
 
 
 @pytest.mark.network

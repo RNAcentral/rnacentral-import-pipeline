@@ -24,9 +24,11 @@ from rnacentral_pipeline.databases.gtrnadb import parser
 
 
 @pytest.fixture(scope="module")
-def other_euk():
+def other_euk(tmp_path_factory):
+    # SqliteDict creates the file it is pointed at, so this has to be somewhere
+    # disposable or the run leaves a taxonomy.db in the repo root.
+    tax_file = tmp_path_factory.mktemp("gtrnadb") / "taxonomy.db"
     with open("data/gtrnadb/other_eukaryotes_export_1.json", "r") as raw:
-        tax_file = Path("taxonomy.db")
         yield list(parser.parse(raw, tax_file))
 
 

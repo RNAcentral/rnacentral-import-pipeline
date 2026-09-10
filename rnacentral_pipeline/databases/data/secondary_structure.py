@@ -50,7 +50,7 @@ class SecondaryStructure(object):
         """
         Compute the MD5 of the dot_bracket string.
         """
-        return md5(self.dot_bracket)
+        return md5(self.dot_bracket.encode("ascii"))
 
     def writeable(self, accession: str) -> ty.Iterable[ty.List[str]]:
         if not self.dot_bracket:

@@ -10,9 +10,18 @@ BEGIN;
 SET LOCAL max_parallel_workers_per_gather = 0;
 SET LOCAL max_parallel_maintenance_workers = 0;
 
+-- Below this size, inserting into the existing indexes beats a full
+-- rebuild: a B-tree insert is O(log n) per row, vs O(n log n) for the
+-- rebuild. Threshold is a conservative guess, not measured - revisit
+-- against rnacen.release_stats over time. Same idea as 000__populate_precompute.sql.
+SELECT CASE WHEN count(*) > 1000000 THEN 'true' ELSE 'false' END AS rebuild_indexes
+FROM load_rnc_sequence_features \gset
+
 -- Drop indexes to speed up bulk insert
+\if :rebuild_indexes
 DROP INDEX IF EXISTS rnacen.ix_rnc_sequence_features__upi_taxid_name;
 DROP INDEX IF EXISTS rnacen.ix_rnx_sequence_features_upi;
+\endif
 
 create index ix_load_rnc_sequence_features__accession on load_rnc_sequence_features(accession);
 ANALYZE load_rnc_sequence_features;
@@ -80,7 +89,7 @@ END $$;
 drop table load_rnc_sequence_features;
 
 -- Recreate indexes
-CREATE INDEX ix_rnc_sequence_features__upi_taxid_name ON rnacen.rnc_sequence_features USING btree (urs, taxid, feature_name);
-CREATE INDEX ix_rnx_sequence_features_upi ON rnacen.rnc_sequence_features USING btree (urs);
+CREATE INDEX IF NOT EXISTS ix_rnc_sequence_features__upi_taxid_name ON rnacen.rnc_sequence_features USING btree (urs, taxid, feature_name);
+CREATE INDEX IF NOT EXISTS ix_rnx_sequence_features_upi ON rnacen.rnc_sequence_features USING btree (urs);
 
 COMMIT;

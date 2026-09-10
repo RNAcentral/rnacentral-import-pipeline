@@ -25,7 +25,13 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 QC_WORKFLOW = ROOT / "workflows" / "utils" / "qc.nf"
+# TODO: the ensembl divisions list is defined twice in the repo -
+# lib/Utils.groovy's ENSEMBL_DIVISIONS() and workflows/utils/ensembl-
+# divisions.nf's ensembl_divisions() - a pre-existing duplication, not
+# introduced here. This checks both rather than picking one, so a future
+# fix (retiring one of the two) is what should shrink this back down.
 UTILS_GROOVY = ROOT / "lib" / "Utils.groovy"
+ENSEMBL_DIVISIONS = ROOT / "workflows" / "utils" / "ensembl-divisions.nf"
 QC_SQL_DIR = ROOT / "files" / "qc"
 
 PROCESS_RE = re.compile(r"^process\s+(\w+)\s*\{", re.MULTILINE)
@@ -36,9 +42,16 @@ QC_SQL_RE = re.compile(r"file\('files/qc/([\w-]+\.sql)'\)")
 SQL_VAR_RE = re.compile(r"(?<!:):'?([a-z_][a-z0-9_]*)'?")
 SQL_IF_RE = re.compile(r"^\s*\\if\s+:\{\?(\w+)\}")
 SQL_SET_RE = re.compile(r"^\s*\\set\s+(\w+)")
+# `SELECT ... AS name \gset` defines :name for later lines from the query's
+# own result, same as \set does for a literal - not a var the caller must pass.
+SQL_GSET_RE = re.compile(r"\\gset\b")
+SQL_GSET_ALIAS_RE = re.compile(r"\bAS\s+(\w+)", re.IGNORECASE)
 ENSEMBL_DIVISION_RE = re.compile(r"(\w+):\s*'ensembl\w*'")
 MAIN_DIVISION_LIST_RE = re.compile(
     r"ENSEMBL_DIVISIONS\(\)\s*\{\s*return\s*\[((?:'\w+',?\s*)+)\]"
+)
+DIVISION_LIST_RE = re.compile(
+    r"def\s+ensembl_divisions\(\)\s*\{\s*\[((?:'\w+',?\s*)+)\]", re.MULTILINE
 )
 
 
@@ -115,6 +128,10 @@ def required_vars(sql_text, defined):
             defined.add(assignment.group(1))
             continue
 
+        if SQL_GSET_RE.search(line):
+            defined.update(SQL_GSET_ALIAS_RE.findall(line))
+            continue
+
         required.update(SQL_VAR_RE.findall(line.split("--")[0]))
 
     return required - defined
@@ -172,12 +189,17 @@ def test_analyze_snapshot_does_not_need_the_run_start_variable():
 def test_qc_knows_every_ensembl_division_main_runs(qc_nf):
     """
     qc.nf keeps its own division -> rnc_database.descr map, so a division added
-    to lib/Utils.groovy's ENSEMBL_DIVISIONS but not here goes missing from the
-    import report without error.
+    to either of the two places the ensembl division list is defined (see the
+    TODO above) but not here goes missing from the import report without error.
     """
     qc_divisions = set(ENSEMBL_DIVISION_RE.findall(qc_nf))
+
     main_lists = MAIN_DIVISION_LIST_RE.findall(UTILS_GROOVY.read_text())
     assert main_lists, "could not find the ensembl division list in lib/Utils.groovy"
-
     for raw in main_lists:
+        assert set(re.findall(r"'(\w+)'", raw)) == qc_divisions
+
+    lists = DIVISION_LIST_RE.findall(ENSEMBL_DIVISIONS.read_text())
+    assert lists, "could not find the ensembl division list"
+    for raw in lists:
         assert set(re.findall(r"'(\w+)'", raw)) == qc_divisions

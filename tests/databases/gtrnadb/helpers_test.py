@@ -18,6 +18,8 @@ import json
 import pytest
 from sqlitedict import SqliteDict
 
+import rnacentral_pipeline.databases.helpers.publications as pub
+from rnacentral_pipeline.databases import data as ddata
 from rnacentral_pipeline.databases.gtrnadb import helpers
 from rnacentral_pipeline.databases.ncbi.taxonomy import TaxonomyEntry
 
@@ -36,6 +38,15 @@ def data():
 @pytest.fixture
 def data2():
     with open("data/gtrnadb/version2.json", "r") as raw:
+        return json.load(raw)
+
+
+@pytest.fixture(scope="module")
+def export():
+    # Only the top-level metaData block is needed here (test_references_
+    # come_from_the_metadata) - simple.json/version2.json are bare per-entry
+    # extracts and don't carry it, so this reads the full real export instead.
+    with open("data/gtrnadb/other_eukaryotes_export_1.json", "r") as raw:
         return json.load(raw)
 
 
@@ -135,6 +146,10 @@ def test_complex_note_data(data2):
     }
 
 
+def test_taxid(data):
+    assert helpers.taxid(data[0]) == 6500
+
+
 def test_lineage(data, taxonomy):
     assert helpers.lineage(taxonomy, data[0]) == (
         "Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; "
@@ -149,6 +164,12 @@ def test_species(data, taxonomy):
 
 def test_product(data):
     assert helpers.product(data[0]) == "tRNA-Ala (AGC)"
+
+
+def test_gene_naming(data):
+    assert helpers.gene(data[0]) == "tRNA-Ala-AGC-1-1"
+    assert helpers.optional_id(data[0]) == "tRNA-Ala-AGC-1-1"
+    assert helpers.gene_synonyms(data[0]) == ["scaffold00844.trna1-AlaAGC"]
 
 
 def test_as_dotbracket(data):
@@ -194,8 +215,28 @@ def test_builds_primary_id(data):
     assert pids == ["GTRNADB:tRNA-Ala-AGC-1-1:KB942240.1:40028-40100"]
 
 
+def test_primary_id_spans_every_exon(data2):
+    location = data2[0]["genomeLocations"][0]
+    # Exons at 1827195-1827231 and 1827257-1827292, so the id covers both.
+    assert helpers.primary_id(data2[0], location) == (
+        "GTRNADB:tRNA-Arg-CCT-1-1:KB941428.1:1827195-1827292"
+    )
+
+
 def test_chromosome(data):
     assert helpers.chromosome(data[0]["genomeLocations"][0]) == "scaffold00844"
+
+
+def test_chromosome_renames_the_bare_name():
+    location = {"exons": [{"chromosome": "Chromosome"}]}
+    assert helpers.chromosome(location) == "chr"
+
+
+def test_accessions(data):
+    location = data[0]["genomeLocations"][0]
+    assert helpers.parent_accession(location) == "KB942240.1"
+    assert helpers.accession(data[0], location) == "KB942240.1:tRNA-Ala-AGC-1-1"
+    assert helpers.seq_version(data[0]) == "1"
 
 
 def test_sequence_without_mature(data):
@@ -210,3 +251,54 @@ def test_sequence_with_mature(data2):
         helpers.sequence(data2[0])
         == "GCCTCCGTGGCCTAATGGATAAGGCATCGGCCTCCTAAGCCGGGGATTGCGGGTTCGAGTCCCGTCGGAGGTG"
     )
+
+
+def test_sequence_prefers_the_mature_form(data2):
+    assert data2[0]["matureSequence"] != data2[0]["sequence"]
+    assert helpers.sequence(data2[0]) == data2[0]["matureSequence"].upper()
+
+
+def test_sequence_falls_back_to_the_genomic_form(data):
+    without_mature = {k: v for k, v in data[0].items() if k != "matureSequence"}
+    assert helpers.sequence(without_mature) == data[0]["sequence"].upper()
+
+
+def test_features_carry_the_anticodon(data):
+    assert helpers.features(data[0]) == [
+        ddata.SequenceFeature(
+            name="anticodon",
+            feature_type="anticodon",
+            location=[34, 35, 36],
+            sequence="AGC",
+            provider="GTRNADB",
+            metadata={"isotype": "Ala", "sequence": "AGC"},
+        )
+    ]
+
+
+def test_no_features_without_an_anticodon(data):
+    stripped = dict(data[0], sequenceFeatures={"isotype": "Ala"})
+    assert helpers.features(stripped) == []
+
+
+def test_regions_are_one_based(data):
+    region = helpers.regions(data[0]["genomeLocations"][0])[0]
+    assert region.assembly_id == "AplCal3.0"
+    assert region.chromosome == "scaffold00844"
+    assert region.strand == ddata.Strand.forward
+    assert [(e.start, e.stop) for e in region.exons] == [(40028, 40100)]
+
+
+def test_regions_keeps_every_exon(data2):
+    region = helpers.regions(data2[0]["genomeLocations"][0])[0]
+    assert [(e.start, e.stop) for e in region.exons] == [
+        (1827195, 1827231),
+        (1827257, 1827292),
+    ]
+
+
+def test_references_come_from_the_metadata(export):
+    assert helpers.references(export["metaData"]) == [
+        pub.reference("PMID:18984615"),
+        pub.reference("PMID:26673694"),
+    ]

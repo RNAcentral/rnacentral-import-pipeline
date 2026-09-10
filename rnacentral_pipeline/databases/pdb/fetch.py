@@ -85,7 +85,14 @@ async def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInf
     if data["response"]["numFound"] == 0:
         raise MissingPdbs(f"Missing for '{query}', {start}")
     for raw in data["response"]["docs"]:
-        for index in range(len(raw["chain_id"])):
+        chain_ids = raw.get("chain_id")
+        if not chain_ids:
+            LOGGER.warning(
+                "No chain_id in PDBe response for %s, skipping",
+                raw.get("pdb_id", "<unknown>"),
+            )
+            continue
+        for index in range(len(chain_ids)):
             chains.append(ChainInfo.build(index, raw))
     return chains
 
@@ -130,7 +137,11 @@ def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[Cha
 
     if seen != required:
         missed = required - seen
-        raise ValueError("Did not find all requested ids: %s" % missed)
+        # Rfam's .preview feed can name PDB entries before PDBe's own search
+        # index has caught up to them - not an error, just a timing gap that
+        # resolves itself once PDBe indexes the entry. Continue with what
+        # was found rather than failing the whole import over it.
+        LOGGER.warning("Did not find all requested ids: %s", missed)
     return chains
 
 

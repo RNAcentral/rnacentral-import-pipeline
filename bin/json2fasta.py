@@ -15,8 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
-import logging
 import re
 
 from Bio import SeqIO
@@ -25,8 +23,9 @@ from Bio.SeqRecord import SeqRecord
 
 import click
 
+from rnacentral_pipeline.rnacentral.ftp_export.sequences_json import parse
+
 EASEL_PATTERN = re.compile(r"^[ACGTN]+$", re.IGNORECASE)
-LOGGER = logging.getLogger(__name__)
 
 
 def as_record(entry):
@@ -36,30 +35,6 @@ def as_record(entry):
 
 def select_easel(entry):
     return re.match(EASEL_PATTERN, entry["sequence"])
-
-
-def decode_entry(raw):
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError as error:
-        try:
-            return json.loads(raw.replace("\\\\", "\\"))
-        except json.JSONDecodeError:
-            raise error
-
-
-def parse(handle):
-    pending = ""
-    for line in handle:
-        pending += line
-        try:
-            yield decode_entry(pending)
-            pending = ""
-        except json.JSONDecodeError:
-            LOGGER.warning("Could not decode JSON entry yet, buffering additional input")
-            continue
-    if pending.strip():
-        yield decode_entry(pending)
 
 
 def sequences(handle, only_valid_easel=False):

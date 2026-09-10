@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from rnacentral_pipeline.rnacentral.release import run
 
 
@@ -104,9 +106,14 @@ def test_run_patches_functions_and_checks_once(monkeypatch):
         (9, 123),
     ) in conn.cursor_obj.calls
 
-    # do_checks runs exactly once, after the per-database loop.
-    assert sql_calls[-1] == "SELECT rnc_load_xref.do_checks(NULL::bigint)"
-    assert sum("do_checks(NULL::bigint)" in sql for sql in sql_calls) == 1
+    # do_checks runs once per released dbid, after the per-database loop, scoped
+    # to that dbid rather than the whole table.
+    assert sql_calls[-1] == "SELECT rnc_load_xref.do_checks(%s::bigint)"
+    assert (
+        "SELECT rnc_load_xref.do_checks(%s::bigint)",
+        (9,),
+    ) in conn.cursor_obj.calls
+    assert sum("do_checks(%s::bigint)" in sql for sql in sql_calls) == 1
 
 
 def test_prepare_releases_skips_only_databases_with_a_pending_release(monkeypatch):
@@ -134,3 +141,84 @@ def test_to_release_only_loads_staged_databases():
     normalised = " ".join(run.TO_RELEASE.split())
     assert "rnacen.load_rnacentral_all l" in normalised
     assert "JOIN rnacen.rnc_database d ON l.database = d.descr" in normalised
+
+
+class CheckCursor:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, sql, params=None):
+        self.calls.append((" ".join(sql.split()), params))
+
+    def fetchall(self):
+        sql, _ = self.calls[-1]
+        if "load_rnacentral load" in sql:
+            return [("ena", 105.0)]
+        if "JOIN rnc_database d ON d.descr = l.database" in sql:
+            return [(9,)]
+        if "count(distinct xref.urs)" in sql:
+            return [("ena", 100.0)]
+        return []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+class CheckConnection:
+    def __init__(self):
+        self.cursor_obj = CheckCursor()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def cursor(self):
+        return self.cursor_obj
+
+
+def test_check_scopes_count_query_to_loaded_dbids(monkeypatch, tmp_path):
+    """
+    COUNT_QUERY used to aggregate every xref partition every release, even
+    though only the databases actually staged this run are ever compared
+    against LOAD_COUNT_QUERY. It should filter to just those dbids.
+    """
+    conn = CheckConnection()
+    monkeypatch.setattr(run.psycopg2, "connect", lambda *a, **k: conn)
+
+    limits = tmp_path / "limits.json"
+    limits.write_text("{}")
+
+    with limits.open() as fh:
+        run.check(fh, "postgres://example")
+
+    count_sql, count_params = next(
+        (sql, params)
+        for sql, params in conn.cursor_obj.calls
+        if "count(distinct xref.urs)" in sql
+    )
+    assert "xref.dbid = ANY(%s)" in count_sql
+    assert count_params == ([9],)
+
+
+def test_do_checks_scopes_to_the_dbid_partitions_when_given_one():
+    """
+    do_checks used to group the whole xref table to find duplicate ids, which
+    dominated release runtime regardless of how small the delta was. Given a
+    dbid, it should only probe that dbid's partitions against the rest of the
+    table instead of re-aggregating everything.
+    """
+    path = (
+        Path(__file__).resolve().parents[3]
+        / "database_functions"
+        / "rnc_load_xref"
+        / "do_checks.sql"
+    )
+    normalised = " ".join(path.read_text().split())
+    assert "xref_p%1$s_deleted" in normalised
+    assert "xref_p%1$s_not_deleted" in normalised
+    assert "x.id in (" in normalised

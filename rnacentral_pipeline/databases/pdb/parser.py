@@ -81,6 +81,9 @@ def parse(
     missing = override_list - seen
     LOGGER.info("Disqualified %i mRNA chains", disqualified["mRNA"])
     LOGGER.info("Disqualified %i non ncRNA chains", disqualified["other"])
-    LOGGER.info("Did not load %s overrided chains", missing)
     if missing:
-        raise ValueError("Missed some required ids %s" % missing)
+        # Same timing gap as fetch.chains(): Rfam's .preview feed can name
+        # entries before PDBe's search index has caught up, so they never
+        # made it into rna_chains. Warn and continue rather than failing the
+        # whole import over it.
+        LOGGER.warning("Did not load %i overridden chains: %s", len(missing), missing)

@@ -15,12 +15,14 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.db import connection
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
 from rnacentral_pipeline.rnacentral.ftp_export import (
     fasta,
     go_terms,
     gpi,
     id_mapping,
+    parquet,
     release_note,
 )
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed, gff3
@@ -63,6 +65,26 @@ def export_sequences():
     This is a group of commands dealing with exporting sequences.
     """
     pass
+
+
+@export_sequences.command("parquet")
+@click.argument("query", type=str)
+@click.argument("output", type=click.Path(writable=True))
+@click.option("--db-url", envvar="PGDATABASE")
+def sequences_parquet(query, output, db_url):
+    with connection(db_url) as conn:
+        parquet.copy_query_2_parquet(query, conn, output)
+
+
+@export_sequences.command("parquet-from-json")
+@click.argument("json_file", type=click.Path(exists=True, dir_okay=False))
+@click.argument("output", type=click.Path(writable=True))
+def sequences_parquet_from_json(json_file, output):
+    """
+    Build the active-sequences parquet from the shared JSON-lines dump (the same
+    file the FASTA export reads) rather than re-querying the database.
+    """
+    parquet.ndjson_2_parquet(json_file, output)
 
 
 @export_sequences.command("valid-nhmmer")
