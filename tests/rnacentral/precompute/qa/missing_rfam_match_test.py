@@ -37,7 +37,7 @@ pytestmark = pytest.mark.db
 )
 def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
     context, sequence = helpers.load_data(rna_id)
-    assert miss.validate(context, rna_type, sequence).has_issue == flag
+    assert miss.validate(rna_type, sequence).has_issue == flag
 
 
 @pytest.mark.parametrize(
@@ -56,4 +56,4 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
 )
 def test_can_produce_correct_contamination_warnings(rna_id, rna_type, message):
     context, sequence = helpers.load_data(rna_id)
-    assert miss.validate(ctx, rna_type, sequence).message == message
+    assert miss.validate(rna_type, sequence).message == message
