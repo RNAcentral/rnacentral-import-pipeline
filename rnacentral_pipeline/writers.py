@@ -216,7 +216,7 @@ class ParquetEntryWriter:
     go_annotations = attr.ib()
     go_publication_mappings = attr.ib()
 
-    def write(self, entries: ty.Iterable[data.Entry]):
+    def write(self, entries: ty.Iterable[data.Entry], allow_empty: bool = False):
         total = 0
         invalid = 0
         for entry in entries:
@@ -244,7 +244,7 @@ class ParquetEntryWriter:
                 )
                 self.terms.writerows(annotations.writeable_ontology_terms())
 
-        if not total:
+        if not total and not allow_empty:
             raise ValueError("Found no entries to write")
 
         LOGGER.info("Wrote %i entries", total)
