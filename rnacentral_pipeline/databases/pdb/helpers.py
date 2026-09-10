@@ -224,7 +224,7 @@ def description(info: ChainInfo, max_length=80) -> str:
     compound = product(info)[:max_length] + (product(info)[max_length:] and "...")
     return "{compound} from {source} (PDB {pdb}, chain {chain})".format(
         compound=compound,
-        source=info.organism_scientific_name,
+        source=info.organism_scientific_name or "",
         pdb=info.pdb_id.upper(),
         chain=info.chain_id,
     )
