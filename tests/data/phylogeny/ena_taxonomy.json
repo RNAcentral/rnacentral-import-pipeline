@@ -71,6 +71,23 @@
     "submittable": "true",
     "taxId": "10116"
   },
+  "12908": {
+    "binomial": "false",
+    "division": "UNC",
+    "formalName": "false",
+    "geneticCode": "1",
+    "merged": "[39419, 37559, 37963]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "unclassified:equivalent name"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "no rank",
+    "scientificName": "unclassified sequences",
+    "submittable": "false",
+    "taxId": "12908"
+  },
   "1305785": {
     "binomial": "true",
     "division": "PRO",
@@ -477,6 +494,27 @@
     "submittable": "true",
     "taxId": "32644"
   },
+  "33708": {
+    "binomial": "true",
+    "commonName": "Murine herpesvirus 68",
+    "division": "VRL",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Viruses; Duplodnaviria; Heunggongvirae; Peploviricota; Herviviricetes; Herpesvirales; Orthoherpesviridae; Gammaherpesvirinae; Rhadinovirus; Rhadinovirus muridgamma4; ",
+    "metagenome": "false",
+    "otherNames": [
+      "murine gammaherpesvirus 68:equivalent name",
+      "murine herpesvirus type 68:equivalent name",
+      "mouse herpesvirus strain 68:equivalent name",
+      "Murid herpesvirus 4:equivalent name",
+      "mouse herpesvirus 68:equivalent name",
+      "Murine herpesvirus 68:genbank common name"
+    ],
+    "rank": "no rank",
+    "scientificName": "Murid gammaherpesvirus 4",
+    "submittable": "true",
+    "taxId": "33708"
+  },
   "3469": {
     "authority": "L., 1753",
     "binomial": "true",
@@ -757,6 +795,20 @@
     "submittable": "true",
     "taxId": "55601"
   },
+  "559292": {
+    "binomial": "true",
+    "division": "FUN",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "3",
+    "otherNames": [],
+    "rank": "strain",
+    "scientificName": "Saccharomyces cerevisiae S288C",
+    "submittable": "true",
+    "taxId": "559292"
+  },
   "562": {
     "lineage": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; ",
     "scientificName": "Escherichia coli"
@@ -892,6 +944,20 @@
     "scientificName": "Apis mellifera",
     "submittable": "true",
     "taxId": "7460"
+  },
+  "759272": {
+    "binomial": "true",
+    "division": "FUN",
+    "formalName": "false",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Sordariomycetes; Sordariomycetidae; Sordariales; Chaetomiaceae; Thermochaetoides; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [],
+    "rank": "strain",
+    "scientificName": "Thermochaetoides thermophila DSM 1495",
+    "submittable": "true",
+    "taxId": "759272"
   },
   "762550": {
     "binomial": "true",
@@ -1108,5 +1174,26 @@
     "scientificName": "Bos taurus",
     "submittable": "true",
     "taxId": "9913"
+  },
+  "9986": {
+    "binomial": "true",
+    "commonName": "rabbit",
+    "division": "MAM",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Glires; Lagomorpha; Leporidae; Oryctolagus; ",
+    "merged": "[9985, 34833]",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "2",
+    "otherNames": [
+      "Lepus cuniculus Linnaeus, 1758:authority",
+      "New Zealand rabbit:includes",
+      "Lepus cuniculus:synonym",
+      "rabbit:genbank common name"
+    ],
+    "rank": "species",
+    "scientificName": "Oryctolagus cuniculus",
+    "submittable": "true",
+    "taxId": "9986"
   }
 }
