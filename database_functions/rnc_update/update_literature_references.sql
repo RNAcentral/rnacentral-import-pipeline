@@ -8,10 +8,6 @@ DECLARE
     fcesig text;
     fcoid oid;
     sql_stmt text;
--- the following could be a good idea
--- https://stackoverflow.com/questions/7682102/putting-explain-results-into-a-table
-    explain_stmt text;
-    explain_result text;
 BEGIN
     get diagnostics _context = pg_context;
     fcesig := substring(_context from 'function (.*?) line');
@@ -19,7 +15,14 @@ BEGIN
     raise notice 'executing function: % oid: %', fcesig, fcoid;
     execute 'set application_name = ''' || fcesig || '''';
 
+    -- Sort budget for the DISTINCT/anti-join sort below. SET LOCAL is txn-scoped
+    -- so it doesn't leak to site connections. Kept modest; the sort spills to
+    -- disk rather than getting a big budget.
+    SET LOCAL work_mem = '256MB';
+
     -- update rnc_references table
+    -- Only the distinct genuinely-new publications, so this stays small (bounded
+    -- by the number of papers, not the number of xrefs) and needs no batching.
     sql_stmt := '
     INSERT INTO rnc_references(
       md5,
@@ -61,37 +64,29 @@ BEGIN
        ) alias4
 ';
 
-    explain_stmt := 'EXPLAIN (VERBOSE) ' || sql_stmt;
-    RAISE NOTICE 'Executing: %', explain_stmt;
-    EXECUTE explain_stmt into explain_result;
-    RAISE NOTICE '%', explain_result;
-
     RAISE NOTICE 'Executing: %', sql_stmt;
     EXECUTE sql_stmt;
 
-
-    ----COMMIT;
-
     -- update rnc_reference_map table
+    -- The anti-join drops pairs that already exist -- on a re-import that is
+    -- nearly all of them, and ON CONFLICT alone paid an index probe for every
+    -- one. DISTINCT collapses the duplicate (accession, md5) rows the loader
+    -- emits. ON CONFLICT DO NOTHING stays as a safety net: the anti-join is not
+    -- atomic with the insert.
     sql_stmt := '
-    insert into rnc_reference_map as t1 (accession, reference_id)
-    select t3.accession, t4.id 
-      from load_rnc_references t3 
-      join rnc_references t4 on (t3.md5 = t4.md5) 
-        on conflict (accession, reference_id) 
+    insert into rnacen.rnc_reference_map as t1 (accession, reference_id)
+    select distinct t3.accession, t4.id
+      from rnacen.load_rnc_references t3
+      join rnacen.rnc_references t4 on (t3.md5 = t4.md5)
+      left join rnacen.rnc_reference_map m
+        on (m.accession = t3.accession and m.reference_id = t4.id)
+     where m.accession is null
+        on conflict (accession, reference_id)
         do nothing
 ';
 
-    explain_stmt := 'EXPLAIN (VERBOSE) ' || sql_stmt;
-    RAISE NOTICE 'Executing: %', explain_stmt;
-    EXECUTE explain_stmt into explain_result;
-    RAISE NOTICE '%', explain_result;
-
     RAISE NOTICE 'Executing: %', sql_stmt;
     EXECUTE sql_stmt;
-
-
-    ----COMMIT;
 
     sql_stmt := '
 truncate table load_rnc_references
@@ -106,4 +101,3 @@ truncate table load_rnc_references
   END;
 
 $function$
-

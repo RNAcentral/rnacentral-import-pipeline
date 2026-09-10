@@ -1,26 +1,42 @@
 from pathlib import Path
 
+import psycopg2.extensions
+
 from rnacentral_pipeline.rnacentral.release import run
 
 
 class FakeCursor:
-    def __init__(self):
+    def __init__(self, conn):
+        self.conn = conn
         self.calls = []
-        self._results = [(9, 123)]
-        self._last_sql = ""
+        self.opts_calls = []
+        self._last = ""
 
     def execute(self, sql, params=None):
         self.calls.append((sql, params))
-        self._last_sql = sql
+        # Each step opens its own connection, so the options recorded at connect
+        # time are the budget this statement runs under.
+        self.opts_calls.append((sql, self.conn.current_options))
+        self._last = sql
+        # Stand in for a RAISE NOTICE arriving from the running function.
+        if sql == "SELECT rnc_update.update_rnc_accessions()":
+            self.conn.notices.append("NOTICE:  Upserting rn [1, 15000000)\n")
+
+    def executemany(self, sql, seq_of_params):
+        # _record_pending_stats batch-inserts the loaded dbids this way.
+        for params in seq_of_params:
+            self.execute(sql, params)
 
     def fetchall(self):
-        # run.run() calls functions.apply(), which reads the tracking table and
-        # expects (schema, name, sha) triples. Returning the release tuples for
-        # that query blows up in _applied_shas; an empty result just means
-        # "nothing applied yet", so every function gets deployed.
-        if "applied_functions" in self._last_sql:
+        # functions.apply asks which functions were already applied -- pretend none,
+        # so it proceeds to (re)deploy them. It expects (schema, name, sha) triples,
+        # so handing it the release tuples would blow up in _applied_shas.
+        if "applied_functions" in self._last:
             return []
-        return self._results
+        # run() asks which releases are pending loading (status = 'L').
+        if "FROM rnacen.rnc_release" in self._last:
+            return [(9, 123)]
+        return []
 
     def __enter__(self):
         return self
@@ -31,9 +47,13 @@ class FakeCursor:
 
 class FakeConnection:
     def __init__(self):
-        self.cursor_obj = FakeCursor()
+        self.cursor_obj = FakeCursor(self)
         self.commits = 0
         self.autocommit = False
+        self.notices = []
+        self.connect_kwargs = []
+        self.current_options = None
+        self.closed = 0
 
     def __enter__(self):
         return self
@@ -47,15 +67,40 @@ class FakeConnection:
     def commit(self):
         self.commits += 1
 
+    def rollback(self):
+        pass
+
+    def poll(self):
+        return psycopg2.extensions.POLL_OK
+
+    def fileno(self):
+        raise AssertionError("select() reached even though poll() said POLL_OK")
+
+    def close(self):
+        self.closed += 1
+
+
+def _run_release(monkeypatch, **kwargs):
+    conn = FakeConnection()
+
+    # _connect passes keepalive/options kwargs, so the stub must accept them.
+    def fake_connect(*args, **opts):
+        conn.connect_kwargs.append(opts)
+        conn.current_options = opts.get("options")
+        return conn
+
+    monkeypatch.setattr(run.psycopg2, "connect", fake_connect)
+    run.run("postgres://example", **kwargs)
+    return conn
+
+
+def _run_capture(monkeypatch, **kwargs):
+    return _run_release(monkeypatch, **kwargs).cursor_obj.calls
+
 
 def test_run_patches_functions_and_checks_once(monkeypatch):
-    conn = FakeConnection()
-    # _connect passes keepalive/options kwargs, so the stub must accept them.
-    monkeypatch.setattr(run.psycopg2, "connect", lambda *a, **k: conn)
-
-    run.run("postgres://example")
-
-    sql_calls = [sql for sql, _ in conn.cursor_obj.calls]
+    calls = _run_capture(monkeypatch)
+    sql_calls = [sql for sql, _ in calls]
 
     # Functions are deployed from database_functions/ in (schema, name) order,
     # interleaved with tracking-table INSERTs, so match on content rather than
@@ -101,19 +146,110 @@ def test_run_patches_functions_and_checks_once(monkeypatch):
     assert any("load_md5_new_sequences$in_md5" in s for s in sql_calls)
 
     # The per-database load still runs for each release returned by TO_RELEASE.
-    assert (
-        "SELECT rnc_update.new_update_release(%s, %s)",
-        (9, 123),
-    ) in conn.cursor_obj.calls
+    assert ("SELECT rnc_update.new_update_release(%s, %s)", (9, 123)) in calls
 
     # do_checks runs once per released dbid, after the per-database loop, scoped
     # to that dbid rather than the whole table.
     assert sql_calls[-1] == "SELECT rnc_load_xref.do_checks(%s::bigint)"
-    assert (
-        "SELECT rnc_load_xref.do_checks(%s::bigint)",
-        (9,),
-    ) in conn.cursor_obj.calls
+    assert ("SELECT rnc_load_xref.do_checks(%s::bigint)", (9,)) in calls
     assert sum("do_checks(%s::bigint)" in sql for sql in sql_calls) == 1
+
+
+def test_run_defaults_to_auto_release_type(monkeypatch):
+    calls = _run_capture(monkeypatch)
+    sql_calls = [sql for sql, _ in calls]
+
+    # Release type is chosen per database from history: 'A' (auto), not a forced 'F'.
+    assert ("SELECT rnc_update.prepare_releases(%s)", ("A",)) in calls
+    assert "SELECT rnc_update.prepare_releases('F')" not in sql_calls
+
+    # The per-database load still runs for each release returned by the pending query.
+    assert ("SELECT rnc_update.new_update_release(%s, %s)", (9, 123)) in calls
+
+
+def test_run_force_full_forces_full_release_type(monkeypatch):
+    calls = _run_capture(monkeypatch, force_full=True)
+
+    # --force-full pins every database to a FULL release.
+    assert ("SELECT rnc_update.prepare_releases(%s)", ("F",)) in calls
+    assert ("SELECT rnc_update.prepare_releases(%s)", ("A",)) not in calls
+
+
+def test_run_logs_progress_for_every_step(monkeypatch, caplog):
+    """A release run that logs nothing is indistinguishable from a wedged one."""
+    with caplog.at_level("INFO", logger=run.LOGGER.name):
+        _run_capture(monkeypatch)
+
+    messages = [r.getMessage() for r in caplog.records]
+
+    # Each long-running step brackets itself, so the last START with no matching
+    # DONE is the step currently in progress.
+    for step in (
+        "apply_functions",
+        "update_rnc_accessions",
+        "update_literature_references",
+        "prepare_releases",
+        "new_update_release(dbid=9, rid=123) [1/1]",
+        "do_checks(dbid=9)",
+    ):
+        assert f"START  {step}" in messages, step
+        assert any(m.startswith(f"DONE   {step} (") for m in messages), step
+
+    assert "DONE   release run" in messages[-1]
+
+
+def test_run_streams_server_notices_into_the_log(monkeypatch, caplog):
+    """
+    The RAISE NOTICE lines inside the release functions are the only view into a
+    step that runs for hours, and a synchronous execute() hides them until the
+    step finishes.
+    """
+    with caplog.at_level("INFO", logger=run.LOGGER.name):
+        conn = _run_release(monkeypatch)
+
+    messages = [r.getMessage() for r in caplog.records]
+
+    # Tagged with the step it came from, so an interleaved log stays readable.
+    assert "update_rnc_accessions | NOTICE:  Upserting rn [1, 15000000)" in messages
+
+    # Notices only materialise on a polled (async) connection, and every one of
+    # them is drained rather than left to pile up.
+    assert any(opts.get("async_") == 1 for opts in conn.connect_kwargs)
+    assert conn.notices == []
+
+
+def _options_for(conn, predicate):
+    # Match what run() issues, not function-deployment SQL: those sources mention
+    # the same table and index names, so a substring search finds them first.
+    return next(opts for sql, opts in conn.cursor_obj.opts_calls if predicate(sql))
+
+
+def test_fk4_validation_runs_on_the_high_mem_connection(monkeypatch):
+    """It joins a whole xref partition against rna, so not on the default budget."""
+    conn = _run_release(monkeypatch)
+
+    default_opts = _options_for(
+        conn, lambda sql: sql == "SELECT rnc_update.update_rnc_accessions()"
+    )
+    validate_opts = _options_for(conn, lambda sql: sql.startswith("ALTER TABLE xref_p"))
+
+    assert validate_opts != default_opts
+    assert "work_mem=256MB" in validate_opts
+
+
+def test_every_connection_pins_client_min_messages(monkeypatch):
+    """
+    The server only sends the progress notices while client_min_messages is at
+    notice or below; a server-side default of warning would silence the log again.
+    """
+    conn = _run_release(monkeypatch)
+
+    # functions.apply opens a plain connection to deploy the sources; it is the
+    # release steps, the ones that run for hours, that must keep their notices.
+    step_options = [o["options"] for o in conn.connect_kwargs if "options" in o]
+    assert step_options
+    for options in step_options:
+        assert "client_min_messages=notice" in options
 
 
 def test_prepare_releases_skips_only_databases_with_a_pending_release(monkeypatch):
@@ -122,14 +258,9 @@ def test_prepare_releases_skips_only_databases_with_a_pending_release(monkeypatc
     release 27.1 staged SILVA, found ENA's pending release, created nothing for
     SILVA, and loaded ENA's release in its place.
     """
-    conn = FakeConnection()
-    monkeypatch.setattr(run.psycopg2, "connect", lambda *a, **k: conn)
-
-    run.run("postgres://example")
-
     prepare = next(
         " ".join(sql.split())
-        for sql, _ in conn.cursor_obj.calls
+        for sql, _ in _run_capture(monkeypatch)
         if "FUNCTION rnc_update.prepare_releases" in sql
     )
     assert "r.dbid = d2.id" in prepare
@@ -159,6 +290,13 @@ class CheckCursor:
         if "count(distinct xref.urs)" in sql:
             return [("ena", 100.0)]
         return []
+
+    def fetchone(self):
+        sql, _ = self.calls[-1]
+        if "to_regclass" in sql:
+            # No pipeline_tracking_import table in this fixture -- delta_dbs stays empty.
+            return (None,)
+        return None
 
     def __enter__(self):
         return self
