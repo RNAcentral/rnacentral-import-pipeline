@@ -76,9 +76,14 @@ jobs:
           # openssh-client was just installed fresh into this container -
           # it has no known_hosts entry for github.com, so a plain
           # git@github.com: clone fails host key verification. Pin the
-          # real key non-interactively rather than disabling checking.
-          mkdir -p ~/.ssh
-          ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+          # real key non-interactively (into an explicit path rather than
+          # ~/.ssh, and point git at it directly via GIT_SSH_COMMAND, so
+          # this doesn't depend on what $HOME resolves to for whatever
+          # process actually opens the SSH connection).
+          mkdir -p /tmp/ssh
+          ssh-keyscan -t ed25519,rsa github.com > /tmp/ssh/known_hosts
+          cat /tmp/ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/tmp/ssh/known_hosts"
 
           git submodule update --init --recursive
 
