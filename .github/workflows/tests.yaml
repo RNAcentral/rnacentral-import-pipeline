@@ -53,14 +53,19 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
-          # actions/checkout persists GITHUB_TOKEN credentials by default,
-          # which includes a git insteadOf rewrite sending every
-          # git@github.com: submodule URL through HTTPS with that token.
-          # The test-data submodule is a separate private repo the token
-          # has no access to, so that rewrite 404s it - disable it so the
-          # SSH key loaded by webfactory/ssh-agent above is actually used.
+          # Deliberately not submodules: recursive - actions/checkout
+          # unconditionally rewrites git@github.com: submodule URLs to
+          # https://github.com/ with the job's GITHUB_TOKEN right before it
+          # fetches submodules itself, regardless of persist-credentials.
+          # The test-data submodule is a separate private repo that token
+          # has no access to, so that rewrite 404s it. Fetching the
+          # submodule ourselves in a later step avoids the rewrite
+          # entirely, so the SSH key loaded by webfactory/ssh-agent above
+          # gets used instead.
           persist-credentials: false
+
+      - name: Fetch test-data submodule
+        run: git submodule update --init --recursive
 
       - name: Ensure coverage tooling is available
         # Belt-and-suspenders: pyproject.toml's dev group already includes
