@@ -1,18 +1,31 @@
-# Runs the offline unit-test subset on every push to any branch.
+# Runs the full pytest suite on every push to any branch.
 #
 # The job runs inside the prebuilt pipeline container
-# (rnacentral/rnacentral-import-pipeline:latest), which already has every Python
-# dependency installed (the Dockerfile runs `poetry install` into the system
-# Python). We only check out the current code and run pytest against it - no
-# dependency resolution happens in CI. This sidesteps the repo being mid-migration
-# from poetry to uv; once the uv changes land on dev this can switch to `uv sync`.
+# (rnacentral/rnacentral-import-pipeline:py314-experimental), which is built
+# from this repo's own pyproject.toml/uv.lock via `uv sync --frozen` (see
+# Dockerfile and .github/workflows/main.yaml) - no dependency resolution
+# happens in this job, we just check out the code and run pytest against
+# whatever's already installed in the image. Image rebuilds only trigger on
+# push to master/dev/python-update when pyproject.toml/uv.lock/Cargo.*/
+# Dockerfile change, so a dependency added on a feature branch won't be in
+# the image yet - the coverage step below installs pytest-cov explicitly
+# rather than depending on that timing.
 #
-# The tests run with no network access: tests/conftest.py blocks outbound sockets
-# and serves external services from recorded fixtures (tests/data/cassettes). The
-# exact set of files run is listed in tests/ci_offline_files.txt - add a file
-# there once it passes offline. Run the same thing locally with:
+# The image tag: main.yaml's docker push step doesn't produce a :latest tag
+# (that one is a stale, orphaned leftover from an older workflow version) -
+# only py<ver>-<VERSION> and py<ver>-experimental, where "py<ver>" is
+# .python-version with dots stripped. "py314" here must be kept in sync with
+# .python-version if that ever changes.
 #
-#   python -m pytest $(grep -vE '^\s*#|^\s*$' tests/ci_offline_files.txt)
+# The tests run with no network access: tests/conftest.py blocks outbound
+# sockets and serves external services from recorded fixtures under
+# test-data/cassettes/ - a private submodule, checked out below using a
+# read-only deploy key (secrets.TEST_DATA_DEPLOY_KEY). A DB/network-marked
+# test with no matching cassette fails loudly (CassetteMiss) rather than
+# silently skipping or hitting the network.
+#
+# Run the same thing locally with:
+#   uv run pytest tests/
 
 name: Unit tests (offline)
 
@@ -23,14 +36,59 @@ jobs:
   offline-tests:
     runs-on: ubuntu-latest
     container:
-      image: rnacentral/rnacentral-import-pipeline:latest
+      image: rnacentral/rnacentral-import-pipeline:py314-experimental
 
     steps:
-      - uses: actions/checkout@v4
+      # The runtime image only installs what tests/import execution need
+      # (see Dockerfile) - openssh-client isn't among them, but the
+      # test-data submodule URL is SSH (git@github.com:...), so git needs
+      # an `ssh` binary on PATH before checkout can authenticate with it.
+      - name: Install openssh-client for submodule checkout
+        run: apt-get update -qq && apt-get install -y -qq openssh-client
 
-      - name: Run offline unit tests
+      - name: Load test-data deploy key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.TEST_DATA_DEPLOY_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Ensure coverage tooling is available
+        # Belt-and-suspenders: pyproject.toml's dev group already includes
+        # pytest-cov, but only images rebuilt after that change picked it up.
+        run: pip install --quiet pytest-cov
+
+      - name: Run offline test suite
         run: |
-          files=$(grep -vE '^\s*#|^\s*$' tests/ci_offline_files.txt)
-          echo "Running offline tests:"
-          echo "$files"
-          python -m pytest -p no:cacheprovider --tb=short $files
+          set -o pipefail
+          python -m pytest -p no:cacheprovider -q --tb=short \
+            --cov --cov-report=term --cov-report=html:coverage_html \
+            tests/ 2>&1 | tee pytest-output.txt
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage_html/
+          retention-days: 30
+
+      - name: Build Slack summary
+        if: always()
+        run: |
+          summary=$(grep -E "passed|failed|error" pytest-output.txt | tail -1)
+          coverage=$(grep "^TOTAL" pytest-output.txt | awk '{print $NF}')
+          {
+            echo "SLACK_MESSAGE=Unit tests on ${{ github.ref_name }} (${{ job.status }}): ${summary:-no summary found}. Coverage: ${coverage:-unknown}"
+          } >> "$GITHUB_ENV"
+
+      - name: Notify Slack
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: ${{ env.SLACK_MESSAGE }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
+          MSG_MINIMAL: true
