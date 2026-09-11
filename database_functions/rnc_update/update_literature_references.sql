@@ -64,7 +64,6 @@ BEGIN
        ) alias4
 ';
 
-    RAISE NOTICE 'Executing: %', sql_stmt;
     EXECUTE sql_stmt;
 
     -- update rnc_reference_map table
@@ -85,18 +84,13 @@ BEGIN
         do nothing
 ';
 
-    RAISE NOTICE 'Executing: %', sql_stmt;
     EXECUTE sql_stmt;
 
     sql_stmt := '
 truncate table load_rnc_references
 ';
 
-    RAISE NOTICE 'Executing: %', sql_stmt;
     EXECUTE sql_stmt;
-
-
-    RAISE NOTICE 'Literature references updated';
 
   END;
 
