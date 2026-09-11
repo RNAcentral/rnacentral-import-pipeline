@@ -147,7 +147,7 @@ def test_labels_feature_type_rnas_correctly(rna_type):
         seq_version="1",
     )
     assert entry.feature_name == rna_type
-    assert entry.ncrna_class is None
+    assert entry.ncrna_class == ""
 
 
 @pytest.mark.parametrize(
@@ -163,7 +163,7 @@ def test_labels_feature_type_rnas_correctly(rna_type):
         "hammerhead_ribozyme",
         "lncRNA",
         "miRNA",
-        "other",
+        "ncRNA",
         "piRNA",
         "rasiRNA",
         "ribozyme",
@@ -223,6 +223,7 @@ def test_can_write_valid_sequence_regions():
         rna_type="snoRNA",
         url="http://www.google.com",
         seq_version="1",
+        description="a description",
     )
 
     assert list(entry.write_sequence_regions()) == [

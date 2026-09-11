@@ -63,9 +63,7 @@ class Entry:
     primary_id: str = attr.ib(validator=is_a(str))
     accession: str = attr.ib(validator=is_a(str))
     ncbi_tax_id: int = attr.ib(validator=is_a(int))
-    database: str = attr.ib(
-        validator=is_a(str),
-    )
+    database: str = attr.ib(validator=is_a(str), converter=str.upper)
     sequence: str = attr.ib(validator=is_a(str))
     regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
     rna_type: str = attr.ib(

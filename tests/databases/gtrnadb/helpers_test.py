@@ -13,45 +13,59 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-"""
-GtRNAdb changed schema in 2021 (c5b3d9c0) and the old simple.json/version2.json
-fixtures went with it, which left most of this file loading files that no longer
-exist. These are the same helpers rewritten against the export we actually
-parse, with the expectations read off the record rather than off the code.
-"""
-
 import json
 
 import pytest
+from sqlitedict import SqliteDict
 
 import rnacentral_pipeline.databases.helpers.publications as pub
-from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases import data as ddata
 from rnacentral_pipeline.databases.gtrnadb import helpers
+from rnacentral_pipeline.databases.ncbi.taxonomy import TaxonomyEntry
 
-EXPORT = "data/gtrnadb/other_eukaryotes_export_1.json"
+# simple.json/version2.json are two single-entry extracts from the real
+# GtRNAdb export (data/gtrnadb/other_eukaryotes_export_1.json), both for
+# Aplysia californica (taxon 6500): a plain tRNA (simple) and one whose
+# matureSequence differs from its genomic sequence (version2/"complex").
 
 
-@pytest.fixture(scope="module")
-def export():
-    with open(EXPORT, "r") as raw:
+@pytest.fixture
+def data():
+    with open("data/gtrnadb/simple.json", "r") as raw:
+        return json.load(raw)
+
+
+@pytest.fixture
+def data2():
+    with open("data/gtrnadb/version2.json", "r") as raw:
         return json.load(raw)
 
 
 @pytest.fixture(scope="module")
-def records(export):
-    return export["data"]
+def export():
+    # Only the top-level metaData block is needed here (test_references_
+    # come_from_the_metadata) - simple.json/version2.json are bare per-entry
+    # extracts and don't carry it, so this reads the full real export instead.
+    with open("data/gtrnadb/other_eukaryotes_export_1.json", "r") as raw:
+        return json.load(raw)
 
 
 @pytest.fixture
-def record(records):
-    """A single exon tRNA whose mature and genomic sequences agree."""
-    return next(r for r in records if r["primaryId"] == "GTRNADB:tRNA-Ala-AGC-1-1")
-
-
-@pytest.fixture
-def spliced(records):
-    """A two exon tRNA, so the intron is spliced out of matureSequence."""
-    return next(r for r in records if r["primaryId"] == "GTRNADB:tRNA-Arg-CCT-1-1")
+def taxonomy(tmp_path):
+    db = SqliteDict(filename=str(tmp_path / "taxonomy.db"))
+    db["6500"] = TaxonomyEntry(
+        tax_id=6500,
+        name="Aplysia californica",
+        lineage=(
+            "Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; "
+            "Gastropoda; Heterobranchia; Euthyneura; Tectipleura; "
+            "Aplysiida; Aplysioidea; Aplysiidae; Aplysia"
+        ),
+        aliases=[],
+        replaced_by=None,
+    )
+    db.commit()
+    return db
 
 
 def test_can_find_all_remote_urls():
@@ -109,68 +123,82 @@ def test_complains_if_no_download_urls():
         )
 
 
-def test_url(record):
-    assert helpers.url(record) == (
-        "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Ala-AGC-1-1.html"
+def test_url(data):
+    assert (
+        helpers.url(data[0])
+        == "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Ala-AGC-1-1.html"
     )
 
 
-def test_anticodon(record):
-    assert helpers.anticodon(record) == "AGC"
+def test_anticodon(data):
+    assert helpers.anticodon(data[0]) == "AGC"
 
 
-def test_note_data_is_just_the_url(record):
-    assert helpers.note_data(record) == {"url": helpers.url(record)}
+def test_note_data(data):
+    assert helpers.note_data(data[0]) == {
+        "url": "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Ala-AGC-1-1.html",
+    }
 
 
-def test_taxid(record):
-    assert helpers.taxid(record) == 6500
+def test_complex_note_data(data2):
+    assert helpers.note_data(data2[0]) == {
+        "url": "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Arg-CCT-1-1.html",
+    }
 
 
-def test_product(record):
-    assert helpers.product(record) == "tRNA-Ala (AGC)"
+def test_taxid(data):
+    assert helpers.taxid(data[0]) == 6500
 
 
-def test_gene_naming(record):
-    assert helpers.gene(record) == "tRNA-Ala-AGC-1-1"
-    assert helpers.optional_id(record) == "tRNA-Ala-AGC-1-1"
-    assert helpers.gene_synonyms(record) == ["scaffold00844.trna1-AlaAGC"]
-
-
-def test_chromosome(record):
-    assert helpers.chromosome(record["genomeLocations"][0]) == "scaffold00844"
-
-
-def test_chromosome_renames_the_bare_name():
-    location = {"exons": [{"chromosome": "Chromosome"}]}
-    assert helpers.chromosome(location) == "chr"
-
-
-def test_accessions(record):
-    location = record["genomeLocations"][0]
-    assert helpers.parent_accession(location) == "KB942240.1"
-    assert helpers.accession(record, location) == "KB942240.1:tRNA-Ala-AGC-1-1"
-    assert helpers.seq_version(record) == "1"
-
-
-def test_builds_primary_id(record):
-    location = record["genomeLocations"][0]
-    assert helpers.primary_id(record, location) == (
-        "GTRNADB:tRNA-Ala-AGC-1-1:KB942240.1:40028-40100"
+def test_lineage(data, taxonomy):
+    assert helpers.lineage(taxonomy, data[0]) == (
+        "Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; "
+        "Gastropoda; Heterobranchia; Euthyneura; Tectipleura; "
+        "Aplysiida; Aplysioidea; Aplysiidae; Aplysia"
     )
 
 
-def test_primary_id_spans_every_exon(spliced):
-    location = spliced["genomeLocations"][0]
-    # Exons at 1827195-1827231 and 1827257-1827292, so the id covers both.
-    assert helpers.primary_id(spliced, location) == (
-        "GTRNADB:tRNA-Arg-CCT-1-1:KB941428.1:1827195-1827292"
+def test_species(data, taxonomy):
+    assert helpers.species(taxonomy, data[0]) == "Aplysia californica"
+
+
+def test_product(data):
+    assert helpers.product(data[0]) == "tRNA-Ala (AGC)"
+
+
+def test_gene_naming(data):
+    assert helpers.gene(data[0]) == "tRNA-Ala-AGC-1-1"
+    assert helpers.optional_id(data[0]) == "tRNA-Ala-AGC-1-1"
+    assert helpers.gene_synonyms(data[0]) == ["scaffold00844.trna1-AlaAGC"]
+
+
+def test_as_dotbracket(data):
+    ans = "(((((((..((((........)))).(((((.......))))).....(((((.......))))))))))))."
+    assert helpers.dot_bracket(data[0]) == ans
+
+
+def test_simple_description(data, taxonomy):
+    assert (
+        helpers.description(taxonomy, data[0]) == "Aplysia californica tRNA-Ala (AGC)"
     )
 
 
-def test_primary_id_is_always_unique(records):
+def test_complex_description(data2, taxonomy):
+    assert (
+        helpers.description(taxonomy, data2[0]) == "Aplysia californica tRNA-Arg (CCT)"
+    )
+
+
+def test_as_dotbracket_detects_weird_strings():
+    data = {"secondaryStructure": ">>>...A<<<"}
+    with pytest.raises(helpers.InvalidDotBracket):
+        helpers.dot_bracket(data)
+
+
+def test_primary_id_is_always_unique(data, data2):
     seen = set()
-    for entry in records:
+    possible = data + data2
+    for entry in possible:
         for location in entry["genomeLocations"]:
             pid = helpers.primary_id(entry, location)
             assert pid not in seen
@@ -178,19 +206,66 @@ def test_primary_id_is_always_unique(records):
     assert seen
 
 
-def test_sequence_prefers_the_mature_form(spliced):
-    assert spliced["matureSequence"] != spliced["sequence"]
-    assert helpers.sequence(spliced) == spliced["matureSequence"].upper()
+def test_builds_primary_id(data):
+    pids = []
+    entry = data[0]
+    for location in entry["genomeLocations"]:
+        pid = helpers.primary_id(entry, location)
+        pids.append(pid)
+    assert pids == ["GTRNADB:tRNA-Ala-AGC-1-1:KB942240.1:40028-40100"]
 
 
-def test_sequence_falls_back_to_the_genomic_form(record):
-    without_mature = {k: v for k, v in record.items() if k != "matureSequence"}
-    assert helpers.sequence(without_mature) == record["sequence"].upper()
+def test_primary_id_spans_every_exon(data2):
+    location = data2[0]["genomeLocations"][0]
+    # Exons at 1827195-1827231 and 1827257-1827292, so the id covers both.
+    assert helpers.primary_id(data2[0], location) == (
+        "GTRNADB:tRNA-Arg-CCT-1-1:KB941428.1:1827195-1827292"
+    )
 
 
-def test_features_carry_the_anticodon(record):
-    assert helpers.features(record) == [
-        data.SequenceFeature(
+def test_chromosome(data):
+    assert helpers.chromosome(data[0]["genomeLocations"][0]) == "scaffold00844"
+
+
+def test_chromosome_renames_the_bare_name():
+    location = {"exons": [{"chromosome": "Chromosome"}]}
+    assert helpers.chromosome(location) == "chr"
+
+
+def test_accessions(data):
+    location = data[0]["genomeLocations"][0]
+    assert helpers.parent_accession(location) == "KB942240.1"
+    assert helpers.accession(data[0], location) == "KB942240.1:tRNA-Ala-AGC-1-1"
+    assert helpers.seq_version(data[0]) == "1"
+
+
+def test_sequence_without_mature(data):
+    assert (
+        helpers.sequence(data[0])
+        == "GGGGCTGTAGCTCAGGTGGTAGAGCGCTCGCTTAGCATGTGAGAGGTACCGGGATCGATACCCGGCAGCTCCA"
+    )
+
+
+def test_sequence_with_mature(data2):
+    assert (
+        helpers.sequence(data2[0])
+        == "GCCTCCGTGGCCTAATGGATAAGGCATCGGCCTCCTAAGCCGGGGATTGCGGGTTCGAGTCCCGTCGGAGGTG"
+    )
+
+
+def test_sequence_prefers_the_mature_form(data2):
+    assert data2[0]["matureSequence"] != data2[0]["sequence"]
+    assert helpers.sequence(data2[0]) == data2[0]["matureSequence"].upper()
+
+
+def test_sequence_falls_back_to_the_genomic_form(data):
+    without_mature = {k: v for k, v in data[0].items() if k != "matureSequence"}
+    assert helpers.sequence(without_mature) == data[0]["sequence"].upper()
+
+
+def test_features_carry_the_anticodon(data):
+    assert helpers.features(data[0]) == [
+        ddata.SequenceFeature(
             name="anticodon",
             feature_type="anticodon",
             location=[34, 35, 36],
@@ -201,21 +276,21 @@ def test_features_carry_the_anticodon(record):
     ]
 
 
-def test_no_features_without_an_anticodon(record):
-    stripped = dict(record, sequenceFeatures={"isotype": "Ala"})
+def test_no_features_without_an_anticodon(data):
+    stripped = dict(data[0], sequenceFeatures={"isotype": "Ala"})
     assert helpers.features(stripped) == []
 
 
-def test_regions_are_one_based(record):
-    region = helpers.regions(record["genomeLocations"][0])[0]
+def test_regions_are_one_based(data):
+    region = helpers.regions(data[0]["genomeLocations"][0])[0]
     assert region.assembly_id == "AplCal3.0"
     assert region.chromosome == "scaffold00844"
-    assert region.strand == data.Strand.forward
+    assert region.strand == ddata.Strand.forward
     assert [(e.start, e.stop) for e in region.exons] == [(40028, 40100)]
 
 
-def test_regions_keeps_every_exon(spliced):
-    region = helpers.regions(spliced["genomeLocations"][0])[0]
+def test_regions_keeps_every_exon(data2):
+    region = helpers.regions(data2[0]["genomeLocations"][0])[0]
     assert [(e.start, e.stop) for e in region.exons] == [
         (1827195, 1827231),
         (1827257, 1827292),
@@ -227,13 +302,3 @@ def test_references_come_from_the_metadata(export):
         pub.reference("PMID:18984615"),
         pub.reference("PMID:26673694"),
     ]
-
-
-def test_dot_bracket_translates_the_gtrnadb_notation():
-    raw = {"secondary_structure": ">>>>>>>..>>>>........<<<<."}
-    assert helpers.dot_bracket(raw) == "(((((((..((((........))))."
-
-
-def test_dot_bracket_detects_weird_strings():
-    with pytest.raises(helpers.InvalidDotBracket):
-        helpers.dot_bracket({"secondary_structure": ">>>...A<<<"})

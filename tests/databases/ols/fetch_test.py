@@ -78,7 +78,7 @@ def test_can_fetch_an_so_term():
         definition=(
             "Small, ~22-nt, RNA molecule that is the endogenous "
             "transcript of a miRNA gene (or the product of other non "
-            "coding RNA genes. Micro RNAs are produced from precursor "
+            "coding RNA genes). Micro RNAs are produced from precursor "
             "molecules (SO:0001244) that can form local hairpin "
             "structures, which ordinarily are processed (usually via the "
             "Dicer pathway) such that a single miRNA molecule "
@@ -205,7 +205,9 @@ def test_retries_404s_for_ols_term_endpoints(monkeypatch):
 
     monkeypatch.setattr(ols.asyncio, "sleep", fake_sleep)
 
-    result = asyncio.run(ols.query_ols("https://example.org/ols4/api/ontologies/SO/terms/x"))
+    result = asyncio.run(
+        ols.query_ols("https://example.org/ols4/api/ontologies/SO/terms/x")
+    )
 
     assert result == {"label": "term"}
     assert calls["count"] == 3

@@ -70,11 +70,7 @@ def reconcile_taxids(taxid):
 def is_ignored_assembly(info):
     if info.taxid in REJECTED_TAXIDS:
         return True
-    if info.taxid == 7227 and info.division == "EnsemblMetazoa":
-        return True
     if info.taxid == 5762 and info.assembly_id == "V1.0":
-        return True
-    if info.taxid == 6239 and info.division == "EnsemblMetazoa":
         return True
     if info.taxid == 8090 and info.ensembl_url != "oryzias_latipes":
         return True

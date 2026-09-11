@@ -32,7 +32,7 @@ def conn():
 def entry(conn, urs_taxid: str) -> gpi.GpiEntry:
     pre = Table("rnc_rna_precomputed")
     related = Table("rnc_related_sequences")
-    generic_query = gpi.generic_query().where(pre.id == urs_taxid)
+    generic_query = gpi.generic_query().where(pre.urs_taxid == urs_taxid)
     mirbase_query = gpi.mirbase_info_query().where(
         related.source_urs_taxid == urs_taxid
     )

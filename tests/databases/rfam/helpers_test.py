@@ -13,14 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
+import csv
 
 from rnacentral_pipeline.databases.rfam import helpers
 
 
 def test_builds_correct_accessions():
-    with open("data/rfam/rfam-duplicates.json", "r") as raw:
-        data = json.load(raw)
+    with open("data/rfam/sequence_info-duplicates.tsv", "r") as raw:
+        data = list(csv.DictReader(raw, delimiter="\t"))
 
     accessions = [helpers.accession(d) for d in data]
 

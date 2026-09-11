@@ -20,14 +20,16 @@ from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 
 from .. import helpers
 
+pytestmark = pytest.mark.db
+
 
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
     [
         ("URS0000400378_30527", "tRNA", False),
         ("URS000058E89C_39432", "rRNA", False),
-        ("URS000061A10B_9606", "tRNA", False),
-        ("URS00008CF5BF_36987", "rRNA", True),
+        ("URS00001617C4_484019", "tRNA", False),
+        ("URS0000000037_859192", "rRNA", True),
         ("URS00009F92C9_358574", "rRNA", False),
         ("URS0000010837_7227", "misc_RNA", True),
         ("URS000080E357_9606", "rRNA", False),
@@ -39,7 +41,7 @@ from .. import helpers
 )
 def test_can_detect_possible_contamination(rna_id: str, rna_type: str, flag: bool):
     context, sequence = helpers.load_data(rna_id)
-    assert cont.validate(context, rna_type, sequence).has_issue == flag
+    assert cont.validate(rna_type, sequence).has_issue == flag
 
 
 @pytest.mark.parametrize(
@@ -60,4 +62,4 @@ def test_can_produce_correct_contamination_warnings(
     rna_id: str, rna_type: str, message: str
 ):
     context, sequence = helpers.load_data(rna_id)
-    assert cont.validate(context, rna_type, sequence).message == message
+    assert cont.validate(rna_type, sequence).message == message

@@ -289,7 +289,7 @@ def test_can_assign_isoform_to_rnase_p():
             species="Drosophila melanogaster",
             common_name="fruit fly",
             lineage=(
-                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota; Neoptera; Endopterygota; Diptera; Brachycera; Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora; Drosophila melanogaster"
+                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Altocrustacea; Allotriocarida; Hexapoda; Insecta; Pterygota; Neoptera; Eumetabola; Endopterygota; Aparaglossata; Panorpida; Diptera; Brachycera; Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora; Drosophila melanogaster"
             ),
             gene="RNaseP:RNA",
             gene_synonyms=[

@@ -17,8 +17,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.ensembl import fungi
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from . import helpers
 
@@ -26,14 +26,14 @@ from . import helpers
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def asp_1():
     return helpers.parse(
-        fungi.parse, "data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat"
+        fungi.parse, "test-data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat"
     )
 
 
 @pytest.mark.parametrize(
     "filename,count",
     [
-        ("data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat", 24),
+        ("test-data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat", 24),
     ],
 )
 def test_can_parse_all_entries(filename, count):
@@ -83,12 +83,12 @@ def test_can_produce_correct_data(asp_1):
                 dat.SequenceRegion(
                     chromosome="I",
                     strand=-1,
-                    exons=[dat.Exon(start=1978646, stop=1978838)],
+                    exons=[dat.Exon(start=1237, stop=1429)],
                     assembly_id="ASM1142v1",
                     coordinate_system=dat.CoordinateSystem.one_based(),
                 ),
             ],
-            rna_type="snRNA",
+            rna_type="SO:0000673",
             url="",
             seq_version="1",
             note_data={},
@@ -103,7 +103,7 @@ def test_can_produce_correct_data(asp_1):
             ),
             gene="EBG00005235662",
             locus_tag="U2",
-            description="Aspergillus nidulans FGSC A4 snRNA U2",
+            description="Aspergillus nidulans FGSC A4 misc RNA U2",
             references=[pubs.reference("doi:10.1093/nar/gkx1011")],
         )
     )

@@ -13,15 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from rnacentral_pipeline.databases.ensembl import vertebrates
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers
 from rnacentral_pipeline.databases.helpers import embl
 
-from rnacentral_pipeline.databases.ensembl import helpers
-from rnacentral_pipeline.databases.ensembl.parser import parse
+EMPTY_GFF_FILE = "data/gencode/empty.gff3"
 
 
-def parse_with_family(filename, family_file="data/rfam/families.tsv", **kwargs):
+def parse_with_family(
+    filename,
+    gff_file=EMPTY_GFF_FILE,
+    family_file="data/rfam/families.tsv",
+    excluded_file=None,
+):
     with open(filename, "r") as raw:
-        return list(parse(raw, family_file, **kwargs))
+        return list(
+            vertebrates.parse(
+                raw, gff_file, family_file=family_file, excluded_file=excluded_file
+            )
+        )
 
 
 def features(filename):

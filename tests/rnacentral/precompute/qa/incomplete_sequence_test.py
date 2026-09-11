@@ -15,10 +15,11 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 import rnacentral_pipeline.rnacentral.precompute.qa.incomplete_sequence as inco
-
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 from tests.rnacentral.precompute import helpers
+
+pytestmark = pytest.mark.db
 
 
 @pytest.mark.parametrize(
@@ -26,7 +27,7 @@ from tests.rnacentral.precompute import helpers
     [  # pylint: disable=no-member
         ("URS0000400378_30527", "tRNA", False),
         ("URS000058E89C_39432", "rRNA", False),
-        ("URS000061A10B_9606", "tRNA", False),
+        ("URS00001617C4_484019", "tRNA", False),
         ("URS0000866382_511983", "tRNA", False),
         ("URS000099C38D_77133", "rRNA", True),
         ("URS00009ED984_77133", "rRNA", True),
@@ -38,7 +39,7 @@ from tests.rnacentral.precompute import helpers
 )
 def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     context, sequence = helpers.load_data(rna_id)
-    assert inco.validate(context, rna_type, sequence).has_issue == flag
+    assert inco.validate(sequence).has_issue == flag
 
 
 @pytest.mark.parametrize(
@@ -58,4 +59,4 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
 )
 def test_can_produce_correct_contamination_warnings(rna_id, rna_type, message):
     context, sequence = helpers.load_data(rna_id)
-    assert inco.validate(ctx, rna_type, sequence).message == message
+    assert inco.validate(sequence).message == message

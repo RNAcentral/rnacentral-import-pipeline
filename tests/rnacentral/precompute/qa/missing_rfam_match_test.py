@@ -15,10 +15,12 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 import rnacentral_pipeline.rnacentral.precompute.qa.missing_rfam_match as miss
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 
 from .. import helpers
+
+pytestmark = pytest.mark.db
 
 
 @pytest.mark.parametrize(
@@ -26,7 +28,7 @@ from .. import helpers
     [  # pylint: disable=no-member
         ("URS0000400378_30527", "tRNA", False),
         ("URS000058E89C_39432", "rRNA", False),
-        ("URS000061A10B_9606", "tRNA", False),
+        ("URS00001617C4_484019", "tRNA", False),
         ("URS0000866382_1000416", "tRNA", True),
         ("URS00009ED984_77133", "rRNA", False),
         ("URS0000A80D0E_60711", "rRNA", True),
@@ -35,7 +37,7 @@ from .. import helpers
 )
 def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
     context, sequence = helpers.load_data(rna_id)
-    assert miss.validate(context, rna_type, sequence).has_issue == flag
+    assert miss.validate(rna_type, sequence).has_issue == flag
 
 
 @pytest.mark.parametrize(
@@ -45,13 +47,13 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
             "URS00007D23E5_6239",
             "tRNA",
             (
-                u"No match to a tRNA Rfam model "
-                u'(<a href="http://rfam.org/family/RF00005">RF00005</a>,'
-                u' <a href="http://rfam.org/family/RF01852">RF01852</a>)'
+                "No match to a tRNA Rfam model "
+                '(<a href="http://rfam.org/family/RF00005">RF00005</a>,'
+                ' <a href="http://rfam.org/family/RF01852">RF01852</a>)'
             ),
         ),
     ],
 )
 def test_can_produce_correct_contamination_warnings(rna_id, rna_type, message):
     context, sequence = helpers.load_data(rna_id)
-    assert miss.validate(ctx, rna_type, sequence).message == message
+    assert miss.validate(rna_type, sequence).message == message
