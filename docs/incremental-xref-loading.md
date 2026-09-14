@@ -1,13 +1,15 @@
-# Incremental xref loading — design & correctness notes
+# Xref loading: full rebuild vs delta — design & correctness notes
 
 **Branch:** `improvement/load-only-new-data`
-**Status:** incremental xref functions written and **parity-validated**, and the
-**per-database FULL/INCREMENTAL selection is now wired in** (default: auto). The
-remaining work is **staging-scale validation + benchmarking** (step 5) before this
-is trusted on production volumes. `rnac release run --force-full` reverts the
-release to the old all-full behaviour at any time; `--force_full_import` on the
-pipeline does that *and* forces a full parse, which is what a delta-parsed database
-needs (see docs/incremental-parsing.md).
+**Status:** two release types: `'F'` (full rebuild) and `'D'` (delta, for a
+manifest-tracked database — currently ENA only). Selection is per-database
+(default: auto) via `release.get_load_release_type`: bootstrap, and any database
+without an import manifest, get `'F'`; a manifest-tracked database gets `'D'`.
+The remaining work is **staging-scale validation + benchmarking** (step 4) before
+delta is trusted on production volumes for a given database. `rnac release run
+--force-full` reverts the release to full for every database at any time;
+`--force_full_import` on the pipeline does that *and* forces a full parse, which
+is what a delta-parsed database needs (see docs/incremental-parsing.md).
 
 ## Problem
 
@@ -22,22 +24,21 @@ Two layers:
 1. **Staging load** — [`bin/split-and-load`](../bin/split-and-load) runs pgloader
    with a `.ctl` file (e.g. [`accessions.ctl`](../files/import-data/load/accessions.ctl))
    that **truncates and bulk-loads the full CSV** into `load_*` tables every run.
-   Cost is set by what the parsers emit (a full dump per database). Comparatively
-   cheap; **not** the main bottleneck and **not** changed by this proposal.
+   Cost is set by what the parsers emit — a full dump per database, except ENA's
+   delta-parsed export (see docs/incremental-parsing.md).
 
 2. **Release merge** — `rnac release run`
    ([`run.py`](../rnacentral_pipeline/rnacentral/release/run.py)) moves staging →
    production. Two sub-parts:
-   - **Sequences (`rna`)** — **already incremental**.
+   - **Sequences (`rna`)** — already incremental.
      [`store_new_sequences`](../database_functions/rnc_load_rna/store_new_sequences.sql)
-     inserts only sequences whose md5 is new. Unchanged sequences are never rewritten. ✅
-   - **Xrefs (`xref`)** — **fully rebuilt every release**. This is the bottleneck.
+     inserts only sequences whose md5 is new. Unchanged sequences are never rewritten.
+   - **Xrefs (`xref`)** — either a full rebuild (`'F'`) or a delta (`'D'`), chosen
+     per database.
 
-### Why xrefs are the bottleneck
+### Full rebuild (`'F'`)
 
-[`run.py:107`](../rnacentral_pipeline/rnacentral/release/run.py#L107) hard-codes
-`prepare_releases('F')` — **every** release is type `'F'` (full). A full release
-runs Partition Exchange Loading (PEL):
+A full release runs Partition Exchange Loading (PEL):
 
 - `populate_pel_tables1..4` build brand-new partition tables
   (`xref_pel_not_deleted` / `xref_pel_deleted`) containing **all** xrefs for the
@@ -45,41 +46,23 @@ runs Partition Exchange Loading (PEL):
 - [`do_pel_exchange`](../database_functions/rnc_load_xref/do_pel_exchange.sql)
   swaps them in, replacing the whole partition.
 
-So every release rewrites, for each database:
+So a full release rewrites, for each database:
 - every unchanged active row (only `last` actually changes), **and**
 - **every historical `deleted='Y'` row, carried forward untouched**
   ([`populate_pel_tables4`](../database_functions/rnc_load_xref/populate_pel_tables4.sql),
   first `UNION ALL` arm).
 
 That deleted-history carry-forward grows without bound and is pure waste every
-release. It is exactly what an incremental load avoids.
+release — unavoidable for `'F'`, but exactly what `'D'`'s row-by-row updates skip
+for a database whose input really is a small delta.
 
-## The existing (disabled, incomplete) incremental path
+## Delta (`'D'`): correctness rules
 
-Release type `'I'` already exists:
-[`load_xref_incremental`](../database_functions/rnc_load_xref_incremental/load_xref_incremental.sql)
-→ `incremental1/2/3`. It is **never invoked** (always `'F'`) and has two problems:
-
-1. **It is Oracle SQL and will not run on Postgres.** e.g. in
-   [`incremental1`](../database_functions/rnc_load_xref_incremental/incremental1.sql):
-   `UPDATE XREF U SET (U.LAST, U.DELETED, u.taxid) = (SELECT …)` — Postgres forbids
-   table-qualified LHS and uses different multi-column-UPDATE syntax; plus `NVL`
-   (→ `COALESCE`), `/*+ PARALLEL(...) */` hints (drop), and `X."VERSION" = NULL`
-   (→ `IS NULL`).
-
-2. **It is functionally incomplete — it never deactivates disappeared xrefs.**
-   `incremental1` only touches rows that are *matched* by the new load.
-   The full path handles "previously active, not in the new load → `deleted='Y'`"
-   in `populate_pel_tables4`; the incremental path has **no equivalent**. An
-   accession dropped from a source would stay `active` forever. This is precisely
-   the "become inactive" behaviour we want, so a new `incremental4` step is
-   required — it does not exist yet.
-
-## Correctness rules the incremental path MUST reproduce
-
-Ground truth = the state the full/PEL path produces. Per `(ac, dbid)`, given the
-new load row `L` (with `comparable_prot_upi`, `version`, `taxid`, `in_load_release`)
-and the previous release `P`:
+`'D'` mutates `xref` in place instead of rebuilding it, so its steps must
+reproduce the same end state a full rebuild would produce for the rows they
+touch. Ground truth = the state the full/PEL path produces. Per `(ac, dbid)`,
+given the new load row `L` (with `comparable_prot_upi`, `version`, `taxid`,
+`in_load_release`) and the previous release `P`:
 
 | Case | Condition | Required end state |
 |---|---|---|
@@ -87,80 +70,81 @@ and the previous release `P`:
 | 2. Changed active | active `X`, `X.ac=L.ac` but urs/version differ | retire `X` in place (`deleted='Y'`, `last = P`); **insert** new active row: `urs=L.urs`, `version_i = X.version_i (+1 if urs changed)`, `created=last=in_load_release`, `deleted='N'` |
 | 3. New sequence for existing accession | accession has active rows but none with `urs=L.urs` (PEL "Gap A") | insert active row, `version_i = max(version_i)+1` |
 | 4. Brand-new accession / previously fully deleted | no active row for `(ac,dbid)` | insert active row, `version_i = 1` if none ever, else `max+1` (keep if same urs) |
-| 5. Disappeared | active `X` whose `(ac[,urs])` is **not** in new load | retire in place: `deleted='Y'`, `last = COALESCE(P, X.last)` — **missing from current incremental** |
-| 6. Already deleted | `X.deleted='Y'` | leave untouched (do **not** rewrite — this is the win) |
+| 5. Explicitly deleted | accession named in the parser's `load_deletions` list | retire in place: `deleted='Y'`, `last = COALESCE(P, X.last)` |
+| 6. Absent from the load, not explicitly deleted | active `X` whose `(ac, urs)` is simply not in this delta | **leave active** — absence means "unchanged", not "gone" |
+| 7. Already deleted | `X.deleted='Y'` | leave untouched (do **not** rewrite — this is the win) |
 
 Field rules:
 - **`version_i`** — monotonic per `(ac, dbid)`. New → 1; same `comparable_prot_upi`
-  → unchanged; changed → `max+1`.
-  ⚠️ **Divergence to reconcile:** `incremental2` bumps `version_i` on *version*
-  change too, whereas `populate_pel_tables2` bumps only on *urs* change. Pick one
-  (match PEL) and apply consistently.
+  → unchanged; changed → `max+1` (matches `populate_pel_tables2`).
 - **`deleted`** — `'N'` active / `'Y'` retired; at most one active row per generation.
 - **`taxid`** — refresh = `COALESCE(incoming, existing)`; otherwise unchanged.
 - **`last`** — surviving active row bumped to `in_load_release` (marks "seen this
   release"); retired row set to previous release.
 - **`created`** — set once at insert, never changed.
 
-## Choosing full vs incremental
+## Choosing full vs delta
 
-- **First load of a database** (no prior completed release / no partition) → must be
+- **First load of a database** (no prior completed release / no partition) →
   **FULL** (bootstraps the PEL partition tables).
-- **Subsequent loads** → **INCREMENTAL**.
-- **Escape hatch** → `rnc_release.force_load` already exists; honour it to force a
-  FULL rebuild (schema change, suspected drift, or after changing the merge logic).
+- **A database with an import manifest** (its parser emits only new/changed
+  records — see docs/incremental-parsing.md) → **DELTA**, except **HGNC**, whose
+  auto-DELTA is deliberately paused for now (see docs/incremental-parsing.md) —
+  it runs FULL despite having a real manifest.
+- **Every other subsequent load** → **FULL**. A row-by-row pass over a full-size
+  input costs no less than a rebuild and does more work per row (see risk 2
+  below), so there's no in-between mode for a database whose parser doesn't
+  actually produce a delta.
+- **Escape hatch** — `rnac release run --force-full` forces `'F'` for every
+  database at any time (schema change, suspected drift, or after changing the
+  merge logic).
 
-Implementation: replace the hard-coded `prepare_releases('F')` with per-database
-type selection — `'I'` when a prior completed release exists for the dbid and
-`force_load='N'`, else `'F'`. `create_release`/`get_release_type`/
-`get_previous_release` already support this; only the *selection* is hard-coded.
+Implementation: `release.get_load_release_type(dbid)` returns `'F'` when there is
+no prior release or no import manifest for the dbid, `'D'` otherwise — with an
+HGNC-specific override ahead of that check, pinning it to `'F'` regardless.
+`rnc_update.prepare_releases` has an `'A'` (auto) mode that applies that choice
+per database; an explicit `'F'`/`'D'` still forces a type for every database.
 
 ## Risks / open questions
 
-1. **Parity.** Incremental must yield the identical active set to full. Two known
-   divergences (case 5 missing, `version_i` bump rule). Mitigation: a diff harness
-   that runs full vs incremental on the same input and compares the `active` xref
-   set — must be built before switching the default.
-2. **Oracle → Postgres rewrite** of `incremental1/2/3` + new `incremental4`.
-3. **When most rows change**, in-place UPDATE/INSERT (index churn, dead tuples,
-   autovacuum) can be *slower* than build-fresh-and-swap. Incremental wins for the
-   common small-delta case; consider a per-database threshold or measurement.
-4. **Reader impact.** PEL swap is invisible until exchange; incremental mutates the
-   live partition (row locks, bloat) while the site reads it. Consider vacuum/timing.
-5. **Transactionality.** PEL swaps atomically. Incremental must wrap each database's
-   mutations in one transaction so a mid-release failure can't half-update a
-   partition. `new_update_release` is a single function call (one txn) — verify
-   under the `run.py` autocommit-per-statement driver.
-6. **Downstream.** `populate_precompute` and `do_checks` read the active set / PK
-   uniqueness — both must hold identically after incremental.
-7. **fk4 (`urs → rna`).** Full validates fk4 per partition post-swap; incremental
+1. **Parity.** `'D'`'s row-by-row steps must yield the identical active set a full
+   rebuild would, for the rows they touch. Mitigation:
+   `tests/xref-incremental-parity/delta.sh` exercises the case table above end to
+   end (unchanged-and-absent stays active, explicit deletion retires, version
+   change replaces, new accession inserts) and diffs against the expected state.
+2. **When most rows change**, in-place UPDATE/INSERT (index churn, dead tuples,
+   autovacuum) can be *slower* than build-fresh-and-swap — `'D'` only wins for a
+   genuinely small delta, which is why it's gated behind an import manifest
+   rather than applied by default.
+3. **Reader impact.** PEL swap is invisible until exchange; `'D'` mutates the live
+   partition (row locks, bloat) while the site reads it. Consider vacuum/timing.
+4. **Transactionality.** PEL swaps atomically. `'D'`'s mutations must stay in one
+   transaction so a mid-release failure can't half-update a partition.
+   `new_update_release` is a single function call (one txn) — verify under the
+   `run.py` autocommit-per-statement driver.
+5. **Downstream.** `populate_precompute` and `do_checks` read the active set / PK
+   uniqueness — both must hold identically after a delta load.
+6. **fk4 (`urs → rna`).** Full validates fk4 per partition post-swap; `'D'`
    inserts into an already-valid partition (checked at insert). Safe as long as
    `store_new_sequences` runs first (it does).
 
-## Findings that make the in-place approach safe (verified while reviewing)
+## Findings that make the in-place approach safe
 
 - **`xref` is declaratively partitioned** (`dbid` LIST → `deleted` LIST; see
   [`do_pel_exchange`](../database_functions/rnc_load_xref/do_pel_exchange.sql):
   `attach partition … for values in ('Y'/'N')`). Therefore `INSERT INTO xref`
   auto-routes to the right partition, and an `UPDATE` that flips `deleted='N'→'Y'`
   **moves the row** from `_not_deleted` to `_deleted` (PG 11+ row movement). The
-  in-place incremental approach needs no manual partition juggling.
+  in-place approach needs no manual partition juggling.
 - **Full releases already reassign every `id`.** The PEL inserts
   ([`populate_pel_tables*`](../database_functions/rnc_load_xref/)) omit `id`, so a
   rebuilt partition gets fresh ids for every carried-forward row. `xref.id` is thus
-  **not stable across full releases today**; incremental keeps ids stable, which is
-  strictly better. ⇒ **Parity must be compared on the business key**
+  **not stable across full releases**; `'D'` keeps ids stable, which is strictly
+  better. ⇒ **Parity must be compared on the business key**
   `(ac, dbid, version, version_i, urs, deleted, last, taxid)`, never on `id`. The
   only uniqueness invariant [`do_checks`](../database_functions/rnc_load_xref/do_checks.sql)
   enforces is `id` uniqueness, trivially preserved (new rows take the default id).
-- **`check_function_bodies` is effectively off** in the deploy path
-  ([`functions.apply`](../rnacentral_pipeline/rnacentral/release/functions.py) applies
-  every `database_functions/*/*.sql` in one transaction). That is why the broken
-  Oracle `incremental*.sql` deploy without error and only fail at *runtime* — which
-  never happens because no `'I'` release is ever created. Replacing them is safe,
-  and callee-before-caller apply order is not a concern.
-- **Derivation strategy chosen:** rather than porting the Oracle originals, each
-  incremental step is written as the **in-place analogue of its
+- **Derivation strategy:** each row-by-row step is the **in-place analogue of its
   `populate_pel_tables*` counterpart** (same predicates and value expressions,
   retargeted from the `xref_pel_*` build tables to `rnacen.xref`). This makes
   parity hold *by construction*. Because `create_release` sets the new release id
@@ -169,7 +153,7 @@ type selection — `'I'` when a prior completed release exists for the dbid and
   UPDATE steps cleanly excludes rows this same release just inserted — with no
   false exclusions.
 
-### Step-by-step mapping (incremental ⇐ PEL)
+### Step-by-step mapping (`'D'` ⇐ PEL)
 
 Run order (helper snapshot first, then inserts, then in-place updates):
 
@@ -184,57 +168,53 @@ Run order (helper snapshot first, then inserts, then in-place updates):
    in-place UPDATE of matched-unchanged rows (`last`, `taxid`).
 5. **B2** `incremental_retire_changed` ⇐ `populate_pel_tables1` (deleted='Y'
    branch): in-place UPDATE retiring matched-but-changed rows.
-6. **B3** `incremental_retire_dropped` ⇐ `populate_pel_tables4` (second `UNION ALL`
-   arm): in-place UPDATE retiring active rows whose `(ac, urs)` vanished from the
-   load. **This is the step with no counterpart in the old Oracle incremental path**
-   — the "become inactive" behaviour.
+6. **B3** `incremental_retire_explicit` ⇐ the parser's `load_deletions` list:
+   in-place UPDATE retiring only the accessions explicitly named as gone. Absence
+   alone never retires under `'D'` — that's the entire performance win, and the
+   reason `'D'` needs a manifest-tracked parser to be correct at all.
 
 `populate_pel_tables4`'s *first* arm (carry forward all historical `deleted='Y'`
-rows) has **deliberately no incremental analogue** — leaving those rows untouched
-is the entire performance win.
+rows) has **deliberately no `'D'` analogue** — leaving those rows untouched is
+the rest of the performance win.
 
-## Proposed sequence of work (once approved)
+## Proposed sequence of work
 
-1. ✅ **Parity harness** — `tests/xref-incremental-parity/` (`schema.sql`, `seed.sql`,
-   `run.sh`). Builds two DBs from one seed, runs FULL in one and INCREMENTAL in the
-   other, diffs the resulting xref state on the business key.
-2. ✅ **Port + deactivation** — the Oracle `incremental1/2/3` are replaced by
-   `incremental_new_versions`, `incremental_new_accessions`, `incremental_refresh`,
-   `incremental_retire_changed`, `incremental_retire_dropped` (each the in-place
-   analogue of a `populate_pel_tables*` step), orchestrated by the rewritten
-   `load_xref_incremental`. The `version_i` divergence is resolved (we follow the
-   PEL rule), and case 5 deactivation is covered by `incremental_retire_dropped`.
-3. ✅ **Parity validated** on the fixture: full and incremental produce byte-identical
-   xref state across cases 1/2/5/D/Gap A + reactivation + deleted-history carry-forward.
-   Confirmed incremental leaves unchanged rows physically in place (stable `id`) while
-   full reassigns every `id`.
-4. ✅ **Selection logic** — new `release.get_load_release_type(dbid)` returns `'F'`
-   for a database with no prior release (bootstrap) and `'I'` otherwise.
-   `rnc_update.prepare_releases` gains an `'A'` (auto) mode that applies that choice
-   per database; an explicit `'F'`/`'I'` still forces a type. `run.run()` calls
-   `prepare_releases('A')` by default, and `rnac release run --force-full` forces
-   `'F'` for every database (the escape hatch, replacing the reliance on a per-row
-   `force_load` flag that nothing set). Tested by:
+1. ✅ **Row-by-row steps built** — `incremental_new_versions`,
+   `incremental_new_accessions`, `incremental_refresh`, `incremental_retire_changed`
+   (each the in-place analogue of a `populate_pel_tables*` step) and
+   `incremental_retire_explicit` (retires only the parser's explicit deletion
+   list), orchestrated by `load_xref_delta`.
+2. ✅ **Delta parity validated** — `tests/xref-incremental-parity/delta.sh` seeds a
+   known xref state, runs `load_xref_delta`, and asserts every case in the table
+   above: absence stays active, explicit deletion retires, version change
+   replaces, new accession inserts, already-deleted history is untouched.
+3. ✅ **Selection logic** — `release.get_load_release_type(dbid)` returns `'F'` for
+   a database with no prior release (bootstrap) or no import manifest, `'D'` for
+   one with a manifest. `rnc_update.prepare_releases` gains an `'A'` (auto) mode
+   that applies that choice per database; an explicit `'F'`/`'D'` still forces a
+   type. `run.run()` calls `prepare_releases('A')` by default, and
+   `rnac release run --force-full` forces `'F'` for every database. Tested by:
    - `tests/rnacentral/release/run_test.py` — `run()` issues `prepare_releases('A')`
      by default and `prepare_releases('F')` under `--force-full`.
    - `tests/xref-incremental-parity/selection.sh` — DB-level assertions that
      `get_load_release_type` and `prepare_releases('A'|'F')` assign the right types.
-5. ⬜ **Staging validation + benchmark** — run the harness pattern against a real
-   staging copy per database; measure wall-clock vs full; watch bloat/autovacuum on
-   the mutated live partitions. **Do this before relying on the auto default in
-   production**; until then, `--force-full` keeps the old behaviour.
-6. ⬜ **Roll out** — drop `--force-full` once staging confirms parity + speedup.
+4. ⬜ **Staging validation + benchmark** — run delta against a real staging copy
+   of ENA; measure wall-clock vs full; watch bloat/autovacuum on the mutated live
+   partition. **Do this before relying on `'D'` for further databases**; until
+   then, `--force-full` keeps the old full-rebuild behaviour available at any time.
+5. ⬜ **Roll out delta parsing to more databases** — extend the manifest/delta
+   parsing approach (docs/incremental-parsing.md) beyond ENA once staging
+   validation on ENA holds up.
 
 ### Validating the harness locally
 
-    PGHOST=127.0.0.1 PGPORT=5433 PGUSER=postgres ./tests/xref-incremental-parity/run.sh
+    PGHOST=127.0.0.1 PGPORT=5433 PGUSER=postgres ./tests/xref-incremental-parity/delta.sh
+    PGHOST=127.0.0.1 PGPORT=5433 PGUSER=postgres ./tests/xref-incremental-parity/selection.sh
 
-(any Postgres you can create databases in; it creates/drops `parity_full` and
-`parity_incr`). Extend `seed.sql` with more edge cases and re-run to widen coverage
-before enabling incremental in step 4.
+(any Postgres you can create databases in.)
 
 ## Out of scope (noted)
 
-The staging pgloader step still truncate-reloads the full CSV because the parsers
-emit a full dump. Making *that* incremental would require parsers to diff against
-DB state — larger change, separate effort.
+The staging pgloader step still truncate-reloads the full CSV for every database
+except ENA, because their parsers emit a full dump. Making that incremental would
+require each parser to diff against DB state — larger change, separate effort.

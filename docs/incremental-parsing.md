@@ -37,35 +37,34 @@ manifest. Same bootstrap-then-incremental shape as the loading side.
 
 ## The load-side consequence (important)
 
-The incremental loader committed on this branch marks a sequence inactive **by its
-absence** from the load (`incremental_retire_dropped`, mirroring
-`populate_pel_tables4`). A delta parse emits only the *changed* subset, so that
-absence rule would wrongly retire every record we didn't re-emit.
+A full rebuild marks a sequence inactive **by its absence** from the load
+(`populate_pel_tables4`'s second arm). A delta parse emits only the *changed*
+subset, so that absence rule would wrongly retire every record the parser didn't
+re-emit -- delta loading needs its own release mode, `DELTA` (`D`):
 
-Delta loading therefore needs a **third release mode** alongside FULL (`F`) and
-INCREMENTAL (`I`):
+- **DELTA (`D`)** — upsert the changed set with row-by-row steps that only act on
+  rows *present* in the load (`incremental_new_versions`, `incremental_new_accessions`,
+  `incremental_refresh`, `incremental_retire_changed`), and retire only the
+  accessions named in an explicit `load_deletions` staging table
+  (`incremental_retire_explicit`), never by absence.
 
-- **DELTA (`D`)** — upsert the changed set with the existing incremental steps
-  (`incremental_new_versions`, `incremental_new_accessions`, `incremental_refresh`,
-  `incremental_retire_changed` — all of which only act on rows *present* in the
-  load), and replace `incremental_retire_dropped` with a step that retires only the
-  accessions in an explicit `load_deletions` staging table.
-
-So `load_xref_delta` reuses 4 of the 5 incremental functions and swaps the one
-absence-based step for an explicit-deletion one.
+So `load_xref_delta` upserts the changed set and retires strictly by an explicit
+list -- absence never deletes.
 
 ### "Absent rows are never deleted" is a database-wide switch
 
-`incremental_retire_dropped` (and `populate_pel_tables4` in the full path) is the
-*only* place a row is retired for being absent. Gating that single step per database
-fully guarantees "absent ≠ deleted" for that database — nothing else deletes by
-absence. The switch is self-managing: **a database has a manifest iff it is
-delta-parsed**, so `release.get_load_release_type(dbid)` becomes
+`incremental_retire_explicit` retires only accessions named in `load_deletions`;
+nothing in the `'D'` path retires by absence (`populate_pel_tables4`, in the full
+`'F'` path, is the only place that still does). The switch is self-managing: **a
+database has a manifest iff it is delta-parsed**, so
+`release.get_load_release_type(dbid)` becomes
 
 - no prior release → `F` (bootstrap full load),
 - a manifest exists for the database → `D` (delta: deletions only from the explicit
   list; absent rows are left active),
-- otherwise → `I` (legacy full dump: absence = deleted).
+- otherwise → `F` (its parser still resubmits a full dump every release, and a
+  full rebuild costs no more than a row-by-row pass over that same full-size
+  input while doing less work per row).
 
 This **cannot** be flipped globally for every database yet: a legacy database still
 ships a full dump each import and relies on absence to detect drops, so turning
@@ -163,6 +162,12 @@ manifest from `manifest.csv`.
 - ✅ **Workflow wiring** — `manifest.csv` is branched out and applied post-release;
   `deletions.csv` rides the normal CSV stream into `load_deletions` via its ctl.
   `hgnc.nf` is unchanged (already emits `*.csv` and has DB access).
+- ⏸ **HGNC's auto-DELTA is paused.** HGNC has a real, populated manifest (it was
+  the first database run through this pipeline) and `get_load_release_type` would
+  select `'D'` for it, but that's deliberately overridden back to `'F'` in the
+  function for now, pending the staging validation in
+  docs/incremental-xref-loading.md. The manifest keeps being written either way, so
+  lifting the pause later needs no backfill.
 
 ### How to test end-to-end on staging
 
