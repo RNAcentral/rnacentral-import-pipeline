@@ -149,10 +149,10 @@ def test_run_patches_functions_and_checks_once(monkeypatch):
     assert ("SELECT rnc_update.new_update_release(%s, %s)", (9, 123)) in calls
 
     # do_checks runs once per released dbid, after the per-database loop, scoped
-    # to that dbid rather than the whole table.
-    assert sql_calls[-1] == "SELECT rnc_load_xref.do_checks(%s::bigint)"
-    assert ("SELECT rnc_load_xref.do_checks(%s::bigint)", (9,)) in calls
-    assert sum("do_checks(%s::bigint)" in sql for sql in sql_calls) == 1
+    # to that dbid's rows created by this release rather than the whole table.
+    assert sql_calls[-1] == "SELECT rnc_load_xref.do_checks(%s::bigint, %s::bigint)"
+    assert ("SELECT rnc_load_xref.do_checks(%s::bigint, %s::bigint)", (9, 123)) in calls
+    assert sum("do_checks(%s::bigint, %s::bigint)" in sql for sql in sql_calls) == 1
 
 
 def test_run_defaults_to_auto_release_type(monkeypatch):
@@ -348,7 +348,9 @@ def test_do_checks_scopes_to_the_dbid_partitions_when_given_one():
     do_checks used to group the whole xref table to find duplicate ids, which
     dominated release runtime regardless of how small the delta was. Given a
     dbid, it should only probe that dbid's partitions against the rest of the
-    table instead of re-aggregating everything.
+    table instead of re-aggregating everything -- and further scope those
+    partitions to rows this release actually created, since only a fresh
+    insert can introduce a new id collision.
     """
     path = (
         Path(__file__).resolve().parents[3]
@@ -357,6 +359,6 @@ def test_do_checks_scopes_to_the_dbid_partitions_when_given_one():
         / "do_checks.sql"
     )
     normalised = " ".join(path.read_text().split())
-    assert "xref_p%1$s_deleted" in normalised
-    assert "xref_p%1$s_not_deleted" in normalised
+    assert "xref_p%1$s_deleted where created = %2$s" in normalised
+    assert "xref_p%1$s_not_deleted where created = %2$s" in normalised
     assert "x.id in (" in normalised

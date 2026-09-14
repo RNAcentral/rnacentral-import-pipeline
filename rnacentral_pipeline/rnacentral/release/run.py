@@ -289,14 +289,13 @@ def run(db_url, force_full=False):
             )
 
     # Verify xref primary key uniqueness for each database loaded this run.
-    # do_checks scopes its scan to the dbid's own partitions against the rest
-    # of xref, rather than aggregating the whole table, so a per-database call
-    # is cheap.
+    # do_checks scopes its scan to rows created by this release, rather than the
+    # dbid's full history, so a per-database call stays cheap as a delta shrinks.
     for (dbid, rid) in releases:
         _run(
             db_url,
-            "SELECT rnc_load_xref.do_checks(%s::bigint)",
-            params=(dbid,),
+            "SELECT rnc_load_xref.do_checks(%s::bigint, %s::bigint)",
+            params=(dbid, rid),
             label=f"do_checks(dbid={dbid})",
             high_mem=True,
         )
