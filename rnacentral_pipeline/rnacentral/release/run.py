@@ -219,9 +219,10 @@ def run(db_url, force_full=False):
     crash on one long-running function doesn't abort the rest.
 
     By default each database's release type is chosen automatically: the first
-    load of a database is FULL (it bootstraps the xref partition), every later
-    load is INCREMENTAL (only new/changed rows are touched). Pass force_full=True
-    to force a FULL release for every database -- e.g. after a schema change.
+    load of a database is FULL (it bootstraps the xref partition), and every
+    later load is FULL too unless the database has an import manifest (only
+    new/changed rows are touched then). Pass force_full=True to force a FULL
+    release for every database -- e.g. after a schema change.
     """
     run_started = time.monotonic()
     # Deploy any changed database functions from database_functions/ before the

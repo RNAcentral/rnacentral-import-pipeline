@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 #
-# Tests the FULL-vs-INCREMENTAL release-type selection (step 4 of
+# Tests the FULL-vs-DELTA release-type selection (step 4 of
 # improvement/load-only-new-data):
 #
-#   * release.get_load_release_type(dbid) -> 'F' for a database with no prior
-#     release, 'I' for one that has been loaded before.
+#   * release.get_load_release_type(dbid) -> 'F' with no prior release or no
+#     import manifest, 'D' once a manifest exists for the database -- except
+#     HGNC, paused on 'F' regardless of its manifest (see the function's comment).
 #   * rnc_update.prepare_releases('A') applies that choice per database.
 #   * rnc_update.prepare_releases('F') forces FULL for every database.
 #
@@ -32,14 +33,14 @@ create schema release;
 set search_path = rnacen, public;
 
 create table rnacen.rnc_database (id smallint primary key, descr text);
-insert into rnacen.rnc_database values (1, 'DBONE'), (2, 'DBTWO');
+insert into rnacen.rnc_database values (1, 'DBONE'), (2, 'DBTWO'), (4, 'HGNC');
 
 create table rnacen.rnc_release (
   id bigint primary key, dbid smallint, release_date date, release_type char(1),
   status char(1), "timestamp" timestamp default now(), userstamp text, descr text, force_load char(1)
 );
--- DBONE has been loaded before (a completed release); DBTWO never has.
-insert into rnacen.rnc_release (id, dbid, release_type, status) values (1, 1, 'F', 'D');
+-- DBONE and HGNC have both been loaded before (a completed release); DBTWO never has.
+insert into rnacen.rnc_release (id, dbid, release_type, status) values (1, 1, 'F', 'D'), (2, 4, 'F', 'D');
 
 create table rnacen.load_rnacentral_all (database varchar(40));
 insert into rnacen.load_rnacentral_all values ('DBONE'), ('DBTWO');
@@ -57,17 +58,18 @@ set client_min_messages = warning;
 -- 1. get_load_release_type reflects history.
 DO $$
 BEGIN
-  ASSERT release.get_load_release_type(1) = 'I', 'db with prior release should be INCREMENTAL';
+  ASSERT release.get_load_release_type(1) = 'F', 'db with prior release but no manifest should be FULL';
   ASSERT release.get_load_release_type(2) = 'F', 'db with no prior release should be FULL';
   ASSERT release.get_load_release_type(3) = 'F', 'unknown db should default to FULL';
+  ASSERT release.get_load_release_type(4) = 'F', 'HGNC should be FULL';
 END $$;
 
 -- 2. prepare_releases('A') picks per database.
 select rnc_update.prepare_releases('A');
 DO $$
 BEGIN
-  ASSERT (select release_type from rnc_release where dbid = 1 and status = 'L') = 'I',
-         'auto mode should give DBONE an INCREMENTAL release';
+  ASSERT (select release_type from rnc_release where dbid = 1 and status = 'L') = 'F',
+         'auto mode should give DBONE a FULL release (no manifest)';
   ASSERT (select release_type from rnc_release where dbid = 2 and status = 'L') = 'F',
          'auto mode should give DBTWO a FULL release';
 END $$;
@@ -85,7 +87,7 @@ BEGIN
 END $$;
 
 -- 4. A delta-parsed database (one that has an import manifest) selects DELTA
---    instead of INCREMENTAL; a database with no manifest still selects INCREMENTAL.
+--    instead of FULL; a database with no manifest still selects FULL.
 create table rnacen.pipeline_tracking_import (
   database text, accession text, signature text,
   updated_at timestamptz default now(), primary key (database, accession)
@@ -97,6 +99,18 @@ insert into rnacen.pipeline_tracking_import (database, accession, signature)
 DO $$
 BEGIN
   ASSERT release.get_load_release_type(1) = 'D', 'db with a manifest selects DELTA';
+END $$;
+
+-- 5. HGNC is the exception: its manifest is real (its parser was the first one
+--    built this way), but auto-DELTA for it is paused, so it stays FULL even
+--    with a manifest present.
+create table rnacen.pipeline_tracking_import_hgnc
+  partition of rnacen.pipeline_tracking_import for values in ('HGNC');
+insert into rnacen.pipeline_tracking_import (database, accession, signature)
+  values ('HGNC', 'x', 'sig');
+DO $$
+BEGIN
+  ASSERT release.get_load_release_type(4) = 'F', 'HGNC stays FULL even with a manifest';
 END $$;
 SQL
 

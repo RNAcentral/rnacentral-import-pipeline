@@ -17,7 +17,6 @@ FUNCTIONS = Path(__file__).resolve().parents[3] / "database_functions"
 # `perform`. A step added without a notice puts the log back in the dark.
 STEP_DISPATCHERS = [
     "rnc_load_rna/load_rna.sql",
-    "rnc_load_xref_incremental/load_xref_incremental.sql",
     "rnc_load_xref_incremental/load_xref_delta.sql",
 ]
 

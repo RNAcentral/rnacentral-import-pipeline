@@ -24,7 +24,7 @@ DBID_SCOPED = [
     "incremental_retire_changed",
 ]
 
-CALLERS = ["load_xref_incremental.sql", "load_xref_delta.sql"]
+CALLERS = ["load_xref_delta.sql"]
 
 # How each step is called once it takes the dbid. new_versions and refresh only
 # ever write the current release, which is already on every staging row, so they
