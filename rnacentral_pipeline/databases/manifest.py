@@ -368,30 +368,68 @@ def apply_artifacts(
     source) rows from manifest_csv and the dropped (database, accession) rows from
     deletions_csv, then replaces each database's stored signatures.
     """
-    signatures: ty.Dict[str, ty.Dict[str, str]] = {}
-    sources: ty.Dict[str, ty.Dict[str, str]] = {}
-    with Path(manifest_csv).open("r", newline="") as handle:
-        for row in csv.reader(handle):
-            database, accession, signature = row[:3]
-            signatures.setdefault(database, {})[accession] = signature
-            source = row[3] if len(row) > 3 else ""
-            if source:
-                sources.setdefault(database, {})[accession] = source
-
-    dropped: ty.Dict[str, ty.List[str]] = {}
-    if deletions_csv is not None and Path(deletions_csv).exists():
-        with Path(deletions_csv).open("r", newline="") as handle:
-            for database, accession in csv.reader(handle):
-                dropped.setdefault(database, []).append(accession)
-
-    for database in set(signatures) | set(dropped):
-        store_signatures(
-            conn,
-            database,
-            signatures.get(database, {}),
-            dropped.get(database, []),
-            sources.get(database, {}),
+    # Streamed through temp tables rather than dicts: ENA's manifest is ~300M rows,
+    # far beyond what a task's memory holds, and the dump repeats some records.
+    with conn.cursor() as cur:
+        cur.execute(
+            "CREATE TEMP TABLE manifest_in "
+            "(database text, accession text, signature text, source text)"
         )
+        with Path(manifest_csv).open("r", newline="") as handle:
+            cur.copy_expert("COPY manifest_in FROM STDIN WITH (FORMAT csv)", handle)
+        cur.execute("CREATE TEMP TABLE deletions_in (database text, accession text)")
+        if deletions_csv is not None and Path(deletions_csv).exists():
+            with Path(deletions_csv).open("r", newline="") as handle:
+                cur.copy_expert(
+                    "COPY deletions_in FROM STDIN WITH (FORMAT csv)", handle
+                )
+        cur.execute(
+            "SELECT database FROM manifest_in UNION SELECT database FROM deletions_in"
+        )
+        databases = [database for (database,) in cur.fetchall()]
+
+    for database in databases:
+        ensure_partition(conn, database)
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                INSERT INTO {FILES_TABLE} (database, path, signature)
+                SELECT DISTINCT database, source, '' FROM manifest_in
+                 WHERE database = %s AND source <> ''
+                ON CONFLICT (database, path) DO NOTHING
+                """,
+                (database,),
+            )
+            cur.execute(
+                f"""
+                DELETE FROM {MANIFEST_TABLE} m USING deletions_in d
+                 WHERE m.database = d.database AND m.accession = d.accession
+                   AND d.database = %s
+                """,
+                (database,),
+            )
+            cur.execute(
+                f"""
+                INSERT INTO {MANIFEST_TABLE} AS m (database, accession, signature, source_id)
+                SELECT DISTINCT ON (i.accession) i.database, i.accession, i.signature, f.id
+                  FROM manifest_in i
+                  LEFT JOIN {FILES_TABLE} f
+                         ON f.database = i.database AND f.path = i.source
+                 WHERE i.database = %s
+                ON CONFLICT (database, accession)
+                DO UPDATE SET signature = excluded.signature,
+                              source_id = excluded.source_id,
+                              updated_at = clock_timestamp()
+                WHERE m.signature IS DISTINCT FROM excluded.signature
+                   OR m.source_id IS DISTINCT FROM excluded.source_id
+                """,
+                (database,),
+            )
+        conn.commit()
+
+    with conn.cursor() as cur:
+        cur.execute("DROP TABLE manifest_in, deletions_in")
+    conn.commit()
 
 
 def apply_source_artifacts(conn, sources_csv: ty.Union[str, Path]) -> None:

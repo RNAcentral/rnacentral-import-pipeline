@@ -66,29 +66,6 @@ def test_write_artifacts_round_trip(tmp_path):
         assert list(csv.reader(handle)) == [["HGNC", "HGNC:9"], ["HGNC", "HGNC:8"]]
 
 
-def test_apply_artifacts_groups_by_database(tmp_path, monkeypatch):
-    manifest.write_artifacts(tmp_path, "HGNC", {"HGNC:1": "s1"}, ["HGNC:9"])
-    # Add a second database's rows to prove per-database grouping.
-    with (tmp_path / manifest.MANIFEST_CSV).open("a", newline="") as handle:
-        csv.writer(handle).writerow(["PDBE", "1ABC", "sp"])
-
-    calls = []
-    monkeypatch.setattr(
-        manifest,
-        "store_signatures",
-        lambda conn, db, sigs, dropped, sources: calls.append(
-            (db, sigs, list(dropped))
-        ),
-    )
-    manifest.apply_artifacts(
-        None, tmp_path / manifest.MANIFEST_CSV, tmp_path / manifest.DELETIONS_CSV
-    )
-
-    by_db = {db: (sigs, dropped) for db, sigs, dropped in calls}
-    assert by_db["HGNC"] == ({"HGNC:1": "s1"}, ["HGNC:9"])
-    assert by_db["PDBE"] == ({"1ABC": "sp"}, [])
-
-
 def test_write_artifacts_records_the_source_of_each_record(tmp_path):
     """ENA's manifest carries the source so a later run can skip it safely."""
     manifest.write_artifacts(
@@ -103,22 +80,6 @@ def test_write_artifacts_records_the_source_of_each_record(tmp_path):
             ["ENA", "AB1.1", "s1", "/ena/wgs/aaa"],
             ["ENA", "AB2.1", "s2", "/ena/wgs/aab"],
         ]
-
-
-def test_apply_artifacts_passes_the_sources_through(tmp_path, monkeypatch):
-    manifest.write_artifacts(
-        tmp_path, "ENA", {"AB1.1": "s1"}, [], {"AB1.1": "/ena/wgs/aaa"}
-    )
-
-    calls = []
-    monkeypatch.setattr(
-        manifest,
-        "store_signatures",
-        lambda conn, db, sigs, dropped, sources: calls.append(sources),
-    )
-    manifest.apply_artifacts(None, tmp_path / manifest.MANIFEST_CSV)
-
-    assert calls == [{"AB1.1": "/ena/wgs/aaa"}]
 
 
 @pytest.fixture
@@ -392,3 +353,44 @@ def test_forgetting_a_source_forgets_its_records_too(conn):
 
     assert manifest.load_signatures(conn, TEST_DB) == {"acc1": "sig1"}
     assert manifest.load_file_signatures(conn, TEST_DB) == {"/src/kept": "s1"}
+
+
+@pytest.mark.db
+def test_apply_artifacts_upserts_deletes_and_resolves_sources(conn, tmp_path):
+    manifest.store_signatures(conn, TEST_DB, {"old": "s0", "gone": "s9"})
+    manifest.write_artifacts(
+        tmp_path,
+        TEST_DB,
+        {"old": "s1", "new": "s2"},
+        ["gone"],
+        {"old": "/src/aaa", "new": "/src/aab"},
+    )
+
+    manifest.apply_artifacts(
+        conn, tmp_path / manifest.MANIFEST_CSV, tmp_path / manifest.DELETIONS_CSV
+    )
+
+    stored = tmp_path / "stored.csv"
+    manifest.dump_signatures(conn, TEST_DB, stored)
+    assert sorted(csv.reader(stored.open())) == [
+        ["new", "s2", "/src/aab"],
+        ["old", "s1", "/src/aaa"],
+    ]
+
+
+@pytest.mark.db
+def test_apply_artifacts_tolerates_a_record_listed_twice(conn, tmp_path):
+    """
+    ENA's dump repeats some records, so the manifest can list an accession more
+    than once with the same signature. The dict-based apply hid that; the
+    primary key must not trip on it.
+    """
+    path = _write(
+        tmp_path,
+        "manifest.csv",
+        [[TEST_DB, "acc1", "s1", ""], [TEST_DB, "acc1", "s1", ""]],
+    )
+
+    manifest.apply_artifacts(conn, path)
+
+    assert manifest.load_signatures(conn, TEST_DB) == {"acc1": "s1"}
