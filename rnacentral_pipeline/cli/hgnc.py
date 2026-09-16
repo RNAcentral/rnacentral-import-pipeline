@@ -36,7 +36,7 @@ def cli():
 @click.option(
     "--force-full",
     is_flag=True,
-    help="Ignore the stored manifest and parse every record.",
+    help="Accepted for the pipeline's --force_full_import; HGNC always parses in full.",
 )
 @click.argument("filename", type=click.Path())
 @click.argument(
@@ -52,19 +52,15 @@ def process_hgnc(filename, output, force_full=False, db_url=None):
     """
     Process the raw HGNC file into importable CSV files.
 
-    Only records that are new or changed since the last import are mapped and
-    written; dropped records go to deletions.csv and the full signature set to
-    manifest.csv, both consumed by the load step. See docs/incremental-parsing.md.
-
-    --force-full ignores the stored manifest and parses everything, for when the
-    tracking table and the loaded data have drifted apart.
+    Every record is mapped and written. The full signature set still goes to
+    manifest.csv so a delta could start from it; see docs/incremental-parsing.md.
     """
-    previous = {} if force_full else manifest.load_signatures_for(db_url, DATABASE)
+    # HGNC is imported in full, as before delta existed: release.get_load_release_type
+    # pins it to FULL, which retires every xref absent from the load, so a delta
+    # parse here would retire everything unchanged. To run HGNC as a delta, lift
+    # that pin and restore `manifest.load_signatures_for(db_url, DATABASE)` here.
+    previous = {}
     result = parser.parse(Path(filename), db_url, previous)
     with entry_writer(Path(output)) as writer:
-        # A delta parse legitimately yields no entries when nothing changed; that is
-        # the fast-path success case, not the "parser produced nothing" failure the
-        # default guard catches. Safe here only because HGNC loads in DELTA mode,
-        # which retires via the explicit deletions list, never by absence.
-        writer.write(result.entries, allow_empty=True)
+        writer.write(result.entries)
     manifest.write_artifacts(output, DATABASE, result.signatures, result.deletions)

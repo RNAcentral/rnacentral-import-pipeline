@@ -19,9 +19,9 @@ BEGIN
         RETURN 'F';
     END IF;
 
-    -- HGNC's manifest is real and tested, but auto-DELTA for it is paused pending
-    -- staging validation (docs/incremental-xref-loading.md); it runs FULL like
-    -- every other database until that's lifted.
+    -- HGNC is deliberately kept FULL, as it was imported before delta existed.
+    -- FULL retires by absence, so the parser (rnac hgnc map) is pinned to a full
+    -- parse to match. To run HGNC as a delta, lift both pins together.
     SELECT descr INTO v_descr FROM RNACEN.rnc_database WHERE id = in_dbid;
     IF v_descr = 'HGNC' THEN
         RETURN 'F';
