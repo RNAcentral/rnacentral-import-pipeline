@@ -44,7 +44,7 @@ ROOTS
 
   : > sources.tsv
   while IFS= read -r root; do
-    signature=\$(find -L "\$root" -type f \( -name '*.ncr.gz' -o -name '*.tar' \) \
+    signature=\$(find -L "\$root" -type f \\( -name '*.ncr.gz' -o -name '*.tar' \\) \
       -printf '%P\t%s\t%T@\n' \
       | LC_ALL=C sort \
       | sha256sum \
