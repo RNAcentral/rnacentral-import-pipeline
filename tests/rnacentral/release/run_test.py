@@ -343,14 +343,14 @@ def test_check_scopes_count_query_to_loaded_dbids(monkeypatch, tmp_path):
     assert count_params == ([9],)
 
 
-def test_do_checks_scopes_to_the_dbid_partitions_when_given_one():
+def test_do_checks_scans_the_id_range_this_release_created():
     """
     do_checks used to group the whole xref table to find duplicate ids, which
-    dominated release runtime regardless of how small the delta was. Given a
-    dbid, it should only probe that dbid's partitions against the rest of the
-    table instead of re-aggregating everything -- and further scope those
-    partitions to rows this release actually created, since only a fresh
-    insert can introduce a new id collision.
+    dominated release runtime regardless of how small the delta was. Scoping
+    with `x.id in (select id ... where created = rid)` was planned as one index
+    probe per candidate id per partition and ran for over two days on ENA. The
+    scan must instead be bounded by the min/max id this release created, so
+    each partition answers through a single range scan of its unique id index.
     """
     path = (
         Path(__file__).resolve().parents[3]
@@ -359,6 +359,8 @@ def test_do_checks_scopes_to_the_dbid_partitions_when_given_one():
         / "do_checks.sql"
     )
     normalised = " ".join(path.read_text().split())
-    assert "xref_p%1$s_deleted where created = %2$s" in normalised
-    assert "xref_p%1$s_not_deleted where created = %2$s" in normalised
-    assert "x.id in (" in normalised
+    assert "with new_ids as materialized (" in normalised
+    assert "select id from xref_p%1$s_deleted where created = %2$s" in normalised
+    assert "select id from xref_p%1$s_not_deleted where created = %2$s" in normalised
+    assert "x.id between (select min(id) from new_ids)" in normalised
+    assert "x.id in (" not in normalised
