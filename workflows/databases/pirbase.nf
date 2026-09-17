@@ -43,8 +43,9 @@ process parse_full {
   path('*.{csv,parquet}'), optional: true
 
   script:
+  def fetch = url.startsWith('http') ? "wget --timeout=60 --tries=10 --continue -O data.fa.gz '$url'" : "cp '$url' data.fa.gz"
   """
-  wget --timeout=60 --tries=10 --continue -O data.fa.gz '$url'
+  $fetch
   gzip -df data.fa.gz
   rnac pirbase parse --known $known $code data.fa .
   """
@@ -66,8 +67,9 @@ process parse_gold {
   path('*.{csv,parquet}')
 
   script:
+  def fetch = url.startsWith('http') ? "wget --timeout=60 --tries=10 --continue -O gold.fa.gz '$url'" : "cp '$url' gold.fa.gz"
   """
-  wget --timeout=60 --tries=10 --continue -O gold.fa.gz '$url'
+  $fetch
   gzip -df gold.fa.gz
   rnac pirbase parse $code gold.fa .
   """
