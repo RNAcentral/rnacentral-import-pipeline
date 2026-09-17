@@ -229,7 +229,8 @@ process ena_signatures {
 // database, producing the to-parse filter plus the manifest.csv / deletions.csv the
 // generic delta wiring already consumes.
 process ena_delta_diff {
-  memory '4GB'
+  memory { 16.GB * task.attempt }
+  errorStrategy { task.attempt < 3 ? 'retry' : 'finish' }
 
   input:
   path('signatures*.csv')
