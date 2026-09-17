@@ -29,6 +29,7 @@ from rnc_rna_precomputed pre
 join rna on rna.urs = pre.urs
 where
     pre.urs_taxid in %s
+    and pre.is_active = true
 """
 
 
