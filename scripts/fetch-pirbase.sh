@@ -10,7 +10,7 @@ out=${1:?usage: fetch-pirbase.sh <output dir>}
 chunk=$((50 * 1024 * 1024))
 mkdir -p "$out/fasta"
 
-rnac pirbase urls "$base" | cut -d, -f3 | while read -r url; do
+"$(dirname "$0")/../bin/rnac" pirbase urls "$base" | cut -d, -f3 | while read -r url; do
   file="$out/fasta/$(basename "$url")"
   total=$(curl -s -m 60 -r 0-0 -D - -o /dev/null "$url" | tr -d '\r' | sed -n 's/^Content-Range: bytes 0-0\///p')
   if [ -z "$total" ]; then
