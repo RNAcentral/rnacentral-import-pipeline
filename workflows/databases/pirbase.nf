@@ -31,6 +31,8 @@ process find_known {
 process parse_full {
   tag { code }
   memory '5GB'
+  // piRBase's server drops most connections past a handful at once
+  maxForks 4
   errorStrategy 'retry'
   maxRetries 3
 
