@@ -109,7 +109,7 @@ def _write(tmp_path, name, rows):
     return path
 
 
-def test_diff_via_polars_treats_an_empty_stored_manifest_as_bootstrap(tmp_path):
+def test_diff_manifests_treats_an_empty_stored_manifest_as_bootstrap(tmp_path):
     """
     ENA emits the same location-based accession twice within one snapshot; the
     duplicate must not upset the diff (it aborted the old COPY with a
@@ -126,14 +126,14 @@ def test_diff_via_polars_treats_an_empty_stored_manifest_as_bootstrap(tmp_path):
         ],
     )
 
-    result = manifest.diff_via_polars(stored, new)
+    result = manifest.diff_manifests(stored, new)
 
     assert result.is_bootstrap is True
     assert result.to_parse == []
     assert result.deletions == []
 
 
-def test_diff_via_polars_diffs_correctly_despite_duplicates(tmp_path):
+def test_diff_manifests_diffs_correctly_despite_duplicates(tmp_path):
     """Against a stored manifest, a duplicated new accession is diffed once."""
     stored = _write(
         tmp_path,
@@ -152,7 +152,7 @@ def test_diff_via_polars_diffs_correctly_despite_duplicates(tmp_path):
         ],
     )
 
-    result = manifest.diff_via_polars(stored, new)
+    result = manifest.diff_manifests(stored, new)
 
     assert result.is_bootstrap is False
     assert set(result.to_parse) == {"acc2", "acc4"}
@@ -160,7 +160,36 @@ def test_diff_via_polars_diffs_correctly_despite_duplicates(tmp_path):
     assert set(result.deletions) == {"acc3"}
 
 
-def test_diff_via_polars_never_deletes_records_of_a_skipped_source(tmp_path):
+def test_diff_manifests_handles_unsorted_input_with_scattered_duplicates(tmp_path):
+    """
+    The diff sorts both sides on disk and merges them, so the manifest never has to
+    fit in memory (a hash join of ENA's manifest was OOM-killed at 32GB). Neither
+    input arrives in accession order, and a duplicate need not be adjacent.
+    """
+    stored = _write(
+        tmp_path,
+        "stored.csv",
+        [("acc3", "sig3", "src"), ("acc1", "sig1", "src"), ("acc2", "sig2", "src")],
+    )
+    new = _write(
+        tmp_path,
+        "new.csv",
+        [
+            ("src", "acc4", "sig4"),
+            ("src", "acc2", "sig2-new"),
+            ("src", "acc1", "sig1"),
+            ("src", "acc4", "sig4"),
+        ],
+    )
+
+    result = manifest.diff_manifests(stored, new)
+
+    assert result.to_parse == ["acc2", "acc4"]
+    assert result.deletions == ["acc3"]
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["new.csv", "stored.csv"]
+
+
+def test_diff_manifests_never_deletes_records_of_a_skipped_source(tmp_path):
     """
     The whole point of skipping an unchanged source: its records are not signatured
     this run, and must not therefore look dropped.
@@ -172,12 +201,12 @@ def test_diff_via_polars_never_deletes_records_of_a_skipped_source(tmp_path):
     )
     new = _write(tmp_path, "new.csv", [("scanned", "acc1", "sig1")])
 
-    result = manifest.diff_via_polars(stored, new, ["scanned"])
+    result = manifest.diff_manifests(stored, new, ["scanned"])
 
     assert result.deletions == []
 
 
-def test_diff_via_polars_deletes_records_of_a_vanished_source(tmp_path):
+def test_diff_manifests_deletes_records_of_a_vanished_source(tmp_path):
     """A source that has gone from the snapshot is scanned, so its records retire."""
     stored = _write(
         tmp_path,
@@ -186,7 +215,7 @@ def test_diff_via_polars_deletes_records_of_a_vanished_source(tmp_path):
     )
     new = _write(tmp_path, "new.csv", [("scanned", "acc1", "sig1")])
 
-    result = manifest.diff_via_polars(stored, new, ["scanned", "gone"])
+    result = manifest.diff_manifests(stored, new, ["scanned", "gone"])
 
     assert result.deletions == ["acc2"]
 
@@ -205,7 +234,7 @@ def test_dump_signatures_round_trips_through_the_polars_diff(conn, tmp_path):
     ]
 
     new = _write(tmp_path, "new.csv", [("", "acc1", "sig1"), ("", "acc3", "sig3")])
-    result = manifest.diff_via_polars(stored, new)
+    result = manifest.diff_manifests(stored, new)
 
     assert result.to_parse == ["acc3"]
     assert result.deletions == ["acc2"]
@@ -293,7 +322,7 @@ def test_changed_signature_still_updates_despite_the_guard(conn):
     }
 
 
-def test_diff_via_polars_retires_a_vanished_source_with_no_new_signatures(tmp_path):
+def test_diff_manifests_retires_a_vanished_source_with_no_new_signatures(tmp_path):
     """
     Every source unchanged bar one that has gone: there are no chunks and so no new
     signatures at all, and the records of the gone source still have to retire.
@@ -305,7 +334,7 @@ def test_diff_via_polars_retires_a_vanished_source_with_no_new_signatures(tmp_pa
     )
     new = _write(tmp_path, "new.csv", [])
 
-    result = manifest.diff_via_polars(stored, new, ["gone"])
+    result = manifest.diff_manifests(stored, new, ["gone"])
 
     assert result.to_parse == []
     assert result.deletions == ["acc2"]

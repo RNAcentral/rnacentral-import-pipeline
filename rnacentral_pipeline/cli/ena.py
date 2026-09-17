@@ -206,7 +206,7 @@ def ena_delta_diff(
     without the restriction every one of its records would look dropped.
 
     The database is only read from: the stored manifest is COPYed out and the joins
-    run in polars here, so this cannot contend with anything else on the database.
+    run on the cluster here, so this cannot contend with anything else on the database.
 
     --force-full skips the diff and parses everything, for when the tracking table
     and the loaded data have drifted apart. Nothing is listed for deletion: a forced
@@ -230,7 +230,7 @@ def ena_delta_diff(
         finally:
             conn.close()
 
-        result = manifest.diff_via_polars(stored, Path(signatures_csv), scanned)
+        result = manifest.diff_manifests(stored, Path(signatures_csv), scanned)
 
         if result.is_bootstrap:
             to_parse.write(delta.KEEP_ALL + "\n")

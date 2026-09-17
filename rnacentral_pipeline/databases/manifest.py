@@ -18,11 +18,12 @@ See docs/incremental-parsing.md.
 import csv
 import hashlib
 import json
+import os
+import subprocess
 import typing as ty
 from pathlib import Path
 
 import attr
-import polars as pl
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
@@ -455,7 +456,7 @@ def apply_source_artifacts(conn, sources_csv: ty.Union[str, Path]) -> None:
 
 @attr.s(frozen=True)
 class DbDiff:
-    """Result of a large-scale diff (see :func:`diff_via_polars`)."""
+    """Result of a large-scale diff (see :func:`diff_manifests`)."""
 
     to_parse = attr.ib(type=ty.List[str])  # accessions new or changed since last import
     deletions = attr.ib(type=ty.List[str])  # accessions present last import, now absent
@@ -470,7 +471,7 @@ def dump_signatures(conn, database: str, path: Path) -> None:
     This is the only database work an incremental import needs. Keeping it to a
     single COPY of one partition means a diff that lands while the database is busy
     can do nothing but read: no temp tables, no server-side set arithmetic, nothing
-    another job can contend with. :func:`diff_via_polars` does the joins.
+    another job can contend with. :func:`diff_manifests` does the joins.
     """
     ensure_table(conn)
     select = cursor_mogrify(
@@ -495,16 +496,42 @@ def cursor_mogrify(conn, statement: str, params: ty.Tuple) -> str:
         return cur.mogrify(statement, params).decode()
 
 
-def _scan_signatures(path: Path, columns: ty.List[str]) -> pl.LazyFrame:
-    return pl.scan_csv(
-        path,
-        has_header=False,
-        new_columns=columns,
-        schema_overrides={column: pl.String for column in columns},
+def _sort_by_accession(path: Path, column: int) -> Path:
+    # GNU sort spills to disk, so the manifest never has to fit in memory. It spills
+    # beside the input because a --contain container gives /tmp a few megabytes.
+    output = path.with_name(path.name + ".sorted")
+    subprocess.run(
+        [
+            "sort",
+            "-t,",
+            f"-k{column},{column}",
+            "-S",
+            "1G",
+            "-T",
+            str(path.parent),
+            "-o",
+            str(output),
+            str(path),
+        ],
+        check=True,
+        env={**os.environ, "LC_ALL": "C"},
     )
+    return output
 
 
-def diff_via_polars(
+def _rows(path: Path) -> ty.Iterator[ty.List[str]]:
+    with path.open(newline="") as handle:
+        yield from csv.reader(handle)
+
+
+def _skip_duplicates(rows: ty.Iterator[ty.List[str]], accession: str):
+    for row in rows:
+        if row[1] != accession:
+            return row
+    return None
+
+
+def diff_manifests(
     stored_csv: Path,
     new_csv: Path,
     scanned_sources: ty.Optional[ty.Collection[str]] = None,
@@ -514,48 +541,45 @@ def diff_via_polars(
 
     ``stored_csv`` is a headerless ``accession,signature,source`` CSV from
     :func:`dump_signatures` and ``new_csv`` a ``source,accession,signature`` one
-    collected from the import; the joins run streaming in polars, so ENA-scale sets never have
-    to fit in memory and the database is left alone. An empty ``stored_csv`` is a
-    bootstrap: nothing was imported before, so there is nothing to delete and the
-    caller parses everything.
+    collected from the import. Both are sorted by accession on disk and walked
+    together in one pass, so ENA-scale sets never have to fit in memory and the
+    database is left alone. An empty ``stored_csv`` is a bootstrap: nothing was
+    imported before, so there is nothing to delete and the caller parses everything.
 
     ``scanned_sources`` restricts deletion to records whose source was actually read
     this run. Without it an import that skips an unchanged source would see every one
     of that source's records as absent, and retire the lot.
 
-    ENA can emit the same location-based accession twice in one snapshot, so the new
-    side is deduplicated before the join.
+    ENA can emit the same location-based accession twice in one snapshot; the first
+    row wins.
     """
     if Path(stored_csv).stat().st_size == 0:
         return DbDiff(to_parse=[], deletions=[], is_bootstrap=True)
 
-    if Path(new_csv).stat().st_size == 0:
-        # Every source was skipped as unchanged. Nothing to parse, but a source that
-        # has gone still has records to retire, so the anti-join must still run.
-        new = pl.LazyFrame(schema={"accession": pl.String, "signature": pl.String})
-    else:
-        new = (
-            _scan_signatures(new_csv, ["source", "accession", "signature"])
-            .select("accession", "signature")
-            .unique(subset="accession", keep="any")
-        )
-    stored = _scan_signatures(stored_csv, ["accession", "signature", "source"])
+    stored_sorted = _sort_by_accession(Path(stored_csv), 1)
+    new_sorted = _sort_by_accession(Path(new_csv), 2)
+    scanned = None if scanned_sources is None else set(scanned_sources)
 
-    to_parse = (
-        new.join(stored, on="accession", how="left", suffix="_stored")
-        .filter(
-            pl.col("signature_stored").is_null()
-            | (pl.col("signature_stored") != pl.col("signature"))
-        )
-        .select("accession")
-    )
-    deletions = stored
-    if scanned_sources is not None:
-        deletions = deletions.filter(pl.col("source").is_in(list(scanned_sources)))
-    deletions = deletions.join(new, on="accession", how="anti").select("accession")
+    to_parse: ty.List[str] = []
+    deletions: ty.List[str] = []
+    stored = _rows(stored_sorted)
+    new = _rows(new_sorted)
+    s = next(stored, None)
+    n = next(new, None)
+    while s is not None or n is not None:
+        if s is None or (n is not None and n[1] < s[0]):
+            to_parse.append(n[1])
+            n = _skip_duplicates(new, n[1])
+        elif n is None or s[0] < n[1]:
+            if scanned is None or s[2] in scanned:
+                deletions.append(s[0])
+            s = next(stored, None)
+        else:
+            if s[1] != n[2]:
+                to_parse.append(n[1])
+            s = next(stored, None)
+            n = _skip_duplicates(new, n[1])
 
-    return DbDiff(
-        to_parse=to_parse.collect(engine="streaming")["accession"].to_list(),
-        deletions=deletions.collect(engine="streaming")["accession"].to_list(),
-        is_bootstrap=False,
-    )
+    stored_sorted.unlink()
+    new_sorted.unlink()
+    return DbDiff(to_parse=to_parse, deletions=deletions, is_bootstrap=False)

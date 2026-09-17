@@ -54,7 +54,7 @@ def test_ena_force_full_keeps_everything_without_a_diff(tmp_path, monkeypatch):
     scanned.write_text("/ena/wgs/aaa\n")
 
     monkeypatch.setattr(ena_cli.manifest, "dump_signatures", _boom)
-    monkeypatch.setattr(ena_cli.manifest, "diff_via_polars", _boom)
+    monkeypatch.setattr(ena_cli.manifest, "diff_manifests", _boom)
 
     to_parse = tmp_path / "to_parse.txt"
     deletions = tmp_path / "deletions.csv"
