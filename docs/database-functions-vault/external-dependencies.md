@@ -12,7 +12,7 @@ Functions that the release-load code calls from schemas **outside the ones this 
 |---|---|---|---|
 | `rnc_logging` | `log_release_start(dbid, release)` | [[rnc_update.load_release]] | Record start of a release load. |
 | `rnc_logging` | `log_release_end(dbid, release, previous_release)` | [[rnc_update.load_release]] | Record completion / diff of a release load. |
-| `rnc_load_xref_incremental` | `load_xref_incremental(previous_release, dbid)` | [[rnc_update.load_release]] | Xref load path for **incremental** (`release_type = 'I'`) releases; the full-release counterpart is [[rnc_load_xref.load_xref]]. |
+| `rnc_load_xref_incremental` | `load_xref_delta(previous_release, dbid)` | [[rnc_update.load_release]] | Xref load path for **delta** (`release_type = 'D'`) releases; the full-release counterpart is [[rnc_load_xref.load_xref]]. |
 | `database` | `set_current_release(dbid, release)` | [[rnc_update.mark_as_done]] | Point `rnc_database.current_release` at the finished release. |
 | `upi` | `getUpi(seq_value)` | [[rnc_load_rna.load_md5_new_sequences_table]] | Format a `seq_upi` sequence value into a `URS……` UPI string. |
 

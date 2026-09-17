@@ -21,6 +21,69 @@ include { qc_import } from './workflows/utils/qc'
 include { slack_message } from './workflows/utils/slack'
 include { slack_closure } from './workflows/utils/slack'
 
+// Promote a delta parse's manifest into pipeline_tracking_import, once the release has
+// committed. Gated on should_release so a run that does not release never advances
+// the manifest ahead of the database. See docs/incremental-parsing.md.
+process apply_manifest {
+  cache false
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple path(manifest), val(_ready)
+
+  output:
+  val('done')
+
+  when: params.get('should_release', false)
+
+  script:
+  """
+  rnac manifest apply $manifest
+  """
+}
+
+// Same rule for the per-source signatures that decide what ENA fetches at all: a run
+// that has not released must not leave them saying those sources are up to date.
+process apply_sources {
+  cache false
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple path(sources), val(_ready)
+
+  output:
+  val('done')
+
+  when: params.get('should_release', false)
+
+  script:
+  """
+  rnac manifest apply-sources $sources
+  """
+}
+
+// The weekly run picks which databases to import by comparing remote checksums against
+// rnc_import_tracker. Recording a checksum before the import has run would mark a
+// failed import as done and skip that database every week after, so the update waits
+// for the release, like the manifests above.
+process update_import_tracker {
+  cache false
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple path(latest_md5s), val(_ready)
+
+  output:
+  val('done')
+
+  when: params.get('should_release', false)
+
+  script:
+  """
+  rnac scan-imports update-tracker $latest_md5s
+  """
+}
+
 workflow import_data {
   take: _flag
   main:
@@ -34,6 +97,8 @@ workflow import_data {
     | branch { r ->
       terms: r.name == "terms.csv" || r.name == "terms.parquet"
       ref_ids: r.name == "ref_ids.csv" || r.name == "ref_ids.parquet"
+      manifest: r.name == "manifest.csv"
+      sources: r.name == "sources.csv"
       csv: true
     } \
     | set { results }
@@ -49,6 +114,24 @@ workflow import_data {
     // Final import step: QC — per-database rows imported this release.
     post_release | qc_import
 
+    // deletions.csv rides the normal csv stream into load_data (staged via
+    // deletions.ctl). manifest.csv is applied only after the release completes.
+    results.manifest \
+    | combine(post_release) \
+    | apply_manifest
+
+    results.sources \
+    | combine(post_release) \
+    | apply_sources
+
+    // Written by select_databases.nf. fromPath emits a literal path whether or not it
+    // exists, so the filter is what stops a run that skipped the selection failing here;
+    // the tracker then keeps what it had and those databases import again next week.
+    channel.fromPath("$projectDir/latest_md5s.csv") \
+    | filter { md5s -> md5s.exists() } \
+    | combine(post_release) \
+    | update_import_tracker
+
   emit: post_release
 }
 
@@ -59,7 +142,10 @@ workflow {
   // See analyze.nf: an onError section crashes on Nextflow 26.04.
   onComplete:
     try {
-      slack_closure("Workflow completed ${workflow.success ? 'Ok' : 'with errors'}")
+      def msg = workflow.success
+        ? "Import workflow completed Ok"
+        : "Import workflow failed"
+      slack_closure(msg)
     } catch (Exception e) {
       log.warn "Could not send Slack notification: ${e}"
     }

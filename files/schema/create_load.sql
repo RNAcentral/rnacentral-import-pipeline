@@ -54,6 +54,16 @@ CREATE UNLOGGED TABLE load_rnc_references (
     doi text NULL
   );
 
+-- Explicit deletion list for delta-parsed databases: accessions the parser found
+-- had dropped out of the input. The DELTA load retires exactly these (never rows
+-- that are merely absent). See docs/incremental-parsing.md.
+DROP TABLE IF EXISTS load_deletions;
+CREATE UNLOGGED TABLE
+  load_deletions (
+    database character varying(40),
+    accession character varying(200)
+  );
+
 DROP TABLE IF EXISTS load_retro_tmp;
 CREATE UNLOGGED TABLE
   load_retro_tmp (

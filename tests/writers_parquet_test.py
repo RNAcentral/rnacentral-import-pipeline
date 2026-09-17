@@ -195,6 +195,15 @@ def test_writer_raises_when_given_no_entries(tmp_path):
             writer.write([])
 
 
+def test_writer_allows_empty_when_requested(tmp_path):
+    """
+    A delta parse legitimately yields no entries when nothing changed; callers
+    like ``rnac hgnc map`` opt out of the empty-write error with allow_empty.
+    """
+    with writers.parquet_entry_writer(tmp_path) as writer:
+        writer.write([], allow_empty=True)
+
+
 def test_writer_closes_files_when_write_raises(tmp_path):
     """
     An exception mid-write must still leave readable parquet files rather than
