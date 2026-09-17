@@ -341,7 +341,9 @@ def check(limit_file, db_url, default_allowed_change=0.30):
             # may not exist on older schemas.
             cur.execute("SELECT to_regclass('rnacen.pipeline_tracking_import')")
             if cur.fetchone()[0] is not None:
-                cur.execute("SELECT database FROM rnacen.pipeline_tracking_import")
+                cur.execute(
+                    "SELECT DISTINCT database FROM rnacen.pipeline_tracking_import"
+                )
                 delta_dbs = {row[0] for row in cur}
 
     problems = False

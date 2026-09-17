@@ -343,6 +343,37 @@ def test_check_scopes_count_query_to_loaded_dbids(monkeypatch, tmp_path):
     assert count_params == ([9],)
 
 
+class DeltaCheckCursor(CheckCursor):
+    def fetchone(self):
+        return (1,)
+
+    def __iter__(self):
+        return iter([("ena",)])
+
+
+def test_check_lets_the_database_dedupe_delta_databases(monkeypatch, tmp_path):
+    """
+    The delta-database lookup fetched every manifest row to build a set of a
+    handful of names; once the ENA manifest held hundreds of millions of rows that
+    OOM-killed the release process before it had done anything.
+    """
+    conn = CheckConnection()
+    conn.cursor_obj = DeltaCheckCursor()
+    monkeypatch.setattr(run.psycopg2, "connect", lambda *a, **k: conn)
+    limits = tmp_path / "limits.json"
+    limits.write_text("{}")
+
+    with limits.open() as fh:
+        run.check(fh, "postgres://example")
+
+    delta_sql = next(
+        sql
+        for sql, _ in conn.cursor_obj.calls
+        if "FROM rnacen.pipeline_tracking_import" in sql
+    )
+    assert delta_sql == "SELECT DISTINCT database FROM rnacen.pipeline_tracking_import"
+
+
 def test_do_checks_scans_the_id_range_this_release_created():
     """
     do_checks used to group the whole xref table to find duplicate ids, which
