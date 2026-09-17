@@ -38,7 +38,7 @@ process parse_full {
   tuple val(code), val(url), path(known)
 
   output:
-  path('*.{csv,parquet}')
+  path('*.{csv,parquet}'), optional: true
 
   script:
   """
