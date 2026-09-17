@@ -18,9 +18,8 @@ import tempfile
 
 import pytest
 
-from rnacentral_pipeline.rnacentral import lookup as lk
-
 from rnacentral_pipeline.databases.genecards_suite.core import lookup as gc
+from rnacentral_pipeline.rnacentral import lookup as lk
 
 
 @pytest.fixture(scope="module")
@@ -108,3 +107,36 @@ def test_can_write_and_load_a_mapping(db):
                 "description": "Homo sapiens (human) non-protein coding lnc-KLRG1-9:4",
             }
         }
+
+
+class FakeConn:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def cursor(self, **kwargs):
+        return self
+
+    def execute(self, query, params):
+        pass
+
+    def __iter__(self):
+        return iter(self.rows)
+
+    def close(self):
+        pass
+
+
+@pytest.fixture
+def one_missing(monkeypatch):
+    monkeypatch.setattr(lk.psycopg2, "connect", lambda url: FakeConn([{"id": "a"}]))
+
+
+def test_missing_ids_raise_by_default(one_missing):
+    with pytest.raises(ValueError, match="Found 1 of 2"):
+        list(lk.lookup("unused", ["a", "b"], "unused"))
+
+
+def test_allow_missing_yields_what_was_found(one_missing):
+    assert list(lk.lookup("unused", ["a", "b"], "unused", allow_missing=True)) == [
+        {"id": "a"}
+    ]

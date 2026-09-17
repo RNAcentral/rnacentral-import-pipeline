@@ -22,7 +22,7 @@ import psycopg2.extras
 CHUNK_SIZE = 300
 
 
-def lookup(db_url, all_ids, query, chunk_size=CHUNK_SIZE):
+def lookup(db_url, all_ids, query, chunk_size=CHUNK_SIZE, allow_missing=False):
     # assert all_ids, "Must give ids to lookup"
     data = {}
     conn = psycopg2.connect(db_url)
@@ -35,7 +35,7 @@ def lookup(db_url, all_ids, query, chunk_size=CHUNK_SIZE):
         for result in cur:
             yield result
             count += 1
-        if count != len(ids):
+        if count != len(ids) and not allow_missing:
             raise ValueError("Found %i of %i" % (count, len(ids)))
         cur.close()
     conn.close()
