@@ -31,7 +31,7 @@ process find_sequences {
   """
   psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -v "min_len=${params.tcode.min_len}" -f "$query" "\$PGDATABASE" > raw.json
   mkdir sequences
-  split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
+  split --lines=${params.tcode.chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json sequences/seq-
   """
 }
 
