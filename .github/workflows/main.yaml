@@ -9,6 +9,7 @@ permissions:
   packages: write
 
 on:
+ workflow_dispatch:
  push:
   branches: ['master', 'dev','python-update']
   paths: ['pyproject.toml', 'uv.lock', 'Cargo.toml', 'Cargo.lock', 'Dockerfile', 'utils/**']
