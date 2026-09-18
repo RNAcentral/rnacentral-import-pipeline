@@ -5,28 +5,19 @@ nextflow.enable.dsl=2
 include { slack_closure } from './workflows/utils/slack'
 include { slack_message } from './workflows/utils/slack'
 
-/* Get some data downloaded and in the right place */
-
-/* On the cluster this is much much faster than wget */
+/* Copy the R2DT models out of the image so r2dt-scan.nf can bind them from the host */
 process get_r2dt_data {
-  container ''
+  container params.r2dt.container
+  containerOptions "${params.r2dt_container}"
 
   input:
     val(data_dir)
 
   script:
   """
-  echo "$data_dir"
-  if [ ! -d $data_dir ]
-  then
-    mkdir -p $data_dir
-  fi
-
-  cd $data_dir
-
-  wget https://github.com/r2dt-bio/R2DT/releases/download/v2.0/cms.tar.gz
-
-  tar -xf cms.tar.gz --strip-components=1 -C ./cms
+  mkdir -p $data_dir
+  rm -rf $data_dir/cms
+  cp -r /rna/r2dt/data/cms $data_dir/cms
   """
 }
 
