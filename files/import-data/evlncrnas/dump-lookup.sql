@@ -10,15 +10,15 @@ COPY(
   ON rnc_database.id = xref.dbid
   WHERE xref.deleted = 'N'
   AND upper(rnc_database.descr) IN (
-    'INTACT',
-    'LNCBASE',
-    'LNCIPEDIA',
-    'MALACARDS',
-    'MODOMICS',
-    'NONCODE',
+    'WORMBASE',
     'SGD',
-    'TARBASE',
-    'TMRNA_WEB',
+    'POMBASE',
+    'LNCIPEDIA',
+    'FLYBASE',
+    'ENSEMBL',
+    'LNCBOOK',
+    'MALACARDS',
+    'GENECARDS',
     'EXPRESSION_ATLAS'
   )
 
