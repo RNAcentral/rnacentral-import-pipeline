@@ -132,12 +132,14 @@ jobs:
             --build-arg PYTHON_VERSION=${{ steps.versions.outputs.python }} \
             -t rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pytag }}-${{ steps.versions.outputs.pipeline }} \
             -t rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pytag }}-experimental \
+            -t rnacentral/rnacentral-import-pipeline:latest \
             -f Dockerfile .
 
       - name: docker push
         run: |
           docker push rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pytag }}-${{ steps.versions.outputs.pipeline }}
           docker push rnacentral/rnacentral-import-pipeline:${{ steps.versions.outputs.pytag }}-experimental
+          docker push rnacentral/rnacentral-import-pipeline:latest
 
   finished-notification:
     needs:
