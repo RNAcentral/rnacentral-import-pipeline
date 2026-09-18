@@ -26,27 +26,48 @@ process find_known {
   """
 }
 
-// The full sets are filtered to sequences RNAcentral already holds; without
-// that they are tens of millions of piRNAs.
-process parse_full {
-  tag { code }
-  memory '5GB'
+// A local mirror lives on /nfs/production
+process fetch {
+  tag { "$code $kind" }
+  queue 'datamover'
+  container ''
   // piRBase's server drops most connections past a handful at once
   maxForks 4
   errorStrategy 'retry'
   maxRetries 3
 
   input:
-  tuple val(code), val(url), path(known)
+  tuple val(code), val(kind), val(url)
+
+  output:
+  tuple val(code), val(kind), path('data.fa.gz')
+
+  script:
+  if( url.startsWith('http') )
+    """
+    wget --timeout=60 --tries=10 --continue -O data.fa.gz '$url'
+    """
+  else
+    """
+    cp '$url' data.fa.gz
+    """
+}
+
+// The full sets are filtered to sequences RNAcentral already holds; without
+// that they are tens of millions of piRNAs.
+process parse_full {
+  tag { code }
+  memory '5GB'
+
+  input:
+  tuple val(code), path(data), path(known)
 
   output:
   path('*.{csv,parquet}'), optional: true
 
   script:
-  def fetch = url.startsWith('http') ? "wget --timeout=60 --tries=10 --continue -O data.fa.gz '$url'" : "cp '$url' data.fa.gz"
   """
-  $fetch
-  gzip -df data.fa.gz
+  gzip -dc $data > data.fa
   rnac pirbase parse --known $known $code data.fa .
   """
 }
@@ -57,20 +78,16 @@ process parse_full {
 process parse_gold {
   tag { "${code} gold" }
   memory '2GB'
-  errorStrategy 'retry'
-  maxRetries 3
 
   input:
-  tuple val(code), val(url)
+  tuple val(code), path(data)
 
   output:
   path('*.{csv,parquet}')
 
   script:
-  def fetch = url.startsWith('http') ? "wget --timeout=60 --tries=10 --continue -O gold.fa.gz '$url'" : "cp '$url' gold.fa.gz"
   """
-  $fetch
-  gzip -df gold.fa.gz
+  gzip -dc $data > gold.fa
   rnac pirbase parse $code gold.fa .
   """
 }
@@ -84,19 +101,20 @@ workflow pirbase {
 
       find_urls \
       | splitCsv \
+      | fetch \
       | branch { row ->
         full: row[1] == 'full'
         gold: row[1] == 'gold'
       } \
-      | set { urls }
+      | set { fetched }
 
-      urls.full \
+      fetched.full \
       | map { row -> tuple(row[0], row[2]) } \
       | combine(known) \
       | parse_full \
       | set { from_full }
 
-      urls.gold \
+      fetched.gold \
       | map { row -> tuple(row[0], row[2]) } \
       | parse_gold \
       | set { from_gold }
