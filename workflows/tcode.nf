@@ -19,6 +19,8 @@ process build_ranges {
 }
 
 process find_sequences {
+  maxForks params.tcode.query_max_forks
+
   input:
   tuple val(min), val(max), path(query)
 
