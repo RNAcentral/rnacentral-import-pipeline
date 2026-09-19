@@ -1,3 +1,9 @@
+-- Sequences without an ORF are stored with null scores; the table predates that.
+ALTER TABLE cpat_results
+  ALTER COLUMN fickett_score DROP NOT NULL,
+  ALTER COLUMN hexamer_score DROP NOT NULL,
+  ALTER COLUMN coding_probability DROP NOT NULL;
+
 INSERT INTO cpat_results (
   urs_taxid,
   fickett_score,

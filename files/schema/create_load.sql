@@ -432,9 +432,9 @@ CREATE UNLOGGED TABLE load_cpat_orfs (
 DROP TABLE IF EXISTS load_cpat;
 CREATE UNLOGGED TABLE load_cpat (
   urs_taxid TEXT not null,
-  fickett_score float not null,
-  hexamer_score float not null,
-  coding_probability float not null,
+  fickett_score float,
+  hexamer_score float,
+  coding_probability float,
   is_protein_coding bool not null
 );
 
