@@ -85,8 +85,11 @@ process store_results {
   path(orf_post_load)
 
   script:
+  // create_load.sql is never re-applied, so the live load_cpat predates the
+  // no-ORF rows and still rejects their null scores; results.ctl does the same
   if (params.writer_format == 'parquet')
     """
+    psql -v ON_ERROR_STOP=1 -c 'ALTER TABLE load_cpat ALTER COLUMN fickett_score DROP NOT NULL, ALTER COLUMN hexamer_score DROP NOT NULL, ALTER COLUMN coding_probability DROP NOT NULL' "\$PGDATABASE"
     load-parquet load_cpat 'results*.parquet' \\
       --truncate \\
       --post-load $result_post_load
