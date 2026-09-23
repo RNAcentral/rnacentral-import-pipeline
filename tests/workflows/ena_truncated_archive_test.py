@@ -31,8 +31,13 @@ def unpack_section() -> str:
     """The part of the script between the rsync and the chunking, as bash."""
     script = fetch_directory_script()
     start = script.index("find copied -type f -empty -delete")
-    end = script.index("mkdir $name-chunks")
-    return script[start:end].replace("\\$", "$").replace("${name}", "wgs")
+    end = script.index("if [ -s \\$label.ncr ]; then")
+    body = script[start:end].replace("\\$", "$")
+    # $root/$label are computed earlier in the real per-root loop (label is a
+    # sha1sum of root); this slice starts after that, so stand in fixed
+    # values the same way the old ${name}-templated script was pinned to
+    # "wgs" for these tests.
+    return "root=wgs\nlabel=wgs\n" + body
 
 
 def test_archives_are_not_unpacked_through_a_shared_xargs():

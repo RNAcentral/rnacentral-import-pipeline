@@ -76,10 +76,12 @@ line-length = 88
 target-version = "py311"
 
 [tool.ruff.lint]
+# Import sorting only - matches what black+isort actually enforced (format +
+# sort). E/W/F is real linting (line length, unused imports, undefined
+# names, ...) that neither tool ever did; the repo has ~1000+ pre-existing
+# violations of it, so selecting those blocks any commit that merely touches
+# an already-violating file. Ratchet those in separately if wanted.
 select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # Pyflakes (unused imports, undefined variables, etc.)
     "I",   # isort (import sorting)
 ]
 

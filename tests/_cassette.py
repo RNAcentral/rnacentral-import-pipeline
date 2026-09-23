@@ -570,6 +570,13 @@ def _install_psycopg2():
             # read this directly rather than asking the cursor for columns.
             self.description = None
 
+        @property
+        def connection(self):
+            # Real psycopg2 cursors expose this; psycopg2.extras.execute_values/
+            # execute_batch read cur.connection.encoding directly to encode the
+            # query themselves, ahead of (and regardless of) our execute().
+            return self._connection
+
         def execute(self, query, params=None, *, vars=None, parameters=None):
             # Real psycopg2's execute() is a C method, so inspect.signature()
             # raises on it - callers that branch on introspection (e.g.
@@ -583,7 +590,24 @@ def _install_psycopg2():
             # execute_batch/execute_values (psycopg2.extras) mogrify() each
             # row and pass the joined result to execute() as bytes, unlike
             # every other caller's plain str query.
-            query_text = query.decode("utf-8") if isinstance(query, bytes) else query
+            #
+            # A caller (e.g. manifest.ensure_partition) may also pass a
+            # psycopg2.sql.Composed instead of a string - real psycopg2
+            # stringifies that against the live connection's encoding to
+            # build the wire query, which this stand-in has no connection to
+            # do offline. str() on a Composed falls back to its (stable,
+            # deterministic) repr instead - not real SQL, but enough to
+            # classify it below as a write (it never matches the SELECT/WITH
+            # regex) and, if it were ever cached, to key it consistently
+            # between record and replay. A composed SELECT would therefore
+            # be treated as an uncached write rather than replayed - nothing
+            # in this codebase does that yet.
+            if isinstance(query, bytes):
+                query_text = query.decode("utf-8")
+            elif isinstance(query, str):
+                query_text = query
+            else:
+                query_text = str(query)
             # Writes/DDL (CREATE TEMP TABLE, INSERT, SET, ...) are never
             # cached: their point is a session-local side effect, not a
             # reusable result, and a fixture that recreates the same temp
@@ -594,6 +618,14 @@ def _install_psycopg2():
             # recording; a no-op offline, since replay has no live session to
             # affect and the point was only ever to enable later real reads.
             if not re.match(r"^\s*(SELECT|WITH)\b", query_text, re.IGNORECASE):
+                temp_created = re.search(
+                    r"\bCREATE\s+(?:TEMP|TEMPORARY)\s+TABLE\s+"
+                    r"(?:IF\s+NOT\s+EXISTS\s+)?(\w+)",
+                    query_text,
+                    re.IGNORECASE,
+                )
+                if temp_created:
+                    self._connection._temp_tables.add(temp_created.group(1))
                 self._columns = None
                 self._rows = []
                 self.description = None
@@ -602,6 +634,15 @@ def _install_psycopg2():
                     real_cur = self._connection._real.cursor()
                     real_cur.execute(query, params)
                     self.rowcount = real_cur.rowcount
+                    # A RETURNING clause makes this a write with a result
+                    # set - still never cached (the write itself is the
+                    # point), but a caller reading it back this same
+                    # session (e.g. execute_values(..., fetch=True)) needs
+                    # it, same as real psycopg2 would give it.
+                    if real_cur.description:
+                        self._columns = [d[0] for d in real_cur.description]
+                        self._rows = real_cur.fetchall()
+                        self.description = real_cur.description
                     real_cur.close()
                 # Real psycopg2 execute() always returns None (results are
                 # read back off the cursor, not off a return value) - a
@@ -613,7 +654,28 @@ def _install_psycopg2():
             # No DSN in the key: replay must work with whatever (or no)
             # PGDATABASE the current environment has, not just the one used
             # to record - there is only one real target in practice.
-            key = _key("psycopg2", query, _canonical_params(params))
+            #
+            # A SELECT reading a session-local temp table (e.g.
+            # apply_artifacts' "SELECT database FROM manifest_in") has query
+            # text that never varies with what was actually COPYed into that
+            # table - every test using the same temp table name would
+            # otherwise collide on one cassette entry and replay whichever
+            # test recorded first. Fold in the table's load version so each
+            # distinct load gets its own entry. Gated on the version being
+            # nonzero (i.e. something has actually gone through copy_expert
+            # FROM STDIN this session), not just the name matching: a fixture
+            # that shadows a real table with a same-named temp one purely to
+            # get a fixed, reusable cassette (its content never changes, only
+            # set once via plain INSERT VALUES) must still key exactly as
+            # before, or its already-recorded cassette stops matching.
+            touches_temp_table = self._connection._temp_table_version > 0 and any(
+                re.search(rf"\b{re.escape(name)}\b", query_text)
+                for name in self._connection._temp_tables
+            )
+            key_query = query
+            if touches_temp_table:
+                key_query = f"{query}\x1f{self._connection._temp_table_version}"
+            key = _key("psycopg2", key_query, _canonical_params(params))
             record = _load("psycopg2", key)
             if record is None:
                 if not _ALLOW_NETWORK:
@@ -680,6 +742,24 @@ def _install_psycopg2():
             return row
 
         def copy_expert(self, sql, file, size=8192):
+            # COPY ... FROM STDIN loads a file into the database - a write,
+            # like execute()'s non-SELECT branch: never cached (the load
+            # itself is the point, and the same file may load different
+            # temp-table contents test to test even when the SQL text is
+            # identical), real and read from `file` while recording, a
+            # no-op offline.
+            if re.search(r"\bFROM\s+STDIN\b", sql, re.IGNORECASE):
+                # Bump so a later SELECT that reads this table (see
+                # execute()'s temp-table key-scoping) gets a fresh cache
+                # entry instead of replaying an earlier load.
+                self._connection._temp_table_version += 1
+                if self._connection._real is not None:
+                    real_cur = self._connection._real.cursor()
+                    real_cur.copy_expert(sql, file, size)
+                    self.rowcount = real_cur.rowcount
+                    real_cur.close()
+                return None
+
             # COPY ... TO STDOUT streams raw text into a file-like object -
             # a completely different shape of call than execute()/fetchall(),
             # so it gets its own cache entry rather than reusing that path.
@@ -698,19 +778,32 @@ def _install_psycopg2():
 
         def mogrify(self, query, vars=None):
             # Used by psycopg2.extras.execute_batch/execute_values to build a
-            # combined multi-row statement before a single execute() call.
-            # Never cached: like other writes, the point is safely interpolated
-            # SQL text to actually run while recording, not a reusable result -
-            # offline there is nothing to run it against, so the exact bytes
-            # don't matter (the caller's follow-up execute() is itself a no-op
-            # without a live connection).
+            # combined multi-row statement before a single execute() call -
+            # for that caller the exact bytes don't matter offline (the
+            # follow-up execute() is itself a no-op without a live
+            # connection). But manifest.cursor_mogrify() calls this directly
+            # to build COPY text ahead of a *cacheable* copy_expert(), where
+            # the bytes become part of the cache key - those need to match
+            # what a live mogrify produced while recording. psycopg2's own
+            # parameter quoting needs no live connection for the plain types
+            # this codebase passes (str, int, None, list, tuple), so
+            # reproduce it with its adapters instead of a live cursor.
             if self._connection._real is not None:
                 real_cur = self._connection._real.cursor()
                 try:
                     return real_cur.mogrify(query, vars)
                 finally:
                     real_cur.close()
-            return b""
+            query_bytes = query.encode("utf-8") if isinstance(query, str) else query
+            if not vars:
+                return query_bytes
+            from psycopg2.extensions import adapt
+
+            if isinstance(vars, dict):
+                quoted = {k: adapt(v).getquoted() for k, v in vars.items()}
+            else:
+                quoted = tuple(adapt(v).getquoted() for v in vars)
+            return query_bytes % quoted
 
         def close(self):
             pass
@@ -730,9 +823,22 @@ def _install_psycopg2():
             self._real = None
             if _ALLOW_NETWORK:
                 self._real = real_connect(*args, **kwargs)
+            # Names created by CREATE TEMP TABLE in this session, and a
+            # version bumped each time one is loaded via COPY ... FROM
+            # STDIN - see the cache-key comment in CassetteCursor.execute().
+            self._temp_tables = set()
+            self._temp_table_version = 0
 
         def cursor(self, *args, **kwargs):
             return CassetteCursor(self)
+
+        @property
+        def encoding(self):
+            # psycopg2.extras.execute_values/execute_batch read this off
+            # cur.connection directly (bypassing our execute() override) to
+            # encode the query themselves - offline there is no real
+            # connection to ask, so default to the server's actual encoding.
+            return self._real.encoding if self._real is not None else "UTF8"
 
         def commit(self):
             if self._real is not None:
