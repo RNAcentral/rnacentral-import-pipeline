@@ -91,8 +91,9 @@ def test_can_detect_if_is_ncrna(pdb, chain, expected):
 def test_description_omits_source_when_organism_name_is_missing():
     # organism_scientific_name is None whenever PDBe's API doesn't supply one
     # (e.g. no organism recorded for some viral RNA) - description() used to
-    # interpolate that None straight into the string, producing a literal
-    # "... from None (PDB ...)" in the stored description.
+    # interpolate that into the string regardless, producing a dangling
+    # "... from  (PDB ...)" (or literal "... from None ...") in the stored
+    # description. The whole "from <source>" phrase is dropped instead.
     info = ChainInfo(
         pdb_id="3t4b",
         chain_id="A",
@@ -109,5 +110,5 @@ def test_description_omits_source_when_organism_name_is_missing():
     )
     assert (
         helpers.description(info)
-        == "HCV IRES pseudoknot domain plus crystallization module from  (PDB 3T4B, chain A)"
+        == "HCV IRES pseudoknot domain plus crystallization module (PDB 3T4B, chain A)"
     )
