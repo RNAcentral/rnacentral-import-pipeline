@@ -79,7 +79,11 @@ def test_a_truncated_archive_is_skipped_not_fatal(tmp_path):
     )
 
     assert run.returncode == 0, run.stderr
-    assert (tmp_path / "wgs.ncr").read_text() == "ID   GOOD\n//\nID   ALSO_GOOD\n//\n"
+    # Order is find's directory-traversal order across copied/a and copied/b,
+    # which is filesystem-dependent (stable locally, not the same on CI) -
+    # only which records survive is under test here, not their order.
+    records = (tmp_path / "wgs.ncr").read_text().split("//\n")
+    assert sorted(r for r in records if r) == ["ID   ALSO_GOOD\n", "ID   GOOD\n"]
     assert "truncated.ncr.gz" in run.stderr
 
 
