@@ -136,29 +136,34 @@ def _canonical_body(body):
     return body
 
 
-def _canonical_params(value):
+def _canonical_params(value, depth=0):
     """
-    Sort a homogeneous list/tuple of scalars for use in a cassette key.
+    Sort a homogeneous list/tuple/set of scalars for use in a cassette key.
 
     Several SQL callers build an id list for `= ANY(%s)`/`IN %s` from a
     Python set (e.g. a set comprehension over parsed rows), whose iteration
     order is hash-randomized per process - recording in one process and
-    replaying in another would otherwise almost never hit the same key. Only
-    a *homogeneous* collection is sorted (every element the same type): a
-    positional args tuple like (min_id, max_id) must keep its order, and
-    mixed-type tuples are never how this codebase builds an id list.
+    replaying in another would otherwise almost never hit the same key.
+    Sorting a *homogeneous* collection (every element the same type) fixes
+    that, and is always safe for a *nested* tuple: one bound to a single
+    placeholder is a single value (e.g. an IN-list), where order is not
+    semantically meaningful. Only the outermost tuple - cursor.execute()'s
+    own positional-args tuple, one element per placeholder in the query - is
+    exempt: (min_id, max_id) there must keep its order. Mixed-type tuples
+    are never how this codebase builds an id list.
     """
-    if isinstance(value, (list, tuple)):
-        items = [_canonical_params(v) for v in value]
+    if isinstance(value, (list, tuple, set)):
+        items = [_canonical_params(v, depth + 1) for v in value]
         if (
-            len(items) > 1
+            not (depth == 0 and isinstance(value, tuple))
+            and len(items) > 1
             and len({type(v) for v in items}) == 1
             and isinstance(items[0], (str, int, float, bool))
         ):
             return sorted(items)
         return items
     if isinstance(value, dict):
-        return {k: _canonical_params(v) for k, v in value.items()}
+        return {k: _canonical_params(v, depth + 1) for k, v in value.items()}
     return value
 
 
@@ -762,8 +767,14 @@ def _install_psycopg2():
         def __enter__(self):
             return self
 
-        def __exit__(self, *exc):
-            self.close()
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            # Like a real psycopg2 connection: this only ends the
+            # transaction (commit/rollback), it does not close the
+            # connection - callers may reuse it after the `with` block.
+            if exc_type is None:
+                self.commit()
+            else:
+                self.rollback()
             return False
 
     def connect(*args, **kwargs):
@@ -822,9 +833,14 @@ def _install_psql_subprocess():
                     "stdout": stdout or "",
                 }
                 _save("psql", key, record)
-            return subprocess.CompletedProcess(
+            completed = subprocess.CompletedProcess(
                 args, record["returncode"], stdout=record["stdout"]
             )
+            if kwargs.get("check") and completed.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    completed.returncode, args, output=completed.stdout
+                )
+            return completed
         return real_run(args, *a, **kwargs)
 
     subprocess.run = fake_run
