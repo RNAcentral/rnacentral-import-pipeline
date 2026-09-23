@@ -515,6 +515,62 @@ def test_drop_failed_caps_the_whole_run(tmp_path):
 
 
 @pytest.mark.r2dt
+def test_drop_failed_keeps_a_zero_row_parquet(tmp_path):
+    """
+    A chunk whose sequences were all attempted already writes 0 rows rather
+    than no file, and an empty mask has no type for filter() to use.
+    """
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    failures = _failures(tmp_path, "URS0000112770")
+    data = _data_csv(tmp_path, "URS0000112770")
+    empty = tmp_path / "attempted_2.parquet"
+    pq.write_table(
+        pa.table(
+            {
+                "urs": pa.array([], pa.string()),
+                "r2dt_version": pa.array([], pa.string()),
+            }
+        ),
+        empty,
+    )
+
+    assert s3.drop_failed(str(failures), [str(data), str(empty)]) == 1
+    assert pq.read_table(empty).num_rows == 0
+
+
+@pytest.mark.r2dt
+def test_drop_failed_expands_globs_itself(tmp_path):
+    """
+    The shell cannot: 11763 chunks a side is 23526 argv entries, which
+    segfaults the interpreter before the command runs.
+    """
+    import pyarrow.parquet as pq
+
+    failures = _failures(tmp_path, "URS0000112770")
+    data = _data_csv(tmp_path, "URS0000112770", "URS0000F7F700")
+    attempted = _attempted_parquet(tmp_path, "URS0000112770", "URS0000F7F700")
+
+    dropped = s3.drop_failed(
+        str(failures), [str(tmp_path / "data*.csv"), str(tmp_path / "*.parquet")]
+    )
+
+    assert dropped == 2
+    assert "URS0000112770" not in data.read_text()
+    assert pq.read_table(attempted).column("urs").to_pylist() == ["URS0000F7F700"]
+
+
+@pytest.mark.r2dt
+def test_drop_failed_refuses_a_pattern_matching_nothing(tmp_path):
+    """Silently dropping nothing would load the rows this exists to remove."""
+    failures = _failures(tmp_path, "URS0000112770")
+
+    with pytest.raises(RuntimeError, match="matched no files"):
+        s3.drop_failed(str(failures), [str(tmp_path / "data*.csv")])
+
+
+@pytest.mark.r2dt
 def test_drop_failed_matches_the_urs_column_only(tmp_path):
     """A URS appearing in another field must not take the row with it."""
     failures = _failures(tmp_path, "URS0000112770")
