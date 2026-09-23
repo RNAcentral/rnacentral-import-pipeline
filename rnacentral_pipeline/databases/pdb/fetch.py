@@ -182,7 +182,7 @@ def rna_chains(
     # This may be missed if the PDB does not contain any chains labeled as RNA.
     # Rfam does match some DNA chains so we allow them into RNAcentral.
     missed = required - seen
-    if missed and limit is None:
+    if missed:
         LOGGER.info("Missed some chains, well fetch manually")
         rna_chains.extend(chains(missed))
 
