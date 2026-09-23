@@ -24,15 +24,15 @@ process merge_and_import {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  // Stage pattern uses the active writer_format so files land as raw*.csv or
-  // raw*.parquet and can be globbed by the branch below.
-  tuple val(name), path(ctl), path("raw*.${params.writer_format}")
+  // Format comes from each file's own extension, not writer_format: bookkeeping
+  // outputs like deletions.csv stay csv whichever format the parsers write.
+  tuple val(name), path(ctl), val(format), path("raw*.${format}")
 
   output:
   tuple val(name), path('rows.count')
 
   script:
-  if (params.writer_format == 'parquet') {
+  if (format == 'parquet') {
     // TODO(phase-1): add a parquet-equivalent of `rnac validate-pgloader` so
     // this branch verifies rows loaded == rows in the parquet files.
     //
@@ -123,7 +123,7 @@ workflow load_data {
     | map { f ->
       def name = f.getBaseName()
       def ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
-      [[name, ctl], f]
+      [[name, ctl, f.getExtension()], f]
     } \
     | filter { entry ->
       def status = entry[0][1].exists()
@@ -133,9 +133,9 @@ workflow load_data {
       status
     } \
     | groupTuple \
-    | map { t -> [t[0][0], t[0][1], t[1]] } \
+    | map { t -> [t[0][0], t[0][1], t[0][2], t[1]] } \
     | combine(create_load_tables(schema)) \
-    | map { n, ctl, fs, _ready -> [n, ctl, fs] } \
+    | map { n, ctl, format, fs, _ready -> [n, ctl, format, fs] } \
     | merge_and_import \
     | filter { _n, rows -> rows.text.trim().toInteger() > 0 } \
     | map { n, _rows -> n } \

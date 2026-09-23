@@ -71,3 +71,13 @@ def test_load_data_gates_imported_names_on_the_count():
     assert gate, "imported_names is no longer built from merge_and_import"
     assert "filter" in gate.group(1)
     assert "toInteger() > 0" in gate.group(1)
+
+
+def test_merge_and_import_loads_each_file_by_its_own_format():
+    """
+    deletions.csv is written as csv whatever writer_format says. Staged under
+    the global format it became raw.parquet, and DuckDB failed on "No magic
+    bytes found" the first time an ENA delta had deletions to load.
+    """
+    assert "params.writer_format" not in merge_and_import()
+    assert 'path("raw*.${format}")' in merge_and_import()
