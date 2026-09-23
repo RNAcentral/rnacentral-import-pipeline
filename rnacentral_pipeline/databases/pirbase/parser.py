@@ -29,6 +29,8 @@ No coordinates are imported. piRBase publishes BED against GRCm38, Rnor6 and
 macFas5, none of which RNAcentral carries any more, and RNAcentral's own genome
 mapping already places these sequences on the current assemblies.
 """
+# For release 28 we decided to import the six gold standard sets in full, plus any piRNA from the
+# full sets whose sequence is already in RNAcentral.
 
 import logging
 import typing as ty
