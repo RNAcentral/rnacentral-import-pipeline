@@ -37,6 +37,7 @@ name: Unit tests (offline)
 
 on:
   push:
+  pull_request:
 
 jobs:
   offline-tests:
