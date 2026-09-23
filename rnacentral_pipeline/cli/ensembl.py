@@ -102,22 +102,16 @@ def parse_data(embl_file, gff_file, output, family_file=None):
 
 @cli.command("assemblies")
 @click.option("--db-url", envvar="PGDATABASE")
-@click.argument("connections", default="databases.json", type=click.File("r"))
-@click.argument("query", default="query.sql", type=click.File("r"))
+@click.option("--location", default=urls.DEFAULT_JSON_URL)
 @click.argument("example_file", default="example-locations.json", type=click.File("r"))
-@click.argument("known_file", default="known-assemblies.sql", type=click.File("r"))
+@click.argument("ucsc_file", default="ucsc.json", type=click.File("r"))
 @click.argument("output", default="assemblies.csv", type=click.Path())
 @format_option
-def ensembl_write_assemblies(
-    connections, query, example_file, known_file, output, db_url=None
-):
+def ensembl_write_assemblies(example_file, ucsc_file, output, location, db_url=None):
     """
-    This will query the ensembl databases in the connections file and write the
-    output to the given file.
+    Write the ensembl_assembly rows for the genesets selected from species.json.
     """
-    assemblies.write(
-        connections, query, example_file, known_file, Path(output), db_url=db_url
-    )
+    assemblies.write(location, example_file, ucsc_file, Path(output), db_url)
 
 
 @cli.command("coordinate-systems")

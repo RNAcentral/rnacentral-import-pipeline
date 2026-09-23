@@ -23,22 +23,23 @@ from rnacentral_pipeline.cli import ensembl
 
 
 @pytest.mark.cli
+@pytest.mark.db
+@pytest.mark.network
 def test_can_fetch_assemblies():
     runner = CliRunner()
-    filename = os.path.abspath("data/qa/rfam/scan.tbl")
     base = Path(os.curdir).absolute()
     with runner.isolated_filesystem():
+        Path("ucsc.json").write_text(
+            '{"ucscGenomes": {"hg38": {"description": "Dec. 2013 (GRCh38/hg38)"}}}'
+        )
         assemblies = "loaded-assemblies.csv"
         cmd = [
             "assemblies",
-            str(base / "config" / "databases.json"),
-            str(base / "files" / "import-data" / "ensembl" / "assemblies.sql"),
             str(base / "files" / "import-data" / "ensembl" / "example-locations.json"),
-            str(base / "files" / "import-data" / "ensembl" / "known-assemblies.sql"),
+            "ucsc.json",
             assemblies,
         ]
         result = runner.invoke(ensembl.cli, cmd)
         assert result.exit_code == 0
-        assert os.path.exists(assemblies)
         with open(assemblies) as raw:
-            assert len(raw.readlines()) >= 440
+            assert len(raw.readlines()) >= 5000

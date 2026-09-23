@@ -15,48 +15,68 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
-import os
-from collections import Counter
+import re
+from pathlib import Path
 
 import attr
-import pytest
 
 from rnacentral_pipeline.databases.ensembl.metadata import assemblies as assem
 
+LOAD_SQL = Path("files/import-data/pre-release/000__assemblies.sql")
 
-@pytest.fixture(scope="module")
-def assemblies():
-    with open("config/databases.json", "r") as conn, open(
-        "files/import-data/ensembl/assemblies.sql", "r"
-    ) as query, open(
-        "files/import-data/ensembl/example-locations.json", "r"
-    ) as exs, open(
-        "files/import-data/ensembl/known-assemblies.sql", "r"
-    ) as kn:
-        examples = json.load(exs)
-        known = assem.load_known(os.environ["PGDATABASE"], kn)
-        return list(assem.fetch(conn, query, examples, known))
+UCSC = {
+    "ucscGenomes": {
+        "hg19": {"description": "Feb. 2009 (GRCh37/hg19)"},
+        "hg38": {"description": "Dec. 2013 (GRCh38/hg38)"},
+    }
+}
 
-
-def assembly_for(assemblies, taxid):
-    found = [a for a in assemblies if a.taxid == taxid]
-    assert len(found) == 1
-    return found[0]
+LINEAGES = {
+    9606: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Chordata; Vertebrata; Mammalia",
+    511145: "cellular organisms; Bacteria; Pseudomonadota; Gammaproteobacteria",
+    400682: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Porifera",
+    9785: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Chordata; Vertebrata; Mammalia",
+    10228: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Placozoa",
+}
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-def test_it_can_load_known():
-    with open("files/import-data/ensembl/known-assemblies.sql", "r") as kn:
-        known = assem.load_known(os.environ["PGDATABASE"], kn)
-    assert len(known) >= 440
-    assert len(known[9606]) == 1
-    assert attr.asdict(known[9606][0]) == attr.asdict(
+def genome(taxid, accession, name, common_name=None):
+    files = {"genes.embl.gz": "e.gz", "genes.gff3.gz": "g.gz"}
+    build = {
+        "release": "2026_04",
+        "paths": {"genebuild": {"files": {"annotations": files}}},
+    }
+    return {
+        "taxid": taxid,
+        "common_name": common_name,
+        "assemblies": {
+            accession: {
+                "name": name,
+                "level": "chromosome",
+                "genebuild_providers": {"ensembl": {"2026_04": build}},
+            }
+        },
+    }
+
+
+def rows(examples=None, versions=None, **species):
+    data = {"species": species}
+    return list(
+        assem.from_species_json(
+            data, frozenset(), examples or {}, UCSC, LINEAGES, versions or {}
+        )
+    )
+
+
+def test_builds_a_complete_row_for_a_reference_genome():
+    human = genome(9606, "GCA_000001405.29", "GRCh38.p14", common_name="human")
+    examples = {"homo_sapiens": {"chromosome": "X", "start": 73819307, "end": 73856333}}
+    [row] = rows(examples=examples, Homo_sapiens=human)
+    assert attr.asdict(row) == attr.asdict(
         assem.AssemblyInfo(
             assembly_id="GRCh38",
-            assembly_full_name="GRCh38.p13",
-            gca_accession="GCA_000001405.28",
+            assembly_full_name="GRCh38.p14",
+            gca_accession="GCA_000001405.29",
             assembly_ucsc="hg38",
             common_name="human",
             taxid=9606,
@@ -66,81 +86,59 @@ def test_it_can_load_known():
             example=assem.AssemblyExample(chromosome="X", start=73819307, end=73856333),
         )
     )
+    assert row.subdomain == "ensembl.org"
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-def test_it_builds_a_valid_assembly(assemblies):
-    val = assembly_for(assemblies, 9606)
-    assert attr.asdict(val) == attr.asdict(
-        assem.AssemblyInfo(
-            assembly_id="GRCh38",
-            assembly_full_name="GRCh38.p13",
-            gca_accession="GCA_000001405.28",
-            assembly_ucsc="hg38",
-            common_name="human",
-            taxid=9606,
-            ensembl_url="homo_sapiens",
-            division="EnsemblVertebrates",
-            blat_mapping=True,
-            example=assem.AssemblyExample(chromosome="X", start=73819307, end=73856333),
-        )
+def test_bacteria_get_a_row_now_they_are_imported():
+    ecoli = genome(511145, "GCA_000005845.2", "ASM584v2")
+    [row] = rows(Escherichia_coli_str_K_12_substr_MG1655=ecoli)
+    assert (row.assembly_id, row.division, row.assembly_ucsc) == (
+        "ASM584v2",
+        "EnsemblBacteria",
+        None,
     )
-    assert val.subdomain == "ensembl.org"
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-def test_it_has_no_bacterial_assemblies(assemblies):
-    divisions = set(a.division for a in assemblies)
-    assert "EnsemblBacteria" not in divisions
+def test_never_writes_the_same_assembly_id_twice():
+    """
+    Amphimedon and Trichoplax both call their assembly v1.0; assembly_id is the
+    table's key, so only the first can have a row.
+    """
+    got = rows(
+        Amphimedon_queenslandica=genome(400682, "GCA_000090795.1", "v1.0"),
+        Trichoplax_adhaerens=genome(10228, "GCA_000150275.1", "v1.0"),
+    )
+    assert [r.ensembl_url for r in got] == ["amphimedon_queenslandica"]
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-@pytest.mark.parametrize(
-    "taxid,count",
-    [
-        (4932, 0),
-        (5127, 0),
-        (546991, 1),
-        (559292, 1),
-        (6239, 1),
-        (6669, 1),
-        (7227, 1),
-        (8090, 1),
-    ],
-)
-def test_it_has_one_assembly_per_taxid(assemblies, taxid, count):
-    val = [a for a in assemblies if a.taxid == taxid]
-    assert len(val) == count, "Issue with counts for %i" % taxid
+def test_keys_on_the_assembly_id_ensembl_writes_into_its_files():
+    """
+    species.json names the elephant assembly Loxafr3.0 but the files, and so every
+    coordinate the parser writes, say loxAfr3.
+    """
+    elephant = genome(9785, "GCA_000001905.1", "Loxafr3.0")
+    [row] = rows(
+        versions={"Loxodonta_africana": "loxAfr3"}, Loxodonta_africana=elephant
+    )
+    assert (row.assembly_id, row.assembly_full_name) == ("loxAfr3", "Loxafr3.0")
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-@pytest.mark.parametrize("key", ["taxid", "assembly_id"])
-def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
-    counts = Counter(getattr(a, key) for a in assemblies)
-    max_item = counts.most_common(n=1)[0]
-    assert max_item[1] == 1, "Too many counts for: %s, %i" % max_item
+def test_reads_the_genome_version_from_a_gtf_header():
+    header = (
+        "#!genome-build Loxafr3.0\n#!genome-version loxAfr3\n#!genome-date 2009-07\n"
+    )
+    assert assem.genome_version(header) == "loxAfr3"
+    assert assem.genome_version("1\tensembl\tgene\n") is None
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-@pytest.mark.parametrize(
-    "taxid,division,assembly_id",
-    [
-        (546991, "EnsemblFungi", "EF2"),
-        (559292, "EnsemblFungi", "R64-1-1"),
-        (6239, "EnsemblVertebrates", "WBcel235"),
-        (6669, "EnsemblMetazoa", "V1.0"),
-        (7227, "EnsemblVertebrates", "BDGP6.28"),
-        (8090, "EnsemblVertebrates", "ASM223467v1"),
-    ],
-)
-def test_it_uses_correct_sources_for_duplicates(
-    assemblies, taxid, division, assembly_id
-):
-    val = assembly_for(assemblies, taxid)
-    assert val.division == division
-    assert val.assembly_id == assembly_id
+def test_loading_never_blanks_an_existing_ucsc_alias():
+    """
+    Other databases' hg38/mm10 coordinates are translated through assembly_ucsc,
+    so overwriting it with an alias we could not derive would delete them.
+    """
+    sql = LOAD_SQL.read_text()
+    assert re.search(
+        r"assembly_ucsc\s*=\s*COALESCE\(\s*EXCLUDED\.assembly_ucsc\s*,\s*ensembl_assembly\.assembly_ucsc\s*\)",
+        sql,
+        re.IGNORECASE,
+    )

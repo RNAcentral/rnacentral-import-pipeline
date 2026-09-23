@@ -1,21 +1,17 @@
 process assemblies {
   input:
-  path(connections)
-  path(query)
   path(examples)
-  path(known)
 
   output:
   path('*.{csv,parquet}')
 
-  // MySQL-backed metadata is deferred under the new FTP structure; opt in with
-  // params.databases.ensembl.metadata.run.
   when:
-  params.databases.ensembl?.metadata?.run
+  params.databases.ensembl?.run
 
   script:
   """
-  rnac ensembl assemblies $connections $query $examples $known assemblies.${params.writer_format}
+  wget -O ucsc.json https://api.genome.ucsc.edu/list/ucscGenomes
+  rnac ensembl assemblies --location '${params.databases.ensembl.species_json_url}' $examples ucsc.json assemblies.${params.writer_format}
   """
 }
 
@@ -99,13 +95,11 @@ workflow ensembl {
     channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
     channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
 
-    channel.fromPath('files/import-data/ensembl/assemblies.sql') | set { assemblies_sql }
     channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
-    channel.fromPath('files/import-data/ensembl/known-assemblies.sql') | set { known }
 
     channel.empty() \
     | mix(
-      assemblies(conn, assemblies_sql, examples, known),
+      assemblies(examples),
       coordinate_systems(conn, coordinate_systems_sql),
       proteins(conn, protein_sql),
       compara(),
