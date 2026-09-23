@@ -24,10 +24,9 @@ from attr.validators import instance_of as is_a
 LOGGER = logging.getLogger(__name__)
 
 # Base of the unified Ensembl organisms FTP. Every path in the species JSON is
-# relative to this. From August 2026 the file is served as species.json; until
-# the temporary structure is retired it is species.new_ftp_structure.json.
+# relative to this.
 BASE_URL = "https://ftp.ebi.ac.uk/pub/ensemblorganisms"
-DEFAULT_JSON_URL = f"{BASE_URL}/species.new_ftp_structure.json"
+DEFAULT_JSON_URL = f"{BASE_URL}/species.json"
 
 # Import the primary annotation for every species (no species is dropped). When
 # a species has more than one gene build we prefer Ensembl's own, then any other
@@ -134,9 +133,7 @@ def _select_geneset(
     )
 
 
-def geneset_urls(
-    data: dict, base_url: str = BASE_URL
-) -> ty.Iterable[GenesetUrls]:
+def geneset_urls(data: dict, base_url: str = BASE_URL) -> ty.Iterable[GenesetUrls]:
     for species, info in data["species"].items():
         selected = _select_geneset(species, info, base_url)
         if selected is not None:
