@@ -1,21 +1,15 @@
 nextflow.enable.dsl=2
 
-// Databases with run=true this run (mirrors main.nf; ensembl special-cased),
-// normalised for matching rnc_database.descr/display_name in SQL.
+// Databases with run=true this run (mirrors main.nf), normalised for matching
+// rnc_database.descr/display_name in SQL.
 def running_databases() {
   def out = []
   def dbs = params.databases ?: [:]
-  def ensembl_descr = [
-    vertebrates: 'ensembl', plants: 'ensembl_plants', fungi: 'ensembl_fungi',
-    protists: 'ensembl_protists', metazoa: 'ensembl_metazoa',
-  ]
   // Config key differs from rnc_database.descr/display_name for these.
   def aliases = [pdb: 'pdbe']
   dbs.each { key, db ->
     if (!(db instanceof Map)) return
-    if (key == 'ensembl') {
-      ensembl_descr.each { sub, descr -> if (db[sub]?.get('run', false)) out << descr }
-    } else if (db.get('run', false)) {
+    if (db.get('run', false)) {
       out << (aliases[key] ?: key)
     }
   }

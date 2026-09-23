@@ -26,7 +26,6 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 QC_WORKFLOW = ROOT / "workflows" / "utils" / "qc.nf"
 MAIN_WORKFLOW = ROOT / "main.nf"
-ENSEMBL_DIVISIONS = ROOT / "workflows" / "utils" / "ensembl-divisions.nf"
 QC_SQL_DIR = ROOT / "files" / "qc"
 
 PROCESS_RE = re.compile(r"^process\s+(\w+)\s*\{", re.MULTILINE)
@@ -37,12 +36,6 @@ QC_SQL_RE = re.compile(r"file\('files/qc/([\w-]+\.sql)'\)")
 SQL_VAR_RE = re.compile(r"(?<!:):'?([a-z_][a-z0-9_]*)'?")
 SQL_IF_RE = re.compile(r"^\s*\\if\s+:\{\?(\w+)\}")
 SQL_SET_RE = re.compile(r"^\s*\\set\s+(\w+)")
-ENSEMBL_DIVISION_RE = re.compile(r"(\w+):\s*'ensembl\w*'")
-# The list moved out of main.nf into a helper, so entry scripts that never
-# evaluate main.nf can still derive the gate.
-DIVISION_LIST_RE = re.compile(
-    r"def\s+ensembl_divisions\(\)\s*\{\s*\[((?:'\w+',?\s*)+)\]", re.MULTILINE
-)
 
 
 def blocks(text, pattern):
@@ -172,14 +165,12 @@ def test_analyze_snapshot_does_not_need_the_run_start_variable():
     assert required_vars(text, set()) == {"run_start"}
 
 
-def test_qc_knows_every_ensembl_division_main_runs(qc_nf):
+def test_qc_reports_ensembl_like_any_other_database(qc_nf):
     """
-    qc.nf keeps its own division -> rnc_database.descr map, so a division added
-    to main.nf but not here goes missing from the import report without error.
+    Ensembl is one ENSEMBL database gated by databases.ensembl.run. A lookup of
+    the old divisions here finds none and drops it from the report silently.
     """
-    qc_divisions = set(ENSEMBL_DIVISION_RE.findall(qc_nf))
-    lists = DIVISION_LIST_RE.findall(ENSEMBL_DIVISIONS.read_text())
-    assert lists, "could not find the ensembl division list"
-
-    for raw in lists:
-        assert set(re.findall(r"'(\w+)'", raw)) == qc_divisions
+    body = qc_nf[
+        qc_nf.index("def running_databases()") : qc_nf.index("def run_dbs_arg()")
+    ]
+    assert "ensembl" not in body
