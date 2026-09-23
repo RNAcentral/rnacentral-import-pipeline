@@ -43,8 +43,19 @@ def species(**assemblies):
     return {"taxid": 42, "assemblies": assemblies}
 
 
-def select(data):
-    return {r.species: r for r in urls.geneset_urls({"species": data}, base_url="B")}
+def select(data, legacy=frozenset()):
+    return {
+        r.species: r
+        for r in urls.geneset_urls({"species": data}, base_url="B", legacy=legacy)
+    }
+
+
+def build(release_name, path):
+    return release(
+        release_name,
+        ("genes.embl.gz", f"{path}.embl.gz"),
+        ("genes.gff3.gz", f"{path}.gff3.gz"),
+    )
 
 
 def test_builds_absolute_urls_from_relative_paths():
@@ -130,7 +141,7 @@ def test_prefers_non_ncbi_over_ncbi_even_on_worse_assembly():
     assert got.embl_url == "B/c.embl.gz"
 
 
-def test_picks_best_assembly_level_then_version_within_a_tier():
+def test_picks_best_assembly_level_first_within_a_tier():
     data = {
         "Sp": species(
             GCA_1=assembly(
@@ -204,3 +215,55 @@ def test_reads_the_species_json_ensembl_publishes():
     """
     configured = re.search(r"species_json_url\s*=\s*'([^']+)'", CONFIG.read_text())[1]
     assert configured == urls.DEFAULT_JSON_URL == f"{urls.BASE_URL}/species.json"
+
+
+def test_keeps_the_assembly_rnacentral_already_uses():
+    """
+    species.json has no reference flag, and comparing version suffixes across
+    accessions picked GRCg6a over GRCg7b, the chicken assembly Ensembl 116 used.
+    """
+    chicken = {
+        "GCA_000002315.5": assembly(
+            "chromosome", {"ensembl": build("2022_01", "grcg6a")}
+        ),
+        "GCA_016699485.1": assembly(
+            "chromosome", {"ensembl": build("2022_01", "grcg7b")}
+        ),
+        "GCA_027557775.1": assembly(
+            "chromosome", {"ensembl": build("2023_06", "galgal4")}
+        ),
+    }
+    got = select({"Gallus_gallus": species(**chicken)}, legacy={"GCA_016699485"})
+    assert got["Gallus_gallus"].embl_url == "B/grcg7b.embl.gz"
+
+
+def test_the_assembly_already_used_beats_a_preferred_provider():
+    assemblies = {
+        "GCA_000000001.1": assembly(
+            "chromosome", {"community": build("2018_01", "used")}
+        ),
+        "GCA_000000002.1": assembly(
+            "chromosome", {"ensembl": build("2026_01", "other")}
+        ),
+    }
+    got = select({"Sp": species(**assemblies)}, legacy={"GCA_000000001"})
+    assert got["Sp"].embl_url == "B/used.embl.gz"
+
+
+def test_a_new_species_takes_the_newest_genebuild_not_the_highest_version():
+    assemblies = {
+        "GCA_000002315.5": assembly("chromosome", {"ensembl": build("2022_01", "old")}),
+        "GCA_027557775.1": assembly("chromosome", {"ensembl": build("2023_06", "new")}),
+    }
+    assert select({"Sp": species(**assemblies)})["Sp"].embl_url == "B/new.embl.gz"
+
+
+def test_the_used_assembly_list_holds_only_reference_genomes():
+    """
+    Ensembl 116 also served alternates such as GRCg6a for chicken; listing those
+    made them tie with the reference and the first one seen won.
+    """
+    legacy = urls.legacy_assemblies()
+    assert {"GCA_000001405", "GCA_016699485", "GCA_000001735"} <= legacy
+    assert "GCA_000002315" not in legacy
+    assert all(re.fullmatch(r"GC[AF]_\d{9}", a) for a in legacy)

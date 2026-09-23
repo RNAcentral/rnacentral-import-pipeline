@@ -16,6 +16,7 @@ limitations under the License.
 import json
 import logging
 import typing as ty
+from pathlib import Path
 from urllib.request import urlopen
 
 import attr
@@ -47,6 +48,17 @@ LEVEL_RANK = {
     "contig": 1,
 }
 
+# Assemblies served by Ensembl 116 and Ensembl Genomes 63, the last numbered
+# releases. species.json has no reference flag, so a species RNAcentral already
+# imports keeps its assembly rather than jumping to a newer or alternate one.
+LEGACY_ASSEMBLIES = (
+    Path(__file__).resolve().parents[3]
+    / "files"
+    / "import-data"
+    / "ensembl"
+    / "legacy-assemblies.txt"
+)
+
 
 @attr.s()
 class GenesetUrls:
@@ -54,6 +66,7 @@ class GenesetUrls:
     taxid: int = attr.ib(validator=is_a(int))
     embl_url: str = attr.ib(validator=is_a(str))
     gff_url: str = attr.ib(validator=is_a(str))
+    accession: str = attr.ib(validator=is_a(str))
 
     def writeable(self, kind=None) -> ty.Tuple[str, str, str, str]:
         return (self.species, str(self.taxid), self.embl_url, self.gff_url)
@@ -68,11 +81,8 @@ def _load(location: str):
         return json.load(handle)
 
 
-def _assembly_version(accession: str) -> int:
-    try:
-        return int(accession.rsplit(".", 1)[1])
-    except (IndexError, ValueError):
-        return 0
+def legacy_assemblies(path: Path = LEGACY_ASSEMBLIES) -> ty.FrozenSet[str]:
+    return frozenset(path.read_text().split())
 
 
 def _provider_tier(provider: str) -> int:
@@ -83,14 +93,16 @@ def _provider_tier(provider: str) -> int:
     return 1
 
 
-def _candidate_key(level: str, version: int, provider: str) -> ty.Tuple[int, int, int]:
-    # Provider preference wins first so a species keeps its Ensembl (or other
-    # non-NCBI) build; then the best assembly (level, then version).
-    return (_provider_tier(provider), LEVEL_RANK.get(level, 0), version)
+def _candidate_key(
+    is_legacy: bool, provider: str, level: str, latest: str
+) -> ty.Tuple[bool, int, int, str]:
+    # The assembly RNAcentral already uses wins, then provider so a species keeps
+    # its Ensembl (or other non-NCBI) build, then assembly level, then newest build.
+    return (is_legacy, _provider_tier(provider), LEVEL_RANK.get(level, 0), latest)
 
 
 def _select_geneset(
-    species: str, info: dict, base_url: str
+    species: str, info: dict, base_url: str, legacy: ty.AbstractSet[str]
 ) -> ty.Optional[GenesetUrls]:
     """
     Pick the single geneset to import for one species: the most preferred
@@ -100,16 +112,18 @@ def _select_geneset(
 
     best = None
     for accession, assembly in info.get("assemblies", {}).items():
-        version = _assembly_version(accession)
+        is_legacy = accession.split(".")[0] in legacy
         for provider, releases in assembly.get("genebuild_providers", {}).items():
-            key = _candidate_key(assembly.get("level"), version, provider)
+            key = _candidate_key(
+                is_legacy, provider, assembly.get("level"), max(releases)
+            )
             if best is None or key > best[0]:
-                best = (key, releases)
+                best = (key, accession, releases)
 
     if best is None:
         return None
 
-    releases = best[1]
+    _, accession, releases = best
     # Release keys are zero-padded YYYY_MM, so a string max is the latest.
     _, release = max(releases.items(), key=lambda kv: kv[0])
 
@@ -130,12 +144,15 @@ def _select_geneset(
         taxid=info["taxid"],
         embl_url=f"{base_url}/{embl}",
         gff_url=f"{base_url}/{gff}",
+        accession=accession,
     )
 
 
-def geneset_urls(data: dict, base_url: str = BASE_URL) -> ty.Iterable[GenesetUrls]:
+def geneset_urls(
+    data: dict, base_url: str = BASE_URL, legacy: ty.AbstractSet[str] = frozenset()
+) -> ty.Iterable[GenesetUrls]:
     for species, info in data["species"].items():
-        selected = _select_geneset(species, info, base_url)
+        selected = _select_geneset(species, info, base_url, legacy)
         if selected is not None:
             yield selected
 
@@ -147,4 +164,6 @@ def urls_for(
     Read the unified Ensembl species JSON and yield the geneset EMBL/GFF3 URLs
     to import, one per species.
     """
-    yield from geneset_urls(_load(location), base_url=base_url)
+    yield from geneset_urls(
+        _load(location), base_url=base_url, legacy=legacy_assemblies()
+    )
