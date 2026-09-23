@@ -37,6 +37,7 @@ name: Unit tests (offline)
 
 on:
   push:
+    branches: ['master', 'dev','python-update']
   pull_request:
 
 jobs:
