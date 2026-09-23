@@ -251,7 +251,6 @@ def has_stats_for(conn, name: str) -> bool:
 
 
 def insert(conn, stats: DatabaseStats):
-    LOGGER.info("Storing %s", stats)
     dbs = Table("rnc_database")
     json_stats = Table("rnc_database_json_stats")
     with conn.cursor() as cur:

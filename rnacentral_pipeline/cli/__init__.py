@@ -42,6 +42,7 @@ from rnacentral_pipeline.cli import (
     lncbase,
     lncbook,
     lncipedia,
+    manifest,
     mgi,
     mgnify,
     mirbase,
@@ -131,6 +132,7 @@ cli.add_command(japonicusdb.cli)
 cli.add_command(lncbase.cli)
 cli.add_command(lncbook.cli)
 cli.add_command(lncipedia.cli)
+cli.add_command(manifest.cli)
 cli.add_command(mgi.cli)
 cli.add_command(mgnify.cli)
 cli.add_command(mirbase.cli)

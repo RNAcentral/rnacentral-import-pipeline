@@ -321,10 +321,13 @@ def r2dt_upload_s3(
     help="fail if FAILURE_LIST holds more URS than this (a run-wide cap)",
 )
 @click.argument("failure_list", type=click.Path(dir_okay=False))
-@click.argument("data_files", nargs=-1, type=click.Path(exists=True, dir_okay=False))
+@click.argument("data_files", nargs=-1)
 def r2dt_drop_failed_uploads(failure_list, data_files, max_failures):
     """
     Remove rows for URS listed in FAILURE_LIST from DATA_FILES, in place.
+
+    DATA_FILES are globs, quoted so they reach here unexpanded: a release with
+    11763 chunks a side made 23526 arguments, which segfaults the interpreter.
 
     Keeps the database honest when upload-s3 tolerated a failure: the URS would
     otherwise get a structure row pointing at an object that is not in S3. Pass

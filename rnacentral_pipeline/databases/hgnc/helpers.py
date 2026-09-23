@@ -51,12 +51,13 @@ def url(entry: HgncEntry) -> str:
 
 
 def load(path: Path) -> ty.List[HgncEntry]:
-    data = []
+    return [HgncEntry.from_raw(raw) for raw in load_raw(path)]
+
+
+def load_raw(path: Path) -> ty.List[dict]:
+    """The raw HGNC records, before mapping to HgncEntry -- used for signatures."""
     with path.open("r") as handle:
-        raw_data = json.load(handle)
-        for raw in raw_data["response"]["docs"]:
-            data.append(HgncEntry.from_raw(raw))
-    return data
+        return json.load(handle)["response"]["docs"]
 
 
 def description(entry: HgncEntry) -> str:
@@ -194,8 +195,27 @@ def _fetch_batch(batch: ty.List[str]) -> ty.List[dict]:
         )
         response.raise_for_status()
     except requests.exceptions.RequestException as err:
-        LOGGER.error("Gave up on a batch, losing %i genes: %s", len(batch), err)
-        return []
+        status = getattr(err.response, "status_code", None)
+        # A 4xx other than 429 is deterministic: some id in the batch is withdrawn
+        # or invalid (Ensembl 400s the whole POST for one bad id). Bisect to isolate
+        # it rather than losing the other 49, and never fail the run over it.
+        if status is not None and 400 <= status < 500 and status != 429:
+            if len(batch) == 1:
+                LOGGER.warning(
+                    "No Ensembl sequence for %s (HTTP %d) -- skipping record",
+                    batch[0],
+                    status,
+                )
+                return []
+            half = len(batch) // 2
+            return _fetch_batch(batch[:half]) + _fetch_batch(batch[half:])
+        # 429/5xx/network: the session has already retried these, so it is a
+        # persistent failure. Returning [] would drop up to 50 genes, and an
+        # incremental load retires by absence -- a flaky Ensembl would silently
+        # retire live xrefs. Fail loudly instead.
+        raise RuntimeError(
+            "Ensembl cdna lookup failed for a batch of %i genes" % len(batch)
+        ) from err
     return response.json()
 
 

@@ -9,17 +9,37 @@ COPY(
   JOIN rnc_database
   ON rnc_database.id = xref.dbid
   WHERE xref.deleted = 'N'
+  -- Entries are matched by exact gene name and taxid, so every database that
+  -- carries curated gene names for an EVlncRNAs species belongs here.
   AND upper(rnc_database.descr) IN (
-    'INTACT',
-    'LNCBASE',
-    'LNCIPEDIA',
-    'MALACARDS',
-    'MODOMICS',
-    'NONCODE',
+    'ENSEMBL',
+    'ENSEMBL_GENCODE',
+    'ENSEMBL_PLANTS',
+    'ENSEMBL_METAZOA',
+    'ENSEMBL_FUNGI',
+    'ENSEMBL_PROTISTS',
+    'HGNC',
+    'MGI',
+    'RGD',
+    'ZFIN',
+    'FLYBASE',
+    'WORMBASE',
     'SGD',
-    'TARBASE',
-    'TMRNA_WEB',
-    'EXPRESSION_ATLAS'
+    'POMBASE',
+    'TAIR',
+    'REFSEQ',
+    'LNCIPEDIA',
+    'LNCBOOK',
+    'NONCODE',
+    'PLNCDB',
+    'MALACARDS',
+    'GENECARDS'
+  )
+  AND (
+    gene <> ''
+    OR external_id <> ''
+    OR gene_synonym <> ''
+    OR optional_id <> ''
   )
 
   ) TO STDOUT CSV HEADER

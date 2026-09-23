@@ -76,4 +76,4 @@ def parse(code, fasta, output, known):
             handle, species, known_path=Path(known) if known else None
         )
         with entry_writer(Path(output)) as writer:
-            writer.write(entries)
+            writer.write(entries, allow_empty=bool(known))

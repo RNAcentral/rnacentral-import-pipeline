@@ -26,7 +26,12 @@ from rnacentral_pipeline.databases.data.regions import Strand
 def results():
     cutoffs = parser.cutoffs(Path("data/cpat"))
     return list(
-        parser.parse(cutoffs, "human", Path("data/cpat/results.ORF_prob.best.tsv"))
+        parser.parse(
+            cutoffs,
+            "human",
+            Path("data/cpat/results.ORF_prob.best.tsv"),
+            Path("data/cpat/no-orfs.txt"),
+        )
     )
 
 
@@ -44,7 +49,7 @@ def test_parses_cutoffs_correctly():
 
 @pytest.mark.cpat
 def test_parses_results_all_results(results):
-    assert len(results) == 3
+    assert len(results) == 5
 
 
 @pytest.mark.cpat
@@ -74,3 +79,21 @@ def test_parses_results_with_orfs_correctly(results):
             metadata={"cutoff": 0.364, "coding_probability": 1.0},
         ),
     )
+
+
+@pytest.mark.cpat
+def test_records_sequences_without_orfs(results):
+    assert results[3] == CpatResult.no_orf("URS00040EA311_10090")
+    assert results[4] == CpatResult.no_orf("URS0003785D4A_10090")
+    assert results[3].protein_coding is False
+
+
+@pytest.mark.cpat
+def test_writes_blank_scores_for_no_orf():
+    assert CpatResult.no_orf("URS00040EA311_10090").writeable() == [
+        "URS00040EA311_10090",
+        "",
+        "",
+        "",
+        "False",
+    ]

@@ -5,6 +5,8 @@ CREATE OR REPLACE FUNCTION rnc_update.move_staging_data(p_in_dbid bigint)
 AS $function$
 BEGIN
 
+    RAISE NOTICE 'move_staging_data: copying dbid % into load_rnacentral', p_in_dbid;
+
     EXECUTE 'TRUNCATE TABLE load_rnacentral';
 
     INSERT INTO load_rnacentral (
@@ -27,4 +29,3 @@ BEGIN
   END;
 
 $function$
-

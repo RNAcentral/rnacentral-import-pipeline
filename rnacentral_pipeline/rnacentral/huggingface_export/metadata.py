@@ -20,11 +20,11 @@ def get_active_sequence_count(cur):
     sequences that should be in the parquet file.
     """
     # Must match the predicate in files/ftp-export/sequences/active.sql (the query that
-    # actually produces the uploaded parquet): is_active, one row per upi.
+    # actually produces the uploaded parquet): is_active, one row per urs.
     query = """select
-  count(distinct pc.upi)
+  count(distinct pc.urs)
   from rnc_rna_precomputed pc
-  join rna on rna.upi = pc.upi
+  join rna on rna.urs = pc.urs
     where is_active
     """
     cur.execute(query)

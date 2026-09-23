@@ -53,15 +53,11 @@ large number of jobs the pipeline runs.
 
 ### Download required R2DT files
 
-Fetch the latest R2DT files from the ftp site and place them where they are
-expected. Note, you may need to update the version `1.2` below to the latest
-one.
+`r2dt-scan.nf` reads the R2DT covariance models from the host rather than the
+image. Copy them out of the current image with:
 
 ```sh
-$ mkdir -p singularity/bind/r2dt/data/cms
-$ cd singularity/bind/r2dt/data/cms
-$ wget 'http://ftp.ebi.ac.uk/pub/databases/RNAcentral/r2dt/1.2/cms.tar.gz'
-$ tar xvf cms.tar.gz
+$ nextflow run prepare-environment.nf
 ```
 
 ### Optionally install nextflow
