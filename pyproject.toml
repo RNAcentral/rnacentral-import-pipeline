@@ -61,8 +61,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=26.3.1",
-    "isort>=5.13.2",
+    "ruff>=0.9.11",
     "pytest>=9.0.3",
     "maturin>=1.10",
     "line-profiler>=5.0.0",
@@ -70,6 +69,18 @@ dev = [
     "crcmod>=1.7",
     "matplotlib>=3.11.1",
     "pytest-cov>=7.1.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes (unused imports, undefined variables, etc.)
+    "I",   # isort (import sorting)
 ]
 
 [tool.pytest.ini_options]
