@@ -30,7 +30,7 @@ select
         'start', region.region_start,
         'stop', region.region_stop
       )),
-    'deleted', array_agg(distinct xref.deleted = 'Y'),
+    'deleted', bool_and(xref.deleted = 'Y'),
     'previous', (array_agg(row_to_json(prev.*)))[1],
     'rfam_hits', array_agg(json_build_object(
        'rfam_hit_id', hits.rfam_hit_id,
