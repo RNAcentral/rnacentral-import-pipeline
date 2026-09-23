@@ -20,12 +20,15 @@ from pathlib import Path
 import attr
 
 from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.ensembl import gff
 from rnacentral_pipeline.databases.ensembl.vertebrates import parser as vertebrates
 
 # Ensembl now serves every organism (all former divisions plus bacteria) in one
 # uniform EMBL/GFF3 format, so a single parser handles them all and every entry
 # is imported as the ENSEMBL database. A couple of per-organism corrections from
 # the old per-division parsers are preserved below.
+
+URL = "https://www.ensembl.org/feature-explorer/{accession}/transcript:{transcript}"
 
 
 def correct_protist_rna_type(entry: Entry) -> Entry:
@@ -67,10 +70,14 @@ def tair_entries(entry: Entry) -> ty.Iterable[Entry]:
 def parse(
     raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None
 ) -> ty.Iterable[Entry]:
+    accession = gff.get_assembly_accession(gff_file)
     entries = vertebrates.parse(
         raw, gff_file, family_file=family_file, excluded_file=excluded_file
     )
     for entry in entries:
         entry = correct_protist_rna_type(entry)
+        entry = attr.evolve(
+            entry, url=URL.format(accession=accession, transcript=entry.primary_id)
+        )
         yield entry
         yield from tair_entries(entry)

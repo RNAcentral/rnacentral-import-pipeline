@@ -76,6 +76,17 @@ def get_assembly(path: Path) -> str:
     raise ValueError(f"Could not find assembly id in {path}")
 
 
+def get_assembly_accession(path: Path) -> str:
+    with path.open("r") as raw:
+        for line in raw:
+            if not line.startswith("#"):
+                break
+            if line.startswith("#!genome-build-accession"):
+                return line.split(" ", 1)[1].strip()
+
+    raise ValueError(f"Could not find assembly accession in {path}")
+
+
 def load_coordinates(path: Path) -> SqliteDict:
     assembly_id = get_assembly(path)
     mapping = SqliteDict()
