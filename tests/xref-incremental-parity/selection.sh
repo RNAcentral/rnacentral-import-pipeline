@@ -5,7 +5,8 @@
 #
 #   * release.get_load_release_type(dbid) -> 'F' with no prior release or no
 #     import manifest, 'D' once a manifest exists for the database -- except
-#     HGNC, paused on 'F' regardless of its manifest (see the function's comment).
+#     HGNC, paused on 'F' regardless of its manifest (see the function's comment),
+#     and WormBase, which follows ENA's manifest.
 #   * rnc_update.prepare_releases('A') applies that choice per database.
 #   * rnc_update.prepare_releases('F') forces FULL for every database.
 #
@@ -33,14 +34,14 @@ create schema release;
 set search_path = rnacen, public;
 
 create table rnacen.rnc_database (id smallint primary key, descr text);
-insert into rnacen.rnc_database values (1, 'DBONE'), (2, 'DBTWO'), (4, 'HGNC');
+insert into rnacen.rnc_database values (1, 'DBONE'), (2, 'DBTWO'), (4, 'HGNC'), (5, 'WORMBASE'), (6, 'ENA');
 
 create table rnacen.rnc_release (
   id bigint primary key, dbid smallint, release_date date, release_type char(1),
   status char(1), "timestamp" timestamp default now(), userstamp text, descr text, force_load char(1)
 );
 -- DBONE and HGNC have both been loaded before (a completed release); DBTWO never has.
-insert into rnacen.rnc_release (id, dbid, release_type, status) values (1, 1, 'F', 'D'), (2, 4, 'F', 'D');
+insert into rnacen.rnc_release (id, dbid, release_type, status) values (1, 1, 'F', 'D'), (2, 4, 'F', 'D'), (3, 5, 'F', 'D');
 
 create table rnacen.load_rnacentral_all (database varchar(40));
 insert into rnacen.load_rnacentral_all values ('DBONE'), ('DBTWO');
@@ -112,7 +113,43 @@ DO $$
 BEGIN
   ASSERT release.get_load_release_type(4) = 'F', 'HGNC stays FULL even with a manifest';
 END $$;
+
+-- 6. WormBase has no manifest of its own: its xrefs come out of the ENA parse, so
+--    it follows ENA's. FULL would retire every WormBase record in the ENA sources
+--    the delta skipped.
+DO $$
+BEGIN
+  ASSERT release.get_load_release_type(5) = 'F', 'WormBase is FULL while ENA has no manifest';
+END $$;
+create table rnacen.pipeline_tracking_import_ena
+  partition of rnacen.pipeline_tracking_import for values in ('ENA');
+insert into rnacen.pipeline_tracking_import (database, accession, signature)
+  values ('ENA', 'x', 'sig');
+DO $$
+BEGIN
+  ASSERT release.get_load_release_type(5) = 'D', 'WormBase follows ENA into DELTA';
+END $$;
+
+-- 7. Every ENA run releases WormBase, even with no WormBase rows staged: a run can
+--    delete WormBase records without loading any.
+delete from rnc_release where status = 'L';
+delete from load_rnacentral_all;
+insert into load_rnacentral_all values ('ENA');
+select rnc_update.prepare_releases('A');
+DO $$
+BEGIN
+  ASSERT (select release_type from rnc_release where dbid = 5 and status = 'L') = 'D',
+         'an ENA run must create a DELTA WormBase release';
+END $$;
 SQL
+
+# ...and release run must execute it: TO_RELEASE is read straight from run.py.
+TO_RELEASE="$(cd "$ROOT" && python3 -c 'from rnacentral_pipeline.rnacentral.release import run; print(run.TO_RELEASE)')"
+released="$(P -d "$DB" -At -c "set search_path=rnacen,public;" -c "$TO_RELEASE" | cut -d'|' -f1 | tr '\n' ' ')"
+if [[ " $released " != *" 5 "* ]]; then
+  echo "TO_RELEASE must pick up WormBase's release on an ENA run (got: $released)" >&2
+  exit 1
+fi
 
 P -d postgres -c "drop database if exists $DB;" >/dev/null
 echo ">>> SELECTION OK: get_load_release_type / prepare_releases behave as specified <<<"

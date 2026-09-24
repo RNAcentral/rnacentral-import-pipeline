@@ -75,6 +75,27 @@ BEGIN
   -- Exactly one active row per still-present accession; ACC_KEEP never duplicated.
   ASSERT (select count(*) from xref where deleted='N') = 3, 'expected 3 active rows';
 END $$;
+
+-- WormBase xrefs come out of the ENA parse as '<ENA record id>:WORMBASE:<gene>', and
+-- their deletions arrive in ENA's list under the bare record id.
+insert into rnacen.rnc_database values (2, 'WORMBASE');
+create table rnacen.xref_p2 partition of rnacen.xref for values in (2) partition by list (deleted);
+create table rnacen.xref_p2_not_deleted partition of rnacen.xref_p2 for values in ('N');
+create table rnacen.xref_p2_deleted     partition of rnacen.xref_p2 for values in ('Y');
+insert into rnacen.xref (ac, dbid, version, version_i, urs, created, last, deleted, taxid) values
+  ('BX1.5:1..21:ncRNA:WORMBASE:WBGene1',  2, 1, 1, 'UPI_K', 1, 1, 'N', 6239),
+  ('BX1.5:1..210:ncRNA:WORMBASE:WBGene2', 2, 1, 1, 'UPI_K', 1, 1, 'N', 6239);
+insert into rnacen.load_deletions (database, accession) values ('ENA', 'BX1.5:1..21:ncRNA');
+
+select rnc_load_xref_incremental.incremental_retire_explicit(2::bigint, 1::bigint);
+
+DO $$
+BEGIN
+  ASSERT (select deleted from xref where ac='BX1.5:1..21:ncRNA:WORMBASE:WBGene1') = 'Y',
+         'a WormBase xref must retire when ENA deletes its record';
+  ASSERT (select deleted from xref where ac='BX1.5:1..210:ncRNA:WORMBASE:WBGene2') = 'N',
+         'a WormBase xref on another record must stay active';
+END $$;
 SQL
 
 P -d postgres -c "drop database if exists $DB;" >/dev/null
