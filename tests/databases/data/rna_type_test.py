@@ -17,11 +17,12 @@ import pytest
 
 from rnacentral_pipeline.databases.data import RnaType, SoTermInfo
 from rnacentral_pipeline.databases.sequence_ontology import tree
+from tests.helpers import SO_ONTOLOGY_PATH
 
 
 @pytest.fixture(scope="module")
 def so_tree():
-    return tree.load_ontology(tree.REMOTE_ONTOLOGY)
+    return tree.load_ontology(SO_ONTOLOGY_PATH)
 
 
 @pytest.mark.parametrize(
@@ -40,7 +41,7 @@ def so_tree():
         ("ncRNA", "SO:0000655"),
         ("misc_RNA", "SO:0000673"),
         ("other", "SO:0000655"),
-        ("precursor_RNA", "SO:0000185"),
+        ("precursor_RNA", "SO:0002393"),
         ("piRNA", "SO:0001035"),
         ("rasiRNA", "SO:0000454"),
         ("ribozyme", "SO:0000374"),

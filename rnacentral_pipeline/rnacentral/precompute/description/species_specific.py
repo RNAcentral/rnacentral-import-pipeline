@@ -416,8 +416,9 @@ def description_of(rna_type: str, sequence: seq.Sequence) -> str:
     """
     Determine the name for the species specific sequence. This will examine
     all descriptions in the xrefs and select one that is the 'best' name for
-    the molecule. If no xref can be selected as a name, then None is returned.
-    This can occur when no xref in the given iterable has a matching rna_type.
+    the molecule. Every RNA must get a description, so if no xref at all can
+    be selected as a name (e.g. a since-superseded sequence with no active
+    accessions), a NoBestFoundException is raised instead of returning None.
     The best description will be the one from the xref which agrees with the
     computed rna_type and has the maximum entropy as estimated by `entropy`.
     The reason this is used over length is that some descriptions which come
@@ -439,15 +440,18 @@ def description_of(rna_type: str, sequence: seq.Sequence) -> str:
 
     Returns
     -------
-    name : str, None
-        A string that is a description of the sequence, or None if no sequence
-        could be selected.
+    name : str
+        A string that is a description of the sequence.
     """
 
     selector = suitable_xref(rna_type)
     try:
         db_name, accessions = utils.best(ORDERING, sequence.accessions, selector)
     except utils.NoBestFoundException:
+        # Every RNA must get a description, so if there is no active
+        # accession at all (e.g. a since-superseded sequence) to fall back
+        # to, this propagates and fails the pipeline rather than silently
+        # producing no description.
         db_name, accessions = utils.best(ORDERING, sequence.accessions, accept_any)
 
     builder = DatabaseSpecifcNameBuilder()

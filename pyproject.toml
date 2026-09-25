@@ -61,14 +61,28 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=26.3.1",
-    "isort>=5.13.2",
+    "ruff>=0.9.11",
     "pytest>=9.0.3",
     "maturin>=1.10",
     "line-profiler>=5.0.0",
     "mypy>=1.20.2",
     "crcmod>=1.7",
     "matplotlib>=3.11.1",
+    "pytest-cov>=7.1.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+# Import sorting only - matches what black+isort actually enforced (format +
+# sort). E/W/F is real linting (line length, unused imports, undefined
+# names, ...) that neither tool ever did; the repo has ~1000+ pre-existing
+# violations of it, so selecting those blocks any commit that merely touches
+# an already-violating file. Ratchet those in separately if wanted.
+select = [
+    "I",   # isort (import sorting)
 ]
 
 [tool.pytest.ini_options]
@@ -79,3 +93,19 @@ markers = [
     "db: Test that require access to our database",
     "r2dt: Tests for the r2dt secondary structure pipeline",
 ]
+
+[tool.coverage.run]
+source = ["rnacentral_pipeline"]
+branch = true
+relative_files = true
+
+[tool.coverage.report]
+skip_empty = true
+exclude_also = [
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "pragma: no cover",
+]
+
+[tool.coverage.html]
+directory = "coverage_html"

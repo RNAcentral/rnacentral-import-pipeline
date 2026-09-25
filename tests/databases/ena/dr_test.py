@@ -30,8 +30,6 @@ def test_can_parse_a_dr_line_with_only_primary():
 
 def test_can_extract_dr_lines():
     with open("data/ena/tpa/mirbase/entry.embl", "r") as raw:
-        # mappings is a generator, so it has to be drained before the file
-        # closes.
         data = dict(dr.mappings(raw))
 
     assert data == {

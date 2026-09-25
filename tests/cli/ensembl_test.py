@@ -23,6 +23,7 @@ from rnacentral_pipeline.cli import ensembl
 
 
 @pytest.mark.cli
+@pytest.mark.db
 def test_can_fetch_assemblies():
     runner = CliRunner()
     filename = os.path.abspath("data/qa/rfam/scan.tbl")

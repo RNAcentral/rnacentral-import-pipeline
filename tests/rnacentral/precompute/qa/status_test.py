@@ -20,14 +20,16 @@ from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
 
 from .. import helpers
 
+pytestmark = pytest.mark.db
+
 
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
     [  # pylint: disable=no-member
         ("URS0000400378_30527", "tRNA", False),
         ("URS000058E89C_39432", "rRNA", False),
-        ("URS000061A10B_9606", "tRNA", False),
-        ("URS00008CF5BF_36987", "rRNA", True),
+        ("URS00001617C4_484019", "tRNA", False),
+        ("URS0000000037_859192", "rRNA", True),
         ("URS00009F92C9_358574", "rRNA", False),
         ("URS0000010837_7227", "misc_RNA", True),
     ],
@@ -44,7 +46,7 @@ def test_can_detect_possible_contamination(rna_id, rna_type, flag):
     [  # pylint: disable=no-member
         ("URS0000400378_30527", "tRNA", False),
         ("URS000058E89C_39432", "rRNA", False),
-        ("URS000061A10B_9606", "tRNA", False),
+        ("URS00001617C4_484019", "tRNA", False),
         ("URS0000866382_511983", "tRNA", False),
         ("URS000099C38D_77133", "rRNA", True),
         ("URS00009ED984_77133", "rRNA", True),
@@ -64,7 +66,7 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     [  # pylint: disable=no-member
         ("URS0000400378_30527", "tRNA", False),
         ("URS000058E89C_39432", "rRNA", False),
-        ("URS000061A10B_9606", "tRNA", False),
+        ("URS00001617C4_484019", "tRNA", False),
         ("URS0000866382_1000416", "tRNA", True),
         ("URS00009ED984_77133", "rRNA", False),
         ("URS0000A80D0E_60711", "rRNA", True),

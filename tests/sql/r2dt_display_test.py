@@ -48,7 +48,7 @@ def copy_query(db, path):
 
 def load_case(db, urs, seq_len, model_length, assigned, inferred, model_id=1):
     with db.cursor() as cur:
-        cur.execute("INSERT INTO rna (upi, len) VALUES (%s, %s)", (urs, seq_len))
+        cur.execute("INSERT INTO rna (urs, len) VALUES (%s, %s)", (urs, seq_len))
         cur.execute(
             """INSERT INTO r2dt_models
                (id, model_name, model_source, model_length, model_basepair_count, so_term_id)
@@ -152,8 +152,10 @@ def test_should_show_update_writes_back_to_r2dt_results(db):
     with db.cursor() as cur:
         for statement in ctl_blocks("BEFORE LOAD DO"):
             cur.execute(statement)
-        cur.execute("""INSERT INTO load_secondary_should_show (urs, should_show)
-               VALUES ('URS0000000001', false), ('URS0000000002', true)""")
+        cur.execute(
+            """INSERT INTO load_secondary_should_show (urs, should_show)
+               VALUES ('URS0000000001', false), ('URS0000000002', true)"""
+        )
 
         update = ctl_blocks("AFTER LOAD DO")[0]
         cur.execute(update)

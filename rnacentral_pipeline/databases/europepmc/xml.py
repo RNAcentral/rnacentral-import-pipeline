@@ -15,36 +15,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-import re
 import csv
 import dbm
-import json
-import typing
-import logging
-from glob import glob
 import functools as ft
+import json
+import logging
+import os
+import re
+import typing
+from contextlib import ExitStack, contextmanager
+from glob import glob
 from pathlib import Path
-from contextlib import ExitStack
-from contextlib import contextmanager
 
 import attr
-from attr.validators import instance_of as is_a
-
 import more_itertools as more
-
+from attr.validators import instance_of as is_a
 from lxml import etree as ET
 
-from rnacentral_pipeline.databases.data import Reference
-from rnacentral_pipeline.databases.data import IdReference
-from rnacentral_pipeline.databases.data import KnownServices
-from rnacentral_pipeline.databases.helpers.publications import reference
-
-from rnacentral_pipeline.databases.europepmc.utils import clean_title
-from rnacentral_pipeline.databases.europepmc.utils import pretty_location
-from rnacentral_pipeline.databases.europepmc.utils import write_lookup
+from rnacentral_pipeline.databases.data import IdReference, KnownServices, Reference
 from rnacentral_pipeline.databases.europepmc.fetch import lookup
-
+from rnacentral_pipeline.databases.europepmc.utils import (
+    clean_title,
+    pretty_location,
+    write_lookup,
+)
+from rnacentral_pipeline.databases.helpers.publications import reference
 
 LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +81,11 @@ class Storage(object):
     def open(self, mode="r"):
         self.db = dbm.open(str(self.path), mode)
         yield self
-        self.db.sync()
+        # dbm.sqlite3 (the default backend on Python 3.13+) commits per write
+        # and has no sync(), unlike dbm.gnu.
+        sync = getattr(self.db, "sync", None)
+        if sync is not None:
+            sync()
         self.db.close()
 
     def __normalize_key__(self, raw):
@@ -120,7 +119,7 @@ class Cache(object):
         cache = cls.build(base_path)
         chunks = more.chunked(references, COMMIT_SIZE)
         for index, chunk in enumerate(chunks):
-            with cache.open(mode="cf") as cache:
+            with cache.open(mode="c") as cache:
                 for reference in chunk:
                     cache.store(reference)
 
@@ -203,7 +202,9 @@ def node_to_reference(node):
 
 
 def parse(xml_file):
-    for _, node in ET.iterparse(xml_file, recover=True, events=("end",), tag="PMC_ARTICLE"):
+    for _, node in ET.iterparse(
+        xml_file, recover=True, events=("end",), tag="PMC_ARTICLE"
+    ):
         ref = node_to_reference(node)
         if not ref:
             continue

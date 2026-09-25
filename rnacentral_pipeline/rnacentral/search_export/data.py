@@ -56,7 +56,11 @@ POPULAR_SPECIES = set(
 
 INSDC_PATTERN = re.compile(r"(Submitted \(\d{2}\-\w{3}\-\d{4}\) to the INSDC\. ?)")
 
-ONTOLOGIES = {"GO", "SO", "ECO"}
+
+# A tuple, not a set: note_references() below iterates this to build the
+# output list, and set iteration order depends on Python's per-process hash
+# randomization, which made the reference ordering non-deterministic.
+ONTOLOGIES = ("GO", "SO", "ECO")
 
 
 def create_tag(root, name, value, attrib={}):

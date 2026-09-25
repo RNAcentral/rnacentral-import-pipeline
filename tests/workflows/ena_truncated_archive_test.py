@@ -31,8 +31,13 @@ def unpack_section() -> str:
     """The part of the script between the rsync and the chunking, as bash."""
     script = fetch_directory_script()
     start = script.index("find copied -type f -empty -delete")
-    end = script.index("mkdir $name-chunks")
-    return script[start:end].replace("\\$", "$").replace("${name}", "wgs")
+    end = script.index("if [ -s \\$label.ncr ]; then")
+    body = script[start:end].replace("\\$", "$")
+    # $root/$label are computed earlier in the real per-root loop (label is a
+    # sha1sum of root); this slice starts after that, so stand in fixed
+    # values the same way the old ${name}-templated script was pinned to
+    # "wgs" for these tests.
+    return "root=wgs\nlabel=wgs\n" + body
 
 
 def test_archives_are_not_unpacked_through_a_shared_xargs():
@@ -74,7 +79,11 @@ def test_a_truncated_archive_is_skipped_not_fatal(tmp_path):
     )
 
     assert run.returncode == 0, run.stderr
-    assert (tmp_path / "wgs.ncr").read_text() == "ID   GOOD\n//\nID   ALSO_GOOD\n//\n"
+    # Order is find's directory-traversal order across copied/a and copied/b,
+    # which is filesystem-dependent (stable locally, not the same on CI) -
+    # only which records survive is under test here, not their order.
+    records = (tmp_path / "wgs.ncr").read_text().split("//\n")
+    assert sorted(r for r in records if r) == ["ID   ALSO_GOOD\n", "ID   GOOD\n"]
     assert "truncated.ncr.gz" in run.stderr
 
 

@@ -13,22 +13,58 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 import os
 import typing as ty
 from functools import lru_cache
 from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
 from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 from rnacentral_pipeline.databases.ensembl.genomes import urls
 
+# The live species_metadata_EnsemblFungi.json is 300MB+, so urls_for() is
+# exercised here against a synthetic in-memory FTP rather than a recorded
+# cassette (see the accidental-499MB-cassette lesson in project history).
+_FAKE_SPECIES_METADATA = json.dumps(
+    [
+        {
+            "organism": {
+                "name": "aspergillus_oryzae",
+                "url_name": "Aspergillus_oryzae",
+            },
+            "assembly": {"assembly_default": "ASM18445v3"},
+            "databases": [{"dbname": "aspergillus_oryzae_core_62_1"}],
+        }
+    ]
+).encode("ascii")
+
+
+class _FakeFtp:
+    def login(self):
+        pass
+
+    def cwd(self, _path):
+        pass
+
+    def retrbinary(self, _cmd, callback):
+        callback(_FAKE_SPECIES_METADATA)
+
+    def close(self):
+        pass
+
 
 @lru_cache()
 def species(division: Division) -> ty.List[str]:
-    found = urls.urls_for(division, "ftp.ensemblgenomes.org")
-    return [f[1] for f in found]
+    with patch(
+        "rnacentral_pipeline.databases.ensembl.genomes.urls.FTP",
+        return_value=_FakeFtp(),
+    ):
+        found = urls.urls_for(division, "ftp.ensemblgenomes.org")
+        return [f.species for f in found]
 
 
 @pytest.mark.parametrize(

@@ -37,9 +37,10 @@ class TestParseDifferential(unittest.TestCase):
         )
 
         # Create sample lookup data
+        # No "CREATE TABLE"/"COPY N" preamble here - the real pipeline's
+        # fetch_lookup process (workflows/databases/expressionatlas.nf) greps
+        # those psql status lines out before parser.py ever sees the file.
         self.lookup_content = (
-            "CREATE TABLE\n"
-            "COPY 5\n"  # Skip these two lines
             "urs_taxid,taxid,gene\n"
             "URS000123_9606,9606,ENSG00000001\n"
             "URS000124_9606,9606,ENSG00000002\n"
@@ -54,7 +55,9 @@ class TestParseDifferential(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create analytics file
-            analytics_path = Path(temp_dir) / "E-MTAB-123-analytics.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            analytics_path = exp_dir / "E-MTAB-123-analytics.tsv"
             with open(analytics_path, "w") as f:
                 f.write(self.analytics_content)
 
@@ -98,7 +101,9 @@ class TestParseDifferential(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create analytics file with alternative column name
-            analytics_path = Path(temp_dir) / "E-MTAB-123-analytics.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            analytics_path = exp_dir / "E-MTAB-123-analytics.tsv"
             with open(analytics_path, "w") as f:
                 f.write(analytics_content_alt)
 
@@ -134,7 +139,9 @@ class TestParseDifferential(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create analytics file
-            analytics_path = Path(temp_dir) / "E-MTAB-123-analytics.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            analytics_path = exp_dir / "E-MTAB-123-analytics.tsv"
             with open(analytics_path, "w") as f:
                 f.write(analytics_content_no_match)
 
@@ -170,7 +177,9 @@ class TestParseDifferential(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create analytics file
-            analytics_path = Path(temp_dir) / "E-MTAB-123-analytics.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            analytics_path = exp_dir / "E-MTAB-123-analytics.tsv"
             with open(analytics_path, "w") as f:
                 f.write(self.analytics_content)
 
@@ -195,7 +204,9 @@ class TestParseDifferential(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create analytics file with a different experiment name
-            analytics_path = Path(temp_dir) / "E-MTAB-456-analytics.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-456"
+            exp_dir.mkdir()
+            analytics_path = exp_dir / "E-MTAB-456-analytics.tsv"
             with open(analytics_path, "w") as f:
                 f.write(self.analytics_content)
 
@@ -222,7 +233,9 @@ class TestParseDifferential(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create analytics file
-            analytics_path = Path(temp_dir) / "E-MTAB-123-analytics.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            analytics_path = exp_dir / "E-MTAB-123-analytics.tsv"
             with open(analytics_path, "w") as f:
                 f.write(analytics_content_empty)
 
@@ -252,7 +265,9 @@ class TestParseDifferential(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create analytics file
-            analytics_path = Path(temp_dir) / "E-MTAB-123-analytics.tsv"
+            exp_dir = Path(temp_dir) / "E-MTAB-123"
+            exp_dir.mkdir()
+            analytics_path = exp_dir / "E-MTAB-123-analytics.tsv"
             with open(analytics_path, "w") as f:
                 f.write(analytics_content_filtered)
 

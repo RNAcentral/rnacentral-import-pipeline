@@ -15,12 +15,19 @@ limitations under the License.
 
 
 import os
-import tempfile
 import subprocess
-
+import tempfile
 from io import StringIO
 
 from rnacentral_pipeline import psql
+
+# Vendored copy of the Sequence Ontology (so-simple.obo) so the test suite can
+# build the SO tree without downloading it from GitHub. Refresh with:
+#   curl -sSL -o tests/data/sequence_ontology/so-simple.obo \
+#     https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/so-simple.obo
+SO_ONTOLOGY_PATH = os.path.join(
+    os.path.dirname(__file__), "data", "sequence_ontology", "so-simple.obo"
+)
 
 
 def run_with_buffer(path, *replacements):
@@ -40,7 +47,12 @@ def run_with_buffer(path, *replacements):
             tmp.flush()
 
         cmd = subprocess.run(
-            ["psql", "-f", tmp.name, os.environ["PGDATABASE"]],
+            # -q matters: without it psql echoes a "SET" command tag to
+            # stdout for each SET in the query file (e.g. id_mapping.sql's
+            # work_mem/enable_nestloop preamble), and those non-JSON lines
+            # break psql.json_handler() - see workflows/export/ftp/id-mapping.nf
+            # for the same gotcha on the production side.
+            ["psql", "-q", "-f", tmp.name, os.environ["PGDATABASE"]],
             stdout=subprocess.PIPE,
             encoding="utf-8",
         )
@@ -76,7 +88,7 @@ def run_range_as_single(upi, path):
         path,
         (
             "rna.id BETWEEN :min AND :max",
-            "xref.upi ='%s' AND xref.taxid = %i" % (upi, taxid),
+            "xref.urs ='%s' AND xref.taxid = %i" % (upi, taxid),
         ),
     )
 
@@ -89,9 +101,14 @@ def run_with_upi_taxid_constraint(rna_id, path, **kwargs):
         (
             "where\n",
             """where
-            xref.upi = '%s' and xref.taxid = %i
+            xref.urs = '%s' and xref.taxid = %i
             and"""
             % (upi, taxid),
         ),
+        # id_mapping.sql has a `:'chunk'` placeholder (production runs one
+        # query per URS-last-character chunk, via `psql -v chunk=...`) that
+        # this helper otherwise leaves unsubstituted, a syntax error. A
+        # no-op on files without that placeholder.
+        (":'chunk'", upi[-1]),
         **kwargs
     )

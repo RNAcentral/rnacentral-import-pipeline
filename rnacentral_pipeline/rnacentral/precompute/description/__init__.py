@@ -25,7 +25,9 @@ def description_of(rna_type: str, sequence: Sequence) -> str:
     approach works in two stages, first it determines the rna_type of the
     sequence and then it will select the description from all xrefs of the
     sequence which match the given rna_type. A species specific name is always
-    generated; every sequence is processed per (URS, taxid).
+    generated; every sequence is processed per (URS, taxid). If no description
+    can be produced, an exception is raised rather than returning None, since
+    every RNA must get a description.
 
     Parameters
     ----------

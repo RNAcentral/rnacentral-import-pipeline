@@ -102,7 +102,7 @@ def parse(handle: ty.IO):
             rna_type=RNA_TYPES[rna_type],
             url=f"http://mirtrondb.cp.utfpr.edu.br/fetch_details.php?mrt_details={name}",
             seq_version="1",
-            gene=host_gene or "",
+            gene=host_gene,
             description=description,
         )
         if entry.accession in pre or entry.accession in mature:

@@ -170,13 +170,13 @@ def get_generic(
             precursors = set()
             aliases = []
             symbol = None
-            if info := mirbase_info.get(result["id"], None):
+            if info := mirbase_info.get(result["urs_taxid"], None):
                 precursors = info["precursors"]
                 aliases = sorted(info["symbol"])
                 symbol = aliases.pop(0)
             assert result["taxid"]
             yield GpiEntry(
-                urs_taxid=result["id"],
+                urs_taxid=result["urs_taxid"],
                 description=result["description"],
                 rna_type=result["rna_type"],
                 symbol=symbol,

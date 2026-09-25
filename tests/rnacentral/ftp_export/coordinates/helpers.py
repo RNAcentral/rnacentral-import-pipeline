@@ -16,36 +16,45 @@ limitations under the License.
 import os
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import data
-
-from tests.helpers import run_with_replacements
+from tests.helpers import run_with_buffer
 
 
 def fetch_raw(rna_id, assembly):
+    # query.sql is COPY ... TO STDOUT CSV (needed because exon data can embed
+    # quotes/backslashes) - run_with_buffer hands back the raw CSV-quoted
+    # text as-is, and data.from_file() is the parser built to unwrap that
+    # (unlike psql.json_handler(), which assumes plain COPY text format and
+    # can't parse this).
+    #
+    # The "Gene records" branch of query.sql isn't scoped by rna_id - it
+    # dumps every gene-prediction record for the whole assembly regardless
+    # of which urs_taxid was requested. fetch_coord() (the only caller)
+    # always parses with genes=False, which throws that branch's rows away
+    # anyway, so cut it off at the DB with "AND FALSE" - same result, but
+    # cassette recordings go from tens of MB of discarded rows to a few KB.
     path = os.path.join("files", "ftp-export", "genome_coordinates", "query.sql")
-    return run_with_replacements(
+    return run_with_buffer(
         path,
-        (":'assembly_id'", "'%s'" % assembly),
+        # Must run before the ":'assembly_id'" replacement below, which would
+        # otherwise consume the ":'assembly_id'" placeholder this depends on.
+        ("WHERE g.assembly_id = :'assembly_id'", "WHERE FALSE"),
+        (":'assembly_id'", assembly),
         (
-            "WHERE\n",
-            """WHERE
-         regions.urs_taxid = '%s'
-         and """
-            % rna_id,
+            "WHERE pre.is_active = true",
+            "WHERE pre.is_active = true AND regions.urs_taxid = '%s'" % rna_id,
         ),
-        take_all=True,
     )
 
 
 def fetch_coord(rna_id, assembly):
-    return data.parse(fetch_raw(rna_id, assembly))
+    # genes=False: the "Gene records" branch of query.sql has no per-urs
+    # filter (gene-prediction records aren't tied to one RNA), so it returns
+    # every gene record for the whole assembly unfiltered - drop those and
+    # keep only the transcript record(s) for this rna_id.
+    return data.from_file(fetch_raw(rna_id, assembly), genes=False)
 
 
 def fetch_all(assembly):
     path = os.path.join("files", "ftp-export", "genome_coordinates", "query.sql")
-    return data.parse(
-        run_with_replacements(
-            path,
-            (":'assembly_id'", "'%s'" % assembly),
-            take_all=True,
-        )
-    )
+    buf = run_with_buffer(path, (":'assembly_id'", assembly))
+    return data.from_file(buf, genes=True)
