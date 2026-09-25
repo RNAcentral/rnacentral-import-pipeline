@@ -12,9 +12,8 @@ process build_rnc_bedfile {
   set -euo pipefail
   psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly_id" -f $query "\$PGDATABASE" > result.json
 
-  rnac ftp-export coordinates as-bed result.json |\
-  sort -k1,1 -k2,2n > rnc_regions_gene.bed
-  bed-expander rnc_regions_gene.bed rnc_regions.bed
+  rnac ftp-export coordinates as-bed --exploded result.json |\
+  sort -k1,1 -k2,2n > rnc_regions.bed
   """
 }
 

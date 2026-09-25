@@ -19,7 +19,7 @@ SELECT
 FROM xref
 join rnc_accessions acc on acc.accession = xref.ac
 join rnc_database db on db.id = xref.dbid
-join rnc_rna_precomputed pre on pre.id = xref.urs_taxid
+join rnc_rna_precomputed pre on pre.urs_taxid = xref.urs_taxid
 where
     xref.deleted = 'N'
     AND right(xref.urs, 1) = ANY (string_to_array(:'chunk', ','))

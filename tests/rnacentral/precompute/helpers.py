@@ -17,11 +17,11 @@ import os
 import typing as ty
 
 from rnacentral_pipeline.databases.sequence_ontology import tree
-from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
-from tests.helpers import run_range_as_single, run_with_replacements
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+from tests.helpers import SO_ONTOLOGY_PATH, run_range_as_single, run_with_replacements
 
-SO_TREE = tree.load_ontology(tree.REMOTE_ONTOLOGY)
+SO_TREE = tree.load_ontology(SO_ONTOLOGY_PATH)
 
 
 def load_data(rna_id: str) -> ty.Tuple[Context, Sequence]:
@@ -32,7 +32,7 @@ def load_data(rna_id: str) -> ty.Tuple[Context, Sequence]:
         (":tablename", "rna"),
         (
             "todo.id BETWEEN :min AND :max",
-            "xref.upi ='%s' AND xref.taxid = %i" % (upi, int(taxid)),
+            "xref.urs ='%s' AND xref.taxid = %i" % (upi, int(taxid)),
         ),
     )
     return (Context(so_tree=SO_TREE), Sequence.build(SO_TREE, data))
@@ -44,7 +44,7 @@ def load_for_upi(upi: str) -> ty.List[Sequence]:
         run_with_replacements(
             path,
             (":tablename", "rna"),
-            ("todo.id BETWEEN :min AND :max", "xref.upi ='%s'" % upi),
+            ("todo.id BETWEEN :min AND :max", "xref.urs ='%s'" % upi),
             take_all=True,
         )
     )

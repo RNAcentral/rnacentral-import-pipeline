@@ -18,6 +18,7 @@ limitations under the License.
 import csv
 import itertools as it
 import logging
+import math
 import operator as op
 import typing as ty
 from pathlib import Path
@@ -34,6 +35,20 @@ from rnacentral_pipeline.output_format import is_parquet
 from rnacentral_pipeline.parquet_writers import typed_parquet_writer
 
 LOGGER = logging.getLogger(__name__)
+
+# select_possible tests these separately. They replace a single
+# matches/sequence_length ratio, which multiplied coverage and identity
+# together: a hit at 97% of each landed at ~94% and was rejected despite being
+# good on both counts, so the sequence got no genomic location at all.
+MIN_COVERAGE = 0.95
+MIN_IDENTITY = 95.0
+
+# blat lays every target sequence out in one 32-bit coordinate space, so a
+# target over 2^32 bases fails `assert (hit->tStart >> bucketShift) <
+# bucketCount` in clumpHits and aligns nothing at all. Shards are cut between
+# whole sequences and never exceed this, so it is a ceiling with margin rather
+# than an exact figure.
+MAX_SHARD_BASES = 3500000000
 
 FIELDS = [
     "matches",  # Number of bases that match that aren't repeats
@@ -64,12 +79,44 @@ FIELDS = [
 ]
 
 
+def psl_coverage(raw: ty.Dict[str, ty.Any]) -> float:
+    """
+    Fraction of the query actually aligned. qEnd - qStart would also count
+    query bases skipped inside the alignment, which are aligned to nothing: a
+    5kb sequence with a 4.7kb insertion spans the whole query but covers 7% of
+    it.
+    """
+    aligned = raw["matches"] + raw["misMatches"] + raw["repMatches"]
+    return aligned / raw["qSize"]
+
+
+def psl_identity(raw: ty.Dict[str, ty.Any]) -> float:
+    """
+    UCSC pslIdent, via pslCalcMilliBad in mRNA mode. This measures only how well
+    the aligned part matches, so unlike match_fraction it says nothing about how
+    much of the sequence aligned, and the two can be tested separately.
+    """
+    q_ali = raw["qEnd"] - raw["qStart"]
+    t_ali = raw["tEnd"] - raw["tStart"]
+    total = raw["matches"] + raw["repMatches"] + raw["misMatches"]
+    if min(q_ali, t_ali) <= 0 or total == 0:
+        return 0.0
+    size_dif = max(0, q_ali - t_ali)
+    milli_bad = (
+        1000
+        * (raw["misMatches"] + raw["qNumInsert"] + round(3 * math.log(1 + size_dif)))
+    ) / total
+    return 100.0 - milli_bad * 0.1
+
+
 @frozen
 class BlatHit:
     upi: str
     sequence_length: int
     matches: int
     target_insertions: int
+    coverage: float
+    identity: float
     region: SequenceRegion
 
     @classmethod
@@ -82,6 +129,8 @@ class BlatHit:
             sequence_length=raw["qSize"],
             matches=raw["matches"],
             target_insertions=raw["tBaseInsert"],
+            coverage=psl_coverage(raw),
+            identity=psl_identity(raw),
             region=SequenceRegion(
                 assembly_id=assembly_id,
                 chromosome=raw["tName"],
@@ -110,12 +159,8 @@ def select_possible(hit: BlatHit) -> bool:
         return False
     if hit.matches == hit.sequence_length:
         return True
-    if (
-        hit.sequence_length > 15
-        and hit.match_fraction > 0.95
-        and hit.match_fraction < 1
-    ):
-        return True
+    if hit.sequence_length > 15:
+        return hit.coverage >= MIN_COVERAGE and hit.identity >= MIN_IDENTITY
     return False
 
 
@@ -123,6 +168,51 @@ def select_best(hits: ty.Iterable[BlatHit]) -> ty.List[BlatHit]:
     hits = list(hits)
     best = max(hits, key=op.attrgetter("match_fraction"))
     return [h for h in hits if h.match_fraction >= best.match_fraction]
+
+
+def parse_fai(handle: ty.IO) -> ty.Iterable[ty.Tuple[str, int]]:
+    for row in csv.reader(handle, delimiter="\t"):
+        if row:
+            yield row[0], int(row[1])
+
+
+def shard_targets(
+    sizes: ty.Iterable[ty.Tuple[str, int]], max_bases: int = MAX_SHARD_BASES
+) -> ty.Iterable[ty.List[str]]:
+    """
+    Group target sequences into shards of at most max_bases, splitting only
+    between whole sequences. psl records name their target sequence and give
+    offsets within it, so hits from separate shards merge with no coordinate
+    translation. A sequence larger than max_bases gets a shard to itself; no
+    assembly has one, and splitting it would need that translation.
+    """
+    shard: ty.List[str] = []
+    used = 0
+    for name, length in sizes:
+        if shard and used + length > max_bases:
+            yield shard
+            shard = []
+            used = 0
+        shard.append(name)
+        used += length
+    if shard:
+        yield shard
+
+
+def write_shard_plan(
+    handle: ty.IO, output: ty.Union[str, Path], max_bases: int = MAX_SHARD_BASES
+):
+    """
+    Write one file of target sequence names per shard. The names are zero
+    padded because genome-mapping.nf pairs each shard's .2bit with its .ooc by
+    the sorted order of two globs.
+    """
+    path = Path(output)
+    path.mkdir(parents=True, exist_ok=True)
+    shards = shard_targets(parse_fai(handle), max_bases=max_bases)
+    for index, shard in enumerate(shards, start=1):
+        with (path / ("shard-%03i.names" % index)).open("w") as out:
+            out.writelines("%s\n" % name for name in shard)
 
 
 def parse_psl(assembly_id: str, handle: ty.IO) -> ty.Iterable[BlatHit]:

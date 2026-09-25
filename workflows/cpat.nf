@@ -47,17 +47,22 @@ process cpat_scan {
   tuple val(model_name), path(data), path(hexamer), path(sequences)
 
   output:
-  tuple val(model_name), path('output.ORF_prob.best.tsv')
+  tuple val(model_name), path('output.ORF_prob.best.tsv'), path('no-orfs.txt')
 
+  // cpat writes nothing for a sequence without an ORF, and crashes reading its
+  // own output when no sequence has one. Record those ids so they count as done.
   script:
   """
-  cpat -g "$sequences" -d "$data" -x "$hexamer" -o output
+  cpat -g "$sequences" -d "$data" -x "$hexamer" -o output 2> cpat.log \
+    || grep -q "No such file or directory: 'output.ORF_prob.tsv'" cpat.log
+  touch output.ORF_prob.best.tsv
+  grep -o 'No ORFs found for [^ ]*' cpat.log | awk '{ print \$NF }' > no-orfs.txt
   """
 }
 
 process parse_results {
   input:
-  tuple val(model_name), path('scan-results.tsv'), path(cutoff_info)
+  tuple val(model_name), path('scan-results.tsv'), path('no-orfs.txt'), path(cutoff_info)
 
   output:
   path("results.${params.writer_format}"), emit: results
@@ -65,7 +70,7 @@ process parse_results {
 
   script:
   """
-  rnac cpat parse $cutoff_info $model_name scan-results.tsv .
+  rnac cpat parse $cutoff_info $model_name scan-results.tsv no-orfs.txt .
   """
 }
 
@@ -80,8 +85,11 @@ process store_results {
   path(orf_post_load)
 
   script:
+  // create_load.sql is never re-applied, so the live load_cpat predates the
+  // no-ORF rows and still rejects their null scores; results.ctl does the same
   if (params.writer_format == 'parquet')
     """
+    psql -v ON_ERROR_STOP=1 -c 'ALTER TABLE load_cpat ALTER COLUMN fickett_score DROP NOT NULL, ALTER COLUMN hexamer_score DROP NOT NULL, ALTER COLUMN coding_probability DROP NOT NULL' "\$PGDATABASE"
     load-parquet load_cpat 'results*.parquet' \\
       --truncate \\
       --post-load $result_post_load
@@ -128,7 +136,6 @@ workflow cpat {
     | find_sequences \
     | flatMap { model_name, rd, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { s -> [model_name, rd, hexamer, s] } : [[model_name, rd, hexamer, seqs]] } \
     | cpat_scan \
-    | filter { _model, f -> f.exists() } \
     | combine(find_models.out.cutoffs) \
     | parse_results
 

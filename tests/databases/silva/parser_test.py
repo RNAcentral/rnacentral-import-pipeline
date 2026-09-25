@@ -13,31 +13,46 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+
 import attr
 import pytest
+from sqlitedict import SqliteDict
 
 import rnacentral_pipeline.databases.helpers.publications as pubs
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.silva import parser
+from rnacentral_pipeline.databases.silva import helpers, parser
+
+# parser.parse() looks up each row's taxon in this SqliteDict first, falling
+# back to the (offline-cached, see tests/conftest.py) phylogeny helpers on a
+# miss - so an empty dict is enough to exercise real species/lineage data
+# without vendoring a taxonomy dump.
+
+
+@pytest.fixture
+def taxonomy_path(tmp_path):
+    path = tmp_path / "taxonomy.db"
+    SqliteDict(filename=str(path)).commit()
+    return str(path)
 
 
 @pytest.mark.silva
 @pytest.mark.parametrize(
     "filename,count",
     [
-        ("data/silva/sample.tsv", 8),
+        ("data/silva/sample.tsv", 9),
         ("data/silva/lsu.tsv", 9),
     ],
 )
-def test_parses_all_data(filename, count):
+def test_parses_all_data(filename, count, taxonomy_path):
     with open(filename, "r") as raw:
-        assert len(list(parser.parse(raw))) == count
+        assert len(list(parser.parse(raw, taxonomy_path))) == count
 
 
 @pytest.mark.silva
-def test_parses_data_correctly():
+def test_parses_data_correctly(taxonomy_path):
     with open("data/silva/sample.tsv", "r") as raw:
-        val = next(parser.parse(raw))
+        val = next(parser.parse(raw, taxonomy_path))
 
     assert val == data.Entry(
         primary_id="SILVA:FN662328.1:1..957",
@@ -78,9 +93,9 @@ def test_parses_data_correctly():
 
 
 @pytest.mark.silva
-def test_can_parse_lsu_data_correctly():
+def test_can_parse_lsu_data_correctly(taxonomy_path):
     with open("data/silva/lsu.tsv", "r") as raw:
-        val = next(parser.parse(raw))
+        val = next(parser.parse(raw, taxonomy_path))
 
     assert val == data.Entry(
         primary_id="SILVA:KF848653.1:<1..>566",
@@ -112,7 +127,7 @@ def test_can_parse_lsu_data_correctly():
         species="Cytospora ceratosperma",
         lineage=(
             "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; "
-            "Sordariomycetes; Sordariomycetidae; Diaporthales; Valsaceae; "
+            "Sordariomycetes; Sordariomycetidae; Diaporthales; Cytosporaceae; "
             "Cytospora; Cytospora ceratosperma"
         ),
         references=[
@@ -120,3 +135,12 @@ def test_can_parse_lsu_data_correctly():
         ],
         description="Cytospora ceratosperma eukaryotic LSU rRNA",
     )
+
+
+@pytest.mark.silva
+def test_skips_entries_with_a_blank_taxid():
+    with open("data/silva/sample.tsv", "r") as raw:
+        row = next(csv.DictReader(raw, delimiter="\t"))
+    row["ncbiTaxId"] = ""
+
+    assert helpers.as_entry(None, row) is None

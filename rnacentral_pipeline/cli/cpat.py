@@ -37,11 +37,12 @@ def cli():
 @click.argument("cutoffs", type=click.File("rb"))
 @click.argument("model_name")
 @click.argument("results", type=click.Path())
+@click.argument("no_orfs", type=click.Path())
 @click.argument("output", type=click.Path())
 @format_option
-def parse(cutoffs, model_name, results, output):
+def parse(cutoffs, model_name, results, no_orfs, output):
     cutoffs = pickle.load(cutoffs)
-    data = parser.parse(cutoffs, model_name, Path(results))
+    data = parser.parse(cutoffs, model_name, Path(results), Path(no_orfs))
     out_path = Path(output)
     if is_parquet():
         opener = cpat_data.parquet_writer(out_path)

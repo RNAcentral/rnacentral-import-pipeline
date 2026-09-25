@@ -44,9 +44,9 @@ CORPUS = Path("data/r2dt/should-show/labelled-corpus.csv")
 
 # Measured against the shipped model; a change here is a change in behaviour,
 # not a flaky threshold. See the module docstring for how to regenerate.
-EXPECTED_ACCURACY = 0.8965
-WRONGLY_SHOWN = 43
-WRONGLY_HIDDEN = 148
+EXPECTED_ACCURACY = 0.9702
+WRONGLY_SHOWN = 26
+WRONGLY_HIDDEN = 29
 
 
 @pytest.mark.r2dt
@@ -181,8 +181,9 @@ def test_model_accuracy_against_the_labels():
     """Guards the quality of the shipped model, not just its stability.
 
     The heuristic in data.ShowInfo.showable() scores 0.867 on the same corpus,
-    with 140 wrongly shown; the model is both more accurate and biased towards
-    hiding, which is the safer error for a public site.
+    with 140 wrongly shown; the model is substantially more accurate, and now
+    roughly balanced between the two error types (26 wrongly shown vs 29
+    wrongly hidden).
     """
     records, labels, _ = corpus()
     frame = pd.DataFrame.from_records(records)

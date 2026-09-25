@@ -5,38 +5,51 @@ CREATE OR REPLACE FUNCTION rnc_update.prepare_releases(p_release_type character)
 AS $function$
 DECLARE
 
+    -- Bailing out whenever any release was pending let one abandoned load block
+    -- every later one: no release got created for the staged database, and the
+    -- stale pending release ran in its place.
     q CURSOR
     FOR
       SELECT distinct
         d2.id
       FROM
-          load_rnacentral_all d1,
+          -- WormBase comes out of the ENA parse, so every ENA run releases it: a run
+          -- can delete WormBase records without loading any.
+          (SELECT database FROM load_rnacentral_all
+           UNION ALL
+           SELECT 'WORMBASE' WHERE EXISTS (
+             SELECT 1 FROM load_rnacentral_all WHERE database = 'ENA')) d1,
           rnc_database d2
       WHERE
-        d1.DATABASE = d2.descr;
+        d1.DATABASE = d2.descr
+      AND NOT EXISTS (
+          SELECT
+            1
+          FROM
+            rnc_release r
+          WHERE
+            r.dbid   = d2.id
+          AND r.status = 'L'
+        );
 
-    v_count_existing_releases numeric;
+    v_type character;
 
 BEGIN
-
-    SELECT count(*)
-    INTO v_count_existing_releases
-    FROM rnc_release
-    WHERE status = 'L';
-
-    IF (v_count_existing_releases > 0) THEN
-      RAISE NOTICE 'Found releases to be loaded';
-      RETURN;
-    END IF;
 
     RAISE NOTICE 'Preparing the release table';
 
     FOR v_db IN q
     LOOP
-      perform rnc_update.create_release(p_in_dbid => v_db.ID, p_release_type => p_release_type);
+      -- 'A' (auto) picks FULL vs INCREMENTAL per database from its history;
+      -- an explicit 'F'/'I' forces that type for every database (escape hatch).
+      IF p_release_type = 'A' THEN
+        v_type := release.get_load_release_type(v_db.ID);
+      ELSE
+        v_type := p_release_type;
+      END IF;
+      perform rnc_update.create_release(p_in_dbid => v_db.ID, p_release_type => v_type);
     END LOOP;
 
   END;
 
 $function$
-

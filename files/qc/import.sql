@@ -45,5 +45,24 @@ WHERE lower(replace(replace(d.descr, '_', ''), ' ', '')) = ANY (string_to_array(
    OR lower(replace(replace(d.display_name, '_', ''), ' ', '')) = ANY (string_to_array(:'run_dbs', ','))
 ORDER BY d.display_name;
 
+-- Annotation-only imports (e.g. QuickGO) have no rnc_release/release_stats
+-- row, so they're reported separately from pipeline_tracking_<activity>.
+SELECT (to_regclass('pipeline_tracking_go_annotations') IS NOT NULL) AS has_go_annotations \gset
+
+\if :has_go_annotations
+\echo
+\echo 'Annotation imports (no release cycle):'
+SELECT source,
+       last_run::date AS last_run,
+       rows_loaded,
+       CASE
+         WHEN last_run < NULLIF(:'run_start', '')::timestamptz THEN 'NOT IMPORTED'
+         ELSE 'ok'
+       END AS status
+FROM pipeline_tracking_go_annotations
+WHERE source = ANY (string_to_array(:'run_dbs', ','))
+ORDER BY source;
+\endif
+
 \echo
 \echo 'status  ok = imported cleanly | NOT IMPORTED = no new release this run (import_date < run start) | CHECK: data disappeared = >5% retired AND carried_over fell vs last release (possible partial/failed import)'

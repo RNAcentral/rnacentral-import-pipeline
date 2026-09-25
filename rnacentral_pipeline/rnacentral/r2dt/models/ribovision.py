@@ -83,6 +83,15 @@ def as_location(raw):
     raise ValueError("Unknown raw location: " + raw)
 
 
+def location_of(row):
+    """
+    The location sits in a fourth column that metadata.tsv has no header for,
+    so DictReader collects it under None. Rows without one omit it entirely.
+    """
+    extra = row.get(None) or []
+    return as_location(extra[0] if extra else None)
+
+
 def so_term(row):
     if row["model_name"] == "DR_LSU_3D":
         return "SO:0001001"
@@ -115,7 +124,7 @@ def parse(handle, extra=None):
             so_rna_type=so_term_id,
             taxid=tid,
             source=Source.ribovision,
-            cell_location=None,
+            cell_location=location_of(row),
             length=model_stats.get("length"),
             basepairs=model_stats.get("basepairs"),
         )

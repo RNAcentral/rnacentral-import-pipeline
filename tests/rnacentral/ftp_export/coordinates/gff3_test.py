@@ -22,7 +22,7 @@ from gffutils import Feature
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3
 
-from .helpers import fetch_coord, fetch_all
+from .helpers import fetch_all, fetch_coord
 
 
 def fetch_data(rna_id, assembly):
@@ -41,6 +41,7 @@ def assert_features_equal(val, ans):
     assert v == a
 
 
+@pytest.mark.db
 def test_can_produce_features():
     data = fetch_data("URS000082BE64_9606", "GRCh38")
     ans = [
@@ -55,10 +56,12 @@ def test_can_produce_features():
             attributes=OrderedDict(
                 [
                     ("Name", ["URS000082BE64_9606"]),
+                    ("description", ["snoRNA (AC138972.8)"]),
                     ("type", ["snoRNA"]),
-                    ("databases", ["snOPY"]),
+                    ("databases", ["ENA", "GeneCards", "snoDB", "snOPY"]),
                     ("ID", ["URS000082BE64_9606.0"]),
-                    ("source", ["alignment"]),
+                    ("source", ["expert-database"]),
+                    ("providing_databases", ["snoDB"]),
                 ]
             ),
         ),
@@ -73,10 +76,12 @@ def test_can_produce_features():
             attributes=OrderedDict(
                 [
                     ("Name", ["URS000082BE64_9606"]),
+                    ("description", ["snoRNA (AC138972.8)"]),
                     ("type", ["snoRNA"]),
-                    ("databases", ["snOPY"]),
+                    ("databases", ["ENA", "GeneCards", "snoDB", "snOPY"]),
                     ("ID", ["URS000082BE64_9606.0:ncRNA_exon1"]),
                     ("Parent", ["URS000082BE64_9606.0"]),
+                    ("providing_databases", ["snoDB"]),
                 ]
             ),
         ),
@@ -84,6 +89,7 @@ def test_can_produce_features():
     assert_features_equal(data, ans)
 
 
+@pytest.mark.db
 def test_can_produce_features_with_identity():
     data = fetch_data("URS0000563942_9606", "GRCh38")
     ans = [
@@ -98,11 +104,13 @@ def test_can_produce_features_with_identity():
             attributes=OrderedDict(
                 [
                     ("Name", ["URS0000563942_9606"]),
+                    ("description", ["(human) partial ncRNA"]),
                     ("type", ["snRNA"]),
-                    ("databases", ["ENA"]),
+                    ("databases", ["ENA", "GeneCards"]),
                     ("ID", ["URS0000563942_9606.0"]),
                     ("source", ["alignment"]),
                     # 'identity': ['1.00']  FIXME This should have identity 1.0
+                    ("Parent", ["RNACG54157061223.1"]),
                 ]
             ),
         ),
@@ -117,8 +125,9 @@ def test_can_produce_features_with_identity():
             attributes=OrderedDict(
                 [
                     ("Name", ["URS0000563942_9606"]),
+                    ("description", ["(human) partial ncRNA"]),
                     ("type", ["snRNA"]),
-                    ("databases", ["ENA"]),
+                    ("databases", ["ENA", "GeneCards"]),
                     ("ID", ["URS0000563942_9606.0:ncRNA_exon1"]),
                     ("Parent", ["URS0000563942_9606.0"]),
                 ]
@@ -128,6 +137,7 @@ def test_can_produce_features_with_identity():
     assert_features_equal(data, ans)
 
 
+@pytest.mark.db
 def test_can_build_feature_for_mapped():
     data = fetch_data("URS0000000098_9606", "GRCh38")
     ans = [
@@ -142,10 +152,12 @@ def test_can_build_feature_for_mapped():
             attributes=OrderedDict(
                 [
                     ("Name", ["URS0000000098_9606"]),
+                    ("description", ["ncRNA"]),
                     ("type", ["Y_RNA"]),
-                    ("databases", ["ENA"]),
+                    ("databases", ["ENA", "GeneCards"]),
                     ("ID", ["URS0000000098_9606.0"]),
                     ("source", ["alignment"]),
+                    ("Parent", ["RNACG00746135190.1"]),
                 ]
             ),
         ),
@@ -160,8 +172,9 @@ def test_can_build_feature_for_mapped():
             attributes=OrderedDict(
                 [
                     ("Name", ["URS0000000098_9606"]),
+                    ("description", ["ncRNA"]),
                     ("type", ["Y_RNA"]),
-                    ("databases", ["ENA"]),
+                    ("databases", ["ENA", "GeneCards"]),
                     ("ID", ["URS0000000098_9606.0:ncRNA_exon1"]),
                     ("Parent", ["URS0000000098_9606.0"]),
                 ]

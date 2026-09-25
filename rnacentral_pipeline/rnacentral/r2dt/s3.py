@@ -18,6 +18,7 @@ Objects live at (matching the historic layout in update-svg.sh):
 
 import base64
 import csv
+import glob
 import gzip
 import hashlib
 import logging
@@ -30,6 +31,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import boto3
+import pyarrow as pa
 import pyarrow.parquet as pq
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
@@ -290,14 +292,35 @@ def _drop_from_parquet(path, failed):
     table = pq.read_table(path)
     if "urs" not in table.column_names:
         return 0
-    kept = table.filter([u not in failed for u in table.column("urs").to_pylist()])
+    # Typed, because a zero-row chunk gives an empty mask and pyarrow infers
+    # null rather than boolean for that, which filter() rejects.
+    mask = pa.array(
+        [u not in failed for u in table.column("urs").to_pylist()], type=pa.bool_()
+    )
+    kept = table.filter(mask)
     if kept.num_rows == table.num_rows:
         return 0
     pq.write_table(kept, path)
     return table.num_rows - kept.num_rows
 
 
-def drop_failed(failure_list, paths, max_failures=None):
+def _expand(patterns):
+    """Each glob's matches, in order, refusing a pattern that matches nothing.
+
+    The shell expanded these until a release staged 11763 chunks a side: 23526
+    argv entries segfaulted the interpreter before it ran a line of this module.
+    A pattern matching nothing was click's `exists=True` error before, and still
+    has to be loud -- silently dropping nothing would load the rows this exists
+    to remove.
+    """
+    for pattern in patterns:
+        matched = sorted(glob.glob(pattern))
+        if not matched:
+            raise RuntimeError(f"{pattern} matched no files")
+        yield from matched
+
+
+def drop_failed(failure_list, patterns, max_failures=None):
     """
     Strip rows for URS whose SVG never reached S3 from the files about to load.
 
@@ -305,6 +328,8 @@ def drop_failed(failure_list, paths, max_failures=None):
     pipeline_tracking_traveler, which files/r2dt/setup.sql excludes from future
     runs, so the sequence would never be drawn again. Above max_failures this
     raises -- that many missing objects is an outage, not a stray wedged key.
+
+    `patterns` are globs, expanded here rather than by the caller's shell.
     """
     failed = failed_urs(failure_list)
     if not failed:
@@ -317,7 +342,7 @@ def drop_failed(failure_list, paths, max_failures=None):
         )
 
     dropped = 0
-    for name in paths:
+    for name in _expand(patterns):
         path = Path(name)
         if path.suffix == ".parquet":
             dropped += _drop_from_parquet(path, failed)

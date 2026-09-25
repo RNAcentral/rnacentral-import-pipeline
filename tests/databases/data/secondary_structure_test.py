@@ -22,3 +22,8 @@ def test_can_create_empty_secondary():
     assert attr.asdict(ss.SecondaryStructure.empty()) == attr.asdict(
         ss.SecondaryStructure(dot_bracket="")
     )
+
+
+def test_md5_of_nonempty_structure_does_not_raise():
+    structure = ss.SecondaryStructure(dot_bracket="((..))")
+    assert structure.md5 == "0a9f0757629cb6e9fa465bf8d6139067"

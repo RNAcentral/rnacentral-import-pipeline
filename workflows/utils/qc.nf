@@ -9,12 +9,14 @@ def running_databases() {
     vertebrates: 'ensembl', plants: 'ensembl_plants', fungi: 'ensembl_fungi',
     protists: 'ensembl_protists', metazoa: 'ensembl_metazoa',
   ]
+  // Config key differs from rnc_database.descr/display_name for these.
+  def aliases = [pdb: 'pdbe']
   dbs.each { key, db ->
     if (!(db instanceof Map)) return
     if (key == 'ensembl') {
       ensembl_descr.each { sub, descr -> if (db[sub]?.get('run', false)) out << descr }
     } else if (db.get('run', false)) {
-      out << key
+      out << (aliases[key] ?: key)
     }
   }
   return out

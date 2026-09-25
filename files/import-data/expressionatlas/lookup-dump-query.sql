@@ -26,11 +26,11 @@ COPY(
 
   WHERE xref.deleted = 'N'
   AND upper(rnc_database.descr) IN (
-    'NONCODE',
-    'RFAM',
-    'SILVA',
-    'SNODB',
-    'SNOPY',
+    'ENSEMBL',
+    'ENSEMBL_PLANTS',
+    'ENSEMBL_METAZOA',
+    'ENSEMBL_PROTISTS',
+    'ENSEMBL_FUNGI',
     'ENSEMBL_GENCODE'
   )
   AND (

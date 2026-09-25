@@ -140,7 +140,7 @@ def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):
     return should_show.write_training_data(handle, db_url, output)
 
 
-def build_model(handle: ty.IO, db_url: str, output: Path):
+def build_model(handle: ty.IO, db_url: ty.Optional[str], output: Path):
     return should_show.write_model(handle, db_url, output)
 
 

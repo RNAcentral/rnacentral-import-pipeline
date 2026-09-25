@@ -495,9 +495,9 @@ PRECOMPUTE_QA = pa.schema(
 CPAT_RESULTS = pa.schema(
     [
         pa.field("urs_taxid", pa.string(), nullable=False),
-        pa.field("fickett_score", pa.float64(), nullable=False),
-        pa.field("hexamer_score", pa.float64(), nullable=False),
-        pa.field("coding_probability", pa.float64(), nullable=False),
+        pa.field("fickett_score", pa.float64(), nullable=True),
+        pa.field("hexamer_score", pa.float64(), nullable=True),
+        pa.field("coding_probability", pa.float64(), nullable=True),
         pa.field("is_protein_coding", pa.bool_(), nullable=False),
     ]
 )

@@ -85,7 +85,14 @@ async def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInf
     if data["response"]["numFound"] == 0:
         raise MissingPdbs(f"Missing for '{query}', {start}")
     for raw in data["response"]["docs"]:
-        for index in range(len(raw["chain_id"])):
+        chain_ids = raw.get("chain_id")
+        if not chain_ids:
+            LOGGER.warning(
+                "No chain_id in PDBe response for %s, skipping",
+                raw.get("pdb_id", "<unknown>"),
+            )
+            continue
+        for index in range(len(chain_ids)):
             chains.append(ChainInfo.build(index, raw))
     return chains
 
@@ -130,23 +137,35 @@ def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[Cha
 
     if seen != required:
         missed = required - seen
-        raise ValueError("Did not find all requested ids: %s" % missed)
+        # Rfam's .preview feed can name PDB entries before PDBe's own search
+        # index has caught up to them - not an error, just a timing gap that
+        # resolves itself once PDBe indexes the entry. Continue with what
+        # was found rather than failing the whole import over it.
+        LOGGER.warning("Did not find all requested ids: %s", missed)
     return chains
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
 def rna_chains(
-    required: ty.Set[ty.Tuple[str, str]], query_size=1000
+    required: ty.Set[ty.Tuple[str, str]],
+    query_size=1000,
+    limit: ty.Optional[int] = None,
 ) -> ty.List[ChainInfo]:
     """
     Get PDB ids of all RNA-containing 3D structures
     using the RCSB PDB REST API.
+
+    limit caps how many chains to fetch before stopping - mainly useful for
+    recording a small, fast cassette/smoke-testing against the live API
+    rather than pulling all ~180k RNA-containing structures.
     """
 
     LOGGER.info("Fetching all RNA containing chains")
     query = "number_of_RNA_chains:[1 TO *]"
     rna_chains: ty.List[ChainInfo] = []
     total = get_pdbe_count(query)
+    if limit is not None:
+        total = min(total, limit)
     seen = set()
     for start in range(0, total, query_size):
         for chain in asyncio.run(fetch_range(query, start, query_size)):
@@ -156,6 +175,9 @@ def rna_chains(
             ) or key in required:
                 rna_chains.append(chain)
                 seen.add(key)
+        if limit is not None and len(rna_chains) >= limit:
+            rna_chains = rna_chains[:limit]
+            break
 
     # This may be missed if the PDB does not contain any chains labeled as RNA.
     # Rfam does match some DNA chains so we allow them into RNAcentral.

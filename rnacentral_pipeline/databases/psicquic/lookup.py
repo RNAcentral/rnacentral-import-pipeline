@@ -29,10 +29,11 @@ from rnc_rna_precomputed pre
 join rna on rna.urs = pre.urs
 where
     pre.urs_taxid in %s
+    and pre.is_active = true
 """
 
 
 def mapping(db_url: str, interactions: ty.List[Interaction]):
     getter = op.attrgetter("urs_taxid")
     ids = {getter(r) for r in interactions}
-    return lookup.as_mapping(db_url, ids, QUERY)
+    return lookup.as_mapping(db_url, ids, QUERY, allow_missing=True)

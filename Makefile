@@ -1,5 +1,6 @@
 image=rnacentral/rnacentral-import-pipeline
-tag=latest
+pytag=py$(subst .,,$(shell cat .python-version))
+tag=$(pytag)-latest
 sif=$(tag).sif
 docker=$(image):$(tag)
 
@@ -11,7 +12,6 @@ rust:
 	mv -f target/release/search-export bin
 	mv -f target/release/ftp-export bin
 	mv -f target/release/json2dfasta bin
-	mv -f target/release/bed-expander bin
 	# For local Python extension development, run: cd utils/genes-preprocessing && maturin develop
 	@echo "Note: genes-preprocessing wheel is built in Docker (rust-utils container)"
 	@echo "For local dev, run: cd utils/genes-preprocessing && maturin develop"
@@ -24,11 +24,10 @@ clean:
 	rm bin/search-export
 	rm bin/ftp-export
 	rm bin/json2dfasta
-	rm bin/bed-expander
 	cargo clean
 
 docker: Dockerfile
-	docker buildx build -t "$(docker)" --platform linux/amd64 .
+	docker buildx build -t "$(docker)" --platform linux/amd64 --build-arg PYTHON_VERSION=$$(cat .python-version)-trixie --build-arg RUST_VERSION=$(pytag)-latest .
 
 shell: docker
 	docker run -v `pwd`:/rna/import-pipeline -i -t "$(docker)"

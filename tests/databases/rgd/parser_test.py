@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.rgd import parser as rgd
 from rnacentral_pipeline.databases import rgd as rgd_db
+from rnacentral_pipeline.databases.rgd import parser as rgd
 
 
 def test_can_find_version():

@@ -86,6 +86,25 @@ def select_hits(hits, output, sort=False):
     blat.select_pickle(hits, output, sort=sort)
 
 
+@hits.command("shard-plan")
+@click.option(
+    "--max-bases",
+    type=int,
+    default=blat.MAX_SHARD_BASES,
+    help="Largest number of target bases to put in one shard",
+)
+@click.argument("fai", default="-", type=click.File("r"))
+@click.argument("output", type=click.Path())
+def shard_plan(fai, output, max_bases):
+    """
+    Split the sequences in a samtools .fai into shards of at most --max-bases,
+    writing the names in each shard to its own file under OUTPUT. blat cannot
+    index a target over 2^32 bases, so genomes past that must be aligned one
+    shard at a time.
+    """
+    blat.write_shard_plan(fai, output, max_bases=max_bases)
+
+
 @cli.command("url-for")
 @click.option("--kind", default="fa", type=click.Choice(["fa", "gff3"]))
 @click.option("--host", default="ensembl")

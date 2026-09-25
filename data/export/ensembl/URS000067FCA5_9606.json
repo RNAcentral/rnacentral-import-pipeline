@@ -1,14 +1,14 @@
 {
-    "rnacentral_id": "URS000067FCA5_9606",
-    "description": "Homo sapiens (human) small nucleolar RNA, H/ACA box 81 (SNORA81)",
-    "sequence": "ACCTTCTTGTATAAGCACTGTGCTAAAATTGCAGACACTAGGACCATGTCTTGGTTTTTGCAATAATGCTAGCAGAGTACACACAAGAAGAAAAGTAACAGCACTAGATTGTAAAGACTGGGGTGGACCTCTTTCTTAATGTCCAATGTCCTTTGTCTTAAGATTTGGTGCAATATCT",
-    "md5": "ea07a553e77ded36156805894bc4767e",
-    "rna_type": "snoRNA",
-    "taxon_id": 9606,
-    "xrefs": [
-        {
-          "database": "Rfam",
-          "id": "RF01241"
-        }
-    ]
+        "rnacentral_id": "URS000067FCA5_9606",
+        "description": "Homo sapiens (human) small nucleolar RNA, H/ACA box 81 (ENSG00000221420.2)",
+        "sequence": "ACCTTCTTGTATAAGCACTGTGCTAAAATTGCAGACACTAGGACCATGTCTTGGTTTTTGCAATAATGCTAGCAGAGTACACACAAGAAGAAAAGTAACAGCACTAGATTGTAAAGACTGGGGTGGACCTCTTTCTTAATGTCCAATGTCCTTTGTCTTAAGATTTGGTGCAATATCT",
+        "md5": "ea07a553e77ded36156805894bc4767e",
+        "rna_type": "snoRNA",
+        "taxon_id": 9606,
+        "xrefs": [
+                {
+                        "database": "Rfam",
+                        "id": "RF01241"
+                }
+        ]
 }

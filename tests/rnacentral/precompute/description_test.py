@@ -1,4 +1,4 @@
-# URS0000BD9FEB_10089 -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Copyright [2009-2017] EMBL-European Bioinformatics Institute
@@ -15,9 +15,12 @@ limitations under the License.
 
 import pytest
 
+from rnacentral_pipeline.rnacentral.precompute import utils
 from rnacentral_pipeline.rnacentral.precompute.description import description_of
 
 from .helpers import load_data
+
+pytestmark = pytest.mark.db
 
 
 @pytest.mark.parametrize(
@@ -52,12 +55,12 @@ from .helpers import load_data
         (
             "URS000080DD59_32630",
             "misc_RNA",
-            "5'-R(*UP*GP*(CBV)P*(CBV)P*AP*GP*UP*UP*CP*GP*CP*UP*GP*GP*C)-3' from (PDB 1QBP, chain E)",
+            "5'-R(*UP*GP*(CBV)P*(CBV)P*AP*GP*UP*UP*CP*GP*CP*UP*GP*GP*C)-3' from None (PDB 1QBP, chain D)",
         ),
         (
             "URS000080E209_32630",
             "misc_RNA",
-            "RNA (5'-R(*CP*CP*GP*CP*CP*GP*CP*GP*CP*CP*AP*(5BU)P*GP*CP*CP*UP*GP*UP*GP*GP*CP*GP... from (PDB 3MEI, chain B)",
+            "RNA (5'-R(*CP*CP*GP*CP*CP*GP*CP*GP*CP*CP*AP*(5BU)P*GP*CP*CP*UP*GP*UP*GP*GP*CP*GP... from None (PDB 3MEI, chain B)",
         ),
         (
             "URS000080E22B_308052",
@@ -65,19 +68,14 @@ from .helpers import load_data
             "tRNA (5'-D(*AP*UP*CP*CP*CP*CP*GP*UP*GP*UP*CP*CP*UP*UP*GP*GP*UP*UP*CP*G)-3') from Mitsuaria sp. 67 (PDB 4WT8, chain D2)",
         ),
         (
-            "URS000080E135_274",
-            "misc_RNA",
-            "messenger RNA (5'-R(*AP*AP*UP*GP*UP*AP*G)-3') from Thermus thermophilus (PDB 4V9N, chain CV)",
-        ),
-        (
             "URS000080E10B_32630",
             "misc_RNA",
-            "5'-R(*GP*CP*CP*GP*AP*AP*GP*CP*CP*(P5P)-3' from (PDB 1XV0, chain B)",
+            "5'-R(*GP*CP*CP*GP*AP*AP*GP*CP*CP*(P5P)-3' from None (PDB 1XV0, chain B)",
         ),
         (
             "URS000080E230_32630",
             "misc_RNA",
-            "5'-D(*CP*AP*GP*CP*TP*AP*CP*TP*TP*GP*AP*GP*CP*T)-3' from (PDB 3H3V, chain P)",
+            "5'-D(*CP*AP*GP*CP*TP*AP*CP*TP*TP*GP*AP*GP*CP*T)-3' from None (PDB 3H3V, chain P)",
         ),
         (
             "URS000075CF25_9913",
@@ -98,7 +96,7 @@ from .helpers import load_data
         (
             "URS00008E3A1B_10090",
             "lncRNA",
-            "Mus musculus predicted gene 11532 (Gm11532)",
+            "Mus musculus (house mouse) predicted gene 11532 (Gm11532)",
         ),
         (
             "URS00009E8F92_885695",
@@ -110,11 +108,6 @@ from .helpers import load_data
             "lncRNA",
             "Arabidopsis thaliana potential natural antisense gene, locus overlaps with AT1G44120 (AT1G44125)",
         ),
-        (
-            "URS0000A86584_10090",
-            "ncRNA",
-            "Mus musculus (house mouse) predicted gene 29254",
-        ),
         pytest.param(
             "URS0000A98E18_9606",
             "Y_RNA",
@@ -124,7 +117,7 @@ from .helpers import load_data
         (
             "URS0000ABD87F_9606",
             "rRNA",
-            "Homo sapiens RNA, 45S pre-ribosomal N1 (RNA45SN1)",
+            "Homo sapiens (human) RNA, 45S pre-ribosomal N1 (RNA45SN1)",
         ),
         (
             "URS000075CC93_9606",
@@ -152,38 +145,33 @@ from .helpers import load_data
             "Danio rerio (zebrafish) microRNA dre-mir-430c precursor (dre-mir-430c 1 to 18)",
         ),
         (
-            "URS0000759BEC_9606",
-            "lncRNA",
-            "Homo sapiens DiGeorge syndrome critical region gene 5 (DGCR5)",
-        ),
-        (
             "URS000075C808_9606",
             "lncRNA",
-            "Homo sapiens HOX transcript antisense RNA (HOTAIR)",
+            "Homo sapiens (human) HOX transcript antisense RNA (HOTAIR)",
         ),
         (
             "URS00006550DA_10090",
             "snoRNA",
-            "Mus musculus (house mouse) small Cajal body-specific RNA 1",
+            "Mus musculus (mouse) small Cajal body-specific RNA 13 (ENSMUSG00002076601.1)",
         ),
         (
             "URS000060B496_10090",
             "snoRNA",
-            "Mus musculus small nucleolar RNA, H/ACA box 3 (Snora3)",
+            "Mus musculus (house mouse) small nucleolar RNA, H/ACA box 3 (Snora3)",
         ),
         (
             "URS00006B3271_10090",
             "snoRNA",
-            "Mus musculus (house mouse) small Cajal body-specific RNA 2",
+            "Mus musculus (mouse) small Cajal body-specific RNA 2 (ENSMUSG00000088185.3)",
         ),
-        ("URS0000661037_7955", "tRNA", "Danio rerio tRNA"),
-        ("URS000069D7FA_6239", "tRNA", "Caenorhabditis elegans tRNA-His"),
+        ("URS0000661037_7955", "tRNA", "Danio rerio tRNA-Ser (AGA) (tRNA-Ser-AGA-9-1)"),
+        ("URS000069D7FA_6239", "tRNA", "Caenorhabditis elegans tRNA"),
         (
             "URS00006D80BC_9913",
             "pre_miRNA",
             "Bos taurus (cattle) microRNA bta-mir-497 precursor",
         ),
-        ("URS00006DC8B9_6239", "tRNA", "Caenorhabditis elegans tRNA-Undet"),
+        ("URS00006DC8B9_6239", "tRNA", "Caenorhabditis elegans tRNA"),
         (
             "URS000061F377_559292",
             "rRNA",
@@ -194,11 +182,15 @@ from .helpers import load_data
             "tRNA",
             "Arabidopsis thaliana (thale cress) tRNA-Met(CAT)",
         ),
-        ("URS00004FB44B_6239", "rRNA", "Caenorhabditis elegans 26s rRNA"),
+        (
+            "URS00004FB44B_6239",
+            "rRNA",
+            "Caenorhabditis elegans 26S ribosomal RNA (rrn-3.1)",
+        ),
         (
             "URS000051DCEC_10090",
             "snoRNA",
-            "Mus musculus small nucleolar RNA, C/D box 17 (Snord17)",
+            "Mus musculus (house mouse) small nucleolar RNA, C/D box 17 (Snord17)",
         ),
         (
             "URS00005511ED_6239",
@@ -218,17 +210,17 @@ from .helpers import load_data
         (
             "URS0000569A4A_9606",
             "snoRNA",
-            "Homo sapiens small Cajal body-specific RNA 10 (SCARNA10)",
+            "Homo sapiens (human) small Cajal body-specific RNA 10 (SCARNA10)",
         ),
         (
             "URS00003BECAC_9606",
             "lncRNA",
-            "Homo sapiens (human) long intergenic non-protein coding RNA 1729",
+            "Homo sapiens (human) non-protein coding lnc-GPCPD1-8:9",
         ),
         (
             "URS00003CE153_9606",
             "lncRNA",
-            "Homo sapiens STARD4 antisense RNA 1 (STARD4-AS1)",
+            "Homo sapiens (human) STARD4 antisense RNA 1 (STARD4-AS1)",
         ),
         ("URS00003CF845_9606", "miRNA", "Homo sapiens (human) hsa-miR-1273d"),
         (
@@ -246,7 +238,7 @@ from .helpers import load_data
         (
             "URS00004E52D3_10090",
             "lncRNA",
-            "Mus musculus (house mouse) predicted gene 12238",
+            "Mus musculus (mouse) predicted gene 12238",
         ),
         (
             "URS00004E9E38_7227",
@@ -254,15 +246,15 @@ from .helpers import load_data
             "Drosophila melanogaster (fruit fly) dme-bantam-3p",
         ),
         (
-            "URS00001DEEBE_562",
+            "URS00001617C4_484019",
             "tRNA",
-            "Escherichia coli tRNA Proline with anticodon CGG (tRNA-Pro-CGG-1-1)",
+            "Thermosipho africanus TCF52B tRNA-Pro (TGG) (tRNA-Pro-TGG-1-1)",
         ),
         ("URS00000AEE53_380749", "tmRNA", "Hydrogenobaculum sp. Y04AAS1 tmRNA"),
         (
             "URS00000F9D45_9606",
             "rRNA",
-            "Homo sapiens RNA, 5S ribosomal 1 (RNA5S1-8, RNA5S10-17)",
+            "Homo sapiens (human) RNA, 5S ribosomal 1 (RNA5S1-8, RNA5S10-17)",
         ),
         (
             "URS000018EB2E_3702",
@@ -272,7 +264,7 @@ from .helpers import load_data
         (
             "URS000019E0CD_9606",
             "lncRNA",
-            "Homo sapiens HELLP associated long non-coding RNA (HELLPAR)",
+            "Homo sapiens (human) HELLP associated long non-coding RNA (HELLPAR)",
         ),
         (
             "URS00002F21DA_7227",
@@ -292,7 +284,7 @@ from .helpers import load_data
         (
             "URS00003AC4AA_3702",
             "siRNA",
-            "Arabidopsis thaliana (thale-cress) tAS3/TASIR-ARF (TRANS-ACTING SIRNA3); other RNA",
+            "Arabidopsis thaliana (thale-cress) ncRNA (TAS3)",
         ),
         pytest.param(
             "URS000001E7BA_559292",
@@ -378,11 +370,27 @@ from .helpers import load_data
             "Homo sapiens (human) let-7 microRNA precursor (2 structures)",
             marks=pytest.mark.xfail(reason="TBI"),
         ),
-        pytest.param(
-            "URS0001C7185B_9606", "lnc_RNA", "Homo sapiens (human) gb|MK280143"
-        ),
+        pytest.param("URS0001C7185B_9606", "lnc_RNA", "Homo sapiens"),
     ],
 )
 def test_computes_correct_species_specific_descriptions(rna_id, rna_type, name):
     context, sequence = load_data(rna_id)
     assert description_of(rna_type, sequence) == name
+
+
+@pytest.mark.parametrize(
+    "rna_id,rna_type",
+    [
+        # These urs_taxids have no active accessions left at all (e.g. a
+        # since-superseded sequence), so no description can be selected.
+        # Every RNA must get a description, so this must error out of the
+        # pipeline rather than silently produce None.
+        ("URS000080E135_274", "misc_RNA"),
+        ("URS0000A86584_10090", "ncRNA"),
+        ("URS0000759BEC_9606", "lncRNA"),
+    ],
+)
+def test_raises_when_no_active_accession_can_produce_a_description(rna_id, rna_type):
+    context, sequence = load_data(rna_id)
+    with pytest.raises(utils.NoBestFoundException):
+        description_of(rna_type, sequence)

@@ -15,7 +15,9 @@ process quickgo_get {
 
 
 process quickgo_parse {
-  memory { params.databases.quickgo.memory }
+  memory { params.databases.quickgo.memory * task.attempt }
+  errorStrategy { task.attempt <= 3 ? 'retry' : 'terminate' }
+  maxRetries 3
 
   input:
   path(data)

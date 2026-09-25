@@ -38,6 +38,19 @@ BASE_SO_TERMS = [
     "ncRNA_gene",
 ]
 
+RIBOZYME = [
+    ("SO:0000655", "ncRNA"),
+    ("SO:0000374", "ribozyme"),
+]
+
+GRAFTS = {
+    # Collect the catalytic RNAs under Ribozyme; SO scatters them under intron,
+    # enzymatic_RNA and RNA_motif so none reach ribozyme on their own.
+    "SO:0000588": RIBOZYME,  # autocatalytically_spliced_intron
+    "SO:0000386": RIBOZYME,  # RNase_P_RNA
+    "SO:0000385": RIBOZYME,  # RNase_MRP_RNA
+}
+
 RENAME = {
     "small_subunit_rRNA": "cytosolic_SSU_rRNA",
     "large_subunit_rRNA": "cytosolic_LSU_rRNA",
@@ -50,8 +63,10 @@ RENAME = {
 }
 
 ALTERNATES = {
+    # Rooted at ncRNA, not transcript, so this agrees with where a plain
+    # ribozyme term lands. Otherwise ribozyme shows up under two roots.
     "SO:0000380": [
-        ("SO:0000673", "transcript"),
+        ("SO:0000655", "ncRNA"),
         ("SO:0000374", "ribozyme"),
         ("SO:0000380", "hammerhead_ribozyme"),
     ],
@@ -84,6 +99,18 @@ SKIPPED_TERMS = {
     "SO:0000388",
     "SO:0000379",
 }
+
+
+def apply_grafts(tree: ty.List[ty.Tuple[str, str]]) -> ty.List[ty.Tuple[str, str]]:
+    """
+    Replace the ancestors of a grafted term, keeping everything below it. This
+    looks at the whole path rather than the term being looked up, so children of
+    a grafted term move with it.
+    """
+    for index, (node_id, _) in enumerate(tree):
+        if node_id in GRAFTS:
+            return GRAFTS[node_id] + tree[index:]
+    return tree
 
 
 @attr.s(frozen=True, hash=False)
@@ -157,6 +184,9 @@ class SoOntology:
         return mapping
 
     def rna_type_tree(self, child, parents) -> ty.List[ty.Tuple[str, str]]:
+        return apply_grafts(self.path_to_base(child, parents))
+
+    def path_to_base(self, child, parents) -> ty.List[ty.Tuple[str, str]]:
         if child in ALTERNATES:
             return ALTERNATES[child]
 

@@ -166,7 +166,7 @@ def dot_bracket(data):
     GtRNAdb uses. That is turn '>>..<<' to '((..))'.
     """
 
-    transformed = data["secondary_structure"].replace(">", "(").replace("<", ")")
+    transformed = data["secondaryStructure"].replace(">", "(").replace("<", ")")
 
     if set(transformed) != set("(.)"):
         raise InvalidDotBracket("Unexpected characters in %s" % transformed)

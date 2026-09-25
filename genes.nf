@@ -39,11 +39,11 @@ process fetch_so_model{
     val(_flag)
 
   output:
-    path("so_embedding_model.emb")
+    path("so_embedding_model.parquet")
 
   script:
   """
-  wget -O so_embedding_model.emb ${params.genes.so_model_url}
+  wget -O so_embedding_model.parquet ${params.genes.so_model_url}
   """
 }
 

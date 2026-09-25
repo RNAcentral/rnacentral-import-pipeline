@@ -26,7 +26,8 @@ import psycopg2.extras
 from more_itertools import chunked
 from pypika import Query, Table
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import cross_validate, train_test_split
 
 LOGGER = logging.getLogger(__name__)
 
@@ -154,18 +155,77 @@ def fetch_training_data(handle: ty.IO, db_url: str) -> pd.DataFrame:
     return training
 
 
-def train(handle, db_url, cross_validation=5, test_size=0.4) -> RandomForestClassifier:
-    data = fetch_training_data(handle, db_url)
+def load_corpus(handle: ty.IO) -> pd.DataFrame:
+    """
+    Load an already-featured, labelled training corpus directly, eg
+    data/r2dt/should-show/labelled-corpus.csv. This is the same shape
+    fetch_modeled_data produces, plus a 'label' column of 0/1 flags, so no
+    database access is needed.
+    """
+    frame = pd.read_csv(handle)
+    frame["valid"] = frame["label"].astype(int).astype(bool)
+    infer_columns(frame)
+    return frame
+
+
+def load_training_data(handle: ty.IO, db_url: ty.Optional[str]) -> pd.DataFrame:
+    """
+    Dispatch to the right loader based on the input file's shape: a
+    pre-featured, labelled corpus (has a 'label' column) is loaded directly,
+    otherwise the input is treated as a urs,flag list and the features are
+    fetched from the database.
+    """
+    pos = handle.tell()
+    header = handle.readline()
+    handle.seek(pos)
+    if "label" in header.strip().split(","):
+        return load_corpus(handle)
+    if not db_url:
+        raise ValueError("db_url is required when training-info is a urs,flag list")
+    return fetch_training_data(handle, db_url)
+
+
+def train(
+    data: pd.DataFrame, cross_validation=5, test_size=0.4
+) -> ty.Tuple[RandomForestClassifier, ty.Dict[str, float]]:
+    X = data[MODEL_COLUMNS].to_numpy()
+    y = data["valid"].to_numpy()
     X_train, X_test, y_train, y_test = train_test_split(
-        data[MODEL_COLUMNS].to_numpy(), data["valid"].to_numpy(), test_size=test_size
+        X, y, test_size=test_size, stratify=y
     )
 
     clf = RandomForestClassifier(min_samples_split=5)
-    scores = cross_val_score(clf, X_train, y_train, cv=cross_validation)
-    LOGGER.info("%s fold cross validation scores: %s", cross_validation, scores)
+    cv_scores = cross_validate(
+        clf, X_train, y_train, cv=cross_validation, scoring=["f1", "accuracy"]
+    )
+
     clf.fit(X_train, y_train)
-    LOGGER.info("Test data (%f) scoring %s", test_size, clf.score(X_test, y_test))
-    return clf
+    predicted = clf.predict(X_test)
+
+    metrics = {
+        "cv_folds": cross_validation,
+        "cv_f1_mean": cv_scores["test_f1"].mean(),
+        "cv_f1_std": cv_scores["test_f1"].std(),
+        "cv_accuracy_mean": cv_scores["test_accuracy"].mean(),
+        "cv_accuracy_std": cv_scores["test_accuracy"].std(),
+        "test_f1": f1_score(y_test, predicted),
+        "test_accuracy": accuracy_score(y_test, predicted),
+    }
+    LOGGER.info(
+        "%s fold CV: f1=%.4f (+/- %.4f) accuracy=%.4f (+/- %.4f)",
+        cross_validation,
+        metrics["cv_f1_mean"],
+        metrics["cv_f1_std"],
+        metrics["cv_accuracy_mean"],
+        metrics["cv_accuracy_std"],
+    )
+    LOGGER.info(
+        "Test set (%d rows): f1=%.4f accuracy=%.4f",
+        len(y_test),
+        metrics["test_f1"],
+        metrics["test_accuracy"],
+    )
+    return clf, metrics
 
 
 def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
@@ -182,8 +242,13 @@ def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
         to_write.to_csv(output, index=False, header=False)
 
 
-def write_model(handle: ty.IO, db_url: str, output: Path):
-    joblib.dump(train(handle, db_url), output)
+def write_model(
+    handle: ty.IO, db_url: ty.Optional[str], output: Path
+) -> ty.Dict[str, float]:
+    data = load_training_data(handle, db_url)
+    clf, metrics = train(data)
+    joblib.dump(clf, output)
+    return metrics
 
 
 def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):

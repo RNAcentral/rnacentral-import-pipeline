@@ -178,7 +178,9 @@ def parse(handle, lookup):
         pl.scan_ndjson(handle).group_by("urs_taxid").agg(pl.col("experiment"))
     )
 
-    lookup_data = pl.scan_csv(lookup)
+    ## The lookup keeps accessions matched only on synonyms, whose gene is
+    ## null; the hits were joined on gene so only those rows can be entries
+    lookup_data = pl.scan_csv(lookup).filter(pl.col("gene").is_not_null())
     ## Join against lookup to get the rest of the required information
     hits = grouped_data.join(lookup_data, on="urs_taxid", how="inner").collect(
         streaming=True
