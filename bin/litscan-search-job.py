@@ -36,6 +36,19 @@ def _failed_result() -> dict[str, list]:
     }
 
 
+def _build_search_date_filter(last_scanned: datetime.date | None) -> str:
+    """FIRST_PDATE is inclusive on both ends, so start the day after the
+    last scan to avoid re-matching (and double-counting) articles published
+    on the day of the previous scan."""
+    if not last_scanned:
+        return ""
+    start = last_scanned + datetime.timedelta(days=1)
+    return (
+        f" AND FIRST_PDATE:[{start.strftime('%Y-%m-%d')}"
+        f" TO {datetime.date.today().strftime('%Y-%m-%d')}]"
+    )
+
+
 async def search_article_async(
     session: aiohttp.ClientSession,
     limiter: AsyncLimiter,
@@ -46,11 +59,7 @@ async def search_article_async(
 ) -> dict[str, list]:
     page = "*"
     articles_list = []
-    search_date = (
-        f" AND FIRST_PDATE:[{date.strftime('%Y-%m-%d')} TO {datetime.date.today().strftime('%Y-%m-%d')}]"
-        if date
-        else ""
-    )
+    search_date = _build_search_date_filter(date)
 
     while len(articles_list) < search_limit and page:
         query = (
