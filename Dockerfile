@@ -74,8 +74,8 @@ RUN apt update && apt upgrade -y && \
     openssl \
     pandoc \
     pgloader \
-    postgresql-17 \
-    postgresql-client-17 \
+    postgresql-16 \
+    postgresql-client-16 \
     procps \
     python3 \
     python3-pip \
