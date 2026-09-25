@@ -51,11 +51,19 @@ ENV RNA=/rna
 WORKDIR $RNA
 
 # Install ONLY runtime dependencies (no gcc, no -dev packages)
+# postgresql-16 isn't in Debian trixie's own repos (trixie only ships 17), so
+# pull it from the PGDG apt repo, which carries every supported major version.
 RUN apt update && apt upgrade -y && \
+    apt install -y ca-certificates curl gnupg && \
+    install -d /usr/share/postgresql-common/pgdg && \
+    curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+    https://www.postgresql.org/media/keys/ACCC4CF8.asc && \
+    . /etc/os-release && \
+    echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
+    > /etc/apt/sources.list.d/pgdg.list && \
+    apt update && \
     apt install -y \
     bedtools \
-    ca-certificates \
-    curl \
     default-mysql-client \
     gawk \
     git \
