@@ -129,7 +129,7 @@ def parse_body_to_dict(body_elem, ignore_tags):
 
         # Prevent key collisions (e.g., if there are two "Results" sub-sections)
         if key in sections_dict:
-            section_name = f"{key}_{i+1}"
+            key = f"{key}_{i+1}"
 
         # 2. Grab the Text (excluding nested sections)
         section_text = get_section_text(sec, ignore_tags)
