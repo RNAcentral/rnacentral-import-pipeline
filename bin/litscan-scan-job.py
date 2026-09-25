@@ -413,7 +413,7 @@ def add_xml_shard(pmcid: str, xml_lookup: dict[int, Path]) -> str:
     if not match:
         raise ValueError(f"Invalid PMCID format: {pmcid!r}")
     pmc_number = int(match.group(1))
-    candidates = [x for x in keys if pmc_number > x]
+    candidates = [x for x in keys if pmc_number >= x]
     if not candidates:
         xml_to_use = keys[0]
         logger.warning(
