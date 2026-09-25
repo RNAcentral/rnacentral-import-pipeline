@@ -167,7 +167,7 @@ async def fetch_all_epmc_data(
     df: pl.DataFrame, search_limit: int = 100
 ) -> pl.DataFrame:
     """
-    Takes a Polars DataFrame with 'job_id' and 'date' columns,
+    Takes a Polars DataFrame with 'job_id' and 'finished' columns,
     runs the async Europe PMC search, and returns a new DataFrame with the results attached.
     """
     # 10 requests per 1 second
