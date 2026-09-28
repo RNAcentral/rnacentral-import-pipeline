@@ -13,17 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-import string
 import typing as ty
-from collections import Counter
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from rnacentral_pipeline.databases.data import RnaType
-from rnacentral_pipeline.databases.data import Database
+from rnacentral_pipeline.databases.data import Database, RnaType
 
 
 @attr.s(frozen=True)
@@ -103,24 +99,6 @@ class Accession:
             return None
 
         return domain
-
-    @property
-    def masked_description(self) -> str:
-        """
-        Compute a masked description. This will do things like strip out
-        '10-mer' and such. The description returned is suitable for entropy
-        computation, but as the description that is displayed to the user.
-        """
-
-        raw = self.description.lower()
-        allowed = set(string.ascii_lowercase + string.digits + " ")
-        counts = Counter(r for r in raw if r in allowed)
-        rep = counts.most_common(1)[0][0]
-        masked = re.sub(r"(\d+-mer)", lambda m: rep * len(m.group(1)[0]), raw)
-        masked = re.sub(r"5'-(.+)-3'", "", masked)
-        masked = "".join(m for m in masked if m in allowed)
-        masked = re.sub(r"\s+", " ", masked)
-        return masked
 
     @property
     def pretty_database(self):
