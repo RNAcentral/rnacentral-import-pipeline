@@ -13,9 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
 import pytest
 
+from rnacentral_pipeline.rnacentral.precompute.data.orf import OrfInfo
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+
+from .. import builders as b
 from .. import helpers
+
+RRNA = "SO:0000252"
 
 
 @pytest.mark.parametrize(
@@ -92,3 +99,82 @@ def test_can_correctly_load_hgnc_data():
 @pytest.mark.skip()
 def test_can_correctly_load_generic_data():
     pass
+
+
+def raw_sequence(**overrides):
+    raw = {
+        "upi": "URS0000000001",
+        "taxid": 9606,
+        "length": 100,
+        "accessions": [],
+        "coordinates": [],
+        "previous": None,
+        "deleted": False,
+        "rfam_hits": [],
+        "last_release": 1,
+        "r2dt_hits": [],
+        "orf_info": None,
+        "possible_orf": None,
+        "possible_orf_stopfree": None,
+        "possible_orf_tcode": None,
+    }
+    raw.update(overrides)
+    return raw
+
+
+def test_build_carries_over_previous_update_when_present():
+    raw = raw_sequence(previous={"description": "an old description"})
+    sequence = Sequence.build(helpers.SO_TREE, raw)
+    assert sequence.previous_update == {"description": "an old description"}
+
+
+def test_build_defaults_previous_update_to_empty_dict_when_absent():
+    raw = raw_sequence(previous=None)
+    sequence = Sequence.build(helpers.SO_TREE, raw)
+    assert sequence.previous_update == {}
+
+
+def test_build_parses_orf_info_when_present():
+    raw = raw_sequence(orf_info={"sources": ["cpat"]})
+    sequence = Sequence.build(helpers.SO_TREE, raw)
+    assert sequence.orf_info == OrfInfo(sources=["cpat"])
+
+
+def test_build_leaves_orf_info_none_when_absent():
+    raw = raw_sequence(orf_info=None)
+    sequence = Sequence.build(helpers.SO_TREE, raw)
+    assert sequence.orf_info is None
+
+
+def test_species_is_empty_with_no_accessions():
+    assert b.sequence().species() == set()
+
+
+def test_species_excludes_accessions_with_no_species():
+    accession = attr.evolve(b.accession("ena", RRNA), species=None)
+    assert b.sequence(accessions=[accession]).species() == set()
+
+
+def test_species_collects_unique_species_across_accessions():
+    human = b.accession("ena", RRNA)
+    mouse = attr.evolve(b.accession("ena", RRNA), species="Mus musculus")
+    assert b.sequence(accessions=[human, mouse]).species() == {
+        "Homo sapiens",
+        "Mus musculus",
+    }
+
+
+def test_has_r2dt_match_is_false_with_no_hits():
+    assert b.sequence().has_r2dt_match() is False
+
+
+def test_has_r2dt_match_is_true_with_a_hit():
+    assert b.sequence(r2dt_hits=[b.r2dt_hit(RRNA)]).has_r2dt_match() is True
+
+
+def test_has_rfam_hit_is_false_with_no_hits():
+    assert b.sequence().has_rfam_hit() is False
+
+
+def test_has_rfam_hit_is_true_with_a_hit():
+    assert b.sequence(rfam_hits=[b.rfam_hit("RF00001", RRNA)]).has_rfam_hit() is True
