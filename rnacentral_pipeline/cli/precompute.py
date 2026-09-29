@@ -19,6 +19,8 @@ import click
 
 from rnacentral_pipeline import writers
 from rnacentral_pipeline.output_format import format_option, is_parquet
+from rnacentral_pipeline.rnacentral.precompute import extract as pre_extract
+from rnacentral_pipeline.rnacentral.precompute import metadata as pre_metadata
 from rnacentral_pipeline.rnacentral.precompute import normalize as pre_normalize
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 from rnacentral_pipeline.rnacentral.precompute import ranges as pre_ranges
@@ -69,14 +71,53 @@ def precompute_from_file(context, json_file, output):
 )
 def precompute_normalize(accessions, metadata, output):
     """
-    Join a raw, ungrouped accessions file (get-accessions/query.sql's psql
-    output) with a merged metadata.json (still produced by the Rust
-    `precompute metadata merge` binary), producing the same
-    merged/normalized output the Rust `precompute normalize` binary does.
-    Replaces that binary and the separate `precompute group-accessions`
-    step (grouping now happens here).
+    Join a raw, ungrouped accessions file (typed Parquet produced by
+    `rnac precompute extract-query` from get-accessions/query.sql) with a
+    merged metadata.json (now produced by `rnac precompute metadata-build`),
+    producing the same merged/normalized output the Rust `precompute
+    normalize` binary does. Replaces that binary and the separate
+    `precompute group-accessions` step (grouping now happens here).
     """
     pre_normalize.write(Path(accessions), Path(metadata), Path(output))
+
+
+@cli.command("metadata-build")
+@click.argument("ranges", type=click.Path(dir_okay=False, file_okay=True))
+@click.argument("raw_dir", type=click.Path(dir_okay=True, file_okay=False))
+@click.argument(
+    "output_dir", type=click.Path(writable=True, dir_okay=True, file_okay=False)
+)
+def precompute_metadata_build(ranges, raw_dir, output_dir):
+    """
+    Replace the Rust `precompute metadata group`+`merge` binaries. Reads
+    the raw per-type metadata files in RAW_DIR (basic.parquet,
+    coordinates.parquet, rfam-hits.parquet, r2dt-hits.parquet,
+    previous.parquet, orfs.parquet, stopfree.parquet, tcode.parquet -
+    produced by `rnac precompute extract-query`) and RANGES (urs_taxid.csv,
+    upi_min/ut_min/ut_max rows), and writes one range-scoped metadata file
+    per row into OUTPUT_DIR, plus a manifest.csv mapping upi_min to each
+    file's path.
+    """
+    pre_metadata.build(Path(ranges), Path(raw_dir), Path(output_dir))
+
+
+@cli.command("extract-query")
+@click.argument("sql_file", type=click.Path(dir_okay=False, file_okay=True))
+@click.argument(
+    "output", type=click.Path(writable=True, dir_okay=False, file_okay=True)
+)
+@click.option("--range", "range_", type=(int, int), default=None)
+@click.option("--pg-url", envvar="PGDATABASE")
+def precompute_extract_query(sql_file, output, range_, pg_url):
+    """
+    Run a query from files/precompute/queries/*.sql (or
+    get-accessions/query.sql) against Postgres via connectorx and write the
+    typed result to Parquet. Replaces piping psql's json_build_object(...)
+    output to a file. --range substitutes real bounds for the query's own
+    `:min`/`:max` placeholders; omitting it substitutes NULL for both,
+    matching the query's own "unranged" case.
+    """
+    pre_extract.extract_query(Path(sql_file), Path(output), pg_url, range=range_)
 
 
 @cli.command("select-outdated")
