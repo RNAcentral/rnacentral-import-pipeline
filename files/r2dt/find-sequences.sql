@@ -24,7 +24,8 @@ WHERE acc.rna_type IN (
   'SO:0002120', -- 3prime_overlapping_ncrna
   'SO:0000644', -- antisense_RNA
   'SO:0000646', -- siRNA
-  'SO:0000454'  -- rasiRNA
+  'SO:0000454', -- rasiRNA
+  'SO:0000234'  -- mRNA (its UTRs are kept)
 );
 
 CREATE INDEX ON excluded (urs);
@@ -37,12 +38,8 @@ SELECT json_build_object(
       )
 FROM rna
 JOIN urs_to_fetch ON rna.urs = urs_to_fetch.urs
+LEFT JOIN excluded ON excluded.urs = rna.urs
 WHERE rna.len < :max_len
-AND NOT EXISTS (
-  SELECT 1 FROM xref x
-  JOIN rnc_accessions acc ON acc.accession = x.ac
-  WHERE x.urs = rna.urs
-  AND acc.rna_type = 'SO:0002291' -- circular RNA
-)
+AND excluded.urs IS NULL
 LIMIT :sequence_count
 ) TO STDOUT;
