@@ -19,6 +19,7 @@ import click
 
 from rnacentral_pipeline import writers
 from rnacentral_pipeline.output_format import format_option, is_parquet
+from rnacentral_pipeline.rnacentral.precompute import normalize as pre_normalize
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 from rnacentral_pipeline.rnacentral.precompute import ranges as pre_ranges
 
@@ -57,6 +58,24 @@ def precompute_from_file(context, json_file, output):
         opener = writers.build(pre.Writer, out_path)
     with opener as writer:
         writer.write(updates)
+
+
+@cli.command("normalize")
+@click.argument("accessions", type=click.Path(dir_okay=False, file_okay=True))
+@click.argument("metadata", type=click.Path(dir_okay=False, file_okay=True))
+@click.argument(
+    "output", type=click.Path(writable=True, dir_okay=False, file_okay=True)
+)
+def precompute_normalize(accessions, metadata, output):
+    """
+    Join a raw, ungrouped accessions file (get-accessions/query.sql's psql
+    output) with a merged metadata.json (still produced by the Rust
+    `precompute metadata merge` binary), producing the same
+    merged/normalized output the Rust `precompute normalize` binary does.
+    Replaces that binary and the separate `precompute group-accessions`
+    step (grouping now happens here).
+    """
+    pre_normalize.write(Path(accessions), Path(metadata), Path(output))
 
 
 @cli.command("upi-taxid-ranges")
