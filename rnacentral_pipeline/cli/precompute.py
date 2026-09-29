@@ -22,6 +22,7 @@ from rnacentral_pipeline.output_format import format_option, is_parquet
 from rnacentral_pipeline.rnacentral.precompute import normalize as pre_normalize
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 from rnacentral_pipeline.rnacentral.precompute import ranges as pre_ranges
+from rnacentral_pipeline.rnacentral.precompute import select_releases as pre_select
 
 
 @click.group("precompute")
@@ -76,6 +77,23 @@ def precompute_normalize(accessions, metadata, output):
     step (grouping now happens here).
     """
     pre_normalize.write(Path(accessions), Path(metadata), Path(output))
+
+
+@cli.command("select-outdated")
+@click.argument("xref", type=click.Path(dir_okay=False, file_okay=True))
+@click.argument("known", type=click.Path(dir_okay=False, file_okay=True))
+@click.argument(
+    "output", type=click.Path(writable=True, dir_okay=False, file_okay=True)
+)
+def precompute_select_outdated(xref, known, output):
+    """
+    Select which urs_taxid pairs need (re)computing, by comparing each
+    pair's xref release against its last-known-precomputed release (typed
+    Parquet, both produced by `rnac precompute extract-query`). Replaces
+    the Rust `precompute select` binary and the external `sort` steps its
+    sorted-merge-join needed.
+    """
+    pre_select.write(Path(xref), Path(known), Path(output))
 
 
 @cli.command("upi-taxid-ranges")
