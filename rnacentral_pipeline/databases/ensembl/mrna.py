@@ -139,11 +139,15 @@ def as_entry(record, gene, feature, accession, rna_type, label, gca) -> data.Ent
 def transcript_entries(record, gene, mrna, cds, tags, gca) -> ty.Iterable[data.Entry]:
     accession = helpers.accession(mrna)
     entry = as_entry(record, gene, mrna, accession, MRNA, "mRNA", gca)
-    entry = attr.evolve(
-        entry,
-        xref_data=xref_data(gene, cds),
-        note_data={"tags": tags} if tags else {},
-    )
+    # 1-based inclusive genomic span, so the export can draw the CDS exactly
+    # even where a UTR was too short to import
+    note = {"cds": [int(cds.location.start) + 1, int(cds.location.end)]}
+    codon_start = int(cds.qualifiers.get("codon_start", ["1"])[0])
+    if codon_start != 1:
+        note["cds_phase"] = codon_start - 1
+    if tags:
+        note["tags"] = tags
+    entry = attr.evolve(entry, xref_data=xref_data(gene, cds), note_data=note)
     if not entry.is_valid():
         return
 

@@ -33,6 +33,7 @@ FROM (
   LEFT JOIN rnc_accession_sequence_region sra ON sra.region_id = regions.id
   LEFT JOIN rnc_accessions ac ON sra.accession = ac.accession
   WHERE pre.is_active = true
+    AND pre.databases <> 'Ensembl mRNA'
   GROUP BY regions.id, regions.region_name, regions.chromosome, regions.strand,
            regions.identity, regions.was_mapped, regions.region_start, pre.urs_taxid,
            pre.short_description, pre.rna_type, pre.databases, genes.public_name, genes.start, genes.stop

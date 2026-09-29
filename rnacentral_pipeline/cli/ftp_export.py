@@ -25,7 +25,7 @@ from rnacentral_pipeline.rnacentral.ftp_export import (
     parquet,
     release_note,
 )
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed, gff3
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed, gff3, mrna
 
 
 @click.group("ftp-export")
@@ -178,3 +178,14 @@ def format_as_gff3(json_file, output, allow_none=False):
     file.
     """
     gff3.from_file(json_file, output, allow_none=allow_none)
+
+
+@export_coordinates.command("mrna-as-gff3")
+@click.argument("json_file", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
+def format_mrna_as_gff3(json_file, output):
+    """
+    Turn the output of mrna.sql into the GFF3 gene models IGV shows in place of
+    Ensembl's own annotation track.
+    """
+    mrna.from_file(json_file, output)

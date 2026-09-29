@@ -122,10 +122,33 @@ def test_the_mrna_keeps_its_protein_xrefs_and_tags(entries):
         "HGNC": ["HGNC:7455"],
     }
     assert entry.note_data["tags"] == ["Ensembl_canonical"]
-    assert entries["ENST00000615165.1"].note_data == {}
+    assert "tags" not in entries["ENST00000615165.1"].note_data
+
+
+def test_the_mrna_records_its_cds_span(entries):
+    # Minus strand: the 5' UTR ends at 156447, the 3' UTR starts at 138479
+    assert entries["ENST00000615165.1"].note_data["cds"] == [138480, 156446]
+    assert entries["ENST00000617983.1"].note_data["cds"] == [72838, 74124]
 
 
 def test_utrs_carry_no_protein_xrefs(entries):
     utr = entries["ENST00000617983.1:five_prime_UTR"]
     assert utr.xref_data == {}
     assert utr.note_data == {}
+
+
+def test_a_cds_starting_mid_codon_records_its_phase(tmp_path):
+    # Ensembl marks an incomplete start with /codon_start; its first CDS base
+    # is then the second or third base of a codon.
+    text = open("data/ensembl/Homo_sapiens.GRCh38.mrna.embl").read()
+    cds = 'FT                   /protein_id="ENSP00000482514'
+    assert text.count(cds) == 1
+    embl = tmp_path / "genes.embl"
+    embl.write_text(text.replace(cds, 'FT                   /codon_start="2"\n' + cds))
+    with open(embl) as raw:
+        found = {e.accession: e for e in mrna.parse(raw, GFF)}
+    shifted = [e for e in found.values() if e.note_data.get("cds_phase")]
+    assert [e.note_data["cds_phase"] for e in shifted] == [1]
+    assert all(
+        "cds_phase" not in e.note_data for e in found.values() if e not in shifted
+    )

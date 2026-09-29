@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
 import pytest
 
 from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
@@ -131,3 +132,30 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
 def test_can_add_messages(rna_id, rna_type, messages):
     context, sequence = helpers.load_data(rna_id)
     assert qa.status(context, sequence, rna_type).messages() == messages
+
+
+def test_mrna_only_sequences_are_not_qa_checked():
+    from .. import builders
+
+    hit = builders.rfam_hit(
+        "RF00177", "SO:0000650", sequence_completeness=0.3, model_domain="Bacteria"
+    )
+    mrna = builders.sequence(
+        accessions=[builders.accession("ENSEMBL_MRNA", "SO:0000204")],
+        rfam_hits=[hit],
+    )
+    status = qa.status(builders.context(), mrna, "ncRNA")
+    fields = attr.fields(type(status))
+    assert [getattr(status, f.name).has_issue for f in fields] == [None] * 7
+    assert not status.has_issue
+
+    shared = builders.sequence(
+        accessions=[
+            builders.accession("ENSEMBL_MRNA", "SO:0000204"),
+            builders.accession("ENA", "SO:0000204"),
+        ],
+        rfam_hits=[hit],
+    )
+    assert qa.status(
+        builders.context(), shared, "ncRNA"
+    ).possible_contamination.has_issue

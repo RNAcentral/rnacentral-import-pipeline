@@ -14,26 +14,37 @@ limitations under the License.
 """
 
 
-from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+import attr
+
+from rnacentral_pipeline.databases.data import Database
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa import contamination
 from rnacentral_pipeline.rnacentral.precompute.qa import (
     incomplete_sequence as incomplete,
 )
 from rnacentral_pipeline.rnacentral.precompute.qa import missing_rfam_match as missing
 from rnacentral_pipeline.rnacentral.precompute.qa import (
+    possible_orf,
+    possible_orf_stopfree,
+    possible_orf_tcode,
+)
+from rnacentral_pipeline.rnacentral.precompute.qa import (
     repetitive_regions as repetitive,
 )
-from rnacentral_pipeline.rnacentral.precompute.qa import possible_orf
-from rnacentral_pipeline.rnacentral.precompute.qa import possible_orf_stopfree
-from rnacentral_pipeline.rnacentral.precompute.qa import possible_orf_tcode
-from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult, QaStatus
 
 
 def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
     """
     Generate the QaStatus for a given Sequence object
     """
+
+    # These checks judge ncRNAs; on Ensembl's mRNAs and UTRs they only raise
+    # meaningless flags, so a sequence known only from there is not checked.
+    if all(acc.database == Database.ensembl_mrna for acc in sequence.accessions):
+        fields = attr.fields(QaStatus)
+        return QaStatus(**{f.name: QaResult.null(f.name) for f in fields})
 
     return QaStatus(
         incomplete_sequence=incomplete.validate(sequence),
