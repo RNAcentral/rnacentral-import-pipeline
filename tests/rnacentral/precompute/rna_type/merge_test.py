@@ -112,7 +112,7 @@ def make_sequence(
     r2dt_hits: ty.Sequence[R2dtHit] = (),
 ) -> Sequence:
     return Sequence(
-        upi="URS0000000001",
+        urs="URS0000000001",
         taxid=9606,
         length=100,
         accessions=list(accessions),

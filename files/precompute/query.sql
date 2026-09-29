@@ -1,7 +1,7 @@
 COPY (
 select
   json_build_object(
-    'upi', rna.urs,
+    'urs', rna.urs,
     'taxid', xref.taxid,
     'length', rna.len,
     'accessions', array_agg(json_build_object(
