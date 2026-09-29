@@ -18,7 +18,6 @@ import logging
 import typing as ty
 
 import attr
-import networkx as nx
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases.data import Database, RnaType
