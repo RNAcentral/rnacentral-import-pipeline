@@ -119,6 +119,7 @@ process process_range {
   // are not uniform: a range holding a few heavily-annotated URS costs far more
   // than 25,000 average ones, so the retry has to raise the request.
   memory { params.precompute.range.memory * task.attempt }
+  time { params.precompute.range.time * task.attempt }
   errorStrategy { task.attempt <= 3 ? 'retry' : 'terminate' }
   maxRetries 3
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
