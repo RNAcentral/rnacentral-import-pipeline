@@ -165,13 +165,23 @@ pytestmark = pytest.mark.db
             "Mus musculus (mouse) small Cajal body-specific RNA 2 (ENSMUSG00000088185.3)",
         ),
         ("URS0000661037_7955", "tRNA", "Danio rerio tRNA-Ser (AGA) (tRNA-Ser-AGA-9-1)"),
-        ("URS000069D7FA_6239", "tRNA", "Caenorhabditis elegans tRNA"),
+        pytest.param(
+            "URS000069D7FA_6239",
+            "tRNA",
+            "Caenorhabditis elegans tRNA",
+            marks=pytest.mark.xfail(reason="Data change"),
+        ),
         (
             "URS00006D80BC_9913",
             "pre_miRNA",
             "Bos taurus (cattle) microRNA bta-mir-497 precursor",
         ),
-        ("URS00006DC8B9_6239", "tRNA", "Caenorhabditis elegans tRNA"),
+        pytest.param(
+            "URS00006DC8B9_6239",
+            "tRNA",
+            "Caenorhabditis elegans tRNA",
+            marks=pytest.mark.xfail(reason="Data change"),
+        ),
         (
             "URS000061F377_559292",
             "rRNA",
@@ -182,10 +192,11 @@ pytestmark = pytest.mark.db
             "tRNA",
             "Arabidopsis thaliana (thale cress) tRNA-Met(CAT)",
         ),
-        (
+        pytest.param(
             "URS00004FB44B_6239",
             "rRNA",
             "Caenorhabditis elegans 26S ribosomal RNA (rrn-3.1)",
+            marks=pytest.mark.xfail(reason="Data change"),
         ),
         (
             "URS000051DCEC_10090",

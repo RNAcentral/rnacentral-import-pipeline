@@ -248,7 +248,11 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS000075EF5D_9606", "U12_snRNA"),
         ("URS0000764CCC_1415657", "RNase_P_RNA"),
         ("URS000077FBEB_9606", "antisense_lncRNA"),
-        ("URS00007A9FDC_6239", "ncRNA"),
+        pytest.param(
+            "URS00007A9FDC_6239",
+            "ncRNA",
+            marks=pytest.mark.xfail(reason="Data change"),
+        ),
         ("URS00007CD270_1872691", "cytosolic_SSU_rRNA"),
         ("URS00007FD8A3_7227", "lncRNA"),
         ("URS0000808D19_644", "hammerhead_ribozyme"),
@@ -299,7 +303,11 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS0001BBF240_224308", "tmRNA"),
         ("URS0000000DBF_6239", "piRNA"),
         ("URS000061F377_559292", "cytosolic_28S_rRNA"),
-        ("URS0000732D5D_9606", "antisense_RNA"),
+        pytest.param(
+            "URS0000732D5D_9606",
+            "antisense_RNA",
+            marks=pytest.mark.xfail(reason="Data change"),
+        ),
         ("URS00021528E4_7515", "cytosolic_28S_rRNA"),
         ("URS0002176781_1658108", "alanyl_tRNA"),
         ("URS00001AD070_9606", "cysteinyl_tRNA"),
@@ -316,11 +324,7 @@ def test_can_detect_parent_properly(first, second, expected):
             "miRNA",
             marks=pytest.mark.xfail(reason="Inactive sequence"),
         ),
-        pytest.param(
-            "URS000060C682_9606",
-            "vault_RNA",
-            marks=pytest.mark.xfail(reason="Inactive sequence"),
-        ),
+        ("URS000060C682_9606", "vault_RNA"),
     ],
 )
 @pytest.mark.db
@@ -364,7 +368,7 @@ def as_rfam_hit(model, so_id):
 
 def as_sequence(accessions, rfam_hits):
     return Sequence(
-        upi="URS0000000001",
+        urs="URS0000000001",
         taxid=9606,
         length=100,
         accessions=accessions,
