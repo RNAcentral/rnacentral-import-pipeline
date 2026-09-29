@@ -37,12 +37,8 @@ SELECT json_build_object(
       )
 FROM rna
 JOIN urs_to_fetch ON rna.urs = urs_to_fetch.urs
+LEFT JOIN excluded ON excluded.urs = rna.urs
 WHERE rna.len < :max_len
-AND NOT EXISTS (
-  SELECT 1 FROM xref x
-  JOIN rnc_accessions acc ON acc.accession = x.ac
-  WHERE x.urs = rna.urs
-  AND acc.rna_type = 'SO:0002291' -- circular RNA
-)
+AND excluded.urs IS NULL
 LIMIT :sequence_count
 ) TO STDOUT;
