@@ -41,6 +41,7 @@ process build_precompute_context {
 
 process build_metadata {
   input:
+  path(urs_taxid)
   path(basic)
   path(coordinates)
   path(rfam_hits)
@@ -51,11 +52,16 @@ process build_metadata {
   path(tcode)
 
   output:
-  path("metadata.json")
+  path("metadata_out/manifest.csv"), emit: manifest
+  path("metadata_out/metadata-*.json"), optional: true, emit: chunks
 
   script:
+  // basic/coordinates/etc land in the task work dir already named
+  // basic.parquet, coordinates.parquet, etc (the query process's own output
+  // naming), so "." is a valid raw-dir for metadata-build as-is - no
+  // staging/renaming needed.
   """
-  precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev $orf $stopfree $tcode metadata.json
+  rnac precompute metadata-build $urs_taxid . metadata_out
   """
 }
 
@@ -94,20 +100,14 @@ process query_accession_range {
   memory '4GB'
 
   input:
-  tuple val(min), val(max), path(query), val(upi_start), val(upi_stop)
+  tuple val(min), val(max), path(query)
 
   output:
-  tuple val(min), val(max), path('accessions.json')
+  tuple val(min), val(max), path('accessions.parquet')
 
   script:
   """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v min=$min \
-    -v max=$max \
-    -f $query \
-    "\$PGDATABASE" > raw.json
-  precompute group-accessions raw.json $upi_start $upi_stop accessions.json
+  rnac precompute extract-query $query accessions.parquet --range $min $max
   """
 }
 
@@ -133,7 +133,7 @@ process process_range {
   script:
   """
   mkdir context
-  precompute normalize $accessions $metadata merged.json
+  rnac precompute normalize $accessions $metadata merged.json
   rnac precompute from-file context merged.json
   """
 }
@@ -260,7 +260,16 @@ workflow precompute {
     ) \
     | set { taxonomy_ready }
 
+    urs_counts \
+    | build_ranges \
+    | set { ranges }
+
+    ranges \
+    | find_upi_taxid_ranges \
+    | set { urs_taxid_ranges }
+
     build_metadata(
+      urs_taxid_ranges,
       basic_query(urs_counts, basic_sql),
       coordinate_query(urs_counts, coordinate_sql),
       rfam_query(urs_counts, rfam_sql),
@@ -269,27 +278,24 @@ workflow precompute {
       orf_query(urs_counts, orf_sql),
       stopfree_query(urs_counts, stopfree_sql),
       tcode_query(urs_counts, tcode_sql),
-    ) \
-    | set { metadata }
-
-    urs_counts \
-    | build_ranges \
-    | set { ranges }
-
-    ranges \
-    | find_upi_taxid_ranges \
-    | splitCsv \
-    | map { upi_min, ut_min, ut_max -> [upi_min, ut_min, ut_max.toInteger() + 1] } \
-    | set { upi_taxid_ranges }
+    )
+    // Reads the chunks emit's file objects directly rather than parsing
+    // manifest.csv's paths - file() on a relative string in this workflow
+    // body resolves against the launch directory, not build_metadata's
+    // task work directory where the files actually live. upi_min comes
+    // back out of each chunk's own filename instead (metadata-N.json -> N).
+    build_metadata.out.chunks \
+    | flatten \
+    | map { f -> [(f.name =~ /^metadata-(\d+)\.json$/)[0][1], f] } \
+    | set { metadata_chunks }
 
     ranges \
     | splitCsv \
     | combine(accessions_ready) \
     | combine(accession_query) \
     | map { _tablename, min, max, _accessions_flag, sql -> [min, max, sql] } \
-    | join(upi_taxid_ranges) \
     | query_accession_range \
-    | combine(metadata) \
+    | join(metadata_chunks) \
     | process_range
 
     process_range.out.data | collect | set { data }

@@ -7,15 +7,15 @@ process query {
   path(query)
 
   output:
-  path("${query.baseName}.json")
+  path("${query.baseName}.parquet")
 
   script:
+  // max_count is no longer used inside the script (there's no dense-fill
+  // padding step anymore - metadata-build's left join handles missing ids
+  // natively) but stays as an input to preserve the dependency edge on
+  // urs_counts at the call site (basic_query(urs_counts, basic_sql), etc.)
+  // without having to touch every call.
   """
-  psql \
-    --variable ON_ERROR_STOP=1 \
-    --variable tablename=$params.precompute.tablename \
-    -f $query \
-    "\$PGDATABASE" > raw.json
-  precompute metadata group ${query.baseName} raw.json $max_count ${query.baseName}.json
+  rnac precompute extract-query $query ${query.baseName}.parquet
   """
 }
