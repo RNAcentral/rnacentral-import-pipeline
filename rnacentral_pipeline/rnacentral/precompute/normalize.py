@@ -15,29 +15,27 @@ limitations under the License.
 
 # Polars replacement for the Rust `precompute normalize` binary.
 #
-# Reads the raw, ungrouped accessions file (the shape
-# files/precompute/get-accessions/query.sql's psql output has, BEFORE
-# Rust's `precompute group-accessions` step - that step is no longer
-# needed, this module groups the raw rows itself) and a merged
-# metadata.json (still produced by the Rust `precompute metadata merge`
-# binary - unchanged for now), and produces the same merged/normalized
-# output the Rust `normalize` binary does.
+# Reads the raw, ungrouped accessions file (typed Parquet produced by
+# `rnac precompute extract-query` from get-accessions/query.sql - see
+# docs/superpowers/specs/2026-09-29-duckdb-parquet-metadata-extraction-design.md;
+# Rust's `precompute group-accessions` step is no longer needed, this
+# module groups the raw rows itself) and a merged metadata.json (now
+# produced by `rnac precompute metadata-build`, see
+# docs/superpowers/specs/2026-09-29-polars-precompute-metadata-build-design.md),
+# and produces the same merged/normalized output the Rust `normalize`
+# binary does.
 #
 # See docs/superpowers/specs/2026-09-28-polars-precompute-normalize-design.md
-# for the full design history, including two real bugs found and fixed
-# while building this (a Polars schema-inference gotcha on
-# sparsely-populated columns, and a psql COPY double-escaping artifact)
-# and a documented, deliberate divergence from Rust's actual production
-# output: Rust's `normalize` binary applies its backslash-unescape a
-# second, redundant time on top of `group-accessions`'s correct pass,
-# which corrupts values containing a literal backslash immediately
-# followed by a JSON escape-trigger character (t, n, r, b, f, /, \, ").
-# This module unescapes exactly once, so it produces the semantically
-# correct value there rather than reproducing that corruption.
+# for the full design history. Rust's `normalize` binary applies its
+# backslash-unescape a second, redundant time on top of
+# `group-accessions`'s correct pass, which corrupts values containing a
+# literal backslash immediately followed by a JSON escape-trigger
+# character (t, n, r, b, f, /, \, ") - a fact about Rust's actual
+# production output, not something this module (now reading typed Parquet,
+# with no JSON/escaping layer at all) needs to replicate or guard against.
 
 import json
 import logging
-import tempfile
 from pathlib import Path
 
 import polars as pl
@@ -45,33 +43,17 @@ import polars as pl
 LOGGER = logging.getLogger(__name__)
 
 
-def _unescape_doubled_backslashes(src: Path, dest: Path) -> None:
-    # psql's COPY-to-JSON output double-escapes backslashes: a value that
-    # should decode to one literal backslash comes out of the raw dump
-    # needing an extra text-level unescape pass before a standard JSON
-    # parse gives the right string. Rust's PsqlJsonIterator::next()
-    # (rnc-core/psql.rs) does this with buf.replace("\\\\", "\\") on each
-    # line before parsing; do the same single pass here, streaming
-    # line-by-line so a multi-GB accessions file never gets held whole in
-    # memory.
-    with open(src) as inp, open(dest, "w") as out:
-        for line in inp:
-            out.write(line.replace("\\\\", "\\"))
-
-
 def read_accessions(path: Path) -> pl.DataFrame:
     # Read the raw, ungrouped accession rows (one per xref, the shape
     # get-accessions/query.sql actually produces) and group them ourselves.
     # Reading Rust's pre-grouped {"Multiple": {id, data: [...]}} format
-    # instead measured 7GB+ peak memory for a single 25,000-id chunk - the
-    # JSON parser over-allocates badly for that doubly-nested
-    # List[Struct[List[String]]] shape. Flat rows + group_by measured ~6x
-    # less. infer_schema_length=None for the same reason as read_metadata:
-    # several fields (e.g. locus_tag) are null for long stretches.
-    with tempfile.NamedTemporaryFile(suffix=".json") as tmp:
-        unescaped_path = Path(tmp.name)
-        _unescape_doubled_backslashes(path, unescaped_path)
-        df = pl.read_ndjson(unescaped_path, infer_schema_length=None)
+    # instead measured 7GB+ peak memory for a single 25,000-id chunk (back
+    # when this read NDJSON) - the JSON parser over-allocated badly for
+    # that doubly-nested List[Struct[List[String]]] shape. Flat rows +
+    # group_by measured ~6x less; now typed Parquet besides, so neither the
+    # schema-inference nor the escaping problem that shape used to need
+    # applies at all.
+    df = pl.read_parquet(path)
     return df.group_by("id").agg(pl.struct(pl.exclude("id")).alias("data"))
 
 
@@ -120,7 +102,7 @@ def _normalize_accession(raw: dict) -> dict:
 def normalize_row(row: dict) -> dict:
     accessions = [_normalize_accession(a) for a in row["data"]]
     return {
-        "urs": row["upi"],
+        "urs": row["urs"],
         "taxid": row["taxid"],
         "length": row["length"],
         "last_release": max(a["last_release"] for a in row["data"]),

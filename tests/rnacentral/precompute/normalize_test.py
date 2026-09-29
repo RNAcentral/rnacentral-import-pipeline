@@ -34,18 +34,22 @@ def _accession(**overrides):
     return base
 
 
+def _write_accessions_parquet(path, rows):
+    pl.DataFrame(rows).write_parquet(path)
+
+
 def test_read_accessions_groups_raw_rows_by_id(tmp_path):
     # get-accessions/query.sql's actual output shape: one flat row per
     # accession, ordered by id but with no grouping - an id can have
     # multiple rows (multiple xrefs to the same urs_taxid).
-    path = tmp_path / "accessions.json"
-    path.write_text(
-        json.dumps(_accession(id=1, accession="A1"))
-        + "\n"
-        + json.dumps(_accession(id=1, accession="A1b"))
-        + "\n"
-        + json.dumps(_accession(id=2, accession="A2"))
-        + "\n"
+    path = tmp_path / "accessions.parquet"
+    _write_accessions_parquet(
+        path,
+        [
+            _accession(id=1, accession="A1"),
+            _accession(id=1, accession="A1b"),
+            _accession(id=2, accession="A2"),
+        ],
     )
 
     df = normalize.read_accessions(path)
@@ -56,67 +60,10 @@ def test_read_accessions_groups_raw_rows_by_id(tmp_path):
     assert [a["accession"] for a in by_id[2]] == ["A2"]
 
 
-def test_read_accessions_collapses_doubled_backslashes_from_psql_dump(tmp_path):
-    # psql's COPY-to-JSON output double-escapes backslashes: a value that
-    # should decode to one literal backslash (e.g. a gene name like
-    # "Dper\snoRNA:GL27867") comes out of the raw dump needing an extra
-    # unescape pass before a plain JSON parse gives the right answer.
-    # Rust's PsqlJsonIterator::next() (rnc-core/psql.rs) does this with
-    # buf.replace("\\\\", "\\") before parsing. Reproduce the raw shape
-    # here: four literal backslash characters in the file, which a plain
-    # JSON parse turns into two, not the intended one.
-    path = tmp_path / "accessions.json"
-    four_backslashes = "\\" * 4
-    line = (
-        '{"id":1,"urs_id":1,"urs_taxid":"URS1_9606","accession":"A1",'
-        '"last_release":5,"is_active":true,"description":"d",'
-        '"gene":"Dper' + four_backslashes + 'snoRNA:GL27867","optional_id":null,'
-        '"database":"ENA","species":null,"common_name":null,"feature_name":null,'
-        '"ncrna_class":null,"locus_tag":null,"organelle":null,"lineage":null,'
-        '"all_species":[],"all_common_names":[],"so_rna_type":null}\n'
-    )
-    path.write_text(line)
-
-    df = normalize.read_accessions(path)
-
-    gene = df["data"][0][0]["gene"]
-    assert gene == "Dper" + "\\" + "snoRNA:GL27867"
-
-
-def test_unescape_does_not_corrupt_a_backslash_followed_by_an_escape_char(tmp_path):
-    # A DB value containing a literal backslash immediately followed by a
-    # JSON escape-trigger character (here 't') - not an actual tab
-    # character. psql's COPY-level double-escaping means the raw dump has
-    # FOUR backslash characters at this position (same mechanism as the
-    # test above, just chosen so a *second*, incorrect unescape pass would
-    # misread it as the `\t` tab escape instead of a literal backslash+t).
-    # Rust's `normalize` binary applies that second, corrupting pass (see
-    # the trace in normalize.py's module comment); this module must not,
-    # since it unescapes exactly once, matching what `group-accessions`
-    # does - not `normalize`'s redundant second pass.
-    path = tmp_path / "accessions.json"
-    four_backslashes = "\\" * 4
-    line = (
-        '{"id":1,"urs_id":1,"urs_taxid":"URS1_9606","accession":"A1",'
-        '"last_release":5,"is_active":true,"description":"d",'
-        '"gene":"Dmel' + four_backslashes + 'tRNA","optional_id":null,'
-        '"database":"ENA","species":null,"common_name":null,"feature_name":null,'
-        '"ncrna_class":null,"locus_tag":null,"organelle":null,"lineage":null,'
-        '"all_species":[],"all_common_names":[],"so_rna_type":null}\n'
-    )
-    path.write_text(line)
-
-    df = normalize.read_accessions(path)
-
-    gene = df["data"][0][0]["gene"]
-    assert gene == "Dmel" + "\\" + "tRNA"  # literal backslash + "tRNA", not a tab
-    assert "\t" not in gene
-
-
 def test_read_metadata_reads_nested_structs(tmp_path):
     path = tmp_path / "metadata.json"
     path.write_text(
-        '{"id":1,"urs_id":1,"urs_taxid":"URS1_9606","upi":"URS1","taxid":9606,'
+        '{"id":1,"urs_id":1,"urs_taxid":"URS1_9606","urs":"URS1","taxid":9606,'
         '"length":100,"coordinates":[],"previous":null,"rfam_hits":[],'
         '"r2dt_hits":null,"orf_info":null,"possible_orf":null,'
         '"possible_orf_stopfree":null,"possible_orf_tcode":null}\n'
@@ -124,7 +71,7 @@ def test_read_metadata_reads_nested_structs(tmp_path):
 
     df = normalize.read_metadata(path)
 
-    assert df["upi"].to_list() == ["URS1"]
+    assert df["urs"].to_list() == ["URS1"]
     assert df["r2dt_hits"].to_list() == [None]
 
 
@@ -133,7 +80,7 @@ def _metadata_line(id_: int, **overrides) -> str:
         "id": id_,
         "urs_id": id_,
         "urs_taxid": f"URS{id_}_9606",
-        "upi": f"URS{id_}",
+        "urs": f"URS{id_}",
         "taxid": 9606,
         "length": 100,
         "coordinates": [],
@@ -174,20 +121,20 @@ def test_read_metadata_handles_a_column_that_is_null_past_the_inference_sample(
 
 def test_join_accessions_metadata_is_an_inner_join_on_id():
     accessions_df = pl.DataFrame({"id": [1, 2], "data": [["a"], ["b"]]})
-    metadata_df = pl.DataFrame({"id": [2, 3], "upi": ["URS2", "URS3"]})
+    metadata_df = pl.DataFrame({"id": [2, 3], "urs": ["URS2", "URS3"]})
 
     joined = normalize.join_accessions_metadata(accessions_df, metadata_df)
 
     # id=1 (accessions only) and id=3 (metadata only) are both dropped -
     # only id=2, present on both sides, survives.
     assert joined["id"].to_list() == [2]
-    assert joined["upi"].to_list() == ["URS2"]
+    assert joined["urs"].to_list() == ["URS2"]
 
 
 def _joined_row(**overrides):
     base = {
         "data": [_accession()],
-        "upi": "URS1",
+        "urs": "URS1",
         "taxid": 9606,
         "length": 100,
         "coordinates": [],
@@ -285,16 +232,17 @@ def test_write_output_writes_one_json_object_per_line(tmp_path):
 
 
 def test_write_reads_joins_normalizes_and_writes(tmp_path):
-    accessions_path = tmp_path / "accessions.json"
+    accessions_path = tmp_path / "accessions.parquet"
     metadata_path = tmp_path / "metadata.json"
     output_path = tmp_path / "output.json"
 
-    accessions_path.write_text(
-        json.dumps(_accession(id=1))
-        + "\n"
-        # id=2 has no accession rows at all - never appears as a group.
-        + json.dumps(_accession(id=3))
-        + "\n"  # no metadata match
+    _write_accessions_parquet(
+        accessions_path,
+        [
+            _accession(id=1),
+            # id=2 has no accession rows at all - never appears as a group.
+            _accession(id=3),  # no metadata match
+        ],
     )
     metadata_row = {k: v for k, v in _joined_row().items() if k != "data"}
     metadata_row["id"] = 1
