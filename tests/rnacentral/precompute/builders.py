@@ -127,7 +127,7 @@ def sequence(
     possible_orf_tcode: ty.Optional[bool] = None,
 ) -> Sequence:
     return Sequence(
-        upi="URS0000000001",
+        urs="URS0000000001",
         taxid=taxid,
         length=length,
         accessions=accessions or [],

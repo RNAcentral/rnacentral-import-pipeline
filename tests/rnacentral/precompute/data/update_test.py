@@ -163,7 +163,7 @@ def test_writeable_statuses_yields_the_qa_row_when_present():
     sequence = b.sequence()
     result = update(sequence=sequence, qa_status=qa_status)
     (row,) = list(result.writeable_statuses())
-    assert row == qa_status.writeable(sequence.upi, sequence.taxid)
+    assert row == qa_status.writeable(sequence.urs, sequence.taxid)
 
 
 def test_writeable_statuses_yields_nothing_for_an_inactive_update_with_no_status():
