@@ -67,9 +67,13 @@ class GenesetUrls:
     embl_url: str = attr.ib(validator=is_a(str))
     gff_url: str = attr.ib(validator=is_a(str))
     accession: str = attr.ib(validator=is_a(str))
+    homology_url: str = attr.ib(validator=is_a(str), default="")
 
-    def writeable(self, kind=None) -> ty.Tuple[str, str, str, str]:
-        return (self.species, str(self.taxid), self.embl_url, self.gff_url)
+    def writeable(self, kind=None) -> ty.Tuple[str, ...]:
+        row = (self.species, str(self.taxid), self.embl_url, self.gff_url)
+        if kind == "mrna":
+            return row + (self.homology_url,)
+        return row
 
 
 def _load(location: str):
@@ -135,6 +139,13 @@ def _select_geneset(
     )
     embl = annotations.get("genes.embl.gz")
     gff = annotations.get("genes.gff3.gz")
+    homology = (
+        release.get("paths", {})
+        .get("homologies", {})
+        .get("files", {})
+        .get("homology_data", {})
+        .get("homology.tsv.gz")
+    )
     if not embl or not gff:
         LOGGER.warning("Missing EMBL/GFF3 for %s, skipping", species)
         return None
@@ -145,6 +156,7 @@ def _select_geneset(
         embl_url=f"{base_url}/{embl}",
         gff_url=f"{base_url}/{gff}",
         accession=accession,
+        homology_url=f"{base_url}/{homology}" if homology else "",
     )
 
 

@@ -21,7 +21,13 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline import schemas
-from rnacentral_pipeline.databases.ensembl import parser, pseudogenes, urls
+from rnacentral_pipeline.databases.ensembl import (
+    homology,
+    mrna,
+    parser,
+    pseudogenes,
+    urls,
+)
 from rnacentral_pipeline.databases.ensembl.metadata import (
     assemblies,
     compara,
@@ -98,6 +104,38 @@ def parse_data(embl_file, gff_file, output, family_file=None):
         message += f"family_file: {family_file.name}\n"
 
         # slack.send_notification("Ensembl parser error", message)
+
+
+@cli.command("parse-mrna")
+@click.argument("embl_file", type=click.File("r"))
+@click.argument("gff_file", type=click.Path())
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+@format_option
+def parse_mrna(embl_file, gff_file, output):
+    """
+    Parse the protein coding mRNAs, and their UTRs, from an Ensembl EMBL file.
+    """
+    entries = mrna.parse(embl_file, Path(gff_file))
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)
+
+
+@cli.command("mrna-homology")
+@click.option("--homology", "homology_files", multiple=True, type=click.Path())
+@click.option("--gff", "gff_files", multiple=True, type=click.Path())
+@click.argument("output", default="compara.csv")
+@format_option
+def mrna_homology(homology_files, gff_files, output):
+    """
+    Link the canonical mRNAs of homologous genes, from Ensembl's homology.tsv.gz
+    files, into the ensembl_compara load format.
+    """
+    rows = homology.rows(map(Path, homology_files), map(Path, gff_files))
+    compara.write_rows(rows, output)
 
 
 @cli.command("assemblies")

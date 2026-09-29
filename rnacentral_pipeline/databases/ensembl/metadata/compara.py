@@ -70,20 +70,27 @@ def write(fasta, output):
     """
     Write the homology data in the given fasta file to the given output file.
     """
+    write_rows(_rows(fasta), output)
+
+
+def write_rows(rows, output):
+    """
+    Write (homology_group, ensembl_transcript) rows to the given output file.
+    """
 
     if isinstance(output, (str, Path)):
         path = Path(output)
         if is_parquet():
             with parquet_writer(path, schemas.COMPARA) as writer:
-                for row in _rows(fasta):
+                for row in rows:
                     writer.writerow(row)
             return
         with path.open("w") as handle:
             writer = csv.writer(handle)
-            for row in _rows(fasta):
+            for row in rows:
                 writer.writerow(list(row))
         return
 
     writer = csv.writer(output)
-    for row in _rows(fasta):
+    for row in rows:
         writer.writerow(list(row))

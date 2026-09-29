@@ -98,6 +98,7 @@ class Database(enum.Enum):
     japonicusdb = DatabaseValue(58, "JaponicusDB", "JAPONICUSDB")
     circatlas = DatabaseValue(59, "circAtlas", "CIRCATLAS")
     circpedia = DatabaseValue(60, "CIRCpedia", "CIRCPEDIA")
+    ensembl_mrna = DatabaseValue(61, "Ensembl mRNA", "ENSEMBL_MRNA")
 
     @classmethod
     def build(cls, name: str) -> Database:

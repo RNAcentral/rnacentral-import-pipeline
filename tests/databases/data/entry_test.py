@@ -274,3 +274,29 @@ def test_write_ac_info_truncates_long_description_for_load_table():
 
     assert len(written) == 1
     assert written[0][10] == "x" * 500
+
+
+@pytest.mark.parametrize(
+    "database,valid",
+    [
+        ("ENA", False),
+        ("ENSEMBL", False),
+        ("ENSEMBL_MRNA", True),
+    ],
+)
+def test_only_ensembl_mrna_may_import_mrna(database, valid):
+    entry = data.Entry(
+        primary_id="a",
+        accession="b",
+        ncbi_tax_id=1,
+        database=database,
+        sequence="ACCGGGGGGGGGGGGGGGGGGGGGGGG",
+        regions=[],
+        rna_type="SO:0000234",
+        url="http://www.google.com",
+        seq_version="1",
+        description="an mRNA",
+    )
+    assert entry.is_valid() == valid
+    assert entry.feature_name == "mRNA"
+    assert entry.ncrna_class == ""
