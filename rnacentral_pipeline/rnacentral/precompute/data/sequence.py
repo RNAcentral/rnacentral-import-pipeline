@@ -23,9 +23,9 @@ from attr.validators import optional
 
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.data.coordinate import Coordinate
+from rnacentral_pipeline.rnacentral.precompute.data.orf import OrfInfo
 from rnacentral_pipeline.rnacentral.precompute.data.r2dt import R2dtHit
 from rnacentral_pipeline.rnacentral.precompute.data.rfam import RfamHit
-from rnacentral_pipeline.rnacentral.precompute.data.orf import OrfInfo
 
 
 def partioned_accessions(so_tree, all_accessions):
@@ -78,7 +78,7 @@ class Sequence:
     step.
     """
 
-    upi = attr.ib(validator=is_a(str))
+    urs = attr.ib(validator=is_a(str))
     taxid = attr.ib(validator=is_a(int))
     length = attr.ib(validator=is_a(int))
     accessions: ty.List[Accession] = attr.ib(validator=is_a(list))
@@ -114,7 +114,7 @@ class Sequence:
             orf_info = OrfInfo.build(data["orf_info"])
 
         return cls(
-            upi=data["upi"],
+            urs=data["urs"],
             taxid=data["taxid"],
             length=data["length"],
             accessions=active,
@@ -146,10 +146,10 @@ class Sequence:
     @property
     def rna_id(self) -> str:
         """
-        Build the RNA id which is {upi}_{taxid}.
+        Build the RNA id which is {urs}_{taxid}.
         """
 
-        return f"{self.upi}_{self.taxid}"
+        return f"{self.urs}_{self.taxid}"
 
     @property
     def has_coordinates(self) -> bool:

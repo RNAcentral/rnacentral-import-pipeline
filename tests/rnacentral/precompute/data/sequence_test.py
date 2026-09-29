@@ -103,7 +103,7 @@ def test_can_correctly_load_generic_data():
 
 def raw_sequence(**overrides):
     raw = {
-        "upi": "URS0000000001",
+        "urs": "URS0000000001",
         "taxid": 9606,
         "length": 100,
         "accessions": [],
