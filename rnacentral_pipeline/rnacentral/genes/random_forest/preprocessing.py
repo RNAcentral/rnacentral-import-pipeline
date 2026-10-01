@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import logging
 import tempfile
 from functools import lru_cache
@@ -407,7 +406,7 @@ def sink_preprocessing(transcripts, output_path, nearby_distance=1000, label=Non
             out.write_parquet(output_path)
             return 0
 
-        lazy = pl.scan_parquet([str(p) for p in paths])
+        lazy = pl.scan_parquet([str(p) for p in paths]).drop_nulls()
         if label is not None:
             lazy = lazy.with_columns(pl.lit(label).alias("label"))
         lazy.sink_parquet(output_path)
