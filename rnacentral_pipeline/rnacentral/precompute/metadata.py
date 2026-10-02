@@ -20,7 +20,7 @@ limitations under the License.
 # and lazily joins them onto a `basic`-derived spine, once. `build()` then
 # filters and sinks that one lazy plan once per id range in urs_taxid.csv,
 # producing N range-scoped files instead of Rust's one monolithic
-# metadata.json.
+# metadata parquet.
 # See docs/superpowers/specs/2026-09-29-polars-precompute-metadata-build-design.md.
 
 import csv
@@ -192,8 +192,10 @@ def build(ranges_path: Path, raw_dir: Path, output_dir: Path) -> None:
     with open(manifest_path, "w", newline="") as manifest_file:
         writer = csv.writer(manifest_file)
         for upi_min, ut_min, ut_max in ranges:
-            chunk_path = output_dir / f"metadata-{upi_min}.json"
-            plan.filter(pl.col("id").is_between(ut_min, ut_max)).sink_ndjson(chunk_path)
+            chunk_path = output_dir / f"metadata-{upi_min}.parquet"
+            plan.filter(pl.col("id").is_between(ut_min, ut_max)).sink_parquet(
+                chunk_path
+            )
             writer.writerow([upi_min, chunk_path.resolve()])
 
     LOGGER.info("wrote %d metadata chunks to %s", len(ranges), output_dir)

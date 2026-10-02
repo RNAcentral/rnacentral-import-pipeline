@@ -37,7 +37,7 @@ def cli():
 
 @cli.command("from-file")
 @click.argument("context", type=click.Path(dir_okay=True, file_okay=True))
-@click.argument("json_file", type=click.Path(dir_okay=False, file_okay=True))
+@click.argument("data_file", type=click.Path(dir_okay=False, file_okay=True))
 @click.argument(
     "output",
     default=".",
@@ -48,12 +48,13 @@ def cli():
     ),
 )
 @format_option
-def precompute_from_file(context, json_file, output):
+def precompute_from_file(context, data_file, output):
     """
-    This command will take the output produced by the precompute query and
-    process the results into a CSV that can be loaded into the database.
+    This command will take the normalized parquet produced by
+    `precompute normalize` and process the results into a CSV that can be
+    loaded into the database.
     """
-    updates = pre.parse(Path(context), Path(json_file))
+    updates = pre.parse(Path(context), Path(data_file))
     out_path = Path(output)
     if is_parquet():
         opener = pre.parquet_writer(out_path)
@@ -73,8 +74,8 @@ def precompute_normalize(accessions, metadata, output):
     """
     Join a raw, ungrouped accessions file (typed Parquet produced by
     `rnac precompute extract-query` from get-accessions/query.sql) with a
-    merged metadata.json (now produced by `rnac precompute metadata-build`),
-    producing the same merged/normalized output the Rust `precompute
+    per-range metadata parquet chunk (produced by `rnac precompute
+    metadata-build`), producing the same merged/normalized output the Rust `precompute
     normalize` binary does. Replaces that binary and the separate
     `precompute group-accessions` step (grouping now happens here).
     """

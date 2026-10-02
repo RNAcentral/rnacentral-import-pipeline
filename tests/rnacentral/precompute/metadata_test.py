@@ -367,10 +367,10 @@ def test_build_writes_one_output_file_per_range_and_a_manifest(tmp_path):
     manifest_rows = (output_dir / "manifest.csv").read_text().strip().splitlines()
     assert len(manifest_rows) == 2
 
-    chunk1 = (output_dir / "metadata-10.json").read_text().strip().splitlines()
-    chunk2 = (output_dir / "metadata-20.json").read_text().strip().splitlines()
-    assert len(chunk1) == 2  # ids 1,2
-    assert len(chunk2) == 3  # ids 3,4,5
+    chunk1 = pl.read_parquet(output_dir / "metadata-10.parquet")
+    chunk2 = pl.read_parquet(output_dir / "metadata-20.parquet")
+    assert chunk1.height == 2  # ids 1,2
+    assert chunk2.height == 3  # ids 3,4,5
 
 
 def test_build_logs_a_warning_with_dropped_count_for_an_unmatched_attachment_id(
@@ -449,7 +449,7 @@ def test_build_produces_a_valid_empty_file_for_a_range_matching_no_ids(tmp_path)
     output_dir = tmp_path / "out"
     metadata.build(ranges_path, raw_dir, output_dir)
 
-    assert (output_dir / "metadata-99.json").read_text() == ""
+    assert pl.read_parquet(output_dir / "metadata-99.parquet").height == 0
 
 
 def test_build_logs_a_warning_for_duplicate_rows_in_a_zero_or_one_attachment(
@@ -559,4 +559,4 @@ def test_metadata_build_cli_wires_through_to_metadata_build(tmp_path):
     )
 
     assert result.exit_code == 0, result.output
-    assert (output_dir / "metadata-1.json").exists()
+    assert (output_dir / "metadata-1.parquet").exists()

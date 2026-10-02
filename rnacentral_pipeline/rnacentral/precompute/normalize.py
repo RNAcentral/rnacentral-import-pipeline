@@ -19,7 +19,7 @@ limitations under the License.
 # `rnac precompute extract-query` from get-accessions/query.sql - see
 # docs/superpowers/specs/2026-09-29-duckdb-parquet-metadata-extraction-design.md;
 # Rust's `precompute group-accessions` step is no longer needed, this
-# module groups the raw rows itself) and a merged metadata.json (now
+# module groups the raw rows itself) and a merged metadata parquet chunk (now
 # produced by `rnac precompute metadata-build`, see
 # docs/superpowers/specs/2026-09-29-polars-precompute-metadata-build-design.md),
 # and produces the same merged/normalized output the Rust `normalize`
@@ -34,7 +34,6 @@ limitations under the License.
 # production output, not something this module (now reading typed Parquet,
 # with no JSON/escaping layer at all) needs to replicate or guard against.
 
-import json
 import logging
 from pathlib import Path
 
@@ -58,12 +57,7 @@ def read_accessions(path: Path) -> pl.DataFrame:
 
 
 def read_metadata(path: Path) -> pl.DataFrame:
-    # infer_schema_length=None scans the whole file for type inference
-    # instead of just the first 100 rows (the default). orf_info is null
-    # for almost all rows and only occasionally a real struct (CPAT-flagged
-    # sequences), so sampling can lock in Null as its type and then crash on
-    # the first real value seen later in the file.
-    return pl.read_ndjson(path, infer_schema_length=None)
+    return pl.read_parquet(path)
 
 
 def join_accessions_metadata(
@@ -89,44 +83,43 @@ _ACCESSION_FIELDS = (
     "organelle",
     "lineage",
     "so_rna_type",
+    "all_species",
+    "all_common_names",
 )
 
-
-def _normalize_accession(raw: dict) -> dict:
-    result = {field: raw[field] for field in _ACCESSION_FIELDS}
-    result["all_species"] = [s for s in raw["all_species"] if s is not None]
-    result["all_common_names"] = [s for s in raw["all_common_names"] if s is not None]
-    return result
+_LIST_FIELDS = ("all_species", "all_common_names")
 
 
-def normalize_row(row: dict) -> dict:
-    accessions = [_normalize_accession(a) for a in row["data"]]
-    return {
-        "urs": row["urs"],
-        "taxid": row["taxid"],
-        "length": row["length"],
-        "last_release": max(a["last_release"] for a in row["data"]),
-        "coordinates": row["coordinates"],
-        "accessions": accessions,
-        "deleted": all(not a["is_active"] for a in row["data"]),
-        "previous": row["previous"],
-        "rfam_hits": row["rfam_hits"],
-        "r2dt_hits": [row["r2dt_hits"]] if row["r2dt_hits"] is not None else [],
-        "orf_info": row["orf_info"],
-        "possible_orf": row["possible_orf"],
-        "possible_orf_stopfree": row["possible_orf_stopfree"],
-        "possible_orf_tcode": row["possible_orf_tcode"],
-    }
+def normalize(joined: pl.DataFrame) -> pl.DataFrame:
+    # Per-id group -> one normalized row. `data` is the list of accession
+    # structs for the id; last_release/deleted are computed over all of them.
+    def per_accession(field: str) -> pl.Expr:
+        return pl.col("data").list.eval(pl.element().struct.field(field))
 
-
-def write_output(rows, path: Path) -> int:
-    count = 0
-    with open(path, "w") as f:
-        for row in rows:
-            f.write(json.dumps(row))
-            f.write("\n")
-            count += 1
-    return count
+    accession_fields = [
+        pl.element().struct.field(f).list.drop_nulls().alias(f)
+        if f in _LIST_FIELDS
+        else pl.element().struct.field(f)
+        for f in _ACCESSION_FIELDS
+    ]
+    return joined.select(
+        "urs",
+        "taxid",
+        "length",
+        per_accession("last_release").list.max().alias("last_release"),
+        "coordinates",
+        pl.col("data").list.eval(pl.struct(accession_fields)).alias("accessions"),
+        (~per_accession("is_active").list.any()).alias("deleted"),
+        "previous",
+        "rfam_hits",
+        # a single optional hit becomes a 0/1-element list; concat_list of a
+        # null struct gives [null], which drop_nulls empties.
+        pl.concat_list(pl.col("r2dt_hits")).list.drop_nulls().alias("r2dt_hits"),
+        "orf_info",
+        "possible_orf",
+        "possible_orf_stopfree",
+        "possible_orf_tcode",
+    )
 
 
 def write(accessions_path: Path, metadata_path: Path, output_path: Path) -> None:
@@ -137,9 +130,9 @@ def write(accessions_path: Path, metadata_path: Path, output_path: Path) -> None
     accessions_unmatched = accessions_df.height - joined.height
     metadata_unmatched = metadata_df.height - joined.height
 
-    written = write_output(
-        (normalize_row(row) for row in joined.iter_rows(named=True)), output_path
-    )
+    normalized = normalize(joined)
+    normalized.write_parquet(output_path)
+    written = normalized.height
 
     # Grouping raw rows (read_accessions) can never produce an id with an
     # empty accession list - an id with zero accessions just never appears

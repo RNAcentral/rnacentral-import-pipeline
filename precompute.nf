@@ -53,7 +53,7 @@ process build_metadata {
 
   output:
   path("metadata_out/manifest.csv"), emit: manifest
-  path("metadata_out/metadata-*.json"), optional: true, emit: chunks
+  path("metadata_out/metadata-*.parquet"), optional: true, emit: chunks
 
   script:
   // basic/coordinates/etc land in the task work dir already named
@@ -133,8 +133,8 @@ process process_range {
   script:
   """
   mkdir context
-  rnac precompute normalize $accessions $metadata merged.json
-  rnac precompute from-file context merged.json
+  rnac precompute normalize $accessions $metadata merged.parquet
+  rnac precompute from-file context merged.parquet
   """
 }
 
@@ -283,10 +283,10 @@ workflow precompute {
     // manifest.csv's paths - file() on a relative string in this workflow
     // body resolves against the launch directory, not build_metadata's
     // task work directory where the files actually live. upi_min comes
-    // back out of each chunk's own filename instead (metadata-N.json -> N).
+    // back out of each chunk's own filename instead (metadata-N.parquet -> N).
     build_metadata.out.chunks \
     | flatten \
-    | map { f -> [(f.name =~ /^metadata-(\d+)\.json$/)[0][1], f] } \
+    | map { f -> [(f.name =~ /^metadata-(\d+)\.parquet$/)[0][1], f] } \
     | set { metadata_chunks }
 
     ranges \
