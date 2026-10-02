@@ -16,7 +16,7 @@ limitations under the License.
 import csv
 
 import psycopg2
-from pypika import Field, Query, Table
+from pypika import Query, Table
 from pypika import functions as fn
 
 
@@ -24,7 +24,7 @@ def upi_taxid_ranges(ranges, tablename, db_url):
     table = Table(tablename)
     with psycopg2.connect(db_url) as conn:
         with conn.cursor() as cur:
-            for (start, stop) in ranges:
+            for start, stop in ranges:
                 query = (
                     Query.from_(table)
                     .select(fn.Min(table.id), fn.Max(table.id))

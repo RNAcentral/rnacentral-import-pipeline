@@ -154,7 +154,7 @@ class SequenceUpdate:
 
         yield [
             self.sequence.rna_id,
-            self.sequence.upi,
+            self.sequence.urs,
             str(self.sequence.taxid),
             str(int(self.sequence.is_active)),
             self.description,
@@ -175,4 +175,4 @@ class SequenceUpdate:
                 raise ValueError(f"No QA status for active update {self}")
             return
 
-        yield self.qa_status.writeable(self.sequence.upi, self.sequence.taxid)
+        yield self.qa_status.writeable(self.sequence.urs, self.sequence.taxid)

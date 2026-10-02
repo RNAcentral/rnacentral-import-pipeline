@@ -1,7 +1,7 @@
 COPY (
 select
   json_build_object(
-    'upi', rna.urs,
+    'urs', rna.urs,
     'taxid', xref.taxid,
     'length', rna.len,
     'accessions', array_agg(json_build_object(
@@ -10,7 +10,7 @@ select
         'description', acc.description,
         'gene', acc.gene,
         'optional_id', acc.optional_id,
-        'database', db.display_name,
+        'database', db.descr,
         'species', coalesce(tax.name, acc.species),
         'common_name', coalesce(tax.common_name, acc.common_name),
         'feature_name', acc.feature_name,

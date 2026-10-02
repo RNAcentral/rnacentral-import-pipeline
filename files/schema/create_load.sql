@@ -352,7 +352,7 @@ CREATE UNLOGGED TABLE load_overlaps (
 DROP TABLE IF EXISTS load_qa_status;
 CREATE UNLOGGED TABLE load_qa_status (
   rna_id varchar(44) NOT NULL,
-  upi varchar(26) NOT NULL,
+  urs varchar(26) NOT NULL,
   taxid int8 NOT NULL,
   has_issue bool,
   incomplete_sequence bool,

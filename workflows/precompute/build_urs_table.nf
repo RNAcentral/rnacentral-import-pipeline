@@ -20,17 +20,15 @@ process select_outdated {
   cpus 4
 
   input:
-  path('xref.csv')
-  path('precompute.csv')
+  path('xref.parquet')
+  path('precompute.parquet')
 
   output:
   path('urs.csv')
 
   script:
   """
-  LC_ALL=C sort -t, -k1,1 --parallel=${task.cpus} -S 4G xref.csv > xref.sorted.csv
-  LC_ALL=C sort -t, -k1,1 --parallel=${task.cpus} -S 4G precompute.csv > precompute.sorted.csv
-  precompute select xref.sorted.csv precompute.sorted.csv urs.csv
+  rnac precompute select-outdated xref.parquet precompute.parquet urs.csv
   """
 }
 
@@ -89,30 +87,39 @@ process sort_ids {
 }
 
 process xref_releases {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  // This may not be enough - it holds the whole xref table in memory briefly before writing to disk
+  // Needs to be tested on the cluster though
+  memory '16 GB'
+
   input:
   val(_flag)
   file(query)
 
   output:
-  path('data.csv')
+  path('data.parquet')
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
+  rnac precompute extract-query $query data.parquet
   """
 }
 
 process precompute_releases {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  // Same reasoning as xref_releases
+  memory '16 GB'
+
   input:
   val(_flag)
   file(query)
 
   output:
-  path('data.csv')
+  path('data.parquet')
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
+  rnac precompute extract-query $query data.parquet
   """
 }
 
