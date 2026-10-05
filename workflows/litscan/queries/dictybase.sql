@@ -1,6 +1,6 @@
 -- DICTYBASE
 select
-    upi,
+    urs,
     taxid,
     external_id,
     gene

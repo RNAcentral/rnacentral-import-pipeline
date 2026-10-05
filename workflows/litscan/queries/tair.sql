@@ -1,6 +1,6 @@
 -- TAIR
 select
-    upi,
+    urs,
     taxid,
     external_id,
     gene

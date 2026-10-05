@@ -1,6 +1,6 @@
 -- ENSEMBL PROTISTS
 select
-    upi,
+    urs,
     taxid,
     external_id,
     gene,

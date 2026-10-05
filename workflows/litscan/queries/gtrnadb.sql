@@ -1,6 +1,6 @@
 -- GTRNADB
 select
-    upi,
+    urs,
     taxid,
     gene
 from xref x

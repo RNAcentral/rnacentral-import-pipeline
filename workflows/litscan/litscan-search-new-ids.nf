@@ -20,7 +20,7 @@ process get_ids {
 
     script:
     """
-    psql -t -A -f $database "\$PGDB_EMBASSY_USER" > results
+    psql -v ON_ERROR_STOP=1 -t -A -f $database "\$PGDB_EMBASSY_USER" > results
     """
 }
 

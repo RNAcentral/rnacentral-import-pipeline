@@ -1,6 +1,6 @@
 -- HGNC
 select
-    upi,
+    urs,
     taxid,
     gene,
 	  accession,

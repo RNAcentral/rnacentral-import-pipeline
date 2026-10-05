@@ -1,6 +1,6 @@
 -- ENSEMBL PLANTS
 select
-    upi,
+    urs,
     taxid,
     external_id,
     gene,
