@@ -17,10 +17,12 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases.data import RnaType, SoTermInfo
+from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.data.update import SequenceUpdate
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult, QaStatus
 
 from .. import builders as b
+from ..helpers import SO_TREE
 
 RRNA = "SO:0000252"
 TRNA = "SO:0000253"
@@ -177,3 +179,42 @@ def test_writeable_statuses_raises_for_an_active_update_with_no_status():
     result = update(sequence=sequence, qa_status=None)
     with pytest.raises(ValueError):
         list(result.writeable_statuses())
+
+
+# --------------------------------------------------------------------- #
+# databases: the stored column holds rnc_database.descr, not Database.pretty()
+# --------------------------------------------------------------------- #
+
+
+def test_accession_build_keeps_the_descr_from_the_query_as_database_name():
+    acc = Accession.build(
+        SO_TREE,
+        {
+            "gene": None,
+            "optional_id": None,
+            "database": "TMRNA_WEB",
+            "species": "Homo sapiens",
+            "common_name": "human",
+            "description": "a sequence",
+            "locus_tag": None,
+            "organelle": None,
+            "lineage": b.HUMAN_LINEAGE,
+            "all_species": ["Homo sapiens"],
+            "all_common_names": ["human"],
+            "so_rna_type": TRNA,
+            "is_active": True,
+        },
+    )
+    assert acc.database_name == "TMRNA_WEB"
+    assert acc.pretty_database == "TMRNA_WEB"
+
+
+def test_databases_column_uses_descr_not_pretty_names():
+    sequence = b.sequence(
+        accessions=[
+            b.accession("tmrna_website", TRNA),
+            b.accession("lncrnadb", RRNA),
+            b.accession("ensembl_plants", RRNA),
+        ]
+    )
+    assert update(sequence=sequence).databases == "ENSEMBL_PLANTS,LNCRNADB,TMRNA_WEB"
