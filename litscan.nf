@@ -12,6 +12,13 @@ include { export_articles }      from './workflows/litscan/litscan-export-articl
 include { export_metadata }      from './workflows/litscan/litscan-export-metadata'
 
 workflow {
+  if (!params.litscan_index) {
+    error "Must set litscan_index, in local.config or as --litscan_index"
+  }
+  if (!params.release_version) {
+    error "Must set release_version, in local.config or as --release_version"
+  }
+
   // 1. Discover new IDs and register them in litscan_job (status='pending').
   //    Emits a channel of files listing the newly registered IDs.
   search_new_ids()
