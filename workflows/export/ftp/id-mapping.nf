@@ -1,6 +1,6 @@
 process build_id_mapping_chunk {
   tag { chunk }
-  maxForks 4
+  maxForks 2
 
   input:
   tuple val(chunk), path(query)
