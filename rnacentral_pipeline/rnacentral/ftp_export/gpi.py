@@ -164,7 +164,8 @@ def get_generic(
     conn, mirbase_info, gpi_filter: GpiFilter = GpiFilter.NONE, **kwargs
 ) -> ty.Iterable[GpiEntry]:
     query = kwargs.get("generic_query", generic_query(gpi_filter))
-    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+    # Named, so rows stream from the server instead of all loading at once.
+    with conn.cursor(name="gpi", cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute(str(query))
         for result in cur:
             precursors = set()
