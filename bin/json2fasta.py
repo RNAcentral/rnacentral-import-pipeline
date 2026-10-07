@@ -16,12 +16,16 @@ limitations under the License.
 """
 
 import re
+import sys
+from pathlib import Path
 
+import click
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-import click
+# The package is not installed into the container's venv.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from rnacentral_pipeline.rnacentral.ftp_export.sequences_json import parse
 
@@ -30,7 +34,11 @@ EASEL_PATTERN = re.compile(r"^[ACGTN]+$", re.IGNORECASE)
 
 def as_record(entry):
     description = entry.get("description", "") or ""
-    return SeqRecord(Seq(entry["sequence"]), id=entry["id"], description=description,)
+    return SeqRecord(
+        Seq(entry["sequence"]),
+        id=entry["id"],
+        description=description,
+    )
 
 
 def select_easel(entry):

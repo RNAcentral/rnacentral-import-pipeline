@@ -17,6 +17,9 @@ import importlib.util
 import io
 import json
 import logging
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -77,3 +80,19 @@ def test_parse_raises_for_incomplete_json_at_eof():
 
     with pytest.raises(json.JSONDecodeError):
         list(json2fasta.parse(raw))
+
+
+@pytest.mark.utils
+def test_script_runs_without_pythonpath(tmp_path):
+    # Nextflow runs the script from a work dir in a container where the package
+    # is not installed, so it must find rnacentral_pipeline on its own.
+    raw = tmp_path / "in.json"
+    raw.write_text('{"id": "URS0001", "description": "d", "sequence": "ACGU"}\n')
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    subprocess.run(
+        [sys.executable, str(MODULE_PATH), str(raw), "out.fasta"],
+        cwd=tmp_path,
+        env=env,
+        check=True,
+    )
+    assert (tmp_path / "out.fasta").read_text().startswith(">URS0001")
