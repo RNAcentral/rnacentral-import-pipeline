@@ -1,16 +1,13 @@
-COPY (
 SELECT
-  json_build_object(
-    'id', todo.id,
-    'urs_id', todo.precompute_urs_id,
-    'urs_taxid', todo.urs_taxid,
-    'urs', todo.urs,
-    'taxid', todo.taxid,
-    'length', rna.len
-  )
+  todo.id,
+  todo.precompute_urs_id AS urs_id,
+  todo.urs_taxid,
+  todo.urs,
+  todo.taxid,
+  rna.len AS length
 FROM precompute_urs_taxid todo
 JOIN rna
 ON
   rna.urs = todo.urs
+WHERE (:min IS NULL OR todo.id BETWEEN :min AND :max)
 ORDER BY todo.precompute_urs_id, todo.id
-) TO STDOUT

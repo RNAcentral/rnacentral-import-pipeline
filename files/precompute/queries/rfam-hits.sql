@@ -1,22 +1,19 @@
-COPY (
-select
-  json_build_object(
-    'id', todo.id,
-    'urs_id', todo.precompute_urs_id,
-    'urs_taxid', todo.urs_taxid,
-    'rfam_hit_id', hits.rfam_hit_id,
-    'model', hits.rfam_model_id,
-    'model_rna_type', models.so_rna_type,
-    'model_domain', models.domain,
-    'model_name', models.short_name,
-    'model_long_name', models.long_name,
-    'model_completeness', hits.model_completeness,
-    'model_start', hits.model_start,
-    'model_stop', hits.model_stop,
-    'sequence_completeness', hits.sequence_completeness,
-    'sequence_start', hits.sequence_start,
-    'sequence_stop', hits.sequence_stop
-  )
+SELECT
+  todo.id,
+  todo.precompute_urs_id AS urs_id,
+  todo.urs_taxid,
+  hits.rfam_hit_id,
+  hits.rfam_model_id AS model,
+  models.so_rna_type AS model_rna_type,
+  models.domain AS model_domain,
+  models.short_name AS model_name,
+  models.long_name AS model_long_name,
+  hits.model_completeness,
+  hits.model_start,
+  hits.model_stop,
+  hits.sequence_completeness,
+  hits.sequence_start,
+  hits.sequence_stop
 FROM precompute_urs_taxid todo
 JOIN rfam_model_hits hits
 ON
@@ -24,6 +21,6 @@ ON
 JOIN rfam_models models
 ON
     models.rfam_model_id = hits.rfam_model_id
-where models.so_rna_type is not NULL
-order by todo.precompute_urs_id, todo.id
-) TO STDOUT
+WHERE models.so_rna_type is not NULL
+  AND (:min IS NULL OR todo.id BETWEEN :min AND :max)
+ORDER BY todo.precompute_urs_id, todo.id

@@ -1,22 +1,19 @@
-COPY (
-select
-  json_build_object(
-    'id', todo.id,
-    'urs_id', todo.precompute_urs_id,
-    'urs_taxid', todo.urs_taxid,
-    'upi', prev.urs,
-    'taxid', prev.taxid,
-    'databases', prev.databases,
-    'has_coordinates', prev.has_coordinates,
-    'is_active', prev.is_active,
-    'last_release', prev.last_release,
-    'rna_type', prev.rna_type,
-    'short_description', prev.short_description,
-    'so_rna_type', prev.so_rna_type
-  )
+SELECT
+  todo.id,
+  todo.precompute_urs_id AS urs_id,
+  todo.urs_taxid,
+  prev.urs AS upi,
+  prev.taxid,
+  prev.databases,
+  prev.has_coordinates,
+  prev.is_active,
+  prev.last_release,
+  prev.rna_type,
+  prev.short_description,
+  prev.so_rna_type
 FROM precompute_urs_taxid todo
 JOIN rnc_rna_precomputed prev
 ON
   prev.urs_taxid = todo.urs_taxid
-order by todo.precompute_urs_id, todo.id
-) TO STDOUT
+WHERE (:min IS NULL OR todo.id BETWEEN :min AND :max)
+ORDER BY todo.precompute_urs_id, todo.id
