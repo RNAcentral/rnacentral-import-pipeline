@@ -11,8 +11,6 @@ include { active_sequences } from './active-sequences'
 include { huggingface } from './huggingface'
 
 process release_note {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
   publishDir "${params.export.ftp.publish}/", mode: 'copy'
 
   input:
