@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import tempfile
 from pathlib import Path
 
@@ -191,6 +192,7 @@ def database_to_bed(
         FROM rnc_genes
         WHERE assembly_id = %s
         AND taxid = %s
+        AND is_active
         ORDER BY chromosome, start
     """,
         (

@@ -63,6 +63,7 @@ def utils_cli():
 
 ## New RF based gene models
 
+
 ## Inference commands to fetch, preprocess and classify transcripts
 @infer_cli.command("fetch")
 @click.option(
@@ -277,12 +278,13 @@ def merge(
     This command takes two gene files (previous and next), merges them, updates IDs,
     and handles any inactive genes based on the provided inactive IDs file.
 
-    The merge is done based on one of two conditions:
-    1. If the previous gene has a perfect overlap, the two are merged and the version is updated
-    2. Within 1kb around each gene, we merge genes that have total region overlap > 0.9, and update the version
-
-    If a gene is present in the previous release but not the next, it is discarded. Genes present in the next
-    release but not the previous are added as new genes.
+    Genes are matched on shared members (see random_forest/merge.py). A previous gene
+    continues as the new gene that keeps at least half of its members, keeping its name
+    and internal name; its extent is recomputed from the members, and its version goes up
+    if the membership changed. A new gene that is only a fragment of a previous gene is a
+    new gene whose `history` column records a split_from event; other previous genes feeding
+    a gene get a merged_from event. Previous genes with no heir are dropped (and deactivated when stored),
+    and members whose URS is in the inactive IDs file are removed first.
     """
     previous_genes = Path(previous_genes)
     next_genes = Path(next_genes)

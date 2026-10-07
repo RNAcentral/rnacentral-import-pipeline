@@ -12,14 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import hashlib
 import io
-import multiprocessing as mp
 import random
 import re
-import traceback
 import uuid
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import lru_cache
 
 import networkx as nx
@@ -28,12 +26,9 @@ import obonet as obo
 import polars as pl
 import psycopg2 as pg
 from psycopg2.extras import RealDictCursor
-from tqdm import tqdm
 
 from rnacentral_pipeline.databases.data import Database
-from rnacentral_pipeline.rnacentral.genes.random_forest.preprocessing import (
-    exon_overlap,
-)
+from rnacentral_pipeline.rnacentral.genes.random_forest import merge, metadata
 from rnacentral_pipeline.rnacentral.precompute import utils
 
 SO_ONTOLOGY_URL = "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/refs/heads/master/Ontology_Files/so-simple.obo"
@@ -320,193 +315,56 @@ def merge_genes(
     next_release_number,
 ):
     """
-    Merges two gene datasets based on exon overlap and updates members.
+    Merge the stored genes with the genes called for the next release.
+
+    Genes are matched on shared members, not on extents; see
+    `random_forest.merge` for the rules. The result has the same columns as
+    before plus `history`, a list of {event, internal_name, name} for the previous genes
+    a gene was carved out of (`split_from`) or absorbed (`merged_from`). Previous genes with no heir are
+    left out, which `deactivate_discarded` then turns into is_active = false.
     """
-    start = pl.read_json(previous_genes).with_columns(
-        pl.col("name").str.split(".").list.last().cast(pl.Int64).alias("version")
+
+    def read(path, release):
+        genes = pl.read_json(path)
+        for column in ("first_release", "last_release"):
+            if column not in genes.columns:
+                genes = genes.with_columns(
+                    pl.lit(release, dtype=pl.Int64).alias(column)
+                )
+        return genes
+
+    previous = read(previous_genes, prev_release_number)
+    following = read(next_genes, next_release_number)
+
+    merged, events = merge.merge(
+        previous.to_dicts(),
+        following.to_dicts(),
+        retired_urs=merge.read_retired_urs(inactive_ids),
     )
-    start = start.with_columns(pl.col("name").str.split(".").list.first())
-    if "first_release" not in start.columns:
-        start = start.with_columns(
-            first_release=pl.lit(prev_release_number, dtype=pl.Int64)
+    print(
+        "Merged {} previous and {} new genes: {}".format(
+            previous.height, following.height, dict(events)
         )
-    if "last_release" not in start.columns:
-        start = start.with_columns(
-            last_release=pl.lit(prev_release_number, dtype=pl.Int64)
-        )
-
-    next_rel = pl.read_json(next_genes).with_columns(
-        pl.col("name").str.split(".").list.last().cast(pl.Int64).alias("version")
     )
-    next_rel = next_rel.with_columns(pl.col("name").str.split(".").list.first())
-    if "first_release" not in next_rel.columns:
-        next_rel = next_rel.with_columns(
-            first_release=pl.lit(next_release_number, dtype=pl.Int64)
-        )
-    if "last_release" not in next_rel.columns:
-        next_rel = next_rel.with_columns(
-            last_release=pl.lit(next_release_number, dtype=pl.Int64)
-        )
-
-    ## The name comes from a hash based on the start, stop and chromosome, so it should
-    ## be joinable when those things have not changed. As long as we also join on the
-    ## strand and assembly to avoid mixing
-
-    common = start.join(
-        next_rel,
-        on=["start", "stop", "strand", "assembly_id", "chromosome"],
-        how="inner",
-        suffix="_new",
+    return pl.DataFrame(
+        merged,
+        schema={
+            "name": pl.Utf8,
+            "internal_name": pl.Utf8,
+            "members": pl.List(pl.Utf8),
+            "start": pl.Int64,
+            "stop": pl.Int64,
+            "strand": pl.Utf8,
+            "chromosome": pl.Utf8,
+            "assembly_id": pl.Utf8,
+            "version": pl.Int64,
+            "first_release": pl.Int64,
+            "last_release": pl.Int64,
+            "history": pl.List(
+                pl.Struct({"event": pl.Utf8, "internal_name": pl.Utf8, "name": pl.Utf8})
+            ),
+        },
     )
-    common = common.with_columns(
-        pl.min_horizontal("first_release", "first_release_new").alias("first_release")
-    )
-    common = common.with_columns(
-        pl.max_horizontal("last_release", "last_release_new").alias("last_release")
-    )
-    ##If the membership changes, we need to increment the version of the gene.
-    ## Sort both member lists before comparing: list equality is order-sensitive,
-    ## and the two sides come from different sources (DB dump vs fresh classify
-    ## output), so an ordering difference must not be read as a membership change.
-    common = common.with_columns(
-        version=pl.when(
-            pl.col("members").list.sort() == pl.col("members_new").list.sort()
-        )
-        .then(pl.col("version"))
-        .otherwise(pl.col("version") + 1)
-    )
-
-    common = common.with_columns(
-        name=pl.col("name") + "." + pl.col("version").cast(pl.Utf8)
-    )
-    common = common.select(
-        pl.col("name"),
-        pl.col("internal_name"),
-        pl.col("members_new").alias("members"),
-        pl.col("start"),
-        pl.col("stop"),
-        pl.col("strand"),
-        pl.col("chromosome"),
-        pl.col("assembly_id"),
-        pl.col("version"),
-        pl.col("first_release"),
-        pl.col("last_release"),
-    )
-
-    ## common is finished now, so do an anti-join to find the ones that are not in common
-    ## Returns rows from the left table that have no match in the right table.
-    next_new = next_rel.join(
-        common, on=["start", "stop", "strand", "assembly_id", "chromosome"], how="anti"
-    )
-
-    old_uncommon = start.join(
-        common, on=["start", "stop", "strand", "assembly_id", "chromosome"], how="anti"
-    )
-
-    ## Use a threshold of 1kb around the start/stop to select candidates to merge
-    ## Then look at the overlap and merge if >0.9
-    nearby_merged = common.clear()
-    new_discarded_names = []
-    for name, data in next_new.group_by(
-        ["assembly_id", "chromosome", "strand"], maintain_order=True
-    ):
-        assembly, chromosome, strand = name
-        old_groups = old_uncommon.filter(
-            (pl.col("assembly_id") == assembly)
-            & (pl.col("chromosome") == chromosome)
-            & (pl.col("strand") == strand)
-        )
-        used_old_rows = set()
-        for new_row in data.iter_rows(named=True):
-            for old_row in old_groups.iter_rows(named=True):
-                old_key = old_row[
-                    "internal_name"
-                ]  # or use a tuple of identifying fields
-                if old_key in used_old_rows:
-                    continue  # Skip this old_row, it's already been merged
-                if (
-                    abs(new_row["start"] - old_row["start"]) < 1000
-                    and abs(new_row["stop"] - old_row["stop"]) < 1000
-                ):
-                    overlap = exon_overlap(
-                        new_row["start"],
-                        new_row["stop"],
-                        old_row["start"],
-                        old_row["stop"],
-                    )
-                    if overlap > 0.9:
-                        merged_row = pl.DataFrame(
-                            {
-                                "name": old_row["name"],
-                                "internal_name": old_row["internal_name"],
-                                ## Wrap in an outer list: members is a list of
-                                ## region_names, and pl.DataFrame reads a bare list
-                                ## as values-down-the-rows. With schema=List(Utf8)
-                                ## that coerces each region_name string into a list
-                                ## of its characters and splits one gene into many
-                                ## rows. [[...]] makes it a single row holding the
-                                ## list.
-                                "members": [new_row["members"]],
-                                "start": min(new_row["start"], old_row["start"]),
-                                "stop": max(new_row["stop"], old_row["stop"]),
-                                "strand": strand,
-                                "chromosome": chromosome,
-                                "assembly_id": assembly,
-                                "version": max(new_row["version"], old_row["version"])
-                                + 1,
-                                "first_release": min(
-                                    new_row["first_release"], old_row["first_release"]
-                                ),
-                                "last_release": max(
-                                    new_row["last_release"], old_row["last_release"]
-                                ),
-                            },
-                            schema=common.schema,
-                        )
-                        nearby_merged = nearby_merged.vstack(merged_row)
-                        new_discarded_names.append(new_row["name"])
-                        used_old_rows.add(old_key)
-                        break
-
-    nearby_merged = nearby_merged.with_columns(
-        name=pl.col("name") + "." + pl.col("version").cast(pl.Utf8)
-    )
-    nearby_merged = nearby_merged.select(
-        pl.col("name"),
-        pl.col("internal_name"),
-        pl.col("members"),
-        pl.col("start"),
-        pl.col("stop"),
-        pl.col("strand"),
-        pl.col("chromosome"),
-        pl.col("assembly_id"),
-        pl.col("version"),
-        pl.col("first_release"),
-        pl.col("last_release"),
-    )
-
-    remaining_new = next_new.filter(
-        ~pl.col("name").is_in(new_discarded_names)
-    ).with_columns(name=pl.col("name") + "." + pl.col("version").cast(pl.Utf8))
-    remaining_new = remaining_new.select(
-        pl.col("name"),
-        pl.col("internal_name"),
-        pl.col("members"),
-        pl.col("start"),
-        pl.col("stop"),
-        pl.col("strand"),
-        pl.col("chromosome"),
-        pl.col("assembly_id"),
-        pl.col("version"),
-        pl.col("first_release"),
-        pl.col("last_release"),
-    )
-    ## For now, just concatenate the remaining stuff, thought some of it may no longer be active
-    final_merged_data = pl.concat(
-        [common, nearby_merged, remaining_new], how="vertical"
-    )
-
-    return final_merged_data
 
 
 def init_genes(genes_file, release_number):
@@ -831,179 +689,72 @@ def deactivate_discarded(merged_genes, taxid, db_str):
         conn.close()
 
 
-def get_accessions(urs_taxids, db_str):
-    conn = None
+ACCESSIONS_QUERY = """
+SELECT a.urs_taxid, ac.database, ac.description, ac.rna_type, 0.0 AS cm_overlap
+FROM rnc_accession_active a
+JOIN rnc_accessions ac ON ac.accession = a.accession
+WHERE a.urs_taxid = ANY(%(urs_taxids)s)
+"""
+
+## urs is the accession prefix before the taxid, e.g. URS123_9606 -> URS123
+RFAM_QUERY = """
+WITH g(urs_taxid, urs) AS (SELECT * FROM unnest(%(urs_taxids)s::text[], %(urs)s::text[]))
+SELECT g.urs_taxid, 'RFAM', rfm.long_name, rfm.so_rna_type, rf.sequence_completeness
+FROM g
+JOIN rfam_model_hits rf ON rf.urs = g.urs
+JOIN rfam_models rfm ON rfm.rfam_model_id = rf.rfam_model_id
+"""
+
+R2DT_QUERY = """
+WITH g(urs_taxid, urs) AS (SELECT * FROM unnest(%(urs_taxids)s::text[], %(urs)s::text[]))
+SELECT g.urs_taxid, 'R2DT', r2m.model_name, r2m.so_term_id, r2.sequence_coverage
+FROM g
+JOIN r2dt_results r2 ON r2.urs = g.urs
+JOIN r2dt_models r2m ON r2m.id = r2.model_id
+"""
+
+
+def fetch_evidence(urs_taxids, db_str, batch_size=20000):
+    """
+    Accessions and Rfam / R2DT hits for the given URS, reduced to the best
+    description and best type of each URS.
+
+    This uses one connection and three queries per batch of `batch_size` URS,
+    so the number of connections no longer depends on the number of genes.
+    Each batch is scored and reduced before the next is fetched, which keeps
+    memory bounded (the reduction is a max, so batching does not change it).
+    """
+    reduced = []
+    conn = pg.connect(db_str)
     try:
-        conn = pg.connect(db_str)
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(
-                """SELECT
-            a.urs_taxid,
-            ac.database,
-            ac.description,
-            ac.rna_type,
-            0.0 as cm_overlap
-            FROM
-            rnc_accession_active a
-            JOIN rnc_accessions ac
-                ON ac.accession = a.accession
-                WHERE a.urs_taxid = ANY(%s)""",
-                (urs_taxids,),
-            )
-
-            accessions = pl.DataFrame(
-                cur.fetchall(),
-                schema={
-                    "urs_taxid": pl.String,
-                    "database": pl.String,
-                    "description": pl.String,
-                    "rna_type": pl.String,
-                    "cm_overlap": pl.Float64,
-                },
-            )
+        with conn.cursor() as cur:
+            for i in range(0, len(urs_taxids), batch_size):
+                batch = urs_taxids[i : i + batch_size]
+                params = {"urs_taxids": batch, "urs": [u.split("_")[0] for u in batch]}
+                rows = []
+                for query in (ACCESSIONS_QUERY, RFAM_QUERY, R2DT_QUERY):
+                    cur.execute(query, params)
+                    rows.extend(cur.fetchall())
+                evidence = pl.DataFrame(
+                    rows, schema=metadata.EVIDENCE_SCHEMA, orient="row"
+                )
+                scored = metadata.score_evidence(
+                    evidence,
+                    description_scores,
+                    type_scores,
+                    utils.entropy,
+                    calculate_type_specificity,
+                )
+                reduced.append(metadata.best_per_urs(scored))
         conn.commit()
-        return accessions
-    except Exception as e:
-        print(f"error getting accessions: {e}")
-        if conn:
-            conn.rollback()
     finally:
-        if conn:
-            try:
-                conn.close()
-            except Exception as e:
-                print(f"error closing connection: {e}")
-
-
-def get_cm_hits(urs_taxids, db_str):
-    # urs is the accession prefix before the taxid, e.g. URS123_9606 -> URS123.
-    # Derive it here so we no longer need a shared lookup table to map
-    # urs_taxid -> urs.
-    urs_list = [u.split("_")[0] for u in urs_taxids]
-
-    def get_rfam():
-        conn = pg.connect(db_str)
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-
-            cur.execute(
-                """
-                    WITH g(urs_taxid, urs) AS (
-                        SELECT * FROM unnest(%s::text[], %s::text[])
-                    )
-                    SELECT
-                    g.urs_taxid,
-                    'RFAM' as database,
-                    rfm.long_name as description,
-                    rfm.so_rna_type as rna_type,
-                    rf.sequence_completeness as cm_overlap
-
-                    FROM g
-                    LEFT JOIN rfam_model_hits_old rf
-                            ON rf.upi = g.urs
-                    JOIN rfam_models rfm
-                            ON rfm.rfam_model_id = rf.rfam_model_id
-            """,
-                (urs_taxids, urs_list),
-            )
-            res = cur.fetchall()
-            cur.close()
         conn.close()
-        if len(res) > 0:
-            rfam_hits = pl.from_dicts(
-                res,
-                schema={
-                    "urs_taxid": pl.Utf8,
-                    "database": pl.Utf8,
-                    "description": pl.Utf8,
-                    "rna_type": pl.Utf8,
-                    "cm_overlap": pl.Float64,
-                },
-            )
-        else:
-            rfam_hits = pl.from_dict(
-                {
-                    "urs_taxid": [],
-                    "database": [],
-                    "description": [],
-                    "rna_type": [],
-                    "cm_overlap": [],
-                },
-                schema={
-                    "urs_taxid": pl.Utf8,
-                    "database": pl.Utf8,
-                    "description": pl.Utf8,
-                    "rna_type": pl.Utf8,
-                    "cm_overlap": pl.Float64,
-                },
-            )
-
-        return rfam_hits
-
-    def get_r2dt():
-        conn = pg.connect(db_str)
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(
-                """
-                    WITH g(urs_taxid, urs) AS (
-                        SELECT * FROM unnest(%s::text[], %s::text[])
-                    )
-                    SELECT
-                    g.urs_taxid,
-                    'R2DT' as database,
-                    r2m.model_name as description,
-                    r2m.so_term_id as rna_type,
-                    r2.sequence_coverage as cm_overlap
+    if not reduced:
+        return pl.DataFrame(schema=metadata.BEST_SCHEMA)
+    return pl.concat(reduced)
 
 
-                    FROM g
-                    LEFT JOIN r2dt_results r2
-                            ON r2.urs = g.urs
-                    JOIN r2dt_models r2m
-                            ON r2m.id = r2.model_id
-
-                """,
-                (urs_taxids, urs_list),
-            )
-
-            res = cur.fetchall()
-            cur.close()
-        conn.close()
-        if len(res) > 0:
-            r2dt_hits = pl.from_dicts(
-                res,
-                schema={
-                    "urs_taxid": pl.Utf8,
-                    "database": pl.Utf8,
-                    "description": pl.Utf8,
-                    "rna_type": pl.Utf8,
-                    "cm_overlap": pl.Float64,
-                },
-            )
-        else:
-            r2dt_hits = pl.from_dict(
-                {
-                    "urs_taxid": [],
-                    "database": [],
-                    "description": [],
-                    "rna_type": [],
-                    "cm_overlap": [],
-                },
-                schema={
-                    "urs_taxid": pl.Utf8,
-                    "database": pl.Utf8,
-                    "description": pl.Utf8,
-                    "rna_type": pl.Utf8,
-                    "cm_overlap": pl.Float64,
-                },
-            )
-        return r2dt_hits
-
-    rfam_hits = get_rfam()
-    r2dt_hits = get_r2dt()
-    cm_hits = rfam_hits.vstack(r2dt_hits)
-    return cm_hits
-
-
+@lru_cache(maxsize=None)
 def calculate_type_specificity(so_type):
     # Unknown/missing SO ids are short-circuited to the generic ncRNA term
     # rather than blowing up (NodeNotFound) or being heavily penalised.
@@ -1012,103 +763,6 @@ def calculate_type_specificity(so_type):
         return nx.shortest_path_length(get_so_graph(), so_type, "SO:0000673")
     except (nx.NetworkXNoPath, nx.NodeNotFound):
         return -1000
-
-
-def calculate_description_score(args):
-    db_score = description_scores.get(args["database"], 0)
-    entropy_score = utils.entropy(args["description"])
-    return db_score + entropy_score
-
-
-def calculate_cm_type_score(args):
-    db_score = type_scores.get(args["database"], 0)
-    specificity_score = calculate_type_specificity(args["rna_type"])
-    overlap_score = float(args.get("cm_overlap", 0.0)) * 100.0
-    return db_score + specificity_score + overlap_score
-
-
-def process_chunk(chunk, db_str):
-    return [process_group(group_item, db_str) for group_item in chunk]
-
-
-def process_group(group_data, db_str, progress_queue=None):
-    """Process a single group - extracted from your original loop"""
-    group_key, group_df = group_data
-    gene_name = group_key[0] if isinstance(group_key, (tuple, list)) else group_key
-
-    try:
-        urs_taxids = group_df.get_column("urs_taxid").unique().to_list()
-        descriptions = get_accessions(urs_taxids, db_str)
-        if descriptions is None:
-            # get_accessions swallows DB errors and returns None; treat that as
-            # a hard failure for this gene rather than blowing up on .vstack.
-            raise RuntimeError(
-                f"get_accessions returned None for {gene_name} "
-                f"(members={urs_taxids}); see 'error getting accessions' above"
-            )
-        cm_hits = get_cm_hits(urs_taxids, db_str)
-        cm_hits = cm_hits.with_columns(pl.col("cm_overlap").fill_null(0.0))
-        descriptions = descriptions.vstack(cm_hits)
-        if descriptions.is_empty():
-            # No active accessions and no CM hits for any member, so there is
-            # nothing to score. Skip rather than emitting a null rna_type.
-            raise RuntimeError(
-                f"no descriptions or CM hits for {gene_name} (members={urs_taxids})"
-            )
-        descriptions_with_scores = descriptions.with_columns(
-            desc_score=pl.struct(
-                pl.col("database"), pl.col("description")
-            ).map_elements(calculate_description_score, return_dtype=pl.Float64)
-        )
-        descriptions_with_scores = descriptions_with_scores.with_columns(
-            type_score=pl.struct(
-                pl.col("urs_taxid"),
-                pl.col("database"),
-                pl.col("rna_type"),
-                pl.col("cm_overlap"),
-            ).map_elements(calculate_cm_type_score, return_dtype=pl.Float64)
-        )
-
-        best_description = (
-            descriptions_with_scores.sort(
-                by="desc_score", descending=True, multithreaded=False
-            )
-            .get_column("description")
-            .to_list()[0]
-        )
-        best_type = (
-            descriptions_with_scores.sort(
-                by="type_score", descending=True, multithreaded=False
-            )
-            .get_column("rna_type")
-            .to_list()[0]
-        )
-        # Guarantee the stored so_rna_type is a real ontology term: a missing or
-        # unknown SO id collapses to the generic ncRNA type instead of erroring
-        # downstream (and avoids ever emitting a null into the NOT NULL column).
-        best_type = normalize_so_type(best_type)
-
-        result = {
-            "name": gene_name,
-            "description": best_description,
-            "rna_type": best_type,
-        }
-        # Update progress if queue provided
-        if progress_queue:
-            progress_queue.put(1)
-
-        return result
-
-    except Exception as e:
-        # Surface the real cause: a bare repr (e.g. an empty IndexError) is
-        # useless, so log the full traceback. The sentinel carries an explicit
-        # rna_type=None so get_metadata can filter it out before it ever
-        # reaches the NOT NULL so_rna_type column.
-        print(f"Error processing {gene_name}: {e!r}")
-        print(traceback.format_exc())
-        if progress_queue:
-            progress_queue.put(1)
-        return {"name": gene_name, "description": "ERROR", "rna_type": None}
 
 
 def remove_species_mention(description, species_name=None, common_name=None):
@@ -1154,82 +808,48 @@ def remove_species_mention(description, species_name=None, common_name=None):
 
 def get_metadata(final_genes, db_str):
     """
-    From the gene members, we want to get the descriptions from the precompute
-    table for each member URS_taxid, and where they came from.
+    From the gene members, we want to get the descriptions from the accessions,
+    Rfam and R2DT hits for each member URS_taxid, and where they came from.
 
-    Then apply an ordered choice to select the best description for the gene.
-
-
+    Then apply an ordered choice to select the best description and RNA type
+    for the gene. All the evidence is fetched in a few batched queries on one
+    connection (see `fetch_evidence`) and scored in memory (see `metadata`).
     """
-    final_genes = (
-        pl.read_json(final_genes)
-        .with_columns(n_members=pl.col("members").list.len())
-        .sort(by="n_members", descending=False)
-    )
-    final_genes = final_genes.explode("members").with_columns(
-        pl.col("members").str.split("@").list.first().alias("urs_taxid")
-    )
-
-    # Main parallelization code
-    grouped = final_genes.group_by("name", maintain_order=True)
-    group_items = list(grouped)  # Convert to list for multiprocessing
-    chunk_size = 250
-    chunks = [
-        group_items[i : i + chunk_size] for i in range(0, len(group_items), chunk_size)
-    ]
-    results = []
-    max_workers = 6  ## Based in the number of connections and what saturates the DB
-
-    ctx = mp.get_context("spawn")
-    with ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx) as executor:
-        chunk_futures = [
-            executor.submit(process_chunk, chunk, db_str) for chunk in chunks
-        ]
-
-        for future in tqdm(
-            as_completed(chunk_futures), total=len(chunks), desc="Processing chunks"
-        ):
-            try:
-                chunk_results = future.result()
-                results.extend([r for r in chunk_results if r is not None])
-            except Exception as e:
-                print(f"Error processing chunk: {e}")
-
-    # Pin the schema explicitly: every result dict has these three string keys,
-    # but rna_type (and description, via the error sentinel) is frequently None.
-    # With the default infer_schema_length polars can infer rna_type as Null
-    # from an all-None prefix and then fail to append a real SO id like
-    # "SO:0000651". An explicit Utf8 schema makes construction order-independent.
-    metadata = pl.DataFrame(
-        results,
-        schema={
-            "name": pl.Utf8,
-            "description": pl.Utf8,
-            "rna_type": pl.Utf8,
-        },
-    )
-
-    # Drop genes whose metadata could not be computed (see process_group). They
-    # carry rna_type=None, which would violate the NOT NULL so_rna_type column.
-    # The full traceback for each was already logged above; here we just report
-    # the count and the affected gene names so they don't crash store_metadata.
-    if "rna_type" not in metadata.columns:
-        metadata = metadata.with_columns(rna_type=pl.lit(None, dtype=pl.Utf8))
-    failed = metadata.filter(pl.col("rna_type").is_null())
-    if not failed.is_empty():
-        failed_names = failed.get_column("name").to_list()
-        print(
-            f"Dropping {failed.height} gene(s) with no computable metadata: "
-            f"{failed_names}"
+    genes = pl.read_json(final_genes)
+    if "name" not in genes.columns:
+        return pl.DataFrame(
+            schema={
+                "name": pl.Utf8,
+                "description": pl.Utf8,
+                "rna_type": pl.Utf8,
+                "short_description": pl.Utf8,
+            }
         )
-        metadata = metadata.filter(pl.col("rna_type").is_not_null())
-
-    metadata = metadata.with_columns(
-        short_description=pl.col("description")
-        .map_elements(remove_species_mention, return_dtype=pl.Utf8)
-        .alias("short_description")
+    members = genes.select("name", "members").explode("members")
+    members = members.select(
+        "name", urs_taxid=pl.col("members").str.split("@").list.first()
     )
-    return metadata
+
+    per_urs = fetch_evidence(
+        members.get_column("urs_taxid").unique().sort().to_list(), db_str
+    )
+    chosen = metadata.choose_gene_metadata(per_urs, members, normalize_so_type)
+
+    # Genes none of whose members have any accession or CM hit have nothing to
+    # score. Report and drop them rather than emitting a null rna_type into the
+    # NOT NULL so_rna_type column.
+    missing = genes.select("name").join(chosen.select("name"), on="name", how="anti")
+    if not missing.is_empty():
+        print(
+            f"Dropping {missing.height} gene(s) with no computable metadata, "
+            f"e.g. {missing.get_column('name').head(10).to_list()}"
+        )
+
+    return chosen.with_columns(
+        short_description=pl.col("description").map_elements(
+            remove_species_mention, return_dtype=pl.Utf8
+        )
+    )
 
 
 def store_metadata(metadata, db_str):

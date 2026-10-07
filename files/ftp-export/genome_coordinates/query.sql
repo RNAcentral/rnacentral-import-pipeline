@@ -28,8 +28,10 @@ FROM (
   JOIN rnc_sequence_regions_active regions ON regions.urs_taxid = pre.urs_taxid
     AND regions.assembly_id = :'assembly_id'
   JOIN rnc_sequence_exons exons ON exons.region_id = regions.id
-  LEFT JOIN rnc_gene_members gm ON gm.locus_id = regions.id
-  LEFT JOIN rnc_genes genes ON genes.id = gm.rnc_gene_id
+  -- Inactive genes keep their member rows, so the active filter must sit inside the join:
+  -- otherwise a locus moved to a new gene is exported once per gene it was ever in
+  LEFT JOIN (rnc_gene_members gm JOIN rnc_genes genes ON genes.id = gm.rnc_gene_id AND genes.is_active)
+    ON gm.locus_id = regions.id
   LEFT JOIN rnc_accession_sequence_region sra ON sra.region_id = regions.id
   LEFT JOIN rnc_accessions ac ON sra.accession = ac.accession
   WHERE pre.is_active = true
@@ -65,6 +67,7 @@ FROM (
   FROM rnc_genes g
   JOIN rnc_gene_metadata md ON md.rnc_gene_id = g.id
   WHERE g.assembly_id = :'assembly_id'
+    AND g.is_active
     AND g.start IS NOT NULL
     AND g.stop IS NOT NULL
     AND g.stop > g.start
