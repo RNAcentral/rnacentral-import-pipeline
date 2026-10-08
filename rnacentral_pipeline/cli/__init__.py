@@ -71,6 +71,7 @@ from rnacentral_pipeline.cli import (
     rgd,
     ribocentre,
     ribovision,
+    sankey,
     scan_imports,
     search_export,
     sgd,
@@ -163,6 +164,7 @@ cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
 cli.add_command(ribovision.cli)
 cli.add_command(ribocentre.cli)
+cli.add_command(sankey.cli)
 cli.add_command(scan_imports.cli)
 cli.add_command(search_export.cli)
 cli.add_command(sgd.cli)
