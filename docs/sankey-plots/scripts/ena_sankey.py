@@ -4,7 +4,7 @@ Sankey of how ENA sequences flow into RNAcentral, for talks and papers.
 
 ENA counts come from the ENA portal API, RNAcentral counts from the database.
 
-Writes ena-sankey.png next to this script.
+Writes ena-sankey.png to docs/sankey-plots.
 """
 
 import os
@@ -16,7 +16,7 @@ import psycopg2
 from matplotlib.patches import PathPatch, Polygon, Rectangle
 from matplotlib.path import Path as MPath
 
-OUT = Path(__file__).parent
+OUT = Path(__file__).parent.parent
 
 QUERY = """
 with ena as (

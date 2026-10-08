@@ -5,7 +5,7 @@ Sankey of how Ensembl sequences flow into RNAcentral, for talks and papers.
 Ensembl counts come from the public Ensembl MySQL servers, RNAcentral counts
 from the database.
 
-Writes ensembl-sankey.png next to this script.
+Writes ensembl-sankey.png to docs/sankey-plots.
 """
 
 import os
@@ -16,7 +16,7 @@ import psycopg2
 import pymysql
 from ena_sankey import AQUA, BLUE, GAP, GREY, MUTED, ORANGE, TOP, Sankey
 
-OUT = Path(__file__).parent
+OUT = Path(__file__).parent.parent
 
 # Vertebrates, then Plants, Fungi, Metazoa and Protists (Bacteria is skipped).
 SERVERS = (("ensembldb.ensembl.org", 3306), ("mysql-eg-publicsql.ebi.ac.uk", 4157))
