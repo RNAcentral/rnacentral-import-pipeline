@@ -20,8 +20,6 @@ include { fetch_schema } from './utils'
 include { build_search_accessions } from './build-accession-table'
 
 process setup {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
   input:
   path(sql)
   path(counts)
@@ -37,8 +35,6 @@ process setup {
 }
 
 process fetch_so_tree {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
   input:
   path(query)
 
@@ -186,7 +182,6 @@ process as_xml {
   memory { params.export.search.memory * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
   maxRetries 3
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   tuple val(min), val(max), path(raw), path(metadata), path('schema.xsd')
