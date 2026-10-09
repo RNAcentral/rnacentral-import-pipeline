@@ -28,7 +28,7 @@ process fetch {
 }
 
 process group {
-  memory params.search_export.memory
+  memory params.export.search.memory
   tag { "${name}" }
 
   input:
