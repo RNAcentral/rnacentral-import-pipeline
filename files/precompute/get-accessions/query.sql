@@ -1,32 +1,27 @@
-COPY (
 SELECT
-  json_build_object(
-    'id', todo.precompute_urs_taxid_id,
-    'urs_id', todo.precompute_urs_id,
-    'urs_taxid', todo.urs_taxid,
-    'accession', todo.accession,
-    'is_active', todo.is_active,
-    'last_release', todo.last_release,
-    'description', todo.description,
-    'gene', todo.gene,
-    'optional_id', todo.optional_id,
-    'database', todo.database,
-    'species', todo.species,
-    'common_name', todo.common_name,
-    'feature_name', todo.feature_name,
-    'ncrna_class', todo.ncrna_class,
-    'locus_tag', todo.locus_tag,
-    'organelle', todo.organelle,
-    'lineage', todo.lineage,
-    'all_species', ARRAY[tax.name, todo.species::text],
-    'all_common_names', ARRAY[tax.common_name, todo.common_name::text],
-    'so_rna_type', todo.so_rna_type
-  )
+  todo.precompute_urs_taxid_id AS id,
+  todo.precompute_urs_id AS urs_id,
+  todo.urs_taxid,
+  todo.accession,
+  todo.is_active,
+  todo.last_release,
+  todo.description,
+  todo.gene,
+  todo.optional_id,
+  todo.database,
+  todo.species,
+  todo.common_name,
+  todo.feature_name,
+  todo.ncrna_class,
+  todo.locus_tag,
+  todo.organelle,
+  todo.lineage,
+  ARRAY[tax.name, todo.species::text] AS all_species,
+  ARRAY[tax.common_name, todo.common_name::text] AS all_common_names,
+  todo.so_rna_type
 FROM precompute_urs_accession todo
-LEFT JOIN rnc_taxonomy tax 
-ON 
+LEFT JOIN rnc_taxonomy tax
+ON
   tax.id = todo.taxid
-WHERE
-  todo.precompute_urs_id BETWEEN :min and :max
-order by todo.precompute_urs_id, todo.precompute_urs_taxid_id
-) TO STDOUT
+WHERE (:min IS NULL OR todo.precompute_urs_id BETWEEN :min AND :max)
+ORDER BY todo.precompute_urs_id, todo.precompute_urs_taxid_id

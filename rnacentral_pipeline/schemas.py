@@ -447,7 +447,7 @@ R2DT_ATTEMPTED = pa.schema(
 PRECOMPUTE_DATA = pa.schema(
     [
         pa.field("id", pa.string(), nullable=False),
-        pa.field("upi", pa.string(), nullable=False),
+        pa.field("urs", pa.string(), nullable=False),
         pa.field("taxid", pa.int64(), nullable=False),
         pa.field("is_active", pa.bool_(), nullable=False),
         pa.field("description", pa.string()),
@@ -471,7 +471,7 @@ PRECOMPUTE_DATA = pa.schema(
 PRECOMPUTE_QA = pa.schema(
     [
         pa.field("rna_id", pa.string(), nullable=False),
-        pa.field("upi", pa.string(), nullable=False),
+        pa.field("urs", pa.string(), nullable=False),
         pa.field("taxid", pa.int64(), nullable=False),
         pa.field("has_issue", pa.bool_(), nullable=False),
         pa.field("incomplete_sequence", pa.bool_(), nullable=False),
