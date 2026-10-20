@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
-from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
 

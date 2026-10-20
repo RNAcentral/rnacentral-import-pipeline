@@ -10,6 +10,7 @@ The query files are executed verbatim, so these guard the shipped artifacts:
   files/r2dt/should-show/update.ctl      - how classifier output reaches the DB
 """
 
+import csv
 import io
 import json
 import re
@@ -39,11 +40,41 @@ def ctl_blocks(section):
 
 
 def copy_query(db, path):
-    """Run a `COPY (...) TO STDOUT` file and parse the JSON it emits."""
+    """
+    Run a query file and return its rows as a list of dict-like objects.
+
+    Two shapes exist among the files this test guards: older files are
+    already `COPY (SELECT json_build_object(...) ...) TO STDOUT` (one JSON
+    object per line); files rewritten for the typed-Parquet extraction
+    path (see files/precompute/queries/*.sql) are plain typed `SELECT`s
+    with a `:min`/`:max` range placeholder (see
+    rnacentral_pipeline.rnacentral.precompute.extract) and no COPY wrapper
+    at all - psycopg2's copy_expert requires a literal COPY statement, and
+    raw Postgres has no idea what `:min` means outside that substitution.
+    Detect which shape a file is and normalize to the same COPY-wrapped,
+    CSV-with-header form either way, so callers get uniform dict rows
+    (json.loads already gives dict-shaped rows for the old files; csv.DictReader
+    gives the same shape for the new ones).
+    """
+    text = path.read_text()
+    if text.strip().upper().startswith("COPY"):
+        out = io.StringIO()
+        with db.cursor() as cur:
+            cur.copy_expert(text, out)
+        return [
+            json.loads(line) for line in out.getvalue().splitlines() if line.strip()
+        ]
+
+    from rnacentral_pipeline.rnacentral.precompute.extract import _substitute_range
+
+    unranged = _substitute_range(text, None)
     out = io.StringIO()
     with db.cursor() as cur:
-        cur.copy_expert(path.read_text(), out)
-    return [json.loads(line) for line in out.getvalue().splitlines() if line.strip()]
+        cur.copy_expert(
+            f"COPY ({unranged}) TO STDOUT WITH (FORMAT csv, HEADER true)", out
+        )
+    out.seek(0)
+    return list(csv.DictReader(out))
 
 
 def load_case(db, urs, seq_len, model_length, assigned, inferred, model_id=1):

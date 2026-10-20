@@ -3,7 +3,6 @@ members = [
   "utils/ftp-export",
   "utils/json2dfasta",
   "utils/json2fasta",
-  "utils/precompute",
   "utils/rnc-core",
   "utils/rnc-test-utils",
   "utils/rnc-utils",
@@ -11,3 +10,6 @@ members = [
   "utils/split-ena",
 ]
 exclude = ["utils/genes-preprocessing", "utils/bed-expander"]
+
+[profile.release]
+debug = true
