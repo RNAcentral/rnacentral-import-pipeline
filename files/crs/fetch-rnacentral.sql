@@ -23,7 +23,7 @@ ON
 WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'
-  AND pre.databases != 'RFAM'
+  AND pre.databases != 'Rfam'
 GROUP BY regions.id
 ORDER BY max(regions.chromosome), regions.region_start, regions.id
 ) TO STDOUT

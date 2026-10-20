@@ -27,7 +27,6 @@ import typing as ty
 from rnacentral_pipeline.databases.data import Database, RnaType
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
-from rnacentral_pipeline.rnacentral.precompute.data.orf import OrfInfo
 from rnacentral_pipeline.rnacentral.precompute.data.r2dt import R2dtHit
 from rnacentral_pipeline.rnacentral.precompute.data.rfam import HitComponent, RfamHit
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
@@ -58,7 +57,6 @@ def accession(
         gene=None,
         optional_id=None,
         database=Database.build(database),
-        database_name=Database.build(database).value.descr,
         species="Homo sapiens",
         common_name="human",
         description=description,
@@ -122,13 +120,9 @@ def sequence(
     taxid: int = 9606,
     length: int = 100,
     coordinates: ty.Optional[list] = None,
-    orf_info: ty.Optional[OrfInfo] = None,
-    possible_orf: ty.Optional[bool] = None,
-    possible_orf_stopfree: ty.Optional[bool] = None,
-    possible_orf_tcode: ty.Optional[bool] = None,
 ) -> Sequence:
     return Sequence(
-        urs="URS0000000001",
+        upi="URS0000000001",
         taxid=taxid,
         length=length,
         accessions=accessions or [],
@@ -139,8 +133,8 @@ def sequence(
         coordinates=coordinates or [],
         last_release=1,
         r2dt_hits=r2dt_hits or [],
-        orf_info=orf_info,
-        possible_orf=possible_orf,
-        possible_orf_stopfree=possible_orf_stopfree,
-        possible_orf_tcode=possible_orf_tcode,
+        orf_info=None,
+        possible_orf=None,
+        possible_orf_stopfree=None,
+        possible_orf_tcode=None,
     )

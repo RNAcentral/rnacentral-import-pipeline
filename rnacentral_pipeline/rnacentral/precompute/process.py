@@ -18,9 +18,8 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import attr
-import polars as pl
 
-from rnacentral_pipeline import schemas, writers
+from rnacentral_pipeline import psql, schemas, writers
 from rnacentral_pipeline.parquet_writers import TypedParquetWrapper
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
@@ -72,11 +71,13 @@ def parquet_writer(path: Path) -> ty.Iterator[Writer]:
 
 def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:
     """
-    Parse the normalized parquet file (the output of `precompute normalize`)
+    Parse the given json file (handle) using the repeat tree at `repeat_path`,
     and produce an iterable of updates for the database.
     """
 
     context = Context.from_directory(context_path)
-    for sequence in pl.read_parquet(data_path).iter_rows(named=True):
-        sequence = Sequence.build(context.so_tree, sequence)
-        yield SequenceUpdate.from_sequence(context, sequence)
+    with data_path.open("r") as handle:
+        raw = psql.json_handler(handle)
+        for sequence in raw:
+            sequence = Sequence.build(context.so_tree, sequence)
+            yield SequenceUpdate.from_sequence(context, sequence)

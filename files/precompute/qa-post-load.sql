@@ -20,7 +20,7 @@ INSERT INTO qa_status (
 ) (
 SELECT DISTINCT ON (rna_id)
   rna_id,
-  urs,
+  upi,
   taxid,
   has_issue,
   incomplete_sequence,

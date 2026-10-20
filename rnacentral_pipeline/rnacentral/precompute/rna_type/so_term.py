@@ -18,6 +18,7 @@ import logging
 import typing as ty
 
 import attr
+import networkx as nx
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases.data import Database, RnaType
@@ -169,7 +170,7 @@ class RnaTypeAnnotation:
     def is_parent_of(self, other: "RnaTypeAnnotation") -> bool:
         if len(self.path) >= len(other.path):
             return False
-        for left, right in zip(self.path, other.path):
+        for (left, right) in zip(self.path, other.path):
             if left != right:
                 return False
         return True
@@ -307,7 +308,9 @@ def all_annotations(
     return annotations
 
 
-def rna_type_of(context: context.Context, sequence: seq.Sequence) -> RnaType:
+def rna_type_of(
+    context: context.Context, sequence: seq.Sequence
+) -> ty.Optional[RnaType]:
 
     annotations = all_annotations(context, sequence)
     if len(annotations) == 0:

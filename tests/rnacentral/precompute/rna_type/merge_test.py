@@ -61,7 +61,6 @@ def make_accession(
         gene=None,
         optional_id=None,
         database=database,
-        database_name=database.value.descr,
         species=None,
         common_name=None,
         description="An RNA",
@@ -113,7 +112,7 @@ def make_sequence(
     r2dt_hits: ty.Sequence[R2dtHit] = (),
 ) -> Sequence:
     return Sequence(
-        urs="URS0000000001",
+        upi="URS0000000001",
         taxid=9606,
         length=100,
         accessions=list(accessions),

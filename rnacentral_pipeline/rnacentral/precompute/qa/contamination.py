@@ -14,8 +14,8 @@ limitations under the License.
 """
 
 import re
-import typing as ty
 
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
 
@@ -34,24 +34,33 @@ GENERIC_DOMAINS = {
 }
 
 
-def is_ignorable_organelle_conflict(rna_type: str, data: Sequence) -> bool:
+def is_ignorable_mito_conflict(rna_type: str, data: Sequence) -> bool:
     """
     This can ignore any conflict where the sequence probably comes from a
-    mitochondrion or chloroplast but matches a bacterial rRNA. In that case
-    we do not warn since this is expected from evolution (both organelles
-    have a bacterial evolutionary origin).
+    mitochondria but it matches a bacterial rRNA. In that case we do not
+    warn since this is expected from evolution.
     """
-    if rna_type != "rRNA" or data.rfam_hits[0].model not in ALLOWED_FAMILIES:
-        return False
-    return data.is_mitochondrial() or data.is_chloroplast()
+    return (
+        data.is_mitochondrial()
+        and rna_type == "rRNA"
+        and data.rfam_hits[0].model in ALLOWED_FAMILIES
+    )
 
 
-def is_generic_domain(domains: ty.Set[str]) -> bool:
+def is_ignorable_chloroplast_conflict(rna_type: str, data: Sequence) -> bool:
+    return (
+        data.is_chloroplast()
+        and rna_type == "rRNA"
+        and data.rfam_hits[0].model in ALLOWED_FAMILIES
+    )
+
+
+def is_generic_domain(data: Sequence) -> bool:
     """
-    Check if any domain in the given set is a generic domain (ie
+    Check if any domain for the given sequence object is a generic domain (ie
     unclassified sequences, etc).
     """
-    return bool(domains & GENERIC_DOMAINS)
+    return bool(data.domains() & GENERIC_DOMAINS)
 
 
 def message(data: Sequence) -> str:
@@ -63,10 +72,6 @@ def message(data: Sequence) -> str:
     common_name = {acc.common_name for acc in data.accessions}
     common_name = {c.lower() for c in common_name if c}
 
-    # No common_name or species to identify the sequence with (e.g. no active
-    # accessions carry either) - leave it blank, the final whitespace cleanup
-    # below collapses "This  sequence" down to "This sequence".
-    sequence_name = ""
     if len(common_name) == 1:
         sequence_name = common_name.pop()
     else:
@@ -99,12 +104,16 @@ def validate(rna_type: str, sequence: Sequence) -> QaResult:
         return QaResult.ok("possible_contamination")
 
     hit = sequence.rfam_hits[0]
-    domains = sequence.domains()
-    if not hit.model_domain or not domains or is_generic_domain(domains):
+    if not hit.model_domain or not sequence.domains():
         return QaResult.ok("possible_contamination")
 
-    if hit.model_domain not in domains and not is_ignorable_organelle_conflict(
-        rna_type, sequence
+    if not sequence.domains() or is_generic_domain(sequence):
+        return QaResult.ok("possible_contamination")
+
+    if (
+        hit.model_domain not in sequence.domains()
+        and not is_ignorable_mito_conflict(rna_type, sequence)
+        and not is_ignorable_chloroplast_conflict(rna_type, sequence)
     ):
         return QaResult.not_ok("possible_contamination", message(sequence))
     return QaResult.ok("possible_contamination")

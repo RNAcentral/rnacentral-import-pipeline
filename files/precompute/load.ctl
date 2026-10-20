@@ -2,7 +2,7 @@ LOAD CSV
 FROM ALL FILENAMES MATCHING ~<precompute.*csv$>
 HAVING FIELDS (
   id,
-  urs,
+  upi,
   taxid,
   is_active,
   description,
@@ -16,7 +16,7 @@ HAVING FIELDS (
 INTO {{PGDATABASE}}?load_precomputed
 TARGET COLUMNS (
   id,
-  urs,
+  upi,
   taxid,
   is_active,
   description,
@@ -51,7 +51,7 @@ insert into rnc_rna_precomputed (
 ) (
 SELECT DISTINCT ON (id)
   id,
-  urs,
+  upi,
   taxid,
   is_active,
   rna_type,
