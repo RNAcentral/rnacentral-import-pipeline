@@ -62,7 +62,7 @@ $$
 DELETE FROM rfam_model_hits hits
 USING load_rfam_model_hits load
 WHERE
-  hits.upi = load.upi
+  hits.urs = load.upi
 ;
 $$,
 $$
@@ -77,7 +77,7 @@ insert into rfam_model_hits (
   e_value,
   score,
   rfam_model_id,
-  upi
+  urs
 ) (
 select
   load.sequence_start,
@@ -93,10 +93,10 @@ select
   load.upi
 from rna, rfam_models as models, load_rfam_model_hits as load
 where
-  rna.upi = load.upi
+  rna.urs = load.upi
   and models.rfam_model_id = load.rfam_model_id
 )
-ON CONFLICT (sequence_start, sequence_stop, model_start, model_stop, rfam_model_id, upi)
+ON CONFLICT (sequence_start, sequence_stop, model_start, model_stop, rfam_model_id, urs)
 DO UPDATE
 SET
   e_value = excluded.e_value,

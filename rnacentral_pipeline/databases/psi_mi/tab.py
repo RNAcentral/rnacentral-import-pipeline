@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
+import collections as coll
 import csv
 import logging
+import re
 import typing as ty
 from datetime import date
-import collections as coll
 
 import tatsu
 
@@ -42,7 +42,7 @@ string = ('"' quoted_string  '"') | simple_string ;
 
 simple_string = /[^|():\t]+/ ;
 
-quoted_string = /(\\"|[^"])+/ ;
+quoted_string = /(?:\\"|[^"])+/ ;
 """
 
 

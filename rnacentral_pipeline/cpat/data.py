@@ -17,12 +17,16 @@ limitations under the License.
 
 import json
 import typing as ty
+from contextlib import contextmanager
+from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
+from rnacentral_pipeline import schemas, writers
 from rnacentral_pipeline.databases.data.regions import Strand
+from rnacentral_pipeline.parquet_writers import TypedParquetWrapper
 
 
 @attr.s()
@@ -57,11 +61,22 @@ class CpatOrf:
 @attr.s()
 class CpatResult:
     urs_taxid = attr.ib(validator=is_a(str))
-    fickett_score = attr.ib(validator=is_a(float))
-    hexamer_score = attr.ib(validator=is_a(float))
-    coding_prob = attr.ib(validator=is_a(float))
+    fickett_score = attr.ib(validator=optional(is_a(float)))
+    hexamer_score = attr.ib(validator=optional(is_a(float)))
+    coding_prob = attr.ib(validator=optional(is_a(float)))
     protein_coding = attr.ib(validator=is_a(bool))
     orf = attr.ib(validator=optional(is_a(CpatOrf)))
+
+    @classmethod
+    def no_orf(cls, urs_taxid: str) -> CpatResult:
+        return cls(
+            urs_taxid=urs_taxid,
+            fickett_score=None,
+            hexamer_score=None,
+            coding_prob=None,
+            protein_coding=False,
+            orf=None,
+        )
 
     @classmethod
     def build(
@@ -85,11 +100,14 @@ class CpatResult:
         )
 
     def writeable(self) -> ty.List[str]:
+        def score(value):
+            return "" if value is None else str(value)
+
         return [
             self.urs_taxid,
-            str(self.fickett_score),
-            str(self.hexamer_score),
-            str(self.coding_prob),
+            score(self.fickett_score),
+            score(self.hexamer_score),
+            score(self.coding_prob),
             str(self.protein_coding),
         ]
 
@@ -118,3 +136,22 @@ class CpatWriter:
             self.results.writerow(result.writeable())
             if result.orf:
                 self.orfs.writerow(result.orf.writeable(result.urs_taxid))
+
+
+_FIELD_SCHEMAS = {
+    "results": schemas.CPAT_RESULTS,
+    "orfs": schemas.CPAT_ORFS,
+}
+
+
+@contextmanager
+def parquet_writer(path: Path) -> ty.Iterator[CpatWriter]:
+    """
+    Open a :class:`CpatWriter` whose ``results`` and ``orfs`` tables stream
+    typed Parquet files under ``path``.
+    """
+    with writers.build_parquet(CpatWriter, path, _FIELD_SCHEMAS) as raw:
+        yield CpatWriter(
+            results=TypedParquetWrapper(raw.results, schemas.CPAT_RESULTS),
+            orfs=TypedParquetWrapper(raw.orfs, schemas.CPAT_ORFS),
+        )

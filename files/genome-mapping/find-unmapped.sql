@@ -14,5 +14,5 @@ SELECT
 FROM rna
 JOIN urs_to_compute
 ON
-  urs_to_compute.urs = rna.upi
+  urs_to_compute.urs = rna.urs
 ) TO STDOUT

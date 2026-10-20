@@ -54,6 +54,16 @@ CREATE UNLOGGED TABLE load_rnc_references (
     doi text NULL
   );
 
+-- Explicit deletion list for delta-parsed databases: accessions the parser found
+-- had dropped out of the input. The DELTA load retires exactly these (never rows
+-- that are merely absent). See docs/incremental-parsing.md.
+DROP TABLE IF EXISTS load_deletions;
+CREATE UNLOGGED TABLE
+  load_deletions (
+    database character varying(40),
+    accession character varying(200)
+  );
+
 DROP TABLE IF EXISTS load_retro_tmp;
 CREATE UNLOGGED TABLE
   load_retro_tmp (
@@ -233,12 +243,6 @@ CREATE UNLOGGED TABLE load_interactions (
   taxid int NOT NULL
 );
 
-DROP TABLE IF EXISTS load_karyotypes;
-CREATE UNLOGGED TABLE load_karyotypes (
-	assembly_id varchar(255) NOT NULL,
-    karyotype text
-);
-
 DROP TABLE IF EXISTS load_rnc_coordinates;
 CREATE UNLOGGED TABLE load_rnc_coordinates (
     accession varchar(200) NULL,
@@ -333,7 +337,8 @@ CREATE UNLOGGED TABLE load_taxonomy (
     aliases json,
     replaced_by int,
     rank text,
-    reference_proteome boolean
+    reference_proteome boolean,
+    is_deleted boolean
 );
 
 DROP TABLE IF EXISTS load_overlaps;
@@ -347,12 +352,13 @@ CREATE UNLOGGED TABLE load_overlaps (
 DROP TABLE IF EXISTS load_qa_status;
 CREATE UNLOGGED TABLE load_qa_status (
   rna_id varchar(44) NOT NULL,
-  upi varchar(26) NOT NULL,
+  urs varchar(26) NOT NULL,
   taxid int8 NOT NULL,
   has_issue bool,
   incomplete_sequence bool,
   possible_contamination bool,
   missing_rfam_match bool,
+  from_repetitive_region bool,
   possible_orf bool,
   possible_orf_stopfree bool,
   possible_orf_tcode bool,
@@ -365,21 +371,6 @@ CREATE UNLOGGED TABLE load_qa_rfam_attempted (
   model_source text NOT NULL,
   source_version text NOT NULL,
   last_run timestamp default CURRENT_TIMESTAMP
-);
-
-DROP TABLE IF EXISTS load_rfam_model_hits;
-CREATE UNLOGGED TABLE load_rfam_model_hits (
-  sequence_start integer NOT NULL,
-  sequence_stop integer NOT NULL,
-  sequence_completeness double precision,
-  model_start integer NOT NULL,
-  model_stop integer NOT NULL,
-  model_completeness double precision,
-  overlap character varying(30) COLLATE pg_catalog."default" NOT NULL,
-  e_value double precision NOT NULL,
-  score double precision NOT NULL,
-  rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-  upi character varying(13) COLLATE pg_catalog."default" NOT NULL
 );
 
 DROP TABLE IF EXISTS load_rnc_text_mining;
@@ -406,21 +397,6 @@ CREATE UNLOGGED TABLE load_secondary_layout_models (
     model_source text not null,
     model_length int,
     model_basepair_count int
-);
-
-DROP TABLE IF EXISTS load_secondary_layout;
-CREATE UNLOGGED TABLE load_secondary_layout (
-    urs text NOT NULL,
-    secondary_structure text NOT NULL,
-    model text NOT NULL,
-    overlap_count int not null,
-    basepair_count int not null,
-    model_start int,
-    model_stop int,
-    model_coverage float,
-    sequence_start int,
-    sequence_stop int,
-    sequence_coverage float
 );
 
 DROP TABLE IF EXISTS load_ensembl_pseudogenes;
@@ -456,9 +432,9 @@ CREATE UNLOGGED TABLE load_cpat_orfs (
 DROP TABLE IF EXISTS load_cpat;
 CREATE UNLOGGED TABLE load_cpat (
   urs_taxid TEXT not null,
-  fickett_score float not null,
-  hexamer_score float not null,
-  coding_probability float not null,
+  fickett_score float,
+  hexamer_score float,
+  coding_probability float,
   is_protein_coding bool not null
 );
 
@@ -493,6 +469,22 @@ CREATE UNLOGGED TABLE load_dfam_model_hits (
   e_value int,
   bits int,
   dfam_model_id text
+);
+
+-- The completeness columns rfam_model_hits needs are computed by
+-- files/rfam-scan/post-load.sql, which joins against rna and rfam_models, so
+-- they are absent here.
+DROP TABLE IF EXISTS load_rfam_model_hits;
+CREATE UNLOGGED TABLE load_rfam_model_hits (
+  upi varchar(13) NOT NULL,
+  sequence_start integer NOT NULL,
+  sequence_stop integer NOT NULL,
+  rfam_model_id varchar(20) NOT NULL,
+  model_start integer NOT NULL,
+  model_stop integer NOT NULL,
+  overlap varchar(30) NOT NULL,
+  e_value double precision NOT NULL,
+  score double precision NOT NULL
 );
 
 DROP TABLE IF EXISTS load_genome_mapping;

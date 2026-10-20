@@ -4,6 +4,7 @@ from pathlib import Path
 
 import click
 
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.stopfree import scan
 
 
@@ -25,5 +26,6 @@ def cli():
     type=float,
     help="Maximum null-model probability still considered protein coding.",
 )
+@format_option
 def scan_command(input_fasta: Path, output: Path, max_probability: float):
     scan.run(input_fasta, output, max_probability)

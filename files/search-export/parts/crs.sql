@@ -8,7 +8,7 @@ SELECT
 FROM search_export_urs todo
 join rnc_sequence_features features
 on
-  features.upi = todo.urs
+  features.urs = todo.urs
   AND features.taxid = todo.taxid
 WHERE
   features.feature_name = 'conserved_rna_structure'

@@ -63,9 +63,7 @@ class Entry:
     primary_id: str = attr.ib(validator=is_a(str))
     accession: str = attr.ib(validator=is_a(str))
     ncbi_tax_id: int = attr.ib(validator=is_a(int))
-    database: str = attr.ib(
-        validator=is_a(str),
-    )
+    database: str = attr.ib(validator=is_a(str), converter=str.upper)
     sequence: str = attr.ib(validator=is_a(str))
     regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
     rna_type: str = attr.ib(
@@ -295,18 +293,18 @@ class Entry:
         # pylint: disable=no-member
         return self.secondary_structure.writeable(self.accession)
 
-    def write_sequence(self) -> ty.Iterable[ty.List[str]]:
+    def write_sequence(self) -> ty.Iterable[ty.List]:
         if not self.is_valid():
             return
         yield [
             self.crc64(),
-            str(len(self.sequence)),
+            len(self.sequence),
             self.sequence,
             self.database_name,
             self.accession,
             self.optional_id,
             self.seq_version,
-            str(self.ncbi_tax_id),
+            self.ncbi_tax_id,
             self.md5(),
         ]
 

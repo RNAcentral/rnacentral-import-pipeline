@@ -157,7 +157,7 @@ def accession(circ_id: str, location: ty.Dict[str, ty.Any]) -> str:
         location: Location dict with chromosome, start, end
 
     Returns:
-        Accession string prefixed with database name (e.g., "CIRCPEDIA:hsa_circ_0001_1:100-200")
+        Accession string prefixed with database name (e.g., "CIRCPEDIA:hsa_circ_0001|1:100-200")
     """
     # Prefix with database name to avoid ID conflicts across databases
     # Include location to ensure uniqueness when a circRNA appears at multiple locations

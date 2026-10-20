@@ -14,20 +14,22 @@ limitations under the License.
 """
 
 
-import polars as pl
-import numpy as np
-import requests
-from gensim.models import Word2Vec
-from sklearn.model_selection import train_test_split, KFold
-from sklearn.ensemble import RandomForestClassifier
-from skl2onnx import to_onnx
-import onnxruntime as rt
-import time
 import pathlib
+import time
+
+import numpy as np
+import onnxruntime as rt
+import polars as pl
+import requests
 from datasets import load_dataset
-from rnacentral_pipeline.rnacentral.genes.random_forest.preprocessing import compare_transcripts
+from skl2onnx import to_onnx
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import KFold, train_test_split
 
-
+from rnacentral_pipeline.rnacentral.genes.random_forest.preprocessing import (
+    compare_transcripts,
+    load_so_model,
+)
 
 url = "https://rest.ensembl.org/lookup/id/{0}?content-type=application/json"
 
@@ -55,6 +57,7 @@ def convert_csv_2_parquet(input_csv: str, output_parquet: str):
     """
     df = pl.read_csv(input_csv)
     df.write_parquet(output_parquet)
+
 
 def locate_genes(df, nearby_distance):
     """
@@ -97,10 +100,9 @@ def locate_genes(df, nearby_distance):
     candidates_df = pl.DataFrame(candidates_df)
     return candidates_df
 
+
 def fetch_training_data(data: str, nearby_distance: int) -> pl.DataFrame:
-    """
-    
-    """
+    """ """
     transcripts = pl.read_parquet(data)
     transcripts = transcripts.group_by(
         ["assembly_id", "gene", "region_name", "strand"], maintain_order=True
@@ -120,11 +122,11 @@ def fetch_training_data(data: str, nearby_distance: int) -> pl.DataFrame:
     if genes.height == 0:
         print("No genes found with selected parameters, try something else")
         exit()
-    
+
     ## We don't store gene level coordinate data, so get it from ensembl
-    genes = genes.with_columns(
-        res=pl.col("gene").map_elements(fetch_data)
-    ).unnest("res")
+    genes = genes.with_columns(res=pl.col("gene").map_elements(fetch_data)).unnest(
+        "res"
+    )
     genes = genes.filter(pl.col("gene_start").is_not_null())
 
     candidates = genes.group_by(["assembly", "e_chromosome", "gene_strand"]).map_groups(
@@ -134,30 +136,33 @@ def fetch_training_data(data: str, nearby_distance: int) -> pl.DataFrame:
     return candidates
 
 
-def build_training_features(candidates: pl.DataFrame, transcripts: pl.DataFrame, so_model_path:str) -> pl.DataFrame:
-    so_model = Word2Vec.load(so_model_path)
+def build_training_features(
+    candidates: pl.DataFrame, transcripts: pl.DataFrame, so_model_path: str
+) -> pl.DataFrame:
+    so_model = load_so_model(so_model_path)
     ## Features can now be built for these candidate genes
     features = pl.DataFrame(
-            {
-                "5p_exon_overlap": [],
-                "5p_exon_dta": [],
-                "5p_exon_3p_dta": [],
-                "exons_overlapping": [],
-                "strand": [],
-                "type_sim": [],
-                "label": [],
-                "comparison": [],
-            }, schema={
-                "5p_exon_overlap": pl.Float64,
-                "5p_exon_dta": pl.Int64,
-                "5p_exon_3p_dta": pl.Int64,
-                "exons_overlapping": pl.Int64,
-                "strand": pl.Int64,
-                "type_sim": pl.Float64,
-                "label": pl.Int8,
-                "comparison": pl.Utf8,
-            }
-        )
+        {
+            "5p_exon_overlap": [],
+            "5p_exon_dta": [],
+            "5p_exon_3p_dta": [],
+            "exons_overlapping": [],
+            "strand": [],
+            "type_sim": [],
+            "label": [],
+            "comparison": [],
+        },
+        schema={
+            "5p_exon_overlap": pl.Float64,
+            "5p_exon_dta": pl.Int64,
+            "5p_exon_3p_dta": pl.Int64,
+            "exons_overlapping": pl.Int64,
+            "strand": pl.Int64,
+            "type_sim": pl.Float64,
+            "label": pl.Int8,
+            "comparison": pl.Utf8,
+        },
+    )
     for row in candidates.iter_rows(named=True):
         ## The extract genes step has already guaranteed that genes and candidates are from the same assembly
         cand_genes = row["candidates"]
@@ -177,7 +182,16 @@ def build_training_features(candidates: pl.DataFrame, transcripts: pl.DataFrame,
     return all_comparisons_features
 
 
-def split_datasets(input_data: str, train_path: str, val_path:str, test_path:str, test_frac:float=0.2, val_frac:float=0.2, seed:int=1337, hub_repo:str=None):
+def split_datasets(
+    input_data: str,
+    train_path: str,
+    val_path: str,
+    test_path: str,
+    test_frac: float = 0.2,
+    val_frac: float = 0.2,
+    seed: int = 1337,
+    hub_repo: str = None,
+):
     all_examples = pl.read_parquet(input_data)
 
     ## Set up one random state for both splits
@@ -201,29 +215,31 @@ def split_datasets(input_data: str, train_path: str, val_path:str, test_path:str
         )
         dataset.push_to_hub(hub_repo)
 
+
 def convert_model(model, output_path, check_data):
-        ## Use the SKL model to predict some classes on our check data
-        start_skl = time.time()
-        classes = model.predict(check_data)
-        end_skl = time.time()
-        ## Convert to onnx
-        model_onnx = to_onnx(model, check_data[:1])
+    ## Use the SKL model to predict some classes on our check data
+    start_skl = time.time()
+    classes = model.predict(check_data)
+    end_skl = time.time()
+    ## Convert to onnx
+    model_onnx = to_onnx(model, check_data[:1])
 
-        sess = rt.InferenceSession(output_path, providers=["CPUExecutionProvider"])
-        input_name = sess.get_inputs()[0].name
-        label_name = sess.get_outputs()[0].name
-        start_onx = time.time()
-        pred_onx = sess.run([label_name], {input_name: check_data})[0]
-        end_onx = time.time()
+    sess = rt.InferenceSession(output_path, providers=["CPUExecutionProvider"])
+    input_name = sess.get_inputs()[0].name
+    label_name = sess.get_outputs()[0].name
+    start_onx = time.time()
+    pred_onx = sess.run([label_name], {input_name: check_data})[0]
+    end_onx = time.time()
 
-        print(f"sklearn took {end_skl - start_skl} seconds")
-        print(f"onnx took {end_onx - start_onx} seconds")
-        if np.allclose(classes, pred_onx):
-            with open(output_path, "wb") as f:
-                f.write(model_onnx.SerializeToString())
-            print(f"Model verification passed, saved to {output_path}")
-        else:
-            print("ONNX model predictions differ to sklearn, not saving")
+    print(f"sklearn took {end_skl - start_skl} seconds")
+    print(f"onnx took {end_onx - start_onx} seconds")
+    if np.allclose(classes, pred_onx):
+        with open(output_path, "wb") as f:
+            f.write(model_onnx.SerializeToString())
+        print(f"Model verification passed, saved to {output_path}")
+    else:
+        print("ONNX model predictions differ to sklearn, not saving")
+
 
 def train(training_data, output_folder, folds, exclude, seed, basename, n_estimators):
     ## Load the data
@@ -268,6 +284,3 @@ def train(training_data, output_folder, folds, exclude, seed, basename, n_estima
 
     importances = pl.DataFrame(feat_importances)
     importances.write_parquet(pathlib.Path(output_folder) / "importances.parquet")
-
-
-

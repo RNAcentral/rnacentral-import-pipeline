@@ -54,8 +54,10 @@ process fetch {
 process generate_bed {
   tag { "${assembly}-${species}" }
   publishDir "${params.export.ftp.publish}/genome_coordinates/bed/", mode: 'copy'
-  time '5m'
-  memory '1 GB'
+  time { 5.m * (2 ** (task.attempt - 1)) }
+  memory { 1.GB * task.attempt }
+  errorStrategy 'retry'
+  maxRetries 3
 
 
   input:
@@ -76,10 +78,11 @@ process generate_bed {
 
 process generate_gff3 {
   tag { "${assembly}-${species}" }
-  memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/genome_coordinates/gff3", mode: 'copy'
-  time '30m'
-  memory '2 GB'
+  time { 30.m * (2 ** (task.attempt - 1)) }
+  memory { 2.GB * task.attempt }
+  errorStrategy 'retry'
+  maxRetries 3
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -137,10 +140,10 @@ process index_gff3 {
 }
 
 workflow export_coordinates {
-  Channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql') | set { known }
-  Channel.fromPath('files/ftp-export/genome_coordinates/query.sql') | set { query }
+  channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql') | set { known }
+  channel.fromPath('files/ftp-export/genome_coordinates/query.sql') | set { query }
 
-  readme(Channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd'))
+  readme(channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd'))
 
   known \
   | find_jobs \

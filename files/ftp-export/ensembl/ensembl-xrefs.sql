@@ -1,7 +1,7 @@
 COPY (
 SELECT
     json_build_object(
-        'rnacentral_id', pre.id,
+        'rnacentral_id', pre.urs_taxid,
         'description', max(pre.description),
         'sequence', max(COALESCE(rna.seq_short, rna.seq_long)),
         'md5', max(rna.md5),
@@ -17,8 +17,8 @@ SELECT
         )
     )
 FROM rna
-JOIN xref ON xref.upi = rna.upi
-JOIN rnc_rna_precomputed pre ON pre.upi = xref.upi AND pre.taxid = xref.taxid
+JOIN xref ON xref.urs = rna.urs
+JOIN rnc_rna_precomputed pre ON pre.urs = xref.urs AND pre.taxid = xref.taxid
 JOIN rnc_database db ON db.id = xref.dbid
 JOIN rnc_accessions acc
 ON
@@ -26,5 +26,5 @@ ON
 WHERE
     xref.deleted = 'N'
     AND rna.id BETWEEN :min AND :max
-group by pre.id
+group by pre.urs_taxid
 ) TO STDOUT

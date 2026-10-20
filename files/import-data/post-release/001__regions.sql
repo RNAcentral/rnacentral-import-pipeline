@@ -2,12 +2,23 @@
 
 BEGIN TRANSACTION;
 
+-- Parallel workers stage shared hash tables and sorts in /dev/shm
+-- (dynamic_shared_memory_type = posix), a fixed-size tmpfs unrelated to
+-- work_mem and usually far smaller than RAM in a container. The matview
+-- refreshes at the bottom of this file blow it out ("could not resize shared
+-- memory segment ... No space left on device"). Serial execution spills to
+-- normal disk temp files instead. Same guard as 000__populate_precompute.sql.
+SET LOCAL max_parallel_workers_per_gather = 0;
+-- Parallel index builds use the same DSM machinery, and this file creates
+-- seven indexes.
+SET LOCAL max_parallel_maintenance_workers = 0;
+
 create index if not exists ix_load_rnc_sequence_regions__accession on load_rnc_sequence_regions(accession);
 
 -- Update the table to include urs_taxid and pretty database name
 update load_rnc_sequence_regions regions
 set
-  urs_taxid = xref.upi || '_' || xref.taxid
+  urs_taxid = xref.urs || '_' || xref.taxid
 from xref
 where
   xref.ac = regions.accession
@@ -39,22 +50,27 @@ WHERE
 ;
 
 -- Workaround for mis-selection of mapped entries
+-- ponytail: `and reg.was_mapped` makes this touch only rows that actually change.
+-- Without it this rewrites every provided region (+ every index entry) on every
+-- run, regardless of how little was loaded.
 update rnc_sequence_regions reg
 set
         was_mapped = false
 from rnc_accession_sequence_region map
 where
         map.region_id = reg.id
+        and reg.was_mapped
 ;
 
--- drop indices before doing further updates/deletes
--- NB: idx_rnc_sequence_regions_id (id) was an exact duplicate of the pkey (also on
--- id) - removed here and below; the always-present pkey serves every id lookup.
-DROP INDEX IF EXISTS idx_rnc_accession_sequence_region_region_id;
-
--- Make a copy of the data I will delete from rnc_accession_sequence_region into a backup table
--- Hopefully we can then just drop it...
-drop table if exists rnc_ac_sr_backup;
+-- The DELETE FROM rnc_sequence_regions below fires an RI check against every
+-- child table that FKs to it. Without an index on the child's region column
+-- that is a seq scan of the child table *per deleted region*, which is why a
+-- tiny load could take hours. idx_rnc_accession_sequence_region_region_id used
+-- to be dropped here and rebuilt at the end - that made the delete pathological
+-- and paid for a full index rebuild on every run.
+CREATE INDEX IF NOT EXISTS idx_rnc_accession_sequence_region_region_id ON rnc_accession_sequence_region(region_id);
+CREATE INDEX IF NOT EXISTS ix_rnc_gene_members__locus_id ON rnc_gene_members(locus_id);
+CREATE INDEX IF NOT EXISTS ix_rnc_gene_status__region_id ON rnc_gene_status(region_id);
 
 -- Delete all mapped locations that are redundant with a given, but not yet
 -- loaded location. These will have the same region_name/assembly as a known
@@ -77,7 +93,7 @@ SELECT gm.*
 FROM rnc_gene_members gm
 JOIN rnc_sequence_regions regions ON gm.locus_id = regions.id
 JOIN load_rnc_sequence_regions load
-  ON load.region_name = regions.region_name
+  ON md5(load.region_name) = md5(regions.region_name)
   AND load.assembly_id = regions.assembly_id
 WHERE regions.was_mapped = true;
 
@@ -85,7 +101,7 @@ DELETE FROM rnc_gene_members gm
 USING rnc_sequence_regions regions,
       load_rnc_sequence_regions load
 WHERE gm.locus_id = regions.id
-  AND load.region_name = regions.region_name
+  AND md5(load.region_name) = md5(regions.region_name)
   AND load.assembly_id = regions.assembly_id
   AND regions.was_mapped = true;
 
@@ -93,7 +109,7 @@ WHERE gm.locus_id = regions.id
 DELETE FROM rnc_sequence_regions regions
 USING load_rnc_sequence_regions load
 WHERE
-  load.region_name = regions.region_name
+  md5(load.region_name) = md5(regions.region_name)
   AND load.assembly_id = regions.assembly_id
   AND regions.was_mapped = true
 ;
@@ -168,7 +184,7 @@ select
   load.exon_start,
   load.exon_stop
 from load_rnc_sequence_regions load
-join rnc_sequence_regions regions on regions.region_name = load.region_name
+join rnc_sequence_regions regions on md5(regions.region_name) = md5(load.region_name)
 join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
 ) ON CONFLICT (region_id, exon_start, exon_stop) DO NOTHING
 ;
@@ -182,19 +198,25 @@ select distinct
   load.accession,
   regions.id
 from load_rnc_sequence_regions load
-join rnc_sequence_regions regions on regions.region_name = load.region_name
+join rnc_sequence_regions regions on md5(regions.region_name) = md5(load.region_name)
 ) ON CONFLICT (accession, region_id) DO NOTHING;
 
 do $$
 declare no_exons int;
 begin
-	select into no_exons count(distinct t.id) from (
-		select regions.id
-		from rnc_sequence_regions regions
-		left join rnc_sequence_exons exons on exons.region_id = regions.id
-		group by regions.id
-		having regions.exon_count != count(exons.*)
-		) t;
+	-- ponytail: only check the regions this load touched. The old form grouped
+	-- the whole regions/exons tables every run.
+	select into no_exons count(*)
+	from (
+		select distinct md5(load.region_name) as name_md5, load.assembly_id
+		from load_rnc_sequence_regions load
+		) l
+	join rnc_sequence_regions regions
+	  on md5(regions.region_name) = l.name_md5
+	 and regions.assembly_id = l.assembly_id
+	where regions.exon_count != (
+		select count(*) from rnc_sequence_exons exons where exons.region_id = regions.id
+		);
 	assert no_exons = 0, 'Some regions ' || no_exons || ' are missing exons';
 end $$;
 
@@ -204,7 +226,7 @@ set
   has_coordinates = true
 from load_rnc_sequence_regions load
 where
-  load.urs_taxid = pre.id
+  load.urs_taxid = pre.urs_taxid
 ;
 
 drop table load_rnc_sequence_regions;
@@ -251,7 +273,5 @@ CREATE INDEX ix_rnc_sequence_regions_active__assembly_id
     ON rnc_sequence_regions_active(assembly_id);
 
 ANALYZE rnc_sequence_regions_active;
-
-CREATE INDEX idx_rnc_accession_sequence_region_region_id ON rnc_accession_sequence_region(region_id);
 
 COMMIT;

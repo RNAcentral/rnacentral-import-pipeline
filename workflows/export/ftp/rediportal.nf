@@ -15,7 +15,7 @@ process dump {
 
 workflow rediportal {
 
-  Channel.fromPath('files/ftp-export/rediportal/editing-locations.sql') | set { query }
+  channel.fromPath('files/ftp-export/rediportal/editing-locations.sql') | set { query }
 
   query | dump
 

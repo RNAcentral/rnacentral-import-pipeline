@@ -14,6 +14,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.databases.rediportal import parser
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral.notify.slack import send_notification
 
 
@@ -30,11 +31,13 @@ def cli():
 @click.argument("redi_bedfile", type=click.File("r"))
 @click.argument("redi_metadata", type=click.File("r"))
 @click.argument("rnc_bedfile", type=click.File("r"))
-@click.argument("output", type=click.File("w"))
+@click.argument("output", type=click.Path())
+@format_option
 def parse_rediportal(genome_build, redi_bedfile, redi_metadata, rnc_bedfile, output):
     """
-    Intersect REDIportal bedfile with ours, parse the result alongside the metadata
-
+    Intersect REDIportal bedfile with ours, parse the result alongside the
+    metadata. Format is governed by ``--format``/``RNAC_OUTPUT_FORMAT``
+    (CSV by default).
     """
     parser.parse(redi_bedfile, redi_metadata, rnc_bedfile, output, genome_build)
 

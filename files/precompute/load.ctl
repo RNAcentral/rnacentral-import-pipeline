@@ -2,11 +2,11 @@ LOAD CSV
 FROM ALL FILENAMES MATCHING ~<precompute.*csv$>
 HAVING FIELDS (
   id,
-  upi,
-  taxid [null if ""],
+  urs,
+  taxid,
   is_active,
   description,
-  rna_type,
+  rna_type [null if ""],
   has_coordinates,
   databases,
   short_description,
@@ -16,7 +16,7 @@ HAVING FIELDS (
 INTO {{PGDATABASE}}?load_precomputed
 TARGET COLUMNS (
   id,
-  upi,
+  urs,
   taxid,
   is_active,
   description,
@@ -37,8 +37,8 @@ WITH
 AFTER LOAD DO
 $$
 insert into rnc_rna_precomputed (
-  id,
-  upi,
+  urs_taxid,
+  urs,
   taxid,
   is_active,
   rna_type,
@@ -51,7 +51,7 @@ insert into rnc_rna_precomputed (
 ) (
 SELECT DISTINCT ON (id)
   id,
-  upi,
+  urs,
   taxid,
   is_active,
   rna_type,
@@ -63,7 +63,7 @@ SELECT DISTINCT ON (id)
   so_rna_type
 FROM load_precomputed
 )
-ON CONFLICT (id) DO UPDATE
+ON CONFLICT (urs_taxid) DO UPDATE
 SET
   is_active = EXCLUDED.is_active,
   rna_type = EXCLUDED.rna_type,

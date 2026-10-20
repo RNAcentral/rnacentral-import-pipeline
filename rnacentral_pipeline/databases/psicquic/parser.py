@@ -13,18 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import itertools as it
+import logging
+import operator as op
 import typing as ty
 from pathlib import Path
-import operator as op
-import itertools as it
 
 import attr
 
-from rnacentral_pipeline.databases.psi_mi import tab
 from rnacentral_pipeline.databases.data import Entry, Interaction, InteractionIdentifier
+from rnacentral_pipeline.databases.psi_mi import tab
 
-from . import lookup
-from . import helpers
+from . import helpers, lookup
+
+LOGGER = logging.getLogger(__name__)
 
 
 def set_interaction_id(interaction: Interaction, index: int) -> Interaction:
@@ -50,7 +52,8 @@ def parse(path: Path, db_url: str) -> ty.Iterable[Entry]:
         grouped = it.groupby(interactions, key)
         for urs_taxid, current in grouped:
             if urs_taxid not in mapping:
-                raise ValueError("Found no sequence info for %s" % urs_taxid)
+                LOGGER.warning("Skipping %s, no active sequence", urs_taxid)
+                continue
 
             info = mapping[urs_taxid]
             current = sorted(current)

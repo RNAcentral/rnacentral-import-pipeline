@@ -41,11 +41,11 @@ CREATE TABLE precompute_urs (
 DROP TABLE IF EXISTS load_precomputed;
 CREATE TABLE load_precomputed (
   id varchar(44) NOT NULL,
-  upi varchar(26) NOT NULL,
+  urs varchar(26) NOT NULL,
   taxid int8 NULL,
   description varchar(500) NULL,
   short_description text NULL,
-  rna_type varchar(500) NULL DEFAULT 'NULL'::character varying,
+  rna_type varchar(500) NULL,
   has_coordinates bool NOT NULL DEFAULT false,
   databases text,
   is_active bool,
@@ -56,7 +56,7 @@ CREATE TABLE load_precomputed (
 DROP TABLE IF EXISTS load_qa_status;
 CREATE TABLE load_qa_status (
   rna_id varchar(44) NOT NULL,
-  upi varchar(26) NOT NULL,
+  urs varchar(26) NOT NULL,
   taxid int8 NOT NULL,
   has_issue bool not null,
   incomplete_sequence bool not null,

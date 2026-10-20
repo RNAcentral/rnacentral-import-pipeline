@@ -8,7 +8,7 @@ COPY (
     FROM search_export_urs todo
     JOIN litsumm_summaries lss
     ON
-      todo.urs_taxid = lss.primary_id
+      todo.urs_taxid = lss.urs_taxid
     WHERE
       lss.should_show = true
     ORDER by todo.id

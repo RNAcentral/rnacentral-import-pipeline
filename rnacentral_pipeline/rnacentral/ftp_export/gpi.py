@@ -107,7 +107,7 @@ def generic_query(gpi_filter: GpiFilter = GpiFilter.NONE) -> Query:
     so_rna_type = fn.Coalesce(pre.assigned_so_rna_type, pre.so_rna_type)
     query = (
         Query.from_(pre)
-        .select(pre.id, pre.taxid, pre.description, ont.name.as_("rna_type"))
+        .select(pre.urs_taxid, pre.taxid, pre.description, ont.name.as_("rna_type"))
         .join(ont)
         .on(ont.ontology_term_id == so_rna_type)
         .where((pre.taxid.notnull()) & (pre.is_active == True))
@@ -164,19 +164,20 @@ def get_generic(
     conn, mirbase_info, gpi_filter: GpiFilter = GpiFilter.NONE, **kwargs
 ) -> ty.Iterable[GpiEntry]:
     query = kwargs.get("generic_query", generic_query(gpi_filter))
-    with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+    # Named, so rows stream from the server instead of all loading at once.
+    with conn.cursor(name="gpi", cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute(str(query))
         for result in cur:
             precursors = set()
             aliases = []
             symbol = None
-            if info := mirbase_info.get(result["id"], None):
+            if info := mirbase_info.get(result["urs_taxid"], None):
                 precursors = info["precursors"]
                 aliases = sorted(info["symbol"])
                 symbol = aliases.pop(0)
             assert result["taxid"]
             yield GpiEntry(
-                urs_taxid=result["id"],
+                urs_taxid=result["urs_taxid"],
                 description=result["description"],
                 rna_type=result["rna_type"],
                 symbol=symbol,

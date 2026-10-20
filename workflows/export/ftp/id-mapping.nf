@@ -1,20 +1,25 @@
 process build_id_mapping_chunk {
   tag { chunk }
-  maxForks 4
+  maxForks 2
 
   input:
   tuple val(chunk), path(query)
 
   output:
-  path("chunk_${chunk}.tsv")
+  path("chunk_*.tsv")
 
   script:
+  // chunk is a comma separated list of UPI suffixes; strip the commas so it can
+  // be used in a filename.
+  def name = chunk.replaceAll(',', '')
   """
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -v chunk=${chunk} -f "$query" "\$PGDATABASE" > raw_${chunk}.json
-  rnac ftp-export id-mapping raw_${chunk}.json - | sort -T . -u > chunk_${chunk}.tsv
+  # -q matters: without it psql echoes a "SET" command tag to stdout for each
+  # SET in the query file, and those land in the JSON the next step parses.
+  psql -q -v ON_ERROR_STOP=1 -v chunk=${chunk} -f "$query" "\$PGDATABASE" > raw_${name}.json
+  rnac ftp-export id-mapping raw_${name}.json - | sort -T . -u > chunk_${name}.tsv
   """
 }
 
@@ -43,7 +48,6 @@ process merge_id_mapping {
 
 process database_mapping {
   publishDir "${params.export.ftp.publish}/id_mapping/database_mappings/", mode: 'copy'
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   path('id_mapping.tsv.gz')
@@ -60,10 +64,10 @@ process database_mapping {
 }
 
 workflow id_mapping {
-  Channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql') | set { id_query }
-  Channel.fromPath('files/ftp-export/id-mapping/readme.txt') | set { readme_template }
+  channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql') | set { id_query }
+  channel.fromPath('files/ftp-export/id-mapping/readme.txt') | set { readme_template }
 
-  Channel.of('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f') \
+  channel.of('0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F') \
   | combine(id_query) \
   | build_id_mapping_chunk \
   | collect \

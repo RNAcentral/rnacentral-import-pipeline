@@ -20,18 +20,30 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from rnacentral_pipeline.databases.data.utils import SO_INSDC_MAPPING, INSDC_SO_MAPPING
 from rnacentral_pipeline.databases.data import RnaType
-from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
-from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
+from rnacentral_pipeline.databases.data.utils import INSDC_SO_MAPPING, SO_INSDC_MAPPING
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.description import (
     description_of,
     short_description_for,
 )
+from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 from rnacentral_pipeline.rnacentral.precompute.rna_type import rna_type_of
 from rnacentral_pipeline.rnacentral.repeats import tree
+
+
+def previous_rna_type(previous: ty.Dict[str, ty.Any]) -> str:
+    """
+    Pull the rna_type out of a previous precompute row, normalising the ways it
+    can be absent to an empty string.
+    """
+
+    rna_type = previous.get("rna_type") or ""
+    if rna_type == "NULL":
+        return ""
+    return rna_type
 
 
 @attr.s(frozen=True)
@@ -73,7 +85,7 @@ class SequenceUpdate:
         correct RNA type or useful description otherwise.
         """
 
-        insdc_rna_type = sequence.previous_update.get("rna_type", "")
+        insdc_rna_type = previous_rna_type(sequence.previous_update)
         if not insdc_rna_type:
             insdc_rna_type = "ncRNA"
             insdc_rna_types: ty.Set[str] = {
@@ -91,6 +103,9 @@ class SequenceUpdate:
             if species:
                 name = species.pop()
             description = f"{name} {insdc_rna_type}"
+        short_description = (
+            sequence.previous_update.get("short_description") or description
+        )
 
         so_rna_type = RnaType.from_so_id(
             context.so_tree, INSDC_SO_MAPPING.get(insdc_rna_type, "SO:0000655")
@@ -100,7 +115,7 @@ class SequenceUpdate:
             insdc_rna_type=insdc_rna_type,
             so_rna_type=so_rna_type,
             description=description,
-            short_description=description,
+            short_description=short_description,
             qa_status=None,
         )
 
@@ -139,7 +154,7 @@ class SequenceUpdate:
 
         yield [
             self.sequence.rna_id,
-            self.sequence.upi,
+            self.sequence.urs,
             str(self.sequence.taxid),
             str(int(self.sequence.is_active)),
             self.description,
@@ -160,91 +175,4 @@ class SequenceUpdate:
                 raise ValueError(f"No QA status for active update {self}")
             return
 
-        yield self.qa_status.writeable(self.sequence.upi, self.sequence.taxid)
-
-
-@attr.s(frozen=True)
-class GenericUpdate:
-    upi = attr.ib(validator=is_a(str))
-    updates: ty.List[SequenceUpdate] = attr.ib(validator=is_a(list))
-    is_active = attr.ib(validator=is_a(bool))
-
-    @classmethod
-    def active(cls, updates: ty.List[SequenceUpdate]) -> "GenericUpdate":
-        return cls(
-            upi=updates[0].sequence.upi,
-            updates=updates,
-            is_active=True,
-        )
-
-    @classmethod
-    def inactive(cls, updates: ty.List[SequenceUpdate]) -> "GenericUpdate":
-        return cls(
-            upi=updates[0].sequence.upi,
-            updates=updates,
-            is_active=False,
-        )
-
-    @classmethod
-    def from_updates(
-        cls, context: Context, updates: ty.List[SequenceUpdate]
-    ) -> "GenericUpdate":
-        active_updates = [u for u in updates if u.is_active]
-        if active_updates:
-            return cls.active(active_updates)
-        return cls.inactive(updates)
-
-    @property
-    def last_release(self):
-        return max(u.sequence.last_release for u in self.updates)
-
-    @property
-    def species_count(self):
-        all_species = set()
-        for update in self.updates:
-            all_species.update(update.sequence.species())
-        return len(all_species)
-
-    @property
-    def description(self) -> str:
-        return f"{self.insdc_rna_type} from {self.species_count} species"
-
-    @property
-    def database_names(self) -> str:
-        databases: ty.Set[str] = set()
-        for update in self.updates:
-            for accession in update.sequence.accessions:
-                databases.add(accession.pretty_database)
-        return ",".join(sorted(databases, key=op.methodcaller("lower")))
-
-    @property
-    def insdc_rna_type(self) -> str:
-        rna_types = {u.insdc_rna_type for u in self.updates}
-        if len(rna_types) == 1:
-            return rna_types.pop()
-        return "ncRNA"
-
-    @property
-    def so_rna_type(self) -> str:
-        rna_types = {u.so_rna_type.so_term.so_id for u in self.updates}
-        if len(rna_types) == 1:
-            return rna_types.pop()
-        return "SO:0000655"
-
-    def as_writeables(self) -> ty.Iterable[ty.List[str]]:
-        yield [
-            self.upi,
-            self.upi,
-            "",
-            str(int(self.is_active)),
-            self.description,
-            self.insdc_rna_type,
-            "0",
-            self.database_names,
-            self.description,
-            str(self.last_release),
-            self.so_rna_type,
-        ]
-
-    def writeable_statuses(self) -> ty.Iterable[ty.List[str]]:
-        return []
+        yield self.qa_status.writeable(self.sequence.urs, self.sequence.taxid)

@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from click.testing import CliRunner
 import obonet
+from click.testing import CliRunner
 
-obonet.read_obo = lambda _: {}
-from rnacentral_pipeline.cli import rgd as rgd_cli
-from rnacentral_pipeline.databases import rgd as rgd_db
+# Stub the ontology load for the import only. Left in place, this leaked into
+# every module imported after it in a full run: the real read_obo is called
+# with ignore_obsolete, so a one argument lambda took out ~200 precompute tests
+# with an arity error that only ever showed up in the whole suite.
+_real_read_obo = obonet.read_obo
+obonet.read_obo = lambda *args, **kwargs: {}
+try:
+    from rnacentral_pipeline.cli import rgd as rgd_cli
+    from rnacentral_pipeline.databases import rgd as rgd_db
+finally:
+    obonet.read_obo = _real_read_obo
 
 
 def test_can_parse_rgd_files(tmp_path, monkeypatch):

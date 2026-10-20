@@ -21,7 +21,7 @@ import requests
 
 from rnacentral_pipeline.databases.data import Database
 
-EXPERT_DATABASES = [f'expert_db:"{db.pretty()}"' for db in Database]
+EXPERT_DATABASES = [f'expert_db:"{db.value.descr}"' for db in Database]
 
 
 def search(index, query, facet):
@@ -50,6 +50,13 @@ def compare(output, results1, results2, facet):
     """
     TODO: check that keys from both facets are checked.
     """
+    # A failed request would otherwise read as zero counts, flagging every row
+    # as an infinite change; the EBI search endpoints do fail intermittently.
+    failed = [n for n, r in (("production", results1), ("dev", results2)) if r is None]
+    if failed:
+        output.write("Search request failed (%s) — no comparison\n" % ", ".join(failed))
+        return
+
     data1 = facet_counts(results1)
     data2 = facet_counts(results2)
     if not data1 and not data2:
@@ -82,8 +89,10 @@ def compare(output, results1, results2, facet):
 
 def write(output: ty.IO):
     """ """
-    index1 = ("http://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral"
-                + "?query={query}&format=json&facetfields={facet}&facetcount=30")
+    index1 = (
+        "http://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral"
+        + "?query={query}&format=json&facetfields={facet}&facetcount=30"
+    )
     index2 = index1.replace("http://www.", "http://wwwdev.")
     queries = ["RNA", 'TAXONOMY:"9606"'] + EXPERT_DATABASES
     facets = ["rna_type", "has_genomic_coordinates"]

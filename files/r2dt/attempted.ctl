@@ -43,5 +43,8 @@ SET
   last_run = EXCLUDED.last_run,
   r2dt_version = EXCLUDED.r2dt_version
 ;
+$$,
+$$
+TRUNCATE load_traveler_attempted;
 $$
 ;

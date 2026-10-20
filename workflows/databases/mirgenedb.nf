@@ -3,9 +3,9 @@ process mirgenedb {
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
-  when: { params.databases.mirgenedb?.run }
+  when: params.databases.mirgenedb?.run
 
   script:
   """

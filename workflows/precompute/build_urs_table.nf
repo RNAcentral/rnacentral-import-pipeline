@@ -14,36 +14,21 @@ process create_schema {
   """
 }
 
-process fetch_all_urs_taxid {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
-  input:
-  path(query)
-
-  output:
-  path('data.csv')
-
-  script:
-  """
-  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
-  """
-}
-
 process select_outdated {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory '24 GB'
   cpus 4
 
   input:
-  path('xref.csv')
-  path('precompute.csv')
+  path('xref.parquet')
+  path('precompute.parquet')
 
   output:
   path('urs.csv')
 
   script:
   """
-  precompute select xref.csv precompute.csv urs.csv
+  rnac precompute select-outdated xref.parquet precompute.parquet urs.csv
   """
 }
 
@@ -69,20 +54,19 @@ process build_table {
   memory '10GB'
 
   input:
-  tuple path('computed*.csv'), path(load), path('active.txt'), path('counts.sql')
+  tuple path('computed*.csv'), path(load), path('counts.sql')
 
   output:
   path('counts.txt')
 
   script:
   """
-  sort -u computed*.csv > to-load-urs.csv
-  expand-urs text active.txt to-load-urs.csv to-load-urs-taxid.csv
+  sort -u computed*.csv > to-load-urs-taxid.csv
+  test -s to-load-urs-taxid.csv || { echo "No urs_taxid selected to precompute" >&2; exit 1; }
   psql \
     -v ON_ERROR_STOP=1 \
     -f "$load" "\$PGDATABASE"
   psql -f counts.sql -v ON_ERROR_STOP=1 "\$PGDATABASE" > counts.txt
-
   """
 }
 
@@ -103,38 +87,47 @@ process sort_ids {
 }
 
 process xref_releases {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  // This may not be enough - it holds the whole xref table in memory briefly before writing to disk
+  // Needs to be tested on the cluster though
+  memory '16 GB'
+
   input:
   val(_flag)
   file(query)
 
   output:
-  path('data.csv')
+  path('data.parquet')
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
+  rnac precompute extract-query $query data.parquet
   """
 }
 
 process precompute_releases {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  // Same reasoning as xref_releases
+  memory '16 GB'
+
   input:
   val(_flag)
   file(query)
 
   output:
-  path('data.csv')
+  path('data.parquet')
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query \$PGDATABASE > data.csv
+  rnac precompute extract-query $query data.parquet
   """
 }
 
 workflow using_release {
     take: flag
     main:
-      Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_sql }
-      Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { pre_sql }
+      channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_sql }
+      channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { pre_sql }
 
       precompute_releases(flag, pre_sql) | set { precompute_info }
       xref_releases(flag, xref_sql) | set { xref_info }
@@ -157,7 +150,7 @@ workflow using_query {
 workflow using_all {
   take: flag
   main:
-    Channel.fromPath("files/precompute/methods/all.sql") | set { to_select }
+    channel.fromPath("files/precompute/methods/all.sql") | set { to_select }
 
     run_query(flag, to_select) | set { selected }
   emit: selected
@@ -178,21 +171,18 @@ workflow using_ids {
 workflow build_urs_table {
     take: method
     main:
-      Channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
-      Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
-      Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
-      Channel.fromPath('files/precompute/get-urs-count.sql') | set { count_sql }
-
-      fetch_all_urs_taxid(active_sql) | set { active_urs }
+      channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
+      channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
+      channel.fromPath('files/precompute/get-urs-count.sql') | set { count_sql }
 
       create_schema(schema_sql) \
       | combine(method) \
       | map { _flag, method_val -> method_val } \
-      | branch {
-        release: it == 'release'
-        query: it == 'query'
-        all: it == 'all'
-        ids: it == 'ids'
+      | branch { v ->
+        release: v == 'release'
+        query: v == 'query'
+        all: v == 'all'
+        ids: v == 'ids'
       } \
       | set { to_build }
 
@@ -201,11 +191,10 @@ workflow build_urs_table {
       to_build.all | using_all | set { from_all }
       to_build.ids | using_ids | set { from_ids }
 
-      Channel.empty() \
+      channel.empty() \
       | mix(from_release, from_query, from_all, from_ids) \
       | collect \
       | combine(load_sql) \
-      | combine(active_urs) \
       | combine(count_sql) \
       | build_table \
       | splitCsv \

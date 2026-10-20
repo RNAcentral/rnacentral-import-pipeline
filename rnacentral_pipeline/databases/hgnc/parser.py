@@ -13,60 +13,65 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from pathlib import Path
-import typing as ty
 import logging
+import typing as ty
+from pathlib import Path
+
+import attr
 
 from rnacentral_pipeline.databases import data
-
+from rnacentral_pipeline.databases import manifest
 from rnacentral_pipeline.databases.hgnc import helpers
-from rnacentral_pipeline.databases.hgnc.data import HgncEntry, Context
+from rnacentral_pipeline.databases.hgnc.data import Context, HgncEntry
 
 LOGGER = logging.getLogger(__name__)
+
+# HGNC's Solr export carries bookkeeping fields that change on every reindex with no
+# biological change: _version_ is Solr's optimistic-concurrency token, uuid/date_modified
+# likewise churn. Excluding them from the record signature stops a plain reindex from
+# re-classing every record as "changed" -- which would otherwise re-map all records
+# through the Ensembl/DB lookups, where a transient failure silently drops entries that
+# then get retired by absence.
+_VOLATILE_FIELDS = frozenset({"_version_", "uuid", "date_modified"})
+
+
+def _biological_view(raw: ty.Mapping[str, ty.Any]) -> ty.Dict[str, ty.Any]:
+    return {k: v for k, v in raw.items() if k not in _VOLATILE_FIELDS}
+
+
+@attr.s(frozen=True)
+class ParseResult:
+    """
+    The output of a delta parse: the entries to (re)load, the full new manifest of
+    signatures, and the accessions that dropped out of the input.
+    """
+
+    entries = attr.ib()      # ty.Iterable[data.Entry] -- new + changed only
+    signatures = attr.ib()   # ty.Dict[str, str] -- accession -> signature (all records)
+    deletions = attr.ib()    # ty.List[str] -- dropped accessions
 
 
 def rnacentral_id(context: Context, entry: HgncEntry) -> ty.Optional[str]:
     """
-    Map HGNC ncRNAs to RNAcentral using RefSeq, Vega, gtRNAdb accessions
-    and sequence matches.
+    Map HGNC ncRNAs to RNAcentral using RefSeq, gtRNAdb accessions and
+    sequence matches.
     """
+    return context.urs_for(entry)
 
-    if entry.refseq_id:
-        refseq_based = helpers.refseq_id_to_urs(context, entry.refseq_id)
-        if refseq_based:
-            return refseq_based
 
-    if entry.gtrnadb_id:
-        gtrnadb_id = entry.gtrnadb_id
-        if gtrnadb_id:
-            return helpers.gtrnadb_to_urs(context, gtrnadb_id)
+def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> ty.Optional[data.Entry]:
+    rna_type = helpers.so_term(hgnc)
+    if rna_type is None:
         return None
 
-    elif entry.ensembl_gene_id:
-        gene = entry.ensembl_gene_id
-        fasta = helpers.ensembl_sequence(context, gene)
-        if not fasta:
-            return None
-
-        md5_hash = helpers.md5(fasta)
-        urs = helpers.md5_to_urs(context, md5_hash)
-        if urs:
-            return urs
-        return helpers.ensembl_gene_to_urs(context, gene)
-
-    LOGGER.info("Cannot map %s", entry)
-    return None
-
-
-def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
     return data.Entry(
         primary_id=hgnc.hgnc_id,
         accession=hgnc.hgnc_id,
         ncbi_tax_id=9606,
         database="HGNC",
-        sequence=helpers.urs_to_sequence(context, urs),
+        sequence=context.sequences[urs],
         regions=[],
-        rna_type=helpers.so_term(context, hgnc),
+        rna_type=rna_type,
         url=helpers.url(hgnc),
         seq_version="1",
         description=helpers.description(hgnc),
@@ -76,11 +81,63 @@ def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
     )
 
 
-def parse(path: Path, db_url: str) -> ty.Iterable[data.Entry]:
-    ctx = Context.build(db_url)
-    for raw_entry in helpers.load(path):
-        mapped = rnacentral_id(ctx, raw_entry)
-        if not mapped:
+def parse(
+    path: Path,
+    db_url: str,
+    previous_signatures: ty.Optional[ty.Mapping[str, str]] = None,
+) -> ParseResult:
+    """
+    Delta parse: signature every raw record, diff against the previous manifest, and
+    map only the new/changed records (the only ones that hit the DB and Ensembl).
+    Dropped accessions are returned for explicit deletion. Pass previous_signatures
+    from the stored manifest; an empty/None manifest parses everything (bootstrap).
+    """
+    raws = {raw["hgnc_id"]: raw for raw in helpers.load_raw(path)}
+    new_signatures = {
+        acc: manifest.record_signature(_biological_view(raw)) for acc, raw in raws.items()
+    }
+    diff = manifest.compute_diff(new_signatures, previous_signatures or {})
+
+    LOGGER.info(
+        "HGNC delta: %d new, %d changed, %d dropped, %d unchanged",
+        len(diff.new),
+        len(diff.changed),
+        len(diff.dropped),
+        len(diff.unchanged),
+    )
+
+    def mapped_entries() -> ty.Iterator[data.Entry]:
+        if not diff.to_parse:
+            return
+        entries = [HgncEntry.from_raw(raws[acc]) for acc in sorted(diff.to_parse)]
+        # Context does its lookups in bulk at build time, so scoping it to the
+        # changed records shrinks the queries as well as the mapping work.
+        ctx = Context.build(db_url, entries)
+        yield from as_entries(ctx, entries)
+
+    return ParseResult(
+        entries=mapped_entries(),
+        signatures=new_signatures,
+        deletions=sorted(diff.dropped),
+    )
+
+
+def as_entries(
+    ctx: Context, raw_entries: ty.List[HgncEntry]
+) -> ty.Iterable[data.Entry]:
+    mapped = 0
+    for raw_entry in raw_entries:
+        urs = rnacentral_id(ctx, raw_entry)
+        if not urs:
+            # Under an incremental load absence retires the existing xref, so an
+            # unmapped record is a silent retirement. Warn rather than debug.
+            LOGGER.warning("Dropped %s: could not resolve an RNAcentral id", raw_entry.hgnc_id)
             continue
-        LOGGER.info("%s -> %s", raw_entry.hgnc_id, mapped)
-        yield as_entry(ctx, raw_entry, mapped)
+
+        entry = as_entry(ctx, raw_entry, urs)
+        if entry is None:
+            continue
+
+        mapped += 1
+        yield entry
+    LOGGER.info("Mapped %i of %i HGNC entries", mapped, len(raw_entries))

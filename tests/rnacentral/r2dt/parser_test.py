@@ -13,185 +13,134 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import shutil
 from pathlib import Path
 
-import attr
 import pytest
 
 from rnacentral_pipeline.databases.helpers.hashes import md5
 from rnacentral_pipeline.rnacentral.r2dt import data, parser
 
-# @pytest.mark.r2dt
-# @pytest.mark.parametrize(
-#     "directory,source,count",
-#     [
-#         ("data/r2dt/crw", data.Source.crw, 1),
-#         ("data/r2dt/ribovision", data.Source.ribovision, 2),
-#     ],
-# )
-# def test_can_get_allpaths(directory, source, count):
-#     path = Path(directory)
-#     assert len(list(results.standard_paths(source, path))) == count
+BASE = Path("data/r2dt/output")
+MODEL_INFO = BASE / "model-info.json"
+
+
+def parse(base=BASE, allow_missing=False):
+    with MODEL_INFO.open("r") as handle:
+        return list(parser.parse(handle, Path(base), allow_missing=allow_missing))
+
+
+@pytest.fixture(scope="module")
+def parsed():
+    return {r.urs: r for r in parse()}
 
 
 @pytest.mark.r2dt
-def test_can_get_expected_paths():
-    base = Path("data/r2dt/crw")
-    paths = list(results.standard_paths(data.Source.crw, base))
-    path = next(p for p in paths if p.urs == "URS00000F9D45_9606")
-    assert path == data.TravelerPaths(
-        "URS00000F9D45_9606", "d.5.e.H.sapiens.2", data.Source.crw, base
-    )
+def test_load_model_info_indexes_by_name():
+    with MODEL_INFO.open("r") as handle:
+        info = parser.load_model_info(handle)
+    assert info["SAM"].alias == "RF00162"
+    assert info["SAM"].source is data.Source.rfam
+    # gtrnadb names are registered with both dashes and underscores
+    assert info["E-Gln"] is info["E_Gln"]
 
 
 @pytest.mark.r2dt
-@pytest.mark.parametrize(
-    "directory,source,count",
-    [
-        ("data/r2dt/crw", data.Source.crw, 1),
-        ("data/r2dt/rfam", data.Source.rfam, 2),
-        ("data/r2dt/ribovision", data.Source.ribovision, 2),
-        ("data/r2dt/gtrnadb", data.Source.gtrnadb, 3),
-    ],
-)
-def test_can_process_a_directory(directory, source, count):
-    path = Path(directory)
-    assert len(list(parser.parse(source, path))) == count
+def test_can_process_a_directory(parsed):
+    assert set(parsed) == {
+        "URS00000F9D45_9606",
+        "URS0000C5FF65",
+        "URS0000A7635A",
+        "URS0000A0BF23",
+    }
 
 
 @pytest.mark.r2dt
-@pytest.mark.xfail()
-def test_can_produce_reasonable_data():
-    val = list(parser.parse(data.Source.crw, Path("data/r2dt/crw")))
-    assert attr.asdict(val[0]) == attr.asdict(
-        data.TravelerResult(
-            urs="URS00000F9D45_9606",
-            model_id="d.5.e.H.sapiens.2",
-            paths=data.TravelerPaths(
-                urs="URS00000F9D45_9606",
-                model_id="d.5.e.H.sapiens.2",
-                source=data.Source.crw,
-                basepath=Path("data/traveler/crw/"),
-            ),
-            source=data.Source.crw,
-            ribovore=data.RibovoreResult(
-                target="URS00000F9D45_9606",
-                status="PASS",
-                length=1588,
-                fm=1,
-                fam="SSU",
-                domain="Bacteria",
-                model="d.5.e.H.sapiens.2",
-                strand=1,
-                ht=1,
-                tscore=1093.0,
-                bscore=1093.0,
-                bevalue=0.0,
-                tcov=0.999,
-                bcov=0.999,
-                bfrom=3,
-                bto=1588,
-                mfrom=3,
-                mto=1512,
-            ),
-        )
-    )
+def test_parse_rejects_a_missing_directory():
+    with pytest.raises(ValueError):
+        parse(base="data/r2dt/no-such-directory")
+
+
+@pytest.mark.r2dt
+def test_parse_is_empty_without_metadata(tmp_path):
+    assert parse(base=tmp_path) == []
 
 
 @pytest.mark.r2dt
 @pytest.mark.parametrize(
-    "directory,source,urs,attr,expected",
+    "urs,source,model_id",
+    [
+        ("URS00000F9D45_9606", data.Source.crw, 1),
+        ("URS0000C5FF65", data.Source.ribovision, 2),
+        ("URS0000A7635A", data.Source.rfam, 3),
+        ("URS0000A0BF23", data.Source.gtrnadb, 4),
+    ],
+)
+def test_assigns_the_expected_model(parsed, urs, source, model_id):
+    assert parsed[urs].source is source
+    assert parsed[urs].model_id == model_id
+
+
+@pytest.mark.r2dt
+@pytest.mark.parametrize(
+    "urs,svg,fasta",
     [
         (
-            "data/r2dt/crw",
-            data.Source.crw,
             "URS00000F9D45_9606",
-            "fasta",
-            "data/r2dt/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.fasta",
+            "svg/URS00000F9D45_9606-d.16.b.C.perfringens.colored.svg",
+            "fasta/URS00000F9D45_9606-d.16.b.C.perfringens.fasta",
         ),
         (
-            "data/r2dt/crw",
-            data.Source.crw,
-            "URS00000F9D45_9606",
-            "svg",
-            "data/r2dt/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.colored.svg",
+            "URS0000C5FF65",
+            "svg/URS0000C5FF65-EC_LSU_3D.colored.svg",
+            "fasta/URS0000C5FF65-EC_LSU_3D.fasta",
         ),
         (
-            "data/r2dt/rfam/",
-            data.Source.rfam,
             "URS0000A7635A",
-            "fasta",
-            "data/r2dt/rfam/RF00162/URS0000A7635A.fasta",
+            "svg/URS0000A7635A.colored.svg",
+            "fasta/URS0000A7635A-RF00162.fasta",
         ),
         (
-            "data/r2dt/rfam/",
-            data.Source.rfam,
-            "URS0000A7635A",
-            "svg",
-            "data/r2dt/rfam/RF00162/URS0000A7635A.colored.svg",
-        ),
-        (
-            "data/r2dt/gtrnadb/",
-            data.Source.gtrnadb,
             "URS0000A0BF23",
-            "fasta",
-            "data/r2dt/gtrnadb/URS0000A0BF23.fasta",
-        ),
-        (
-            "data/r2dt/gtrnadb/",
-            data.Source.gtrnadb,
-            "URS0000A0BF23",
-            "svg",
-            "data/r2dt/gtrnadb/URS0000A0BF23-E-Gln.colored.svg",
+            "svg/URS0000A0BF23-E-Gln.colored.svg",
+            "fasta/URS0000A0BF23-E_Gln.fasta",
         ),
     ],
 )
-def test_can_produce_correct_paths(directory, source, urs, attr, expected):
-    val = list(parser.parse(source, Path(directory)))
-    v = next(v for v in val if v.urs == urs)
-    assert getattr(v.paths, attr) == Path(expected)
+def test_can_produce_correct_paths(parsed, urs, svg, fasta):
+    info = parsed[urs].info
+    assert info.svg == BASE / "results" / svg
+    assert info.fasta == BASE / "results" / fasta
 
 
 @pytest.mark.r2dt
-def test_gets_correct_count():
-    val = list(parser.parse(data.Source.rfam, Path("data/r2dt/rfam")))
-    v = next(v for v in val if v.urs == "URS0000A7635A")
-    assert v.overlap_count() == 0
-    assert v.basepair_count() == 24
+def test_attaches_ribovore_hits_only_where_they_exist(parsed):
+    assert parsed["URS00000F9D45_9606"].hit_info.model == "d.16.b.C.perfringens"
+    assert parsed["URS0000C5FF65"].hit_info.model == "EC_LSU_3D"
+    # gtrnadb has no ribotyper stage, and there is no hit for the Rfam URS
+    assert parsed["URS0000A0BF23"].hit_info is None
+    assert parsed["URS0000A7635A"].hit_info is None
 
 
 @pytest.mark.r2dt
-def test_produces_valid_data_for_rfam():
-    val = parser.parse(data.Source.rfam, Path("data/r2dt/rfam"))
-    v = next(v for v in val if v.urs == "URS0000A7635A")
-    assert attr.asdict(v) == attr.asdict(
-        data.TravelerResult(
-            urs="URS0000A7635A",
-            model_id="RF00162",
-            paths=data.TravelerPaths(
-                urs="URS0000A7635A",
-                model_id="RF00162",
-                source=data.Source.rfam,
-                basepath=Path("data/r2dt/rfam/RF00162/"),
-            ),
-            source=data.Source.rfam,
-            ribovore=None,
-        )
-    )
+def test_gets_correct_count(parsed):
+    val = parsed["URS0000A7635A"]
+    assert val.overlap_count() == 0
+    assert val.basepair_count() == 24
 
-    assert v.paths.svg == Path("data/r2dt/rfam/RF00162/URS0000A7635A.colored.svg")
-    writeable = v.writeable()
 
-    # This is too long to include in the file so I just compare to the file it
-    # is meant to read.
-    with Path("data/r2dt/rfam/RF00162/URS0000A7635A.colored.svg").open("r") as raw:
-        d = raw.read().replace("\n", "")
-        assert d == writeable[3]
-    del writeable[3]
+@pytest.mark.r2dt
+def test_produces_valid_data_for_rfam(parsed):
+    val = parsed["URS0000A7635A"]
+    writeable = val.writeable()
+
+    # The SVG is too long to include here, so compare it to the file it reads.
+    with (BASE / "results/svg/URS0000A7635A.colored.svg").open("r") as raw:
+        assert raw.read().replace("\n", "") == val.svg()
 
     assert writeable == [
         "URS0000A7635A",
-        "RF00162",
+        3,
         "((((((((......(((...(((.....)))......))).(((.(((......))))))........((((......))))...)))))))).",
         0,
         24,
@@ -200,70 +149,26 @@ def test_produces_valid_data_for_rfam():
         None,
         None,
         None,
-        "",
+        True,
     ]
 
 
 @pytest.mark.r2dt
-def test_parses_ribovision_results():
-    vals = parser.parse(data.Source.ribovision, Path("data/r2dt/ribovision"))
-    val = next(v for v in vals if v.urs == "URS0000C5FF65")
-    assert attr.asdict(val) == attr.asdict(
-        data.TravelerResult(
-            urs="URS0000C5FF65",
-            model_id="EC_LSU_3D",
-            paths=data.TravelerPaths(
-                urs="URS0000C5FF65",
-                model_id="EC_LSU_3D",
-                source=data.Source.ribovision,
-                basepath=Path("data/r2dt/ribovision/"),
-            ),
-            source=data.Source.ribovision,
-            ribovore=data.RibovoreResult(
-                target="URS0000C5FF65",
-                status="PASS",
-                length=2892,
-                fm=1,
-                fam="LSU",
-                domain="Bacteria",
-                model="EC_LSU_3D",
-                strand=1,
-                ht=1,
-                tscore=2197.9,
-                bscore=2197.9,
-                bevalue=0.0,
-                tcov=0.999,
-                bcov=0.999,
-                bfrom=2,
-                bto=2890,
-                mfrom=2,
-                mto=2902,
-            ),
-        )
-    )
+def test_produces_valid_data_for_ribovision(parsed):
+    val = parsed["URS0000C5FF65"]
+    assert val.writeable()[3:] == [3, 854, 2, 2902, 2, 2890, 0.999, True]
 
 
 @pytest.mark.r2dt
 @pytest.mark.parametrize(
-    "directory,source,urs,md5_hash",
+    "urs,md5_hash",
     [
-        (
-            "data/r2dt/crw",
-            data.Source.crw,
-            "URS00000F9D45_9606",
-            "2204b2f0ac616b8366a3b5f37aa123b8",
-        ),
-        (
-            "data/r2dt/rfam",
-            data.Source.rfam,
-            "URS0000A7635A",
-            "9504c4b9a1cea77fa2c4ef8082d7b996",
-        ),
+        ("URS00000F9D45_9606", "2204b2f0ac616b8366a3b5f37aa123b8"),
+        ("URS0000A7635A", "9504c4b9a1cea77fa2c4ef8082d7b996"),
     ],
 )
-def test_can_extract_expected_svg_data(directory, source, urs, md5_hash):
-    val = list(parser.parse(source, Path(directory)))
-    svg = next(v for v in val if v.urs == urs).svg()
+def test_can_extract_expected_svg_data(parsed, urs, md5_hash):
+    svg = parsed[urs].svg()
     assert "\n" not in svg
     assert svg.startswith("<svg")
     assert md5(svg.encode()) == md5_hash
@@ -271,48 +176,73 @@ def test_can_extract_expected_svg_data(directory, source, urs, md5_hash):
 
 @pytest.mark.r2dt
 @pytest.mark.parametrize(
-    "directory,source,urs,secondary,bp_count",
+    "urs,secondary,bp_count",
     [
         (
-            "data/r2dt/crw",
-            data.Source.crw,
             "URS00000F9D45_9606",
             "(((((((((....((((((((.....((((((............))))..))....)))))).)).(((((......((.((.(((....))))).)).....))))).)))))))))...",
             35,
         ),
         (
-            "data/r2dt/rfam",
-            data.Source.rfam,
-            "URS0000A7635B",
+            "URS0000A7635A",
             "((((((((......(((...(((.....)))......))).(((.(((......))))))........((((......))))...)))))))).",
             24,
         ),
+        (
+            "URS0000A0BF23",
+            "(((((((..((((........)))).(((((.......))))).....(((((.......)))))))))))).",
+            21,
+        ),
     ],
 )
-def test_can_extract_expected_dot_bracket_data(
-    directory, source, urs, secondary, bp_count
-):
-    val = parser.parse(source, Path(directory))
-    v = next(v for v in val if v.urs == urs)
-    assert v.dot_bracket() == secondary
-    assert v.basepair_count() == bp_count
+def test_can_extract_expected_dot_bracket_data(parsed, urs, secondary, bp_count):
+    val = parsed[urs]
+    assert val.dot_bracket() == secondary
+    assert val.basepair_count() == bp_count
+    assert val.modeled_length() == len(secondary)
 
 
 @pytest.mark.r2dt
-def test_parses_gtrnadb_results():
-    vals = parser.parse(data.Source.ribovision, Path("data/r2dt/gtrnadb"))
-    val = next(v for v in vals if v.urs == "URS0000A0BF23")
-    assert attr.asdict(val) == attr.asdict(
-        data.TravelerResult(
-            urs="URS0000A0BF23",
-            model_id="EC_LSU_3D",
-            paths=data.TravelerPaths(
-                urs="URS0000A0BF23",
-                model_id="E-Gln",
-                source=data.Source.gtrnadb,
-                basepath=Path("data/r2dt/gtrnadb/"),
-            ),
-            source=data.Source.ribovision,
-            ribovore=None,
-        )
+def test_skips_models_that_are_not_in_the_mapping(tmp_path):
+    shutil.copytree(BASE, tmp_path / "output")
+    metadata = tmp_path / "output/results/tsv/metadata.tsv"
+    metadata.write_text(metadata.read_text() + "URS0000A7635B\tno-such-model\trfam\n")
+    assert "URS0000A7635B" not in {r.urs for r in parse(base=tmp_path / "output")}
+
+
+@pytest.mark.r2dt
+def test_prefers_a_non_rfam_hit_over_an_rfam_one(tmp_path):
+    shutil.copytree(BASE, tmp_path / "output")
+    metadata = tmp_path / "output/results/tsv/metadata.tsv"
+    # the same URS drawn against both an Rfam and a CRW model
+    metadata.write_text(
+        "URS00000F9D45_9606\tSAM\trfam\n"
+        "URS00000F9D45_9606\td.16.b.C.perfringens\tcrw\n"
     )
+    results = parse(base=tmp_path / "output")
+    assert [(r.urs, r.source) for r in results] == [
+        ("URS00000F9D45_9606", data.Source.crw)
+    ]
+
+
+@pytest.mark.r2dt
+def test_missing_ribotyper_data_is_fatal_unless_allowed(tmp_path):
+    shutil.copytree(BASE, tmp_path / "output")
+    (tmp_path / "output/rfam/.ribotyper.long.out").unlink()
+
+    with pytest.raises(ValueError):
+        parse(base=tmp_path / "output")
+
+    assert len(parse(base=tmp_path / "output", allow_missing=True)) == 4
+
+
+@pytest.mark.r2dt
+def test_missing_result_files_are_fatal_unless_allowed(tmp_path):
+    shutil.copytree(BASE, tmp_path / "output")
+    (tmp_path / "output/results/svg/URS0000A7635A.colored.svg").unlink()
+
+    with pytest.raises(ValueError):
+        parse(base=tmp_path / "output")
+
+    results = parse(base=tmp_path / "output", allow_missing=True)
+    assert "URS0000A7635A" not in {r.urs for r in results}

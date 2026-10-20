@@ -42,8 +42,8 @@ CREATE TABLE search_export_accessions (
 
 INSERT INTO search_export_urs (urs_taxid, urs, taxid) (
   SELECT
-    pre.id,
-    pre.upi,
+    pre.urs_taxid,
+    pre.urs,
     pre.taxid
   FROM rnc_rna_precomputed pre
   WHERE

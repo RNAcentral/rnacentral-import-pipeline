@@ -13,14 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import operator as op
-import itertools as it
 import typing as ty
 
 from Bio.UniProt.GOA import gpa_iterator as raw_parser
 
 from rnacentral_pipeline.databases.data.go_annotations import GoTermAnnotation
-
 from rnacentral_pipeline.databases.quickgo import helpers
 
 
@@ -42,27 +39,33 @@ def as_annotation(record: ty.Dict[str, ty.Any]) -> GoTermAnnotation:
 
 def parse(handle: ty.IO) -> ty.Iterable[GoTermAnnotation]:
     """
-    Parse the given file to produce an iterable of GoTerm objects to import.
+    Parse the given file to produce an iterable of GoTerm objects to import,
+    merging publications/extensions for rows that share the same annotation.
     """
-
-    key = op.attrgetter(
-        "rna_id", "qualifier", "term_id", "evidence_code", "assigned_by"
-    )
 
     records = raw_parser(handle)
     records = filter(lambda r: r["Assigned_by"] != "RNAcentral", records)
     records = filter(lambda r: r["DB:Reference"] != "GO_REF:0000115", records)
-    annotations = list(map(as_annotation, records))
-    annotations.sort(key=key)
 
-    for _, similar_iter in it.groupby(annotations, key):
-        similar = list(similar_iter)
-        if len(similar) == 1:
-            yield similar[0]
-            continue
+    # A dict merge, keyed on the same fields as the old sort key, holds one
+    # entry per unique annotation instead of every raw row (duplicates
+    # included) at once - the file has far fewer unique annotations than
+    # rows, since a single annotation can carry many publications/extensions.
+    merged: ty.Dict[ty.Tuple[str, str, str, str, str], GoTermAnnotation] = {}
+    for record in records:
+        annotation = as_annotation(record)
+        key = (
+            annotation.rna_id,
+            annotation.qualifier,
+            annotation.term_id,
+            annotation.evidence_code,
+            annotation.assigned_by,
+        )
+        existing = merged.get(key)
+        if existing is None:
+            merged[key] = annotation
+        else:
+            existing.publications.extend(annotation.publications)
+            existing.extensions.extend(annotation.extensions)
 
-        merged = similar.pop(0)
-        for ann in similar:
-            merged.publications.extend(ann.publications)
-            merged.extensions.extend(ann.extensions)
-        yield merged
+    return merged.values()

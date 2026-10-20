@@ -29,6 +29,8 @@ FALLBACK_SPECIES_URL = "https://rest.uniprot.org/taxonomy/{taxon_id}.json"
 
 LOGGER = logging.getLogger(__name__)
 
+SESSION = requests.Session()
+
 
 class UnknownTaxonId(Exception):
     """
@@ -54,7 +56,7 @@ def get_json_with_retries(url: str) -> ty.Any:
 
     for count in range(10):
         try:
-            response = requests.get(url)
+            response = SESSION.get(url)
             response.raise_for_status()
             return response.json()
         except simplejson.errors.JSONDecodeError:
@@ -126,7 +128,7 @@ def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
     return ena_data
 
 
-@lru_cache()
+@lru_cache(maxsize=None)
 def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
     """
     Call the EBI taxonomy API to get the phylogenetic information for the given
@@ -198,7 +200,7 @@ def division(taxon_id: int) -> str:
     return data["division"]
 
 
-@lru_cache
+@lru_cache(maxsize=None)
 def taxid(species: str) -> int:
     """
     Get the taxid for a given species

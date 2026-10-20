@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import logging
+import sys
 
 import click
 
@@ -35,18 +36,22 @@ from rnacentral_pipeline.cli import (
     genome_mapping,
     gtrnadb,
     hgnc,
+    huggingface,
     intact,
     japonicusdb,
     lncbase,
     lncbook,
     lncipedia,
+    manifest,
+    mgi,
     mgnify,
     mirbase,
     mirgenedb,
     mirtrondb,
-    modomics,
     misc,
+    modomics,
     ncbi,
+    noncode,
     notify,
     ols,
     pdb,
@@ -61,9 +66,9 @@ from rnacentral_pipeline.cli import (
     rediportal,
     refseq,
     release,
-    rgd,
     repeats,
     rfam,
+    rgd,
     ribocentre,
     ribovision,
     scan_imports,
@@ -96,10 +101,11 @@ def cli(log_level):
     pipeline. This handles individual python parts, and the overall pipeline is
     coordinated by nextflow.
     """
-    level = getattr(logging, log_level.upper())
-    logger = logging.getLogger()
-    logger.setLevel(level=level)
-    pass
+    # setLevel alone left the root logger without a handler, so logging.lastResort
+    # served every record and silently dropped everything below warning. Nextflow
+    # splits stdout/stderr into separate .command files, and release progress
+    # belongs with the psql output it brackets in .command.out, not .command.err.
+    logging.basicConfig(level=getattr(logging, log_level.upper()), stream=sys.stdout)
 
 
 cli.add_command(circatlas.cli)
@@ -120,11 +126,14 @@ cli.add_command(genes.cli)
 cli.add_command(genome_mapping.cli)
 cli.add_command(gtrnadb.cli)
 cli.add_command(hgnc.cli)
+cli.add_command(huggingface.cli)
 cli.add_command(intact.cli)
 cli.add_command(japonicusdb.cli)
 cli.add_command(lncbase.cli)
 cli.add_command(lncbook.cli)
 cli.add_command(lncipedia.cli)
+cli.add_command(manifest.cli)
+cli.add_command(mgi.cli)
 cli.add_command(mgnify.cli)
 cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
@@ -134,6 +143,7 @@ cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
+cli.add_command(noncode.cli)
 cli.add_command(notify.cli)
 cli.add_command(ols.cli)
 cli.add_command(pdb.cli)

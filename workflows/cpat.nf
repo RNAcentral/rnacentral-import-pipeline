@@ -3,8 +3,6 @@
 nextflow.enable.dsl=2
 
 process find_models {
-  when: { params.cpat?.run }
-
   input:
   val(_flag)
 
@@ -12,6 +10,8 @@ process find_models {
   path('CPAT-3.0.4/dat/*_logitModel.RData'), emit: rdata
   path('CPAT-3.0.4/dat/*_Hexamer.tsv'), emit: hexamers
   path('cutoffs.csv'), emit: cutoffs
+
+  when: params.cpat?.run
 
   script:
   """
@@ -47,53 +47,75 @@ process cpat_scan {
   tuple val(model_name), path(data), path(hexamer), path(sequences)
 
   output:
-  tuple val(model_name), path('output.ORF_prob.best.tsv')
+  tuple val(model_name), path('output.ORF_prob.best.tsv'), path('no-orfs.txt')
 
+  // cpat writes nothing for a sequence without an ORF, and crashes reading its
+  // own output when no sequence has one. Record those ids so they count as done.
   script:
   """
-  cpat -g "$sequences" -d "$data" -x "$hexamer" -o output
+  cpat -g "$sequences" -d "$data" -x "$hexamer" -o output 2> cpat.log \
+    || grep -q "No such file or directory: 'output.ORF_prob.tsv'" cpat.log
+  touch output.ORF_prob.best.tsv
+  grep -o 'No ORFs found for [^ ]*' cpat.log | awk '{ print \$NF }' > no-orfs.txt
   """
 }
 
 process parse_results {
   input:
-  tuple val(model_name), path('scan-results.tsv'), path(cutoff_info)
+  tuple val(model_name), path('scan-results.tsv'), path('no-orfs.txt'), path(cutoff_info)
 
   output:
-  path('results.csv'), emit: results
-  path('orfs.csv'), emit: orfs
+  path("results.${params.writer_format}"), emit: results
+  path("orfs.${params.writer_format}"), emit: orfs
 
   script:
   """
-  rnac cpat parse $cutoff_info $model_name scan-results.tsv .
+  rnac cpat parse $cutoff_info $model_name scan-results.tsv no-orfs.txt .
   """
 }
 
 process store_results {
   memory 6.GB
   input:
-  path('results*.csv')
-  path('orfs.*.csv')
+  path("results*.${params.writer_format}")
+  path("orfs*.${params.writer_format}")
   path(result_ctl)
   path(orf_ctl)
+  path(result_post_load)
+  path(orf_post_load)
 
   script:
-  """
-  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} cpat-results
-  split-and-load $orf_ctl 'orfs*.csv' ${params.import_data.chunk_size} cpat-orfs
-  """
+  // create_load.sql is never re-applied, so the live load_cpat predates the
+  // no-ORF rows and still rejects their null scores; results.ctl does the same
+  if (params.writer_format == 'parquet')
+    """
+    psql -v ON_ERROR_STOP=1 -c 'ALTER TABLE load_cpat ALTER COLUMN fickett_score DROP NOT NULL, ALTER COLUMN hexamer_score DROP NOT NULL, ALTER COLUMN coding_probability DROP NOT NULL' "\$PGDATABASE"
+    load-parquet load_cpat 'results*.parquet' \\
+      --truncate \\
+      --post-load $result_post_load
+    load-parquet load_cpat_orfs 'orfs*.parquet' \\
+      --truncate \\
+      --post-load $orf_post_load
+    """
+  else
+    """
+    split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} cpat-results
+    split-and-load $orf_ctl 'orfs*.csv' ${params.import_data.chunk_size} cpat-orfs
+    """
 }
 
 workflow cpat {
   take: flag
   main:
     if (!params.cpat.run) {
-      Channel.of('cpat skipped') | set { done }
+      channel.of('cpat skipped') | set { done }
     } else {
 
-    Channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
-    Channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
-    Channel.fromPath('files/cpat/query.sql') | set { query }
+    channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
+    channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
+    channel.fromPath('files/cpat/results-post-load.sql') | set { result_post_load }
+    channel.fromPath('files/cpat/orfs-post-load.sql') | set { orf_post_load }
+    channel.fromPath('files/cpat/query.sql') | set { query }
 
     flag | find_models
 
@@ -112,21 +134,20 @@ workflow cpat {
     | map { model_name, rd, hexamer -> [model_name, rd, hexamer, params.cpat.taxid_mapping[model_name]] } \
     | combine(query) \
     | find_sequences \
-    | flatMap { model_name, rd, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { [model_name, rd, hexamer, it] } : [[model_name, rd, hexamer, seqs]] } \
+    | flatMap { model_name, rd, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { s -> [model_name, rd, hexamer, s] } : [[model_name, rd, hexamer, seqs]] } \
     | cpat_scan \
-    | filter { _model, f -> f.exists() } \
     | combine(find_models.out.cutoffs) \
     | parse_results
 
     parse_results.out.results | collect | set { data }
     parse_results.out.orfs | collect | set { orfs }
 
-    store_results(data, orfs, load_ctl, orf_ctl)
-    data | map { _ -> 'cpat done' } | first | set { done }
+    store_results(data, orfs, load_ctl, orf_ctl, result_post_load, orf_post_load)
+    data | map { _v -> 'cpat done' } | set { done }
     }
   emit: done
 }
 
 workflow {
-  cpat(Channel.of('ready'))
+  cpat(channel.of('ready'))
 }

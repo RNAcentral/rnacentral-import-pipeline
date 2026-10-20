@@ -13,19 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import csv
-import operator as op
 import itertools as it
+import operator as op
+import re
+from pathlib import Path
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
-from .data import INFORMATIVE_NAMES
-from .data import SO_TERM_MAPPING
-from .data import RFAM_RNA_TYPE_MAPPING
-from .data import DOMAIN_MAPPING
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import row_writer
+
+from .data import (
+    DOMAIN_MAPPING,
+    INFORMATIVE_NAMES,
+    RFAM_RNA_TYPE_MAPPING,
+    SO_TERM_MAPPING,
+)
 
 
 def empty_str_from(target):
@@ -159,5 +165,5 @@ def parse(handle):
 def from_file(handle, output):
     data = parse(handle)
     data = map(op.methodcaller("writeable"), data)
-    writer = csv.writer(output)
-    writer.writerows(data)
+    with row_writer(Path(output), schemas.RFAM_FAMILIES) as writer:
+        writer.writerows(data)

@@ -18,7 +18,6 @@ import logging
 import typing as ty
 
 import attr
-import networkx as nx
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases.data import Database, RnaType
@@ -35,6 +34,8 @@ EXCLUDED_DATABASES = {
 }
 
 ACCEPTED_DATABASES = {
+    Database.circatlas,
+    Database.circpedia,
     Database.five_srrnadb,
     Database.flybase,
     Database.gtrnadb,
@@ -43,11 +44,14 @@ ACCEPTED_DATABASES = {
     Database.mirbase,
     Database.mirgenedb,
     Database.pirbase,
+    Database.plncdb,
     Database.pombase,
     # Database.sgd, This is excluded because they tend ot use things like rRNA_gene, which we don't like as much as the transcript terms
     Database.snodb,
+    Database.snopy,
     Database.snorna_database,
     Database.tarbase,
+    Database.tmrna_website,
     Database.zwd,
     Database.pdbe,
     Database.gencode,
@@ -165,7 +169,7 @@ class RnaTypeAnnotation:
     def is_parent_of(self, other: "RnaTypeAnnotation") -> bool:
         if len(self.path) >= len(other.path):
             return False
-        for (left, right) in zip(self.path, other.path):
+        for left, right in zip(self.path, other.path):
             if left != right:
                 return False
         return True
@@ -303,9 +307,7 @@ def all_annotations(
     return annotations
 
 
-def rna_type_of(
-    context: context.Context, sequence: seq.Sequence
-) -> ty.Optional[RnaType]:
+def rna_type_of(context: context.Context, sequence: seq.Sequence) -> RnaType:
 
     annotations = all_annotations(context, sequence)
     if len(annotations) == 0:

@@ -78,11 +78,7 @@ logging.cfg
 local.config
 work/
 .nextflow*
-data/ensembl_*/*.dat
-data/ensembl/*.dat
-data/gencode/human-transcripts.gff3
 .editorconfig
-data/ensembl/excluded.txt
 data/intact/intact.txt
 *.nix
 Procfile
@@ -91,7 +87,6 @@ nix
 target/
 bin/json2fasta
 bin/split-ena
-bin/expand-urs
 bin/ftp-export
 bin/kv
 bin/precompute
@@ -111,3 +106,4 @@ bin/bed-expander
 .projections.json
 *.slurm
 tmp/*
+.serena

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2026] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,64 +16,70 @@ This contains the logic for parsing MGI data files and producing Entry objects
 for export to usable flat files.
 """
 
-import csv
-import itertools as it
-import operator as op
+import logging
+import typing as ty
+from pathlib import Path
 
-from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.writers import build_entry_writer
+from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.mgi import helpers
+from rnacentral_pipeline.databases.mgi.data import Context, MgiEntry
 
-from . import helpers
-
-
-def lines(raw):
-    """
-    Produces an iterable of all ines in the file. This will correct the issues
-    with header being over 2 lines so a normal CSV parser can parse the file.
-    """
-
-    header = "\t".join([next(raw).strip(), next(raw).strip()])
-    header = header.lower()
-    yield header.replace(" ", "_")
-    for line in raw:
-        yield line
+LOGGER = logging.getLogger(__name__)
 
 
-def as_entry(data):
-    yield Entry(
-        primary_id=helpers.primary_id(data),
-        accession=helpers.accession(data),
-        ncbi_tax_id=helpers.taxon_id(data),
+def as_entry(context: Context, entry: MgiEntry, urs: str) -> ty.Optional[data.Entry]:
+    rna_type = helpers.so_term(entry)
+    if rna_type is None:
+        return None
+
+    return data.Entry(
+        primary_id=entry.mgi_id,
+        accession=entry.mgi_id,
+        ncbi_tax_id=helpers.MOUSE_TAXID,
         database="MGI",
-        sequence="",
-        exons=[],
-        rna_type=helpers.infer_rna_type(data) or "",
-        url="",
-        xref_data=helpers.xref_data(data),
-        chromosome=helpers.chromosome(data),
-        species=helpers.species(data),
-        common_name=helpers.common_name(data),
-        lineage=helpers.lineage(data),
-        gene=helpers.gene(data),
-        optional_id=helpers.symbol(data),
-        description=helpers.name(data),
+        sequence=context.sequences[urs],
+        regions=[],
+        rna_type=rna_type,
+        url=helpers.url(entry),
         seq_version="1",
-        location_start=helpers.start(data),
-        location_end=helpers.stop(data),
-        references=helpers.references(data),
+        description=helpers.description(entry),
+        chromosome=entry.chromosome,
+        gene=entry.symbol,
+        locus_tag=entry.symbol,
+        references=helpers.references(),
     )
 
 
-def parse(raw):
+def as_entries(
+    context: Context, raw_entries: ty.List[MgiEntry]
+) -> ty.Iterable[data.Entry]:
+    mapped = 0
+    for raw_entry in raw_entries:
+        urs = context.urs_for(raw_entry)
+        if not urs:
+            LOGGER.debug("Cannot map %s", raw_entry.mgi_id)
+            continue
+
+        entry = as_entry(context, raw_entry, urs)
+        if entry is None:
+            continue
+
+        mapped += 1
+        yield entry
+    LOGGER.info("Mapped %i of %i MGI markers", mapped, len(raw_entries))
+
+
+def ncrna_entries(raw_entries: ty.List[MgiEntry]) -> ty.List[MgiEntry]:
     """
-    Parses the file and produces an iterable of all entries as MGI objects.
+    Keep only the RNA markers. The file is mostly protein coding genes and
+    genome features, and asking the database about their transcripts is a large
+    query for a guaranteed miss.
     """
 
-    data = csv.DictReader(lines(raw), delimiter="\t")
-    data = map(as_entry, data)
-    return filter(op.attrgetter("rna_type"), data)
+    return [e for e in raw_entries if helpers.so_term(e) is not None]
 
 
-def from_file(raw, output):
-    writer = build_entry_writer(parse)
-    writer(output, raw)
+def parse(path: Path, db_url: str) -> ty.Iterable[data.Entry]:
+    raw_entries = ncrna_entries(helpers.load(path))
+    context = Context.build(db_url, raw_entries)
+    yield from as_entries(context, raw_entries)

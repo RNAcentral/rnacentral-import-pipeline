@@ -76,11 +76,12 @@ def notify_query(title, query):
 
 @cli.command("file")
 @click.argument("path", type=click.File())
-def notify_file(path):
+@click.option("--username", default=None, help="Slack sender name to post under")
+def notify_file(path, username):
     """
     Read a mrkdwn formatted file and send as a message in slack.
     """
-    send_notification("", path.read())
+    send_notification("", path.read(), username=username)
 
 @cli.command("report")
 def notify_report():

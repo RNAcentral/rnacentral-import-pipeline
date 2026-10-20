@@ -23,12 +23,18 @@ on:
         required: false
         type: boolean
         default: false
+      tag:
+        description: 'Floating tag to publish alongside the versioned tag. Defaults to "latest"; set to something else for isolated test builds.'
+        required: false
+        type: string
+        default: 'latest'
 
 jobs:
   build-rust-utils:
     runs-on: ubuntu-latest
     env:
       FORCE_REBUILD: ${{ github.event.inputs.force_rebuild || 'false' }}
+      FLOATING_TAG: ${{ github.event.inputs.tag || 'latest' }}
     steps:
       - uses: actions/checkout@v3
 
@@ -52,8 +58,14 @@ jobs:
             VERSION=$VERSION_CONTENT
           fi
 
+          # Prefix with the Python tag so an image built for one Python
+          # version can never be pulled by a Dockerfile expecting another
+          # (the mismatch a bare "latest" tag let happen).
+          PYTAG="py$(cat .python-version | tr -d '.')"
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "🔖 Building rust-utils:$VERSION"
+          echo "pytag=$PYTAG" >> $GITHUB_OUTPUT
+          echo "🔖 Building rust-utils:${PYTAG}-${VERSION}"
 
       - name: Docker login
         env:
@@ -64,35 +76,43 @@ jobs:
       - name: Build Rust utilities container
         run: |
           VERSION=${{ steps.rust-version.outputs.version }}
+          PYTAG=${{ steps.rust-version.outputs.pytag }}
+          PYTHON_VERSION="$(cat .python-version)-trixie"
           if [ "$FORCE_REBUILD" = "true" ]; then
             docker build --no-cache \
               --build-arg RUST_VERSION=${VERSION} \
-              -t rnacentral/rust-utils:${VERSION} \
+              --build-arg PYTHON_VERSION=${PYTHON_VERSION} \
+              -t rnacentral/rust-utils:${PYTAG}-${VERSION} \
               -f containers/rust-utils/Dockerfile .
           else
             docker build \
               --build-arg RUST_VERSION=${VERSION} \
-              -t rnacentral/rust-utils:${VERSION} \
+              --build-arg PYTHON_VERSION=${PYTHON_VERSION} \
+              -t rnacentral/rust-utils:${PYTAG}-${VERSION} \
               -f containers/rust-utils/Dockerfile .
           fi
 
-      - name: Tag as latest
+      - name: Tag as floating tag
         run: |
           VERSION=${{ steps.rust-version.outputs.version }}
-          docker tag rnacentral/rust-utils:${VERSION} rnacentral/rust-utils:latest
+          PYTAG=${{ steps.rust-version.outputs.pytag }}
+          docker tag rnacentral/rust-utils:${PYTAG}-${VERSION} rnacentral/rust-utils:${PYTAG}-${FLOATING_TAG}
 
       - name: Push versioned tag
         run: |
           VERSION=${{ steps.rust-version.outputs.version }}
-          docker push rnacentral/rust-utils:${VERSION}
+          PYTAG=${{ steps.rust-version.outputs.pytag }}
+          docker push rnacentral/rust-utils:${PYTAG}-${VERSION}
 
-      - name: Push latest tag
-        run: docker push rnacentral/rust-utils:latest
+      - name: Push floating tag
+        run: |
+          PYTAG=${{ steps.rust-version.outputs.pytag }}
+          docker push rnacentral/rust-utils:${PYTAG}-${FLOATING_TAG}
 
       - name: Slack notification
         if: always()
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_MESSAGE: 'Rust utilities ${{ steps.rust-version.outputs.version }} container built and pushed: ${{ job.status }}'
+          SLACK_MESSAGE: 'Rust utilities ${{ steps.rust-version.outputs.pytag }}-${{ steps.rust-version.outputs.version }} container built and pushed: ${{ job.status }}'
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           MSG_MINIMAL: true

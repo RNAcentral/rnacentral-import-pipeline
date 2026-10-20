@@ -39,7 +39,7 @@ process import_organisms {
 
     script:
     """
-    pgloader --on-error-stop $ctl
+    pgloader --on-error-stop --with "drop indexes" $ctl
     """
 }
 
@@ -50,12 +50,12 @@ workflow load_organisms {
       | create_csv
       | set{ organism_pmid }
 
-      load_ctl = Channel.of("$baseDir/workflows/litscan/organisms/load-organisms.ctl")
+      load_ctl = channel.of("$baseDir/workflows/litscan/organisms/load-organisms.ctl")
       import_organisms(organism_pmid, load_ctl) \
       | set{ done }
     emit: done
 }
 
 workflow {
-  load_organisms()
+  load_organisms(channel.of('ready'))
 }

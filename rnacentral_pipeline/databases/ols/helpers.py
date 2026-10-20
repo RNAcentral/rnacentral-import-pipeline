@@ -14,8 +14,12 @@ limitations under the License.
 """
 
 import csv
-import operator as op
 import itertools as it
+import operator as op
+from pathlib import Path
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import row_writer
 
 from . import fetch
 
@@ -34,5 +38,9 @@ def process_term_file(term_handle, output):
     data = parse_file(term_handle)
     data = map(op.methodcaller("writeables"), data)
     data = it.chain.from_iterable(data)
-    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
-    writer.writerows(data)
+    with row_writer(
+        Path(output),
+        schemas.ONTOLOGY_TERMS,
+        csv_options={"quoting": csv.QUOTE_ALL},
+    ) as writer:
+        writer.writerows(data)

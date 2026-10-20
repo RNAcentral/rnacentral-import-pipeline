@@ -9,7 +9,7 @@ process change_status_to_pending {
 
     script:
     """
-    psql -c "UPDATE litscan_job j SET status='pending' FROM ( SELECT DISTINCT job_id FROM litscan_database WHERE name IN $params.rescan_ids_from ) d WHERE j.job_id = d.job_id;" $PGDB_EMBASSY_USER
+    psql -c "UPDATE litscan_job j SET status='pending' FROM ( SELECT DISTINCT job_id FROM litscan_database WHERE name IN $params.rescan_ids_from ) d WHERE j.job_id = d.job_id;" \$PGDB_EMBASSY_USER
     """
 }
 
@@ -21,5 +21,5 @@ workflow rescan_ids_by_date {
 }
 
 workflow {
-    rescan_ids_by_date(Channel.from('ready'))
+    rescan_ids_by_date(channel.from('ready'))
 }

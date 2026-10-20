@@ -5,7 +5,7 @@ process fetch_data {
   output:
   path('*.json')
 
-  when: { params.databases.gtrnadb?.run }
+  when: params.databases.gtrnadb?.run
 
   script:
   """
@@ -21,7 +21,7 @@ process process_data {
   tuple path(raw), path(tax_info)
 
   output:
-  path('*.csv')
+  path('*.{csv,parquet}')
 
   script:
   """

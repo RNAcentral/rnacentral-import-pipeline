@@ -15,11 +15,13 @@ include { japonicusdb } from './databases/japonicusdb'
 include { lncbase } from './databases/lncbase'
 include { lncbook } from './databases/lncbook'
 include { lncipedia } from './databases/lncipedia'
+include { mgi } from './databases/mgi'
 include { mgnify } from './databases/mgnify'
 include { mirbase } from './databases/mirbase'
 include { mirgenedb } from './databases/mirgenedb'
 include { mirtrondb } from './databases/mirtrondb'
 include { modomics } from './databases/modomics'
+include { noncode } from './databases/noncode'
 include { pdbe } from './databases/pdbe'
 include { pirbase } from './databases/pirbase'
 include { plncdb } from './databases/plncdb'
@@ -59,17 +61,16 @@ process build_context {
 }
 
 workflow parse_databases {
-  emit: data
   main:
 
     if (params.get('needs_taxonomy', false)) {
       build_context | set { context }
     }
     else {
-      Channel.empty() | set { context }
+      channel.empty() | set { context }
     }
 
-    Channel.empty() \
+    channel.empty() \
     | mix(
       circatlas(),
       circpedia(),
@@ -88,11 +89,13 @@ workflow parse_databases {
       lncbase(),
       lncbook(),
       lncipedia(),
+      mgi(),
       mirbase(),
       mgnify(),
       mirgenedb(),
       mirtrondb(),
       modomics(),
+      noncode(),
       pdbe(),
       pirbase(),
       plncdb(),
@@ -115,4 +118,5 @@ workflow parse_databases {
     ) \
     | flatten \
     | set { data }
+  emit: data
 }

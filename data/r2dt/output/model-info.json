@@ -1,0 +1,4 @@
+{"model_name": "d.16.b.C.perfringens", "model_id": 1, "model_source": "crw", "model_alias": "d.16.b.C.perfringens", "model_length": 1512, "model_basepairs": 447}
+{"model_name": "EC_LSU_3D", "model_id": 2, "model_source": "ribovision", "model_alias": "EC_LSU_3D", "model_length": 2904, "model_basepairs": 800}
+{"model_name": "SAM", "model_id": 3, "model_source": "rfam", "model_alias": "RF00162", "model_length": 108, "model_basepairs": 30}
+{"model_name": "E-Gln", "model_id": 4, "model_source": "gtrnadb", "model_alias": "E-Gln", "model_length": 74, "model_basepairs": 21}

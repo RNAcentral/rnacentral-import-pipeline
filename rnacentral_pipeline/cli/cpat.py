@@ -13,13 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from pathlib import Path
 import pickle
+from pathlib import Path
 
 import click
 
+from rnacentral_pipeline.cpat import data as cpat_data
 from rnacentral_pipeline.cpat import parser
 from rnacentral_pipeline.cpat.data import CpatWriter
+from rnacentral_pipeline.output_format import format_option, is_parquet
 from rnacentral_pipeline.writers import build
 
 
@@ -35,11 +37,18 @@ def cli():
 @click.argument("cutoffs", type=click.File("rb"))
 @click.argument("model_name")
 @click.argument("results", type=click.Path())
+@click.argument("no_orfs", type=click.Path())
 @click.argument("output", type=click.Path())
-def parse(cutoffs, model_name, results, output):
+@format_option
+def parse(cutoffs, model_name, results, no_orfs, output):
     cutoffs = pickle.load(cutoffs)
-    data = parser.parse(cutoffs, model_name, Path(results))
-    with build(CpatWriter, Path(output)) as wtr:
+    data = parser.parse(cutoffs, model_name, Path(results), Path(no_orfs))
+    out_path = Path(output)
+    if is_parquet():
+        opener = cpat_data.parquet_writer(out_path)
+    else:
+        opener = build(CpatWriter, out_path)
+    with opener as wtr:
         wtr.write(data)
 
 

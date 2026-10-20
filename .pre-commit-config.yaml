@@ -6,16 +6,12 @@ repos:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
     -   id: check-yaml
--   repo: https://github.com/psf/black
-    rev: 22.6.0
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
     hooks:
-    -   id: black
--   repo: https://github.com/pycqa/isort
-    rev: 5.11.5
-    hooks:
-    -   id: isort
-        args: ["--profile", "black", "--filter-files"]
-        name: isort (python)
+    -   id: ruff
+        args: [--fix]
+    -   id: ruff-format
 -   repo: local
     hooks:
     -   id: rustfmt
@@ -24,6 +20,16 @@ repos:
         language: system
         types: [rust]
         args: ['--edition', '2021']
+    # Same scope and command as .github/workflows/nextflow-lint.yaml, so a
+    # clean commit cannot fail lint in CI. weekly-update/ is excluded there.
+    -   id: nextflow-lint
+        name: nextflow lint
+        # bash -c because pre-commit execs `entry` without a shell, so a bare
+        # glob would be passed through to nextflow literally.
+        entry: bash -c 'nextflow lint *.nf workflows/'
+        language: system
+        files: \.(nf|config)$
+        pass_filenames: false
 # - repo: https://github.com/python-poetry/poetry
 #   rev: '1.2.2'
 #   hooks:

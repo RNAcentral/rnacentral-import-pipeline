@@ -13,19 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
 import csv
+import itertools as it
 import json
 import logging
 import operator as op
-import itertools as it
-import collections as coll
+from pathlib import Path
 
 import attr
-from attr.validators import optional
-from attr.validators import instance_of as is_a
-
 import psycopg2 as pg
+from attr.validators import instance_of as is_a
+from attr.validators import optional
 from psycopg2.extras import DictCursor
+
+from rnacentral_pipeline import schemas
+from rnacentral_pipeline.parquet_writers import row_writer
 
 from . import databases as db
 
@@ -67,11 +70,7 @@ def reconcile_taxids(taxid):
 def is_ignored_assembly(info):
     if info.taxid in REJECTED_TAXIDS:
         return True
-    if info.taxid == 7227 and info.division == "EnsemblMetazoa":
-        return True
     if info.taxid == 5762 and info.assembly_id == "V1.0":
-        return True
-    if info.taxid == 6239 and info.division == "EnsemblMetazoa":
         return True
     if info.taxid == 8090 and info.ensembl_url != "oryzias_latipes":
         return True
@@ -258,4 +257,5 @@ def write(connections, query, example_file, known_handle, output, db_url=None):
     known = load_known(db_url, known_handle)
     data = fetch(connections, query, examples, known)
     data = map(op.methodcaller("writeable"), data)
-    csv.writer(output).writerows(data)
+    with row_writer(Path(output), schemas.ASSEMBLIES) as writer:
+        writer.writerows(data)

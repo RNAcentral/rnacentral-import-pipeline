@@ -6,8 +6,6 @@ include { sequences } from './text-search/sequences'
 include { genes } from './text-search/genes'
 
 process create_release_note {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
   input:
   path('count*')
 
@@ -24,6 +22,7 @@ process create_release_note {
 // This deletes the old data and then moves the new data in place.
 process atomic_publish {
   queue 'datamover'
+  containerOptions "${params.common_container} --bind $launchDir"
 
   input:
   path('release_note.txt')
@@ -55,7 +54,7 @@ process atomic_publish {
 workflow text_search {
   take: _flag
   main:
-    Channel.fromPath('files/search-export/post-publish.sql') | set { post }
+    channel.fromPath('files/search-export/post-publish.sql') | set { post }
 
     sequences()
 
@@ -77,5 +76,5 @@ workflow text_search {
 }
 
 workflow {
-  text_search(Channel.of('ready'))
+  text_search(channel.of('ready'))
 }

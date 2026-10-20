@@ -22,9 +22,12 @@ ORDER BY display_name
 """
 
 
-def send_notification(title, message):
+def send_notification(title, message, username=None):
     """
     Send a notification to the configured slack webhook.
+
+    username posts under that name instead of the app's default, and needs the
+    app to have the chat:write.customize scope or Slack silently ignores it.
     """
     SLACK_WEBHOOK = os.getenv("SLACK_CLIENT_TOKEN")
     if SLACK_WEBHOOK is None:
@@ -41,8 +44,11 @@ def send_notification(title, message):
             "text": {"type": "mrkdwn", "text": message},
         },
     ]
+    kwargs = {"channel": channel, "text": title, "blocks": blocks}
+    if username:
+        kwargs["username"] = username
     try:
-        response = client.chat_postMessage(channel=channel, text=title, blocks=blocks)
+        response = client.chat_postMessage(**kwargs)
 
         print(response)
     except SlackApiError as e:

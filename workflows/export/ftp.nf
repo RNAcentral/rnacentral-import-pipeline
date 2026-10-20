@@ -7,10 +7,12 @@ include { id_mapping } from './ftp/id-mapping'
 include { ensembl_export } from './ftp/ensembl'
 include { fasta_export } from './ftp/sequences'
 include { rediportal } from './ftp/rediportal.nf'
+include { active_sequences } from './active-sequences'
+include { huggingface } from './huggingface'
+
+include { slack_closure } from '../utils/slack'
 
 process release_note {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
   publishDir "${params.export.ftp.publish}/", mode: 'copy'
 
   input:
@@ -108,6 +110,7 @@ process gpi_species {
   output:
   path("rnacentral.species.gpi*")
 
+  script:
   """
   rnac ftp-export gpi --filter species rnacentral.species.gpi
   gzip -k rnacentral.species.gpi
@@ -121,6 +124,7 @@ process gpi_reference_proteome {
   output:
   path("rnacentral.reference_proteome.gpi*")
 
+  script:
   """
   rnac ftp-export gpi --filter reference-proteome rnacentral.reference_proteome.gpi
   gzip -k rnacentral.reference_proteome.gpi
@@ -128,18 +132,20 @@ process gpi_reference_proteome {
 }
 
 workflow ftp {
-  take: _flag
+  take:
+    _flag
+    active_json
   main:
     if (params.export.ftp.run) {
-      Channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
-      Channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
+      channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
+      channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
       md5(md5_query, md5_template)
 
-      Channel.fromPath('files/ftp-export/release_note.txt') | release_note
-      Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
+      channel.fromPath('files/ftp-export/release_note.txt') | release_note
+      channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
 
-      Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
-      Channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
+      channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
+      channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
       rfam_annotations(rfam_annotation_query, rfam_readme)
 
       gpi()
@@ -148,11 +154,25 @@ workflow ftp {
       id_mapping()
       export_coordinates()
       ensembl_export()
-      fasta_export()
+      fasta_export(active_json)
       rediportal()
+      // Shares this run's dump so the (very slow) active-sequences query runs once.
+      huggingface(channel.of('ready'), active_json)
     }
 }
 
 workflow {
-  ftp(Channel.of('ready'))
+  main:
+  ftp(channel.of('ready'), active_sequences())
+
+  // See analyze.nf: an onError section crashes on Nextflow 26.04.
+  onComplete:
+    try {
+      def msg = workflow.success
+        ? "FTP export workflow completed"
+        : "FTP export workflow failed"
+      slack_closure(msg)
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
 }

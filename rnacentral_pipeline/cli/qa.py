@@ -15,8 +15,8 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.databases import rfam
-from rnacentral_pipeline.databases import dfam
+from rnacentral_pipeline.databases import dfam, rfam
+from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
 
 
@@ -30,11 +30,13 @@ def cli():
 
 @cli.command("rfam")
 @click.argument("tblout", default="-", type=click.File("r"))
-@click.argument("output", default="-", type=click.File("w"))
+@click.argument("output", default="-", type=click.Path(allow_dash=True))
+@format_option
 def process_tblout(tblout, output):
     """
-    Process a table out file and create a CSV for importing into our database.
-    This will overwrite the given file.
+    Process a tblout file and write rows for importing into our database.
+    Format is governed by ``--format``/``RNAC_OUTPUT_FORMAT``; ``-`` writes
+    CSV to stdout regardless.
     """
     rfam.infernal_results.as_csv(tblout, output)
 
@@ -55,6 +57,6 @@ def process_dfam(data, output):
 @click.argument("filename", type=click.File("r"))
 @click.argument("name")
 @click.argument("version_file", type=click.File("r"))
-@click.argument("output", type=click.File("w"))
+@click.argument("output", type=click.Path())
 def track_attempted(filename, name, version_file, output):
     attempted.qa(filename, name, version_file, output)
