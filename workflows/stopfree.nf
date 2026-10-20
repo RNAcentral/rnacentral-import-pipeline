@@ -33,7 +33,7 @@ process find_sequences {
   """
   PGOPTIONS='-c max_parallel_workers_per_gather=0' psql -v ON_ERROR_STOP=1 -v "min=$min" -v "max=$max" -f "$query" "\$PGDATABASE" > raw.json
   mkdir sequences
-  split --lines=${params.stopfree.chunk_size} --additional-suffix='.fasta' --filter '${workflow.launchDir}/bin/json2fasta.py - - >> \$FILE' raw.json sequences/seq-
+  split --lines=${params.stopfree.chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json sequences/seq-
   """
 }
 

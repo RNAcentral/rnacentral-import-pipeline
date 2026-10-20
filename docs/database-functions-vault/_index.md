@@ -47,7 +47,7 @@ flowchart TD
     LR --> GRT["release.get_release_type"]
     LR --> GPR["release.get_previous_release"]
     LR -->|type = F| LX["rnc_load_xref.load_xref"]
-    LR -->|type = I| LXI["(rnc_load_xref_incremental.load_xref_incremental)"]:::ext
+    LR -->|type = D| LXI["(rnc_load_xref_incremental.load_xref_delta)"]:::ext
     LR --> MAD["mark_as_done"]
     LR --> LRE["(rnc_logging.log_release_end)"]:::ext
 

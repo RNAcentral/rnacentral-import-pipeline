@@ -103,7 +103,6 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
     for record in SeqIO.parse(raw, "embl"):
         current_gene = None
         for feature in record.features:
-
             if feature.type in IGNORE_FEATURES:
                 LOGGER.debug("Skipping ignored feature type for %s", feature)
                 continue

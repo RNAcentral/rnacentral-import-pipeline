@@ -13,13 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 import collections as coll
-
-from rnacentral_pipeline.databases.helpers import publications as pubs
+import csv
 
 from rnacentral_pipeline.databases.go_annotations import GoTermAnnotation
-
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 ECO_MAPPING = {
     "IBA": "",
@@ -41,7 +39,7 @@ ECO_MAPPING = {
 TAIR_QUERY = """
 select
     acc.locus_tag,
-    xrefupi || '_' xref.taxid as rna_id
+    xref.urs_taxid as rna_id
 from rnc_accessions acc
 join xref
 on

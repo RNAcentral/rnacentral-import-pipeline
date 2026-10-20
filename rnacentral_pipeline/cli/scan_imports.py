@@ -14,9 +14,9 @@ limitations under the License.
 """
 
 import click
+import pandas as pd
 import psycopg2
 import psycopg2.extras
-import pandas as pd
 
 
 @click.group("scan-imports")
@@ -25,6 +25,7 @@ def cli():
     A group of commands to scan imports and decide what to run
     """
     pass
+
 
 """
 This is the process I think
@@ -41,13 +42,16 @@ metadata of json files to compare only the actual data md5 (date would change th
 """
 
 
-
-
 @cli.command("select-for-import")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument("db_md5_map")
 @click.argument("output", default="db_selection.config")
-def select_db_to_import(db_md5_map, output, db_url=None, type=click.Path(writable=True,dir_okay=False,file_okay=True)):
+def select_db_to_import(
+    db_md5_map,
+    output,
+    db_url=None,
+    type=click.Path(writable=True, dir_okay=False, file_okay=True),
+):
     """
     Takes the map of db name to md5 sum and queries our DB to select those DBs that can usefully be imported
 
@@ -73,8 +77,16 @@ def select_db_to_import(db_md5_map, output, db_url=None, type=click.Path(writabl
     cur.close()
     conn.close()
 
-    selection = latest_checksums.join(prev_checksums.set_index("db_name"), on="db_name").query("checksum != file_md5")['db_name'].values
-    deselection = latest_checksums.join(prev_checksums.set_index("db_name"), on="db_name").query("checksum == file_md5")['db_name'].values
+    selection = (
+        latest_checksums.join(prev_checksums.set_index("db_name"), on="db_name")
+        .query("checksum != file_md5")["db_name"]
+        .values
+    )
+    deselection = (
+        latest_checksums.join(prev_checksums.set_index("db_name"), on="db_name")
+        .query("checksum == file_md5")["db_name"]
+        .values
+    )
 
     selection = [f"{s}.run = true" for s in selection]
     deselection = [f"{s}.run = false" for s in deselection]
@@ -82,41 +94,59 @@ def select_db_to_import(db_md5_map, output, db_url=None, type=click.Path(writabl
     activation_string = "\n\t\t".join(selection)
     deactivation_string = "\n\t\t".join(deselection)
 
-    with open(output, 'w') as selection_config:
-        selection_config.write(selection_template.format(activation_string, deactivation_string))
+    with open(output, "w") as selection_config:
+        selection_config.write(
+            selection_template.format(activation_string, deactivation_string)
+        )
+
 
 @cli.command("update-tracker")
 @click.argument("latest_md5s")
 @click.option("--db-url", envvar="PGDATABASE")
 def update_tracker(latest_md5s, db_url):
-    latest_checksums = pd.read_csv(latest_md5s, names=["db_name", "checksum"])
+    """
+    Record the checksum of each database's remote file in rnc_import_tracker.
+
+    Every database in the file is written, not only the ones that changed: the tracker
+    says what we last imported, so dropping the unchanged rows would make every
+    database look new again on the next run.
+    """
+    latest = pd.read_csv(latest_md5s, names=["db_name", "checksum"])
 
     conn = psycopg2.connect(db_url)
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        with conn.cursor() as cur:
+            names = sorted({str(name).upper() for name in latest["db_name"]})
+            cur.execute(
+                "SELECT descr, id FROM rnc_database WHERE descr = ANY(%s)", (names,)
+            )
+            ids = dict(cur.fetchall())
 
-    cur.execute("SELECT * FROM rnc_import_tracker;")
+            rows = [
+                (str(name).lower(), ids[str(name).upper()], str(checksum))
+                for name, checksum in zip(latest["db_name"], latest["checksum"])
+                if str(name).upper() in ids
+            ]
+            if not rows:
+                return
 
-    prev_checksums = pd.DataFrame(cur.fetchall())
-
-    selection = latest_checksums.join(prev_checksums.set_index("db_name"), on="db_name").query("checksum != file_md5")
-    selection['db_name'] = selection['db_name'].apply(lambda x: x.upper())
-
-    print(cur.execute("SELECT * FROM rnc_database WHERE descr = ANY(%s);", (list(selection['db_name'].values),) ) )
-    all_dbs = pd.DataFrame(cur.fetchall())
-
-    insert_data = selection.join(all_dbs.set_index('descr'), on='db_name', rsuffix='_r').filter(items=["db_name", "id_r", "checksum"])
-
-    print(insert_data)
-
-    for idx, row in insert_data.iterrows():
-        print(row)
-        db_name = row[0].lower()
-        db_id = row[1]
-        checksum = row[2]
-
-        cur.execute("TRUNCATE TABLE rnc_import_tracker")
-        cur.execute("INSERT INTO rnc_import_tracker(db_name, db_id, last_import_date, file_md5) VALUES (%s, %s, CURRENT_TIMESTAMP, %s) ", (db_name, db_id, checksum,))
-
-    conn.commit()
-    cur.close()
-    conn.close()
+            # db_name carries no unique constraint, so replace this run's rows rather
+            # than upserting -- and only this run's. Truncating the table would forget
+            # every database the run did not cover.
+            cur.execute(
+                "DELETE FROM rnc_import_tracker WHERE db_name = ANY(%s)",
+                ([row[0] for row in rows],),
+            )
+            psycopg2.extras.execute_values(
+                cur,
+                """
+                INSERT INTO rnc_import_tracker
+                    (db_name, db_id, last_import_date, file_md5)
+                VALUES %s
+                """,
+                rows,
+                template="(%s, %s, CURRENT_TIMESTAMP, %s)",
+            )
+        conn.commit()
+    finally:
+        conn.close()

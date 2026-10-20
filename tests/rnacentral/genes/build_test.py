@@ -13,15 +13,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import io
+import os
 
-import pytest
 import psycopg2
+import pytest
 import yaml
 from yaml import Loader
 
 from rnacentral_pipeline.rnacentral.genes import build
+
+pytestmark = pytest.mark.skip(
+    reason=(
+        "Tests rnacentral_pipeline.rnacentral.genes.build (Context/Methods/"
+        "from_json), which has zero production callers - the real genes CLI "
+        "(rnacentral_pipeline/cli/genes.py) is built entirely on the Random "
+        "Forest classifier pipeline (rnacentral_pipeline/rnacentral/genes/"
+        "random_forest/), a different architecture (ML classification + "
+        "community detection, not interval-tree/rules clustering). "
+        "files/genes/{data,counts}.sql aren't wired into any .nf either. "
+        "This suite is the reference for reworking coverage against the RF "
+        "pipeline (see tests/rnacentral/genes/random_forest/) elsewhere, not "
+        "for deletion."
+    )
+)
 
 
 ENDPOINT_QUERY = """

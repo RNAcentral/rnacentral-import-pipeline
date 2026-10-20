@@ -51,12 +51,13 @@ def url(entry: HgncEntry) -> str:
 
 
 def load(path: Path) -> ty.List[HgncEntry]:
-    data = []
+    return [HgncEntry.from_raw(raw) for raw in load_raw(path)]
+
+
+def load_raw(path: Path) -> ty.List[dict]:
+    """The raw HGNC records, before mapping to HgncEntry -- used for signatures."""
     with path.open("r") as handle:
-        raw_data = json.load(handle)
-        for raw in raw_data["response"]["docs"]:
-            data.append(HgncEntry.from_raw(raw))
-    return data
+        return json.load(handle)["response"]["docs"]
 
 
 def description(entry: HgncEntry) -> str:
@@ -89,6 +90,22 @@ def _longest(rows) -> ty.Dict[str, str]:
     return {key: urs for key, (urs, _) in best.items()}
 
 
+def known_urs(conn, urs_ids: ty.List[str]) -> ty.Set[str]:
+    """
+    The subset of the given URS ids that we actually hold.
+
+    HGNC curates a URS for most of its ncRNAs, which is a better answer than
+    anything we can re-derive. Trusting one we do not have would produce an
+    xref pointing at nothing, so unknown ids fall through to the lookups.
+    """
+    if not urs_ids:
+        return set()
+
+    with conn.cursor() as cur:
+        cur.execute("select urs from rna where urs = ANY(%s)", (sorted(set(urs_ids)),))
+        return {urs for (urs,) in cur}
+
+
 def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
     """
     Map every RefSeq id to the longest URS it corresponds to.
@@ -102,7 +119,7 @@ def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
 
     ids = sorted(set(refseq_ids))
     query = """
-    select k, rna.upi, rna.len
+    select k, rna.urs, rna.len
     from (
         select acc.parent_ac as k, acc.accession
         from rnc_accessions acc where acc.parent_ac = ANY(%s)
@@ -114,7 +131,7 @@ def refseq_mapping(conn, refseq_ids: ty.List[str]) -> ty.Dict[str, str]:
         from rnc_accessions acc where acc.optional_id = ANY(%s)
     ) m
     join xref on xref.ac = m.accession
-    join rna on rna.upi = xref.upi
+    join rna on rna.urs = xref.urs
     where xref.taxid = %s and xref.deleted = 'N' and xref.dbid = %s
     """
     with conn.cursor() as cur:
@@ -130,10 +147,10 @@ def gtrnadb_mapping(conn, gtrnadb_ids: ty.List[str]) -> ty.Dict[str, str]:
         return {}
 
     query = """
-    select acc.optional_id, rna.upi, rna.len
+    select acc.optional_id, rna.urs, rna.len
     from xref
     join rnc_accessions acc on acc.accession = xref.ac
-    join rna on rna.upi = xref.upi
+    join rna on rna.urs = xref.urs
     where xref.taxid = %s and xref.deleted = 'N' and xref.dbid = %s
       and acc.database = 'GTRNADB' and acc.optional_id = ANY(%s)
     """
@@ -178,8 +195,27 @@ def _fetch_batch(batch: ty.List[str]) -> ty.List[dict]:
         )
         response.raise_for_status()
     except requests.exceptions.RequestException as err:
-        LOGGER.error("Gave up on a batch, losing %i genes: %s", len(batch), err)
-        return []
+        status = getattr(err.response, "status_code", None)
+        # A 4xx other than 429 is deterministic: some id in the batch is withdrawn
+        # or invalid (Ensembl 400s the whole POST for one bad id). Bisect to isolate
+        # it rather than losing the other 49, and never fail the run over it.
+        if status is not None and 400 <= status < 500 and status != 429:
+            if len(batch) == 1:
+                LOGGER.warning(
+                    "No Ensembl sequence for %s (HTTP %d) -- skipping record",
+                    batch[0],
+                    status,
+                )
+                return []
+            half = len(batch) // 2
+            return _fetch_batch(batch[:half]) + _fetch_batch(batch[half:])
+        # 429/5xx/network: the session has already retried these, so it is a
+        # persistent failure. Returning [] would drop up to 50 genes, and an
+        # incremental load retires by absence -- a flaky Ensembl would silently
+        # retire live xrefs. Fail loudly instead.
+        raise RuntimeError(
+            "Ensembl cdna lookup failed for a batch of %i genes" % len(batch)
+        ) from err
     return response.json()
 
 
@@ -228,11 +264,11 @@ def ensembl_mapping(conn, gene_ids: ty.List[str]) -> ty.Dict[str, str]:
 
     with conn.cursor() as cur:
         cur.execute(
-            "select md5, upi, len from rna where md5 = ANY(%s)", (list(digests),)
+            "select md5, urs, len from rna where md5 = ANY(%s)", (list(digests),)
         )
         rows = [
-            (gene_id, upi, length)
-            for digest, upi, length in cur
+            (gene_id, urs, length)
+            for digest, urs, length in cur
             for gene_id in digests[digest]
         ]
     return _longest(rows)
@@ -246,8 +282,8 @@ def sequence_mapping(conn, urs_ids: ty.List[str]) -> ty.Dict[str, str]:
         return {}
 
     query = """
-    select upi, coalesce(seq_short, seq_long)
-    from rna where upi = ANY(%s)
+    select urs, coalesce(seq_short, seq_long)
+    from rna where urs = ANY(%s)
     """
     with conn.cursor() as cur:
         cur.execute(query, (sorted(set(urs_ids)),))

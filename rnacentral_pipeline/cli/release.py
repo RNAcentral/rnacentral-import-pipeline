@@ -15,9 +15,8 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral.release import functions
-from rnacentral_pipeline.rnacentral.release import run
 from rnacentral_pipeline.rnacentral.release import database_stats as stats
+from rnacentral_pipeline.rnacentral.release import functions, run
 
 
 @click.group("release")
@@ -30,11 +29,16 @@ def cli():
 
 @cli.command("run")
 @click.option("--db-url", envvar="PGDATABASE")
-def run_release(db_url=None):
+@click.option(
+    "--force-full",
+    is_flag=True,
+    help="Force a full (non-incremental) release for every database.",
+)
+def run_release(db_url=None, force_full=False):
     """
     A command to run the release logic in the database.
     """
-    run.run(db_url)
+    run.run(db_url, force_full=force_full)
 
 
 @cli.command("check")
@@ -49,7 +53,9 @@ def check_release(limit_file, db_url=None):
 
 @cli.command("functions")
 @click.option("--db-url", envvar="PGDATABASE")
-@click.option("--dry-run", is_flag=True, help="Show what would change without applying.")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would change without applying."
+)
 def sync_functions(db_url=None, dry_run=False):
     """
     Apply the database functions from database_functions/ whose source has changed
@@ -64,8 +70,11 @@ def sync_functions(db_url=None, dry_run=False):
 
 @cli.command("update-stats")
 @click.option("--db-url", envvar="PGDATABASE")
-def update_stats(db_url):
+@click.option(
+    "--force", is_flag=True, help="Recompute every database, not just loaded ones"
+)
+def update_stats(db_url, force):
     """
-    Update the stats in the database.
+    Update the stats for every database loaded since its stats were last computed.
     """
-    stats.update_stats(db_url)
+    stats.update_stats(db_url, force=force)

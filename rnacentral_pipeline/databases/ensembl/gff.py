@@ -65,13 +65,14 @@ IGNORED_TRANSCRIPTS = {
 
 
 def get_assembly(path: Path) -> str:
+    path = Path(path)
     with path.open("r") as raw:
         for line in raw:
             if not line.startswith("#"):
                 break
             if line.startswith("#!genome-version"):
                 parts = line.split(" ", 1)
-                return parts[1]
+                return parts[1].strip()
 
     raise ValueError(f"Could not find assembly id in {path}")
 
@@ -79,7 +80,8 @@ def get_assembly(path: Path) -> str:
 def load_coordinates(path: Path) -> SqliteDict:
     assembly_id = get_assembly(path)
     mapping = SqliteDict()
-    with tempfile.NamedTemporaryFile() as tmp:
+    # dir="." because singularity --contain gives us a tiny in-memory /tmp
+    with tempfile.NamedTemporaryFile(dir=".") as tmp:
         db = gffutils.create_db(str(path), tmp.name)
         for ncrna_gene in db.features_of_type("ncRNA_gene"):
             for transcript in db.children(ncrna_gene):

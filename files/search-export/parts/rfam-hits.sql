@@ -8,11 +8,11 @@ COPY (
       'rfam_clans', models.rfam_clan_id
     )
   FROM search_export_urs todo
-  JOIN rfam_model_hits hits 
+  JOIN rfam_model_hits hits
   ON
-    todo.urs = hits.upi
-  JOIN rfam_models models 
-  ON 
+    todo.urs = hits.urs
+  JOIN rfam_models models
+  ON
     hits.rfam_model_id = models.rfam_model_id
   ORDER BY todo.id
 ) TO STDOUT

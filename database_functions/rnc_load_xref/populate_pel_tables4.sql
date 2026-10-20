@@ -8,7 +8,7 @@ BEGIN
     INSERT INTO XREF_PEL_DELETED(
         DBID,
         CREATED,
-        UPI,
+        URS,
         VERSION_I,
         TIMESTAMP,
         USERSTAMP,
@@ -21,7 +21,7 @@ BEGIN
     SELECT
       x.DBID,
       x.CREATED,
-      x.UPI,
+      x.URS,
       x.VERSION_I,
       x.TIMESTAMP,
       x.USERSTAMP,
@@ -53,7 +53,7 @@ BEGIN
     INSERT INTO XREF_PEL_DELETED(
         DBID,
         CREATED,
-        UPI,
+        URS,
         VERSION_I,
         TIMESTAMP,
         USERSTAMP,
@@ -66,7 +66,7 @@ BEGIN
     SELECT
       x.DBID,
       x.CREATED,
-      x.UPI,
+      x.URS,
       x.VERSION_I,
       x.TIMESTAMP,
       x.USERSTAMP,
@@ -88,7 +88,7 @@ BEGIN
     SELECT
       x.DBID,
       x.CREATED,
-      x.UPI,
+      x.URS,
       x.VERSION_I,
       x.TIMESTAMP,
       x.USERSTAMP,
@@ -112,7 +112,7 @@ BEGIN
           WHERE L.COMPARABLE_PROT_UPI IS NOT NULL
           AND X.AC                 = L.IN_AC
           AND X.DBID               = L.IN_DBID
-          AND X.UPI                = L.COMPARABLE_PROT_UPI -- retire the specific dropped (ac,upi), not only whole-accession removals
+          AND X.URS                = L.COMPARABLE_PROT_UPI -- retire the specific dropped (ac,urs), not only whole-accession removals
         )
     ;
 
@@ -121,4 +121,3 @@ BEGIN
 END;
 
 $function$
-

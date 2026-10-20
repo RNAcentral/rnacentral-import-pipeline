@@ -18,7 +18,15 @@ import click
 
 from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
-from rnacentral_pipeline.rnacentral.genome_mapping import blat, urls, igv, update_assemblies
+from rnacentral_pipeline.rnacentral.genome_mapping import (
+    blat,
+    igv,
+    update_assemblies,
+    urls,
+)
+
+# Exit status meaning "Ensembl has no such file", as opposed to a real failure.
+NO_REMOTE_FILE = 3
 
 
 @click.group("genome-mapping")
@@ -78,6 +86,25 @@ def select_hits(hits, output, sort=False):
     blat.select_pickle(hits, output, sort=sort)
 
 
+@hits.command("shard-plan")
+@click.option(
+    "--max-bases",
+    type=int,
+    default=blat.MAX_SHARD_BASES,
+    help="Largest number of target bases to put in one shard",
+)
+@click.argument("fai", default="-", type=click.File("r"))
+@click.argument("output", type=click.Path())
+def shard_plan(fai, output, max_bases):
+    """
+    Split the sequences in a samtools .fai into shards of at most --max-bases,
+    writing the names in each shard to its own file under OUTPUT. blat cannot
+    index a target over 2^32 bases, so genomes past that must be aligned one
+    shard at a time.
+    """
+    blat.write_shard_plan(fai, output, max_bases=max_bases)
+
+
 @cli.command("url-for")
 @click.option("--kind", default="fa", type=click.Choice(["fa", "gff3"]))
 @click.option("--host", default="ensembl")
@@ -88,8 +115,18 @@ def find_remote_url(species, assembly_id, output, host=None, kind=None):
     """
     Determine the remote URL to fetch the genome or coordinates for a given species/assembly.
     The url is written to the output file and may include '*'.
+
+    Exits with status 3 if Ensembl does not serve the file. Many assemblies in
+    ensembl_assembly are no longer on the current FTP, so callers treat that as
+    a species to skip rather than as a failure.
     """
-    url = urls.url_for(species, assembly_id, kind=kind, host=host)
+    try:
+        url = urls.url_for(species, assembly_id, kind=kind, host=host)
+    except urls.NoTopLevelFiles:
+        click.echo(
+            "No %s for %s/%s on %s" % (kind, species, assembly_id, host), err=True
+        )
+        raise SystemExit(NO_REMOTE_FILE)
     output.write(url)
 
 

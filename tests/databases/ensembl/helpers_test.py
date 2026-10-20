@@ -15,31 +15,27 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.databases.ensembl import helpers
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers
 
-from .helpers import features, feature_for, first_feature_for
+from .helpers import feature_for, features, first_feature_for
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def human_12():
-    return features("data/ensembl/Homo_sapiens.GRCh38.90.chromosome.12.dat")
+    return features("test-data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat")
 
 
 def test_it_gets_transcript_id(human_12):
     assert (
-        helpers.transcript(feature_for(human_12, "ENST00000535849.1"))
-        == "ENST00000535849.1"
+        helpers.transcript(feature_for(human_12, "ENST00000546223.1"))
+        == "ENST00000546223.1"
     )
 
 
 @pytest.mark.parametrize(
     "transcript_id,notes",
     [
-        # ('ENST00000540907.11', [
-        #     "processed_transcript",
-        #     "transcript_id=ENST00000544511.1"
-        # ]),
-        ("ENST00000540226.1", ["antisense_RNA"]),
+        ("ENST00000540226.2", ["lncRNA"]),
     ],
 )
 def test_it_can_get_notes(human_12, transcript_id, notes):
@@ -49,8 +45,7 @@ def test_it_can_get_notes(human_12, transcript_id, notes):
 @pytest.mark.parametrize(
     "transcript_id,note_data",
     [
-        # ('ENST00000540907.11', {'transcript_id': ['ENST00000540907.11']}),
-        ("ENST00000544511.1", {"transcript_id": ["ENST00000544511.1"]}),
+        ("ENST00000432994.2", {"transcript_id": ["ENST00000432994.2"]}),
     ],
 )
 def test_it_can_get_grouped_notes(human_12, transcript_id, note_data):
@@ -61,17 +56,14 @@ def test_it_can_get_grouped_notes(human_12, transcript_id, note_data):
 @pytest.mark.parametrize(
     "transcript_id,status",
     [
-        ("ENST00000535572.5", False),
-        ("ENST00000408512.1", True),
-        ("ENST00000358495.7", False),
-        ("ENST00000535376.5", False),
-        ("ENST00000623153.1", False),
-        ("ENST00000546223.1", True),
-        ("ENST00000358495.7", False),
-        ("ENST00000358495.7", False),
-        ("ENST00000481052.5", False),
-        ("ENST00000430095.6", False),
-        ("ENST00000364606.1", True),
+        ("ENST00000534526.7", False),  # mRNA, protein-coding
+        ("ENST00000550091.5", True),  # misc_RNA, protein_coding_CDS_not_defined
+        ("ENST00000494275.5", False),  # misc_RNA, retained_intron
+        ("ENST00000531134.8", False),  # mRNA, protein-coding
+        ("ENST00000611210.1", True),  # misc_RNA, misc_RNA
+        ("ENST00000516089.1", True),  # misc_RNA, scaRNA
+        ("ENST00000472289.5", False),  # mRNA, protein-coding
+        ("ENST00000497153.5", True),  # misc_RNA, protein_coding_CDS_not_defined
     ],
 )
 def test_can_detect_if_is_noncoding(human_12, transcript_id, status):

@@ -15,7 +15,7 @@ CREATE INDEX IF NOT EXISTS ix__load_rfam_model_hits__rfam_model_id
 
 DELETE FROM rfam_model_hits hits
 USING load_rfam_model_hits load
-WHERE hits.upi = load.upi;
+WHERE hits.urs = load.upi;
 
 INSERT INTO rfam_model_hits (
   sequence_start,
@@ -28,7 +28,7 @@ INSERT INTO rfam_model_hits (
   e_value,
   score,
   rfam_model_id,
-  upi
+  urs
 )
 SELECT
   load.sequence_start,
@@ -43,9 +43,9 @@ SELECT
   load.rfam_model_id,
   load.upi
 FROM rna, rfam_models AS models, load_rfam_model_hits AS load
-WHERE rna.upi = load.upi
+WHERE rna.urs = load.upi
   AND models.rfam_model_id = load.rfam_model_id
-ON CONFLICT (sequence_start, sequence_stop, model_start, model_stop, rfam_model_id, upi)
+ON CONFLICT (sequence_start, sequence_stop, model_start, model_stop, rfam_model_id, urs)
 DO UPDATE SET
   e_value = excluded.e_value,
   score = excluded.score,

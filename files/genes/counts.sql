@@ -6,11 +6,11 @@ COPY (
     'mapped_count', count(distinct regions.id) filter (where was_mapped = true),
     'given_count', count(distinct regions.id) filter (where was_mapped = false),
     'total_count', count(distinct regions.id)
-  ) 
+  )
 FROM rnc_rna_precomputed pre
 JOIN rnc_sequence_regions regions
 ON
-  regions.urs_taxid = pre.id
+  regions.urs_taxid = pre.urs_taxid
 WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'

@@ -15,11 +15,14 @@ limitations under the License.
 
 import importlib.util
 import io
+import json
 import logging
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
-
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "bin" / "json2fasta.py"
 SPEC = importlib.util.spec_from_file_location("json2fasta", MODULE_PATH)
@@ -29,33 +32,22 @@ SPEC.loader.exec_module(json2fasta)
 
 
 @pytest.mark.utils
-def test_parse_can_read_multiline_json_entry():
-    raw = io.StringIO('{"id":"URS0001",\n"description":"sample","sequence":"ACGUN"}\n')
+def test_parse_reads_one_entry_per_line():
+    raw = io.StringIO(
+        '{"id": "URS0001", "description": "sample description", "sequence": "ACGUN"}\n'
+    )
 
     parsed = list(json2fasta.parse(raw))
 
     assert parsed == [
-        {"id": "URS0001", "description": "sample", "sequence": "ACGUN"},
+        {"id": "URS0001", "description": "sample description", "sequence": "ACGUN"},
     ]
 
 
 @pytest.mark.utils
-def test_parse_logs_when_buffering_multiline_json(caplog):
-    raw = io.StringIO('{"id":"URS0001",\n"description":"sample","sequence":"ACGUN"}\n')
-
-    with caplog.at_level(logging.WARNING):
-        parsed = list(json2fasta.parse(raw))
-
-    assert parsed == [
-        {"id": "URS0001", "description": "sample", "sequence": "ACGUN"},
-    ]
-    assert "Could not decode JSON entry yet" in caplog.text
-
-
-@pytest.mark.utils
-def test_sequences_emits_fasta_records_from_multiline_json():
+def test_sequences_emits_fasta_records():
     raw = io.StringIO(
-        '{"id":"URS0001",\n"description":"sample description","sequence":"ACGUN"}\n'
+        '{"id": "URS0001", "description": "sample description", "sequence": "ACGUN"}\n'
     )
 
     records = list(json2fasta.sequences(raw))
@@ -67,8 +59,40 @@ def test_sequences_emits_fasta_records_from_multiline_json():
 
 
 @pytest.mark.utils
+def test_parse_fails_fast_on_an_entry_split_across_lines(caplog):
+    # A dump must emit exactly one compact JSON object per line - buffering
+    # across lines to tolerate a split entry is what caused a 256GB OOM in
+    # production (a single bad line would otherwise accumulate the rest of
+    # the multi-hundred-GB dump into one string). parse() must fail on the
+    # first line instead, not wait for the object to complete.
+    raw = io.StringIO('{"id":"URS0001",\n"description":"sample","sequence":"ACGUN"}\n')
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(json.JSONDecodeError):
+            list(json2fasta.parse(raw))
+
+    assert "Undecodable JSON on line 1" in caplog.text
+
+
+@pytest.mark.utils
 def test_parse_raises_for_incomplete_json_at_eof():
     raw = io.StringIO('{"id":"URS0001","sequence":"ACGUN"')
 
-    with pytest.raises(json2fasta.json.JSONDecodeError):
+    with pytest.raises(json.JSONDecodeError):
         list(json2fasta.parse(raw))
+
+
+@pytest.mark.utils
+def test_script_runs_without_pythonpath(tmp_path):
+    # Nextflow runs the script from a work dir in a container where the package
+    # is not installed, so it must find rnacentral_pipeline on its own.
+    raw = tmp_path / "in.json"
+    raw.write_text('{"id": "URS0001", "description": "d", "sequence": "ACGU"}\n')
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    subprocess.run(
+        [sys.executable, str(MODULE_PATH), str(raw), "out.fasta"],
+        cwd=tmp_path,
+        env=env,
+        check=True,
+    )
+    assert (tmp_path / "out.fasta").read_text().startswith(">URS0001")

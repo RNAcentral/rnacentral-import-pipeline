@@ -94,7 +94,7 @@ def fetch_inspect_data(filename, output, db_url=None):
     to evaluate a diagram and decide if it should be true/false in the training
     set.
     """
-    r2dt.write_training_data(filename, db_url, output)
+    r2dt.write_inspect_data(filename, db_url, output)
 
 
 @should_show.command("build-model")
@@ -103,14 +103,27 @@ def fetch_inspect_data(filename, output, db_url=None):
 @click.argument("model", type=click.Path())
 def build_model(training_info, model, db_url=None):
     """
-    This builds a model given then training information. The training
-    information should be a csv file of:
-        URS,flag
-    The flag must be 1 or 0 to indicate if the URS should be shown or not. THis
-    will fetch the data like the fetch-data command but will then build a model
-    and write it out the the output file directly.
+    This builds a model given the training information, which can be either:
+
+    \b
+    - a pre-featured, labelled corpus (eg data/r2dt/should-show/labelled-corpus.csv,
+      as produced by fetch-data plus hand labelling, with a 'label' column) - used
+      directly, no database needed; or
+    - a plain URS,flag csv, in which case --db-url is required to fetch the
+      features for each URS.
+
+    The model is trained with 5-fold cross validation on a held-out split of
+    the data to estimate F1/accuracy, then refit on the full training split
+    and scored on the held-out test split; both sets of metrics are printed.
     """
-    r2dt.build_model(training_info, db_url, Path(model))
+    metrics = r2dt.build_model(training_info, db_url, Path(model))
+    click.echo(
+        "{cv_folds}-fold CV: f1={cv_f1_mean:.4f} (+/- {cv_f1_std:.4f}) "
+        "accuracy={cv_accuracy_mean:.4f} (+/- {cv_accuracy_std:.4f})".format(**metrics)
+    )
+    click.echo(
+        "Test set: f1={test_f1:.4f} accuracy={test_accuracy:.4f}".format(**metrics)
+    )
 
 
 @should_show.command("compute")
@@ -308,10 +321,13 @@ def r2dt_upload_s3(
     help="fail if FAILURE_LIST holds more URS than this (a run-wide cap)",
 )
 @click.argument("failure_list", type=click.Path(dir_okay=False))
-@click.argument("data_files", nargs=-1, type=click.Path(exists=True, dir_okay=False))
+@click.argument("data_files", nargs=-1)
 def r2dt_drop_failed_uploads(failure_list, data_files, max_failures):
     """
     Remove rows for URS listed in FAILURE_LIST from DATA_FILES, in place.
+
+    DATA_FILES are globs, quoted so they reach here unexpanded: a release with
+    11763 chunks a side made 23526 arguments, which segfaults the interpreter.
 
     Keeps the database honest when upload-s3 tolerated a failure: the URS would
     otherwise get a structure row pointing at an object that is not in S3. Pass

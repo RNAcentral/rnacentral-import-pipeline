@@ -45,7 +45,7 @@ CREATE TABLE load_precomputed (
   taxid int8 NULL,
   description varchar(500) NULL,
   short_description text NULL,
-  rna_type varchar(500) NULL DEFAULT 'NULL'::character varying,
+  rna_type varchar(500) NULL,
   has_coordinates bool NOT NULL DEFAULT false,
   databases text,
   is_active bool,

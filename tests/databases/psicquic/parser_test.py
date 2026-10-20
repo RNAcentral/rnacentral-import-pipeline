@@ -26,7 +26,7 @@ from rnacentral_pipeline.databases.data import (
     Interactor,
 )
 from rnacentral_pipeline.databases.helpers import publications as pub
-from rnacentral_pipeline.databases.psicquic import parser
+from rnacentral_pipeline.databases.psicquic import helpers, parser
 
 
 @pytest.fixture(scope="module")
@@ -151,3 +151,14 @@ def test_can_parse_correctly(data):
             )
         ],
     )
+
+
+def test_normalises_u_in_looked_up_sequence():
+    info = {"sequence": "AUACUU", "rna_type": "SO:0000274", "description": "x"}
+    entry = helpers.as_entry("URS0001BC29EB_9606", [], info)
+    assert entry.sequence == "ATACTT"
+
+
+def test_skips_urs_without_active_sequence(monkeypatch):
+    monkeypatch.setattr(parser.lookup, "mapping", lambda db_url, interactions: {})
+    assert list(parser.parse(Path("data/psicquic/data.tsv"), "unused")) == []

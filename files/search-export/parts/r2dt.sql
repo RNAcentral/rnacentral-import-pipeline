@@ -16,7 +16,7 @@ ON
   layout.model_id = models.id
 JOIN rna
 ON
-  rna.upi = layout.urs
+  rna.urs = layout.urs
 WHERE
   coalesce(layout.assigned_should_show, layout.inferred_should_show) = true
   -- A sequence much longer than the model it was drawn against was force-fit to

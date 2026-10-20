@@ -89,11 +89,37 @@ class BedEntry:
             ]
         return data
 
+    def exploded(self) -> ty.Iterator[ty.List]:
+        """
+        One row per exon: chrom, exon_start, exon_end, rna_id, transcript
+        length, strand, transcript_start, transcript_end. This is the format
+        genomic intersects (e.g. rediportal) need, replacing the old Rust
+        bed-expander binary.
+        """
+        total_length = sum(self.sizes())
+        for exon in self.region.exons:
+            yield [
+                self.bed_chromosome,
+                exon.start,
+                exon.stop,
+                self.rna_id,
+                total_length,
+                self.region.strand.display_string(),
+                self.region.start,
+                self.region.stop,
+            ]
+
 
 def write_bed_text(entries, out, extended=True):
     data = map(op.methodcaller("writeable", extended=extended), entries)
     writer = csv.writer(out, delimiter="\t", lineterminator="\n")
     writer.writerows(data)
+
+
+def write_exploded_bed_text(entries, out):
+    writer = csv.writer(out, delimiter="\t", lineterminator="\n")
+    for entry in entries:
+        writer.writerows(entry.exploded())
 
 
 def from_json(handle, out):
@@ -104,3 +130,14 @@ def from_json(handle, out):
     data = coord.from_file(handle, genes=False)
     data = map(BedEntry.from_coordinate, data)
     write_bed_text(data, out)
+
+
+def from_json_exploded(handle, out):
+    """
+    Transform raw coordinate data into the exploded (one row per exon) bed
+    format used for genomic intersects, e.g. rediportal.
+    """
+
+    data = coord.from_file(handle, genes=False)
+    data = map(BedEntry.from_coordinate, data)
+    write_exploded_bed_text(data, out)

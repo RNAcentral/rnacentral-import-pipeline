@@ -1,6 +1,6 @@
 -- MIRGENEDB
 select
-    upi,
+    urs,
     taxid,
 	  external_id
 from xref x

@@ -125,7 +125,6 @@ def test_can_build_xrefs(simple_entry):
     }
 
 
-@pytest.mark.xfail()
 def test_can_fetch_sequence(simple_entry):
     with rgd.indexed("data/rgd/sequences.fa.gz") as indexed:
         data = rgd.sequences_for(simple_entry, indexed)
@@ -257,7 +256,6 @@ def test_produces_none_for_no_sequence(tricky_entry, sequences):
     )
 
 
-@pytest.mark.xfail()
 def test_can_create_entries_for_all_ncrna(rat_ncrna, sequences):
     entries = [rgd.as_entries(e, sequences) for e in rat_ncrna]
     assert len(entries) == 15

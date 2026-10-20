@@ -153,7 +153,6 @@ def corrected_records(handle):
 
     seen = coll.defaultdict(set)
     for record in SeqIO.parse(handle, "fasta"):
-
         if not str(record.seq):
             continue
 
@@ -281,7 +280,7 @@ def transcripts(entry, seqs):
 
 def sequences_for(entry, sequences):
     seqs = set()
-    for (record_id, exon) in seq_xref_ids(entry):
+    for record_id, exon in seq_xref_ids(entry):
         if record_id not in sequences:
             continue
         record = sequences[record_id]

@@ -14,11 +14,10 @@ limitations under the License.
 """
 
 import csv
-from pathlib import Path
 import typing as ty
+from pathlib import Path
 
-from rnacentral_pipeline.cpat.data import CpatResult
-from rnacentral_pipeline.cpat.data import CpatCutoffs
+from rnacentral_pipeline.cpat.data import CpatCutoffs, CpatResult
 
 
 def cutoffs(directory: Path) -> CpatCutoffs:
@@ -38,9 +37,13 @@ def cutoffs(directory: Path) -> CpatCutoffs:
 
 
 def parse(
-    cutoffs: CpatCutoffs, model_name: str, results: Path
+    cutoffs: CpatCutoffs, model_name: str, results: Path, no_orfs: Path
 ) -> ty.Iterable[CpatResult]:
     with results.open("r") as raw:
         reader = csv.DictReader(raw, delimiter="\t")
         for data in reader:
             yield CpatResult.build(data, model_name, cutoffs)
+    with no_orfs.open("r") as raw:
+        for line in raw:
+            if line.strip():
+                yield CpatResult.no_orf(line.strip())

@@ -4,20 +4,24 @@ HAVING FIELDS (
     taxid,
     name,
     lineage,
+    common_name,
     aliases,
     replaced_by,
     rank,
-    reference_proteome
+    reference_proteome,
+    is_deleted
 )
 INTO {{PGDATABASE}}?load_taxonomy
 TARGET COLUMNS (
     taxid,
     name,
     lineage,
+    common_name,
     aliases,
     replaced_by,
     rank,
-    reference_proteome
+    reference_proteome,
+    is_deleted
 )
 WITH skip header = 0,
     fields escaped by double-quote,
@@ -32,10 +36,12 @@ create table load_taxonomy (
     taxid int,
     name text,
     lineage text,
+    common_name text,
     aliases json,
     replaced_by int,
     rank text,
-    reference_proteome boolean
+    reference_proteome boolean,
+    is_deleted boolean
 );
 $$
 

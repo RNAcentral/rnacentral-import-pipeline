@@ -12,7 +12,7 @@ COPY(
 
   FROM search_export_urs todo
   JOIN rnc_sequence_features sf
-    ON sf.upi = todo.urs
+    ON sf.urs = todo.urs
     AND sf.taxid = todo.taxid
 
   WHERE feature_name = 'rna_editing_event'

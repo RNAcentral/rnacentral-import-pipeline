@@ -2,9 +2,9 @@ LOAD CSV
 FROM ALL FILENAMES MATCHING ~<cpat-results.*csv$>
 HAVING FIELDS (
   urs_taxid,
-  fickett_score,
-  hexamer_score,
-  coding_probability,
+  fickett_score [null if ""],
+  hexamer_score [null if ""],
+  coding_probability [null if ""],
   is_protein_coding
 )
 INTO {{PGDATABASE}}?load_cpat
@@ -15,6 +15,21 @@ TARGET COLUMNS (
   coding_probability,
   is_protein_coding
 )
+
+-- Sequences without an ORF are stored with null scores; the tables predate that.
+BEFORE LOAD DO
+$$
+ALTER TABLE load_cpat
+  ALTER COLUMN fickett_score DROP NOT NULL,
+  ALTER COLUMN hexamer_score DROP NOT NULL,
+  ALTER COLUMN coding_probability DROP NOT NULL;
+$$,
+$$
+ALTER TABLE cpat_results
+  ALTER COLUMN fickett_score DROP NOT NULL,
+  ALTER COLUMN hexamer_score DROP NOT NULL,
+  ALTER COLUMN coding_probability DROP NOT NULL;
+$$
 
 AFTER LOAD DO
 $$

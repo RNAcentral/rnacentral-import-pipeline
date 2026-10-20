@@ -44,7 +44,7 @@ def find_url(species, assembly, host, output, temp_directory=None):
     temp directory, defaulting to the current one.
     """
 
-    url = urls.url_for(species, assembly, host, soft_masked=True)
+    url = urls.url_for(species, assembly, "fa", host, soft_masked=True)
     output.write(url)
     output.write("\n")
 

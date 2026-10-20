@@ -61,11 +61,22 @@ class CpatOrf:
 @attr.s()
 class CpatResult:
     urs_taxid = attr.ib(validator=is_a(str))
-    fickett_score = attr.ib(validator=is_a(float))
-    hexamer_score = attr.ib(validator=is_a(float))
-    coding_prob = attr.ib(validator=is_a(float))
+    fickett_score = attr.ib(validator=optional(is_a(float)))
+    hexamer_score = attr.ib(validator=optional(is_a(float)))
+    coding_prob = attr.ib(validator=optional(is_a(float)))
     protein_coding = attr.ib(validator=is_a(bool))
     orf = attr.ib(validator=optional(is_a(CpatOrf)))
+
+    @classmethod
+    def no_orf(cls, urs_taxid: str) -> CpatResult:
+        return cls(
+            urs_taxid=urs_taxid,
+            fickett_score=None,
+            hexamer_score=None,
+            coding_prob=None,
+            protein_coding=False,
+            orf=None,
+        )
 
     @classmethod
     def build(
@@ -89,11 +100,14 @@ class CpatResult:
         )
 
     def writeable(self) -> ty.List[str]:
+        def score(value):
+            return "" if value is None else str(value)
+
         return [
             self.urs_taxid,
-            str(self.fickett_score),
-            str(self.hexamer_score),
-            str(self.coding_prob),
+            score(self.fickett_score),
+            score(self.hexamer_score),
+            score(self.coding_prob),
             str(self.protein_coding),
         ]
 

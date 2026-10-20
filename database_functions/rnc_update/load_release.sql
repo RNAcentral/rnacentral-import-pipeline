@@ -23,8 +23,10 @@ BEGIN
     v_previous_release := release.get_previous_release(p_in_dbid, p_in_load_release);
     IF v_release_type = 'F' THEN
       perform rnc_load_xref.load_xref(v_previous_release, p_in_dbid);
-    elsif v_release_type = 'I' THEN
-      perform rnc_load_xref_incremental.load_xref_incremental(v_previous_release, p_in_dbid);
+    elsif v_release_type = 'D' THEN
+      perform rnc_load_xref_incremental.load_xref_delta(v_previous_release, p_in_dbid);
+    ELSE
+      RAISE EXCEPTION 'Unknown release_type: % (only F and D are handled)', v_release_type;
     END IF;
 
     -- mark release as done
@@ -38,4 +40,3 @@ BEGIN
   END;
 
 $function$
-

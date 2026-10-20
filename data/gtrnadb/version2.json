@@ -1,0 +1,59 @@
+[
+  {
+    "crossReferenceIds": [
+      "RNACENTRAL:URS00006C1C15"
+    ],
+    "gene": {
+      "geneId": "GTRNADB:tRNA-Arg-CCT-1-1",
+      "symbol": "tRNA-Arg-CCT-1-1",
+      "synonyms": [
+        "scaffold00032.trna17-ArgCCT"
+      ]
+    },
+    "genomeLocations": [
+      {
+        "assembly": "AplCal3.0",
+        "exons": [
+          {
+            "INSDC_accession": "KB941428.1",
+            "chromosome": "scaffold00032",
+            "endPosition": 1827231,
+            "startPosition": 1827195,
+            "strand": "+"
+          },
+          {
+            "INSDC_accession": "KB941428.1",
+            "chromosome": "scaffold00032",
+            "endPosition": 1827292,
+            "startPosition": 1827257,
+            "strand": "+"
+          }
+        ],
+        "gca_accession": "GCA_000002075.2",
+        "ucsc_assembly": ""
+      }
+    ],
+    "matureSequence": "GCCTCCGTGGCCTAATGGATAAGGCATCGGCCTCCTAAGCCGGGGATTGCGGGTTCGAGTCCCGTCGGAGGTG",
+    "name": "tRNA-Arg (CCT)",
+    "primaryId": "GTRNADB:tRNA-Arg-CCT-1-1",
+    "pseudogene": false,
+    "secondaryStructure": ">>>>>>>..>>>>........<<<<.>>>>>.......<<<<<.....>>>>>.......<<<<<<<<<<<<.",
+    "sequence": "GCCTCCGTGGCCTAATGGATAAGGCATCGGCCTCCTAGCTGGATCGGCTCATCGTGTGTGCAAGCCGGGGATTGCGGGTTCGAGTCCCGTCGGAGGTG",
+    "sequenceFeatures": {
+      "anticodon": {
+        "indexes": [
+          34,
+          35,
+          36
+        ],
+        "sequence": "CCT"
+      },
+      "isotype": "Arg",
+      "score": "57.8"
+    },
+    "soTermId": "SO:0001036",
+    "taxonId": "NCBITaxon:6500",
+    "url": "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Arg-CCT-1-1.html",
+    "version": "1"
+  }
+]

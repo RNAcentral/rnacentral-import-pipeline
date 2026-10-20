@@ -29,6 +29,8 @@ FALLBACK_SPECIES_URL = "https://rest.uniprot.org/taxonomy/{taxon_id}.json"
 
 LOGGER = logging.getLogger(__name__)
 
+SESSION = requests.Session()
+
 
 class UnknownTaxonId(Exception):
     """
@@ -54,7 +56,7 @@ def get_json_with_retries(url: str) -> ty.Any:
 
     for count in range(10):
         try:
-            response = requests.get(url)
+            response = SESSION.get(url)
             response.raise_for_status()
             return response.json()
         except simplejson.errors.JSONDecodeError:

@@ -30,8 +30,8 @@ from tqdm import tqdm
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
-from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
+from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.rnacentral import lookup
 
 from . import helpers
@@ -40,15 +40,15 @@ tqdm.pandas()
 
 QUERY = """
 select
-    pre.id as id,
+    pre.urs_taxid as id,
     pre.rna_type,
     COALESCE(rna.seq_short, rna.seq_long) as sequence,
     pre.description
 
 from rnc_rna_precomputed pre
-join rna on rna.upi = pre.upi
+join rna on rna.urs = pre.urs
 where
-    pre.id in %s
+    pre.urs_taxid in %s
 """
 
 base_url = furl(
@@ -100,7 +100,9 @@ def resolve_sheet(db_dir: Path, basename: str) -> Path:
         candidate = db_dir.joinpath(f"{basename}{suffix}")
         if candidate.exists():
             return candidate
-    raise FileNotFoundError(f"Could not find {basename}.xls or {basename}.tsv in {db_dir}")
+    raise FileNotFoundError(
+        f"Could not find {basename}.xls or {basename}.tsv in {db_dir}"
+    )
 
 
 def load_table(path: Path) -> pd.DataFrame:
@@ -312,15 +314,15 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     )  #
 
     ## Match with RNAcentral based on the gene name
-    ## This is optionally chunked to save memory - 
+    ## This is optionally chunked to save memory -
     ## split the lookup file and provide a list on the commandline
     matched_frame = pd.concat(
         [get_db_matches(no_accession_frame, dump_chunk) for dump_chunk in db_dumps]
     )
     matched_frame["taxid"] = matched_frame["taxid"].astype(str)
-    matched_frame["urs_taxid"] = matched_frame["urs"].astype(str) + "_" + matched_frame[
-        "taxid"
-    ]
+    matched_frame["urs_taxid"] = (
+        matched_frame["urs"].astype(str) + "_" + matched_frame["taxid"]
+    )
     matched_frame.drop_duplicates(subset="urs_taxid", inplace=True)
 
     ## Look up the rest of the data for the hits
@@ -334,7 +336,9 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     )
 
     ## Build frame with all hits & accessions and add aggregated publication data
-    full_frame = pd.concat([matched_frame, ensembl_frame, ncbi_frame], ignore_index=True)
+    full_frame = pd.concat(
+        [matched_frame, ensembl_frame, ncbi_frame], ignore_index=True
+    )
     full_frame.drop_duplicates(subset="ID", inplace=True)
     full_frame = full_frame.merge(function_df, how="left", on="ID")
     full_frame["publications"] = full_frame["publications"].apply(

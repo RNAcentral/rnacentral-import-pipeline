@@ -63,7 +63,7 @@ def as_entry(
         accession=f"{database}:{urs_taxid}",
         ncbi_tax_id=taxid(urs_taxid),
         database=database,
-        sequence=info["sequence"],
+        sequence=info["sequence"].replace("U", "T"),
         regions=[],
         rna_type=info["rna_type"],
         url="http://www.ebi.ac.uk/Tools/webservices/psicquic/view/main.xhtml",

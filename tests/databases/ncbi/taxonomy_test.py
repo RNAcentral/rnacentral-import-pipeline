@@ -15,6 +15,9 @@ limitations under the License.
 
 from io import StringIO
 
+import pytest
+
+from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.ncbi import taxonomy
 
 # --- nodes.dmp fixtures ---
@@ -29,8 +32,7 @@ NODES_DMP = (
 # 15 preamble lines, then tab-separated data with taxid in column 1 (0-indexed)
 STATS_HEADER = "".join(f"preamble line {i}\n" for i in range(15))
 STATS_DATA = (
-    "UP000005640\t9606\tHomo sapiens\t20600\n"
-    "UP000000589\t10090\tMus musculus\t17100\n"
+    "UP000005640\t9606\tHomo sapiens\t20600\nUP000000589\t10090\tMus musculus\t17100\n"
 )
 
 # --- fullnamelineage.dmp fixture ---
@@ -51,10 +53,28 @@ NAMES_DMP = (
 # --- merged.dmp fixture (empty — no merged taxids) ---
 MERGED_DMP = ""
 
+# --- delnodes.dmp fixture ---
+# Real format: deleted_taxid \t|\n (just a bare id per line). 2 is deleted; 9606
+# is included to check that a still-live node is never emitted as deleted.
+DELNODES_DMP = "2\t|\n9606\t|\n"
+
+# --- delnodes.dmp fixture (empty — no deleted taxids) ---
+DELNODES_DMP_EMPTY = ""
+
 
 def test_parse_nodes():
     result = taxonomy.parse_nodes(StringIO(NODES_DMP))
     assert result == {"9606": "species", "10090": "species", "9443": "order"}
+
+
+def test_parse_delnodes():
+    result = taxonomy.parse_delnodes(StringIO(DELNODES_DMP))
+    assert result == {"2", "9606"}
+
+
+def test_parse_delnodes_empty():
+    result = taxonomy.parse_delnodes(StringIO(DELNODES_DMP_EMPTY))
+    assert result == set()
 
 
 def test_parse_ref_proteomes():
@@ -88,6 +108,44 @@ def test_taxonomy_entry_build_defaults():
     assert entry.reference_proteome is False
 
 
+def _build_with_names(*names):
+    return taxonomy.TaxonomyEntry.build(
+        entry=["9606", "Homo sapiens", "Eukaryota; Metazoa; "],
+        names=[("9606", n, "", c) for n, c in names],
+    )
+
+
+def test_common_name_prefers_genbank():
+    entry = _build_with_names(
+        ("Homo sapiens", "scientific name"),
+        ("human", "common name"),
+        ("man", "genbank common name"),
+    )
+    assert entry.common_name == "man"
+    # genbank wins regardless of the order the names appear in
+    entry = _build_with_names(
+        ("man", "genbank common name"),
+        ("human", "common name"),
+    )
+    assert entry.common_name == "man"
+
+
+def test_common_name_falls_back_to_common_name():
+    entry = _build_with_names(("human", "common name"))
+    assert entry.common_name == "human"
+
+
+def test_common_name_empty_when_absent():
+    entry = _build_with_names(("Homo sapiens", "scientific name"))
+    assert entry.common_name == ""
+
+
+def test_common_name_is_written_after_lineage():
+    entry = _build_with_names(("man", "genbank common name"))
+    row = next(iter(entry.writeable()))
+    assert row[3] == "man"
+
+
 def test_taxonomy_entry_writeable_includes_rank_and_proteome():
     entry = taxonomy.TaxonomyEntry.build(
         entry=["9606", "Homo sapiens", "Eukaryota; Metazoa; "],
@@ -98,8 +156,20 @@ def test_taxonomy_entry_writeable_includes_rank_and_proteome():
     rows = list(entry.writeable())
     assert len(rows) == 1
     row = rows[0]
-    assert row[5] == "species"
-    assert row[6] is True
+    assert row[6] == "species"
+    assert row[7] is True
+    assert row[8] is False
+
+
+def test_taxonomy_entry_build_deleted():
+    entry = taxonomy.TaxonomyEntry.build_deleted("2")
+    assert entry.tax_id == 2
+    assert entry.is_deleted is True
+    assert entry.name == "deleted taxid 2"
+    assert entry.lineage == ""
+    assert entry.replaced_by is None
+    row = list(entry.writeable())[0]
+    assert row[8] is True
 
 
 def test_parse_integrates_rank_and_proteome():
@@ -109,6 +179,7 @@ def test_parse_integrates_rank_and_proteome():
             StringIO(NAMES_DMP),
             StringIO(MERGED_DMP),
             StringIO(NODES_DMP),
+            StringIO(DELNODES_DMP_EMPTY),
             ref_proteomes_handle=StringIO(STATS_HEADER + STATS_DATA),
         )
     )
@@ -126,7 +197,83 @@ def test_parse_without_ref_proteomes():
             StringIO(NAMES_DMP),
             StringIO(MERGED_DMP),
             StringIO(NODES_DMP),
+            StringIO(DELNODES_DMP_EMPTY),
         )
     )
     for entry in entries:
         assert entry.reference_proteome is False
+
+
+def test_build_from_ena(monkeypatch):
+    monkeypatch.setattr(
+        taxonomy.phy,
+        "phylogeny",
+        lambda tax_id: {
+            "taxId": str(tax_id),
+            "scientificName": "uncultured Caudovirales phage",
+            "commonName": "",
+            "rank": "species",
+            "lineage": "Viruses; Duplodnaviria; ",
+        },
+    )
+    entry = taxonomy.TaxonomyEntry.build_from_ena(3016054)
+    assert entry.tax_id == 3016054
+    assert entry.name == "uncultured Caudovirales phage"
+    assert entry.lineage == "Viruses; Duplodnaviria; uncultured Caudovirales phage"
+    assert entry.rank == "species"
+    assert entry.is_deleted is False
+    assert entry.replaced_by is None
+
+
+def test_resolve_missing_collects_all_failures(monkeypatch):
+    def fake_phylogeny(tax_id):
+        if tax_id == 9606:
+            return {"scientificName": "Homo sapiens", "rank": "species", "lineage": ""}
+        if tax_id == 111:
+            raise phy.UnknownTaxonId(tax_id)
+        raise phy.FailedTaxonId(tax_id)
+
+    monkeypatch.setattr(taxonomy.phy, "phylogeny", fake_phylogeny)
+
+    with pytest.raises(taxonomy.UnresolvableTaxids) as excinfo:
+        taxonomy.resolve_missing(["9606", "111", "222"])
+    failed_ids = {tid for tid, _ in excinfo.value.failures}
+    assert failed_ids == {"111", "222"}
+
+
+def test_write_missing_round_trips(monkeypatch):
+    monkeypatch.setattr(
+        taxonomy.phy,
+        "phylogeny",
+        lambda tax_id: {
+            "scientificName": "Homo sapiens",
+            "rank": "species",
+            "lineage": "Eukaryota; Metazoa; ",
+        },
+    )
+    output = StringIO()
+    taxonomy.write_missing(StringIO("9606\n\n"), output)
+    row = output.getvalue().strip().split(",")
+    assert row[0] == "9606"
+    assert row[1] == "Homo sapiens"
+
+
+def test_parse_emits_deleted_taxids():
+    entries = list(
+        taxonomy.parse(
+            StringIO(LINEAGE_DMP),
+            StringIO(NAMES_DMP),
+            StringIO(MERGED_DMP),
+            StringIO(NODES_DMP),
+            StringIO(DELNODES_DMP),
+        )
+    )
+    by_id = {e.tax_id: e for e in entries}
+    # 2 is deleted and should be emitted as a deleted sentinel
+    assert by_id[2].is_deleted is True
+    assert by_id[2].name == "deleted taxid 2"
+    # 9606 is in delnodes but still a live node, so it must keep its real data
+    assert by_id[9606].is_deleted is False
+    assert by_id[9606].name == "Homo sapiens"
+    # live taxa are flagged not-deleted
+    assert by_id[9443].is_deleted is False

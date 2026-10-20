@@ -13,14 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import json
+import os
 
 import pytest
 
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl
-
 from tests import helpers
+
+pytestmark = pytest.mark.db
 
 
 def load_data(rna_id):

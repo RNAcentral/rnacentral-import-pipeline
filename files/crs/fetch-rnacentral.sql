@@ -3,7 +3,7 @@ SELECT
   json_build_object(
       'assembly_id', :'assembly_id',
       'region_id', max(regions.region_name),
-      'rna_id', max(pre.id),
+      'rna_id', max(pre.urs_taxid),
       'rna_type',  max(pre.rna_type),
       'databases', regexp_split_to_array(max(pre."databases"), ','),
       'providing_databases', max(regions.providing_databases),
@@ -16,7 +16,7 @@ SELECT
 FROM rnc_rna_precomputed pre
 JOIN rnc_sequence_regions_active regions
 ON
-  regions.urs_taxid = pre.id
+  regions.urs_taxid = pre.urs_taxid
 JOIN rnc_sequence_exons exons
 ON
   exons.region_id = regions.id

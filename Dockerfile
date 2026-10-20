@@ -4,7 +4,14 @@
 # Build arguments for tool versions
 ARG INFERNAL_VERSION=1.1.5
 ARG SAMTOOLS_VERSION=1.22.1
-ARG RUST_VERSION=latest
+# rust-utils images are tagged py<version>-<rust-version>; default matches
+# .python-version at repo root so a plain `docker build` can't pull a wheel
+# built for a different Python. Override with
+# --build-arg RUST_VERSION=py$(cat .python-version | tr -d .)-latest
+ARG RUST_VERSION=py314-latest
+# Default matches .python-version at repo root; override with
+# --build-arg PYTHON_VERSION=$(cat .python-version)-trixie
+ARG PYTHON_VERSION=3.14-trixie
 
 # Stage 1: Pull pre-built Infernal container
 FROM rnacentral/infernal:${INFERNAL_VERSION} AS infernal
@@ -16,7 +23,7 @@ FROM rnacentral/samtools:${SAMTOOLS_VERSION} AS samtools
 FROM rnacentral/rust-utils:${RUST_VERSION} AS rust-utils
 
 # Stage 4: Python environment builder
-FROM python:3.11.14-trixie AS python-builder
+FROM python:${PYTHON_VERSION} AS python-builder
 
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -33,22 +40,30 @@ COPY --from=rust-utils /rna/wheels/*.whl /tmp/wheels/
 RUN uv pip install /tmp/wheels/*.whl
 
 # Download NLTK data
-RUN /app/.venv/bin/python3 -m nltk.downloader words
+RUN /app/.venv/bin/python3 -m nltk.downloader -d /app/.venv/nltk_data words punkt punkt_tab
 
 # Stage 5: Final runtime image
-FROM python:3.11.14-trixie
+FROM python:${PYTHON_VERSION}
 ARG INFERNAL_VERSION=1.1.5
 ARG SAMTOOLS_VERSION=1.22.1
-ARG RUST_VERSION=latest
+ARG RUST_VERSION=py314-latest
 ENV RNA=/rna
 WORKDIR $RNA
 
 # Install ONLY runtime dependencies (no gcc, no -dev packages)
+# postgresql-16 isn't in Debian trixie's own repos (trixie only ships 17), so
+# pull it from the PGDG apt repo, which carries every supported major version.
 RUN apt update && apt upgrade -y && \
+    apt install -y ca-certificates curl gnupg && \
+    install -d /usr/share/postgresql-common/pgdg && \
+    curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+    https://www.postgresql.org/media/keys/ACCC4CF8.asc && \
+    . /etc/os-release && \
+    echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
+    > /etc/apt/sources.list.d/pgdg.list && \
+    apt update && \
     apt install -y \
     bedtools \
-    ca-certificates \
-    curl \
     default-mysql-client \
     gawk \
     git \
@@ -67,13 +82,14 @@ RUN apt update && apt upgrade -y && \
     openssl \
     pandoc \
     pgloader \
-    postgresql-17 \
-    postgresql-client-17 \
+    postgresql-16 \
+    postgresql-client-16 \
     procps \
     python3 \
     python3-pip \
     rsync \
     sbcl \
+    tabix \
     tar \
     time \
     unzip \
@@ -145,5 +161,6 @@ ENV PATH="$RNA/blat_suite:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE/bin:$PATH"
 ENV PATH="$RNA/venv/bin:$PATH"
+ENV NLTK_DATA="$RNA/venv/nltk_data"
 
 ENTRYPOINT ["/bin/bash"]

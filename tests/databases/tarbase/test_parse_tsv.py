@@ -8,6 +8,8 @@ from rnacentral_pipeline.databases.data.related import (
 )
 from rnacentral_pipeline.databases.tarbase.parser import parse
 
+pytestmark = pytest.mark.db
+
 
 @pytest.mark.tarbase
 def test_tarbase_tsv_parse_existing():

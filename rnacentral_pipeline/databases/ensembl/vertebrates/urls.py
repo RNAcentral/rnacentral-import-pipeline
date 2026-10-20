@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import json
-import re
 import tempfile
 import typing as ty
 from contextlib import contextmanager
@@ -23,25 +22,22 @@ from ftplib import FTP
 from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 
 
-
 def latest_release(ftp: FTP) -> str:
-    ## Parse the readme for the current release to avoid getting a half baked release
-    readme_lines = []
-    ftp.retrlines("RETR current_README", readme_lines.append)
-    cur_readme = "\n".join(readme_lines)
-    pattern = r"Ensembl Release (\d+) Databases\."
-    match = re.search(pattern, cur_readme, re.IGNORECASE)
-
-    if not match:
-        raise ValueError("Could not determine latest Ensembl release from README")
-    release = match.group(1)
+    ## VERSION rather than a release-* listing, to avoid picking up a half baked
+    ## release. current_README, which we used to parse, is gone from the FTP site.
+    lines: ty.List[str] = []
+    ftp.retrlines("RETR VERSION", lines.append)
+    release = "".join(lines).strip()
+    if not release.isdigit():
+        raise ValueError(f"Could not determine latest Ensembl release, got {release!r}")
     return f"release-{release}"
 
 
 @contextmanager
 def species_info(ftp: FTP, release: str):
     info_path = f"{release}/species_metadata_EnsemblVertebrates.json"
-    with tempfile.NamedTemporaryFile() as tmp:
+    # dir="." because singularity --contain gives us a tiny in-memory /tmp
+    with tempfile.NamedTemporaryFile(dir=".") as tmp:
         ftp.retrbinary(f"RETR {info_path}", tmp.write)
         tmp.flush()
         tmp.seek(0)
@@ -67,9 +63,13 @@ def generate_paths(base: str, release: str, handle) -> ty.Iterable[FtpInfo]:
 
 
 def urls_for(host: str) -> ty.Iterable[FtpInfo]:
-    with FTP(host) as ftp:
+    ftp = FTP(host)
+    try:
         ftp.login()
         ftp.cwd("pub")
         latest = latest_release(ftp)
         with species_info(ftp, latest) as info:
             yield from generate_paths(f"ftp://{host}/pub", latest, info)
+    finally:
+        # close() not quit(); a failed transfer makes QUIT raise over the real error
+        ftp.close()

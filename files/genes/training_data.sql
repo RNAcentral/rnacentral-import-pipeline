@@ -1,7 +1,7 @@
 COPY (
   select
     distinct region_name,
-    urs_taxid,
+    regions.urs_taxid,
     gene,
     regions.chromosome,
     regions.assembly_id,
@@ -23,10 +23,10 @@ COPY (
     join rnc_sequence_exons ex on
       ex.region_id = regions.id
     join rnc_rna_precomputed pc on
-      pc.upi = xref.upi
+      pc.urs = xref.urs
     where
       xref.deleted = 'N'
-    and 
+    and
       xref.taxid = 9606
     and
     /* These are all Ensembl flavours. - use only Ensembl human for training data */

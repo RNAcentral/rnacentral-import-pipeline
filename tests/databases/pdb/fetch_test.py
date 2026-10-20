@@ -13,11 +13,84 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import asyncio
 import datetime as dt
 
 import pytest
 
 from rnacentral_pipeline.databases.pdb import fetch
+
+
+class FakeResponse:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._payload
+
+
+def test_fetch_range_skips_docs_missing_chain_id(monkeypatch):
+    """
+    A PDBe search doc with no chain_id field used to crash the whole fetch
+    with a KeyError - ChainInfo has nothing to build without a chain id, so
+    it should be skipped instead of aborting every other doc in the batch.
+    """
+    payload = {
+        "response": {
+            "numFound": 2,
+            "docs": [
+                {"pdb_id": "1abc"},
+                {
+                    "pdb_id": "1s72",
+                    "chain_id": ["9"],
+                    "release_date": "2004-06-15T01:00:00Z",
+                    "experimental_method": ["X-ray diffraction"],
+                    "entity_id": 2,
+                    "title": "some title",
+                    "molecule_sequence": "ACGU",
+                },
+            ],
+        }
+    }
+    monkeypatch.setattr(fetch.requests, "get", lambda url: FakeResponse(payload))
+
+    result = asyncio.run(fetch.fetch_range("some query", 0, 1000))
+
+    assert len(result) == 1
+    assert result[0].pdb_id == "1s72"
+
+
+def test_chains_warns_instead_of_raising_on_missing_ids(monkeypatch, caplog):
+    """
+    Rfam's .preview feed can name a PDB entry before PDBe's search index has
+    caught up to it. That used to raise ValueError and crash the whole pdbe
+    import over a handful of not-yet-indexed structures. It should warn and
+    return whatever it did find instead.
+    """
+    found = fetch.ChainInfo(
+        pdb_id="1s72",
+        chain_id="9",
+        release_date=dt.datetime(2004, 6, 15, hour=1),
+        experimental_method="X-ray diffraction",
+        entity_id=2,
+        taxids=[2238],
+        resolution=2.4,
+        sequence="ACGU",
+        title="some title",
+        molecule_names=["5S ribosomal RNA"],
+        molecule_type="RNA",
+        organism_scientific_name="Haloarcula marismortui",
+    )
+    monkeypatch.setattr(fetch, "all_chains_in_pdbs", lambda _: [found])
+
+    with caplog.at_level("WARNING"):
+        result = fetch.chains({("1s72", "9"), ("9igu", "A")})
+
+    assert result == [found]
+    assert "9igu" in caplog.text
 
 
 @pytest.mark.network

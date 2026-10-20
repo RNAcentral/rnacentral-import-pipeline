@@ -35,6 +35,8 @@ EXCLUDED_DATABASES = {
 }
 
 ACCEPTED_DATABASES = {
+    Database.circatlas,
+    Database.circpedia,
     Database.five_srrnadb,
     Database.flybase,
     Database.gtrnadb,
@@ -43,11 +45,14 @@ ACCEPTED_DATABASES = {
     Database.mirbase,
     Database.mirgenedb,
     Database.pirbase,
+    Database.plncdb,
     Database.pombase,
     # Database.sgd, This is excluded because they tend ot use things like rRNA_gene, which we don't like as much as the transcript terms
     Database.snodb,
+    Database.snopy,
     Database.snorna_database,
     Database.tarbase,
+    Database.tmrna_website,
     Database.zwd,
     Database.pdbe,
     Database.gencode,

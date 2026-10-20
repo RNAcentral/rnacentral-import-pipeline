@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
+import operator as op
 import logging
 import re
 import typing as ty
@@ -21,6 +23,7 @@ import attr
 import psycopg2
 from attr.validators import instance_of as is_a
 from attr.validators import optional
+from pypika import Query, Table
 
 LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +115,7 @@ class HgncEntry:
                 "tRNA-" + ONE_TO_THREE[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
             )
         # nuclear-encoded mitochondrial tRNAs
-        m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", accession)
+        m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", self.symbol)
         if m:
             if m.group(1) not in ONE_TO_THREE:
                 return None
@@ -127,6 +130,39 @@ class HgncEntry:
         return None
 
 
+def ensembl_mapping(conn):
+    xref = Table("xref")
+    rna = Table("rna")
+    acc = Table("rnc_accessions")
+    query = (
+        Query.from_(xref)
+        .select(xref.urs, acc.optional_id, rna.len)
+        .join(acc)
+        .on(acc.accession == xref.ac)
+        .join(rna)
+        .on(rna.urs == xref.urs)
+        # dbid 21 == NONCODE
+        .where((xref.dbid == 21) & (xref.taxid == 9606) & (xref.deleted == "N"))
+    )
+
+    found = coll.defaultdict(set)
+    with conn.cursor() as cur:
+        cur.execute(str(query))
+        for result in cur:
+            urs, gene, length = result
+            gene = gene.split(".")[0]
+            found[gene].add((urs, length))
+
+    mapping = {}
+    for gene, ids in found.items():
+        if not ids:
+            continue
+
+        best, _ = max(ids, key=op.itemgetter(1))
+        mapping[gene] = best
+    return mapping
+
+
 @attr.s()
 class Context:
     """
@@ -137,6 +173,7 @@ class Context:
     """
 
     conn = attr.ib()
+    supplied = attr.ib(factory=set)
     refseq = attr.ib(factory=dict)
     gtrnadb = attr.ib(factory=dict)
     ensembl = attr.ib(factory=dict)
@@ -148,14 +185,30 @@ class Context:
         from rnacentral_pipeline.databases.hgnc import helpers
 
         conn = psycopg2.connect(db_url)
+
+        # HGNC curates the URS itself for most entries. Deriving one from RefSeq
+        # or Ensembl instead follows whichever transcript they happen to annotate
+        # this month, so the mapping drifts every release while HGNC's is stable.
         context = cls(
             conn=conn,
-            refseq=helpers.refseq_mapping(
-                conn, [e.refseq_id for e in entries if e.refseq_id]
+            supplied=helpers.known_urs(
+                conn, [e.rnacentral_id for e in entries if e.rnacentral_id]
             ),
-            gtrnadb=helpers.gtrnadb_mapping(
-                conn, [e.gtrnadb_id for e in entries if e.gtrnadb_id]
-            ),
+        )
+        LOGGER.info(
+            "HGNC supplied a URS we hold for %i of %i entries",
+            sum(1 for e in entries if context.urs_for(e)),
+            len(entries),
+        )
+
+        # Everything below is a fallback, so only the entries HGNC did not
+        # already answer for are worth looking up.
+        remaining = [e for e in entries if context.urs_for(e) is None]
+        context.refseq = helpers.refseq_mapping(
+            conn, [e.refseq_id for e in remaining if e.refseq_id]
+        )
+        context.gtrnadb = helpers.gtrnadb_mapping(
+            conn, [e.gtrnadb_id for e in remaining if e.gtrnadb_id]
         )
         LOGGER.info(
             "Resolved %i refseq and %i gtrnadb ids",
@@ -166,7 +219,7 @@ class Context:
         # Only the entries nothing else could map are worth asking Ensembl about.
         pending = [
             e.ensembl_gene_id
-            for e in entries
+            for e in remaining
             if e.ensembl_gene_id and context.urs_for(e) is None
         ]
         context.ensembl = helpers.ensembl_mapping(conn, pending)
@@ -182,8 +235,12 @@ class Context:
 
     def urs_for(self, entry: HgncEntry) -> ty.Optional[str]:
         """
-        Map a single entry to a URS, using RefSeq, gtRNAdb then Ensembl.
+        Map a single entry to a URS, preferring the one HGNC supplies and
+        falling back to RefSeq, gtRNAdb then Ensembl.
         """
+        if entry.rnacentral_id in self.supplied:
+            return entry.rnacentral_id
+
         if entry.refseq_id:
             urs = self.refseq.get(entry.refseq_id)
             if urs:

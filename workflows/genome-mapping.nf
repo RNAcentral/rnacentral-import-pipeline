@@ -76,14 +76,21 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  path("${species}.${assembly}.ensembl.gff3.gz")
+  path("${species}.${assembly}.ensembl.gff3.gz"), optional: true
 
   script:
   """
   set -o pipefail
 
-  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}.${assembly}.gff3.gz '{}'
+  status=0
+  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly url.txt || status=\$?
+  if [[ "\$status" -eq 3 ]]; then
+    exit 0
+  elif [[ "\$status" -ne 0 ]]; then
+    exit "\$status"
+  fi
+
+  wget -O ${species}.${assembly}.gff3.gz "\$(cat url.txt)"
   gzip -d "${species}.${assembly}.gff3.gz"
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
@@ -117,7 +124,7 @@ process download_genome {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple val(species), val(assembly), path("${species}.${assembly}.fa")
+  tuple val(species), val(assembly), path("${species}.${assembly}.fa"), optional: true
 
   script:
   """
@@ -125,8 +132,15 @@ process download_genome {
 
   psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" \$PGDATABASE
 
-  rnac genome-mapping url-for --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
+  status=0
+  rnac genome-mapping url-for --host=$division $species $assembly url.txt || status=\$?
+  if [[ "\$status" -eq 3 ]]; then
+    exit 0
+  elif [[ "\$status" -ne 0 ]]; then
+    exit "\$status"
+  fi
+
+  wget -O ${species}.${assembly}.fa.gz "\$(cat url.txt)"
 
   gzip -d ${species}.${assembly}.fa.gz
   """
@@ -141,17 +155,38 @@ process blat_index {
   tuple val(species), val(assembly), path("${species}_${assembly}.fa")
 
   output:
-  tuple val(species), val(assembly), path("${species}_${assembly}.{2bit,ooc}")
+  tuple val(species),
+        val(assembly),
+        path("${species}_${assembly}.shard-*.2bit"),
+        path("${species}_${assembly}.shard-*.ooc")
 
   script:
+  def genome = "${species}_${assembly}.fa"
+  // blat indexes the whole target in one 32-bit coordinate space and aborts on
+  // anything past 2^32 bases, which is most of the polyploid plants. Cutting
+  // the target on whole-sequence boundaries keeps every psl offset valid, so
+  // the shards align independently and their hits merge as they are.
+  // Assemblies under the limit produce a single shard and one index, as before.
   """
-  faToTwoBit -noMask ${species}_${assembly}.fa ${species}_${assembly}.2bit
-  blat \
-    -makeOoc=${species}_${assembly}.ooc \
-    -stepSize=${params.genome_mapping.blat.options.step_size} \
-    -repMatch=${params.genome_mapping.blat.options.rep_match} \
-    -minScore=${params.genome_mapping.blat.options.min_score} \
-    ${species}_${assembly}.fa /dev/null /dev/null
+  set -o pipefail
+
+  samtools faidx $genome
+  rnac genome-mapping blat shard-plan \
+    --max-bases ${params.genome_mapping.blat.max_shard_bases} \
+    ${genome}.fai plan
+
+  for names in plan/shard-*.names; do
+    shard="${species}_${assembly}.\$(basename "\$names" .names)"
+    samtools faidx -r "\$names" $genome > "\$shard.fa"
+    faToTwoBit -noMask "\$shard.fa" "\$shard.2bit"
+    blat \
+      -makeOoc="\$shard.ooc" \
+      -stepSize=${params.genome_mapping.blat.options.step_size} \
+      -repMatch=${params.genome_mapping.blat.options.rep_match} \
+      -minScore=${params.genome_mapping.blat.options.min_score} \
+      "\$shard.fa" /dev/null /dev/null
+    rm "\$shard.fa"
+  done
   """
 }
 
@@ -173,9 +208,13 @@ process index_genome_for_browser {
 
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
-  memory { params.genome_mapping.blat.directives.memory }
-  errorStrategy { task.exitStatus in [137, 140, 143] ? 'retry' : 'ignore' }
-  time { task.attempt == 1 ? 15.m : task.attempt == 2? 60.m : 24.h }
+  // A shard holds up to max_shard_bases in memory, so an OOM retried at the
+  // same size just fails again until maxRetries drops the chunk.
+  memory { params.genome_mapping.blat.directives.memory * task.attempt }
+  errorStrategy { task.exitStatus in [137, 140, 143] && task.attempt <= 3 ? 'retry' : 'ignore' }
+  // Measured over a full run: chunks take 14m to 4h46 and the old 15m/60m rungs
+  // timed out 532 attempts before reaching the 24h one that always succeeded.
+  time { task.attempt == 1 ? 6.h : 24.h }
   maxRetries 3
 
   input:
@@ -301,11 +340,16 @@ workflow genome_mapping {
       genomes
       | blat_index \
       | join(split_sequences) \
-      | flatMap { species, assembly, genome_chunks, chunks ->
+      | flatMap { species, assembly, indexes, oocs, chunks ->
+        def indexList = indexes instanceof List ? indexes : [indexes]
+        def oocList = oocs instanceof List ? oocs : [oocs]
         def chunkList = chunks instanceof List ? chunks : [chunks]
-        [genome_chunks.collate(2), chunkList]
+        // Both globs are sorted by name and the shards are numbered, so the
+        // .2bit and .ooc of a shard line up.
+        def shards = [indexList, oocList].transpose()
+        [shards, chunkList]
           .combinations()
-          .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
+          .collect { shard, chunk -> [species, assembly] + shard + [chunk] }
       } \
       | filter { _s, _a, _g, _o, chunk -> !chunk.isEmpty() } \
       | blat

@@ -29,10 +29,12 @@ resolved against other objects until run time), so files are applied in plain
 import dataclasses as dc
 import hashlib
 import logging
-from pathlib import Path
 import typing as ty
+from pathlib import Path
 
 import psycopg2
+
+from rnacentral_pipeline import db
 
 LOGGER = logging.getLogger(__name__)
 
@@ -94,9 +96,7 @@ def discover(
 
 
 def _applied_shas(cur) -> ty.Dict[ty.Tuple[str, str], str]:
-    cur.execute(
-        f"SELECT schema_name, function_name, sha256 FROM {TRACKING_TABLE}"
-    )
+    cur.execute(f"SELECT schema_name, function_name, sha256 FROM {TRACKING_TABLE}")
     return {(s, n): sha for (s, n, sha) in cur.fetchall()}
 
 
@@ -115,23 +115,41 @@ def apply(db_url: str, dry_run: bool = False) -> ty.List[Function]:
     applied.
     """
     functions = discover(exclude_schemas=DEPLOY_EXCLUDE_SCHEMAS)
-    with psycopg2.connect(db_url) as conn:
+    with db.connect(db_url) as conn:
         with conn.cursor() as cur:
             todo = pending(cur, functions)
             if not todo:
                 LOGGER.info("All %d functions up to date", len(functions))
                 return []
 
+            if dry_run:
+                for fn in todo:
+                    LOGGER.info("Would apply %s.%s", fn.schema, fn.name)
+                conn.rollback()
+                return todo
+
+            # One line, not one per function: this step takes well under a second,
+            # so a line each just buries the steps that actually run long. Counts
+            # per schema say where the change landed; the exact names (and when
+            # they were applied) live in TRACKING_TABLE, so the log needn't carry
+            # them at INFO.
+            counts: ty.Dict[str, int] = {}
             for fn in todo:
-                LOGGER.info(
-                    "%s %s.%s",
-                    "Would apply" if dry_run else "Applying",
-                    fn.schema,
-                    fn.name,
-                )
-                if dry_run:
-                    continue
-                cur.execute(fn.sql)
+                counts[fn.schema] = counts.get(fn.schema, 0) + 1
+            LOGGER.info(
+                "Applying %d changed function(s): %s",
+                len(todo),
+                ", ".join(f"{schema} ({n})" for schema, n in sorted(counts.items())),
+            )
+            for fn in todo:
+                LOGGER.debug("Applying %s.%s", fn.schema, fn.name)
+                # A failure here is a syntax error in the function body, which
+                # postgres reports without naming the function -- so say which one.
+                try:
+                    cur.execute(fn.sql)
+                except Exception:
+                    LOGGER.error("Failed applying %s.%s", fn.schema, fn.name)
+                    raise
                 cur.execute(
                     f"""
                     INSERT INTO {TRACKING_TABLE}
@@ -144,12 +162,6 @@ def apply(db_url: str, dry_run: bool = False) -> ty.List[Function]:
                     (fn.schema, fn.name, fn.sha256),
                 )
 
-        if dry_run:
-            conn.rollback()
-        else:
-            conn.commit()
+        conn.commit()
 
-    LOGGER.info(
-        "%s %d function(s)", "Would apply" if dry_run else "Applied", len(todo)
-    )
     return todo

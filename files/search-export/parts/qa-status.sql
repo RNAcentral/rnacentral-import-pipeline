@@ -12,6 +12,6 @@ COPY (
       'possible_orf_tcode', qa.possible_orf_tcode
     )
   FROM search_export_urs todo
-  JOIN qa_status qa ON qa.rna_id = todo.urs_taxid
+  JOIN qa_status qa ON qa.urs_taxid = todo.urs_taxid
   ORDER BY todo.id
 ) TO STDOUT

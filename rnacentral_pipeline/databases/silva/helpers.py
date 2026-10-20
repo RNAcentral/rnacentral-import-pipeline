@@ -60,7 +60,13 @@ def primary_id(row) -> str:
 
 
 def taxid(row) -> int:
-    return int(row["ncbiTaxId"])
+    # SILVA 144 ships rows with an empty ncbiTaxId; treat them like any other
+    # unresolvable taxon so as_entry skips them instead of crashing the parse.
+    given = row["ncbiTaxId"]
+    try:
+        return int(given)
+    except ValueError:
+        raise phy.UnknownTaxonId(given)
 
 
 def sequence(row) -> str:

@@ -18,6 +18,7 @@ Tests for CIRCpedia helper functions.
 """
 
 import pytest
+
 from rnacentral_pipeline.databases.circpedia import helpers
 
 
@@ -88,7 +89,7 @@ class TestAccession:
         """Test accession generation with database prefix."""
         location = {"chromosome": "1", "start": 100, "end": 200}
         acc = helpers.accession("hsa_circ_0001", location)
-        assert acc == "CIRCPEDIA:hsa_circ_0001_1:100-200"
+        assert acc == "CIRCPEDIA:hsa_circ_0001|1:100-200"
 
     def test_generates_different_accessions_for_different_locations(self):
         """Test that different locations produce different accessions."""

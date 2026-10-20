@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.utils import unpickle_stream
 

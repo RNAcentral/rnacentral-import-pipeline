@@ -121,7 +121,7 @@ def test_can_create_correct_data(simple_data):
         url="https://www.malacards.org/card/esophageal_cancer",
         seq_version=1,
         gene="DELEC1",
-        description="Homo sapiens (human) deleted in esophageal cancer 1 (DEC1)",
+        description="Homo sapiens (human) deleted in esophageal cancer 1",
         references=[pub.reference(27899610)],
         note_data={
             "diseases": [
@@ -185,7 +185,7 @@ def test_correctly_groups_sequences(simple_data):
             "GCTCTCTGAAGTTCTAGGCTAT"
         ),
         regions=[],
-        rna_type="lncRNA",
+        rna_type="ncRNA",
         url="https://www.malacards.org/card/multisystemic_smooth_muscle_dysfunction_syndrome",
         seq_version=1,
         gene="ACTA2-AS1",
