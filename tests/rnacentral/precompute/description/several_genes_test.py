@@ -11,7 +11,7 @@ import typing as ty
 import attr
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute.description.name_builders import (
+from rnacentral_pipeline.rnacentral.precompute.description.species_specific import (
     select_with_several_genes,
 )
 

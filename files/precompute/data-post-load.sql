@@ -13,7 +13,7 @@ INSERT INTO rnc_rna_precomputed (
 ) (
 SELECT DISTINCT ON (id)
   id,
-  urs,
+  upi,
   taxid,
   is_active,
   rna_type,
