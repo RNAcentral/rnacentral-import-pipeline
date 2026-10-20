@@ -35,6 +35,9 @@
 
 name: Unit tests (offline)
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: ['master', 'dev','python-update']
