@@ -14,6 +14,6 @@ where
     exists(select 1 from qa_status qa where qa.urs = pre.urs and qa.taxid = pre.taxid and qa.has_issue = false)
     -- and exists(select 1 from xref where xref.urs = pre.urs and xref.taxid = pre.taxid and xref.deleted = 'N')
     and pre.is_active = true
-    and pre.databases != 'Rfam'
+    and pre.databases != 'RFAM'
 group by pre.urs_taxid, go_terms.ontology_term_id
 ) TO STDOUT
