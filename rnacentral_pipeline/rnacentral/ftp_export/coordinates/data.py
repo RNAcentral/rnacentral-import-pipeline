@@ -16,8 +16,8 @@ limitations under the License.
 import csv
 import itertools as it
 import json
-import sys
 import operator as op
+import sys
 import typing as ty
 
 import attr
@@ -184,10 +184,61 @@ def from_file(handle, genes=True) -> ty.Iterable[Region]:
     # The query exports each record as a single CSV-quoted JSON field (COPY ... CSV).
     # CSV avoids COPY text format's backslash-escaping, which corrupts JSON whose
     # data contains a " or \.
-    csv.field_size_limit(sys.maxsize)  # records with many exons exceed the default limit
+    csv.field_size_limit(
+        sys.maxsize
+    )  # records with many exons exceed the default limit
     rows = csv.reader(handle)
     data = (json.loads(row[0]) for row in rows)
     data = filter(lambda d: d["rna_type"] != "NULL", data)
     if not genes:
-        data = filter(lambda d: d['rna_id'] != None, data)
+        data = filter(lambda d: d["rna_id"] != None, data)
     yield from parse(data)
+
+
+def remove_duplicates(
+    regions: ty.Iterable[Region],
+) -> ty.Iterable[Region]:
+    # LNCipedia and CIRCpedia starts are loaded 1 bp low, so the same transcript
+    # appears twice; keep the higher starts and every providing database.
+    # Gene names ignore strand, so a + and - gene can share an ID; keep the first.
+    pending = {}
+    genes = set()
+    for region in regions:
+        if region.is_gene:
+            if region.region_id not in genes:
+                genes.add(region.region_id)
+                yield region
+            continue
+        for key in [
+            k
+            for k, r in pending.items()
+            if r.chromosome != region.chromosome or r.start < region.start - 1
+        ]:
+            yield pending.pop(key)
+        key = (
+            region.rna_id,
+            region.chromosome,
+            region.string_strand(),
+            region.metadata.get("parent_gene"),
+            region.source,
+            tuple(sorted(e.stop for e in region.exons)),
+        )
+        twin = pending.get(key)
+        if twin is None:
+            pending[key] = region
+            continue
+        starts = zip(
+            sorted(e.start for e in twin.exons), sorted(e.start for e in region.exons)
+        )
+        if not all(0 <= b - a <= 1 for a, b in starts):
+            yield region
+            continue
+        keep, other = (region, twin) if region.start > twin.start else (twin, region)
+        providers = keep.metadata.get("providing_databases", []) + other.metadata.get(
+            "providing_databases", []
+        )
+        metadata = dict(keep.metadata)
+        if providers:
+            metadata["providing_databases"] = list(dict.fromkeys(providers))
+        pending[key] = attr.evolve(keep, metadata=metadata)
+    yield from pending.values()

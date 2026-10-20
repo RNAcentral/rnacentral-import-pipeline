@@ -127,7 +127,7 @@ def from_json(handle, out):
     Transform raw coordinate data into bed format.
     """
 
-    data = coord.from_file(handle, genes=False)
+    data = coord.remove_duplicates(coord.from_file(handle, genes=False))
     data = map(BedEntry.from_coordinate, data)
     write_bed_text(data, out)
 
@@ -138,6 +138,6 @@ def from_json_exploded(handle, out):
     format used for genomic intersects, e.g. rediportal.
     """
 
-    data = coord.from_file(handle, genes=False)
+    data = coord.remove_duplicates(coord.from_file(handle, genes=False))
     data = map(BedEntry.from_coordinate, data)
     write_exploded_bed_text(data, out)

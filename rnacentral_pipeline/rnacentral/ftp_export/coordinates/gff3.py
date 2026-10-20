@@ -30,9 +30,17 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
     """
 
     for raw_region in regions:
-        if raw_region.start is None or raw_region.stop is None or raw_region.stop <= raw_region.start:
-            LOGGER.warning("Skipping region %s: invalid coordinates start=%s stop=%s",
-                           raw_region.region_id, raw_region.start, raw_region.stop)
+        if (
+            raw_region.start is None
+            or raw_region.stop is None
+            or raw_region.stop <= raw_region.start
+        ):
+            LOGGER.warning(
+                "Skipping region %s: invalid coordinates start=%s stop=%s",
+                raw_region.region_id,
+                raw_region.start,
+                raw_region.stop,
+            )
             continue
         region = raw_region.as_one_based()
         attributes = OrderedDict(
@@ -128,5 +136,5 @@ def from_file(handle, output, allow_none=False):
     """
 
     parsed = coord.from_file(handle)
-    features = regions_as_features(parsed)
+    features = regions_as_features(coord.remove_duplicates(parsed))
     write_gff_text(features, output, allow_no_features=allow_none)
