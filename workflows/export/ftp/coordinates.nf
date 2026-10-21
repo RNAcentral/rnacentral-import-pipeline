@@ -102,10 +102,11 @@ process generate_gff3 {
 
 process generate_gff3_for_igv {
   tag { "${assembly}-${species}" }
-  memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
-  time '30m'
-  memory '2 GB'
+  time { 30.m * (2 ** (task.attempt - 1)) }
+  memory { 2.GB * task.attempt }
+  errorStrategy 'retry'
+  maxRetries 3
 
   input:
   tuple val(assembly), val(species), path(raw_data)
