@@ -54,8 +54,8 @@ process fetch {
 process generate_bed {
   tag { "${assembly}-${species}" }
   publishDir "${params.export.ftp.publish}/genome_coordinates/bed/", mode: 'copy'
-  time { 5.m * (2 ** (task.attempt - 1)) }
-  memory { 1.GB * task.attempt }
+  time { 30.m * (2 ** (task.attempt - 1)) }
+  memory { 2.GB * task.attempt }
   errorStrategy 'retry'
   maxRetries 3
 
