@@ -156,9 +156,11 @@ workflow scan_new_ids {
             [ "${file.name}", file ]
           }
         | toList
+        | filter { it }
         | load_job
 
-      done = load_job.out
+      // No new IDs means nothing to load, but downstream stages still run.
+      done = load_job.out.ifEmpty(true)
 
     emit: done
 }

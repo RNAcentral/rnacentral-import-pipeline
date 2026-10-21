@@ -56,11 +56,8 @@ def taxonomy(tmp_path):
     db["6500"] = TaxonomyEntry(
         tax_id=6500,
         name="Aplysia californica",
-        lineage=(
-            "Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; "
-            "Gastropoda; Heterobranchia; Euthyneura; Tectipleura; "
-            "Aplysiida; Aplysioidea; Aplysiidae; Aplysia"
-        ),
+        lineage="",
+        common_name="",
         aliases=[],
         replaced_by=None,
     )
@@ -69,10 +66,9 @@ def taxonomy(tmp_path):
 
 
 def test_can_find_all_remote_urls():
-    assert (
-        helpers.extract_download_urls(
-            "http://google.com",
-            """
+    assert helpers.extract_download_urls(
+        "http://google.com",
+        """
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
  <head>
@@ -89,14 +85,12 @@ def test_can_find_all_remote_urls():
 <address>Apache/2.2.15 (CentOS) Server at <a href="mailto:lowe@soe.ucsc.edu">trna.ucsc.edu</a> Port 80</address>
 </body></html>
     """,
-        )
-        == [
-            ("archaea_tRNAs.json.gz", "http://google.com/archaea_tRNAs.json.gz"),
-            ("bacteria_tRNAs.tar.gz", "http://google.com/bacteria_tRNAs.tar.gz"),
-            ("fungi_tRNAs.tar.gz", "http://google.com/fungi_tRNAs.tar.gz"),
-            ("model_tRNAs.tar.gz", "http://google.com/model_tRNAs.tar.gz"),
-        ]
-    )
+    ) == [
+        ("archaea_tRNAs.json.gz", "http://google.com/archaea_tRNAs.json.gz"),
+        ("bacteria_tRNAs.tar.gz", "http://google.com/bacteria_tRNAs.tar.gz"),
+        ("fungi_tRNAs.tar.gz", "http://google.com/fungi_tRNAs.tar.gz"),
+        ("model_tRNAs.tar.gz", "http://google.com/model_tRNAs.tar.gz"),
+    ]
 
 
 def test_complains_if_no_download_urls():
@@ -148,14 +142,6 @@ def test_complex_note_data(data2):
 
 def test_taxid(data):
     assert helpers.taxid(data[0]) == 6500
-
-
-def test_lineage(data, taxonomy):
-    assert helpers.lineage(taxonomy, data[0]) == (
-        "Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; "
-        "Gastropoda; Heterobranchia; Euthyneura; Tectipleura; "
-        "Aplysiida; Aplysioidea; Aplysiidae; Aplysia"
-    )
 
 
 def test_species(data, taxonomy):

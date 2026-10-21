@@ -71,10 +71,14 @@ async def search_article_async(
         articles = None
         for attempt in range(max_retries):
             try:
-                async with semaphore, limiter, session.get(
-                    EUROPE_PMC + query,
-                    timeout=aiohttp.ClientTimeout(total=60),
-                ) as response:
+                async with (
+                    semaphore,
+                    limiter,
+                    session.get(
+                        EUROPE_PMC + query,
+                        timeout=aiohttp.ClientTimeout(total=60),
+                    ) as response,
+                ):
                     if response.status in (429, 500, 502, 503, 504):
                         if attempt < max_retries - 1:
                             delay = 2**attempt
@@ -190,7 +194,16 @@ async def fetch_all_epmc_data(
         print(f"Executing {len(tasks)} requests at 10 req/sec...")
         results = await asyncio.gather(*tasks)
 
-    results_df = pl.DataFrame(results)
+    # Inferring from the first rows breaks when they are all zero-hit searches.
+    results_df = pl.DataFrame(
+        results,
+        schema={
+            "hit_count": pl.List(pl.Int64),
+            "pmcids": pl.List(pl.String),
+            "cite_counts": pl.List(pl.Int64),
+            "status": pl.List(pl.String),
+        },
+    )
     final_df = pl.concat([df, results_df], how="horizontal")
 
     return final_df

@@ -114,14 +114,6 @@ def test_can_get_expected_data(apis_1):
                 "GenBank_transcript": ["XR_003306550.1"],
                 "RFAM_trans_name": ["RF00003"],
             },
-            species="Apis mellifera",
-            common_name="Honey bee",
-            lineage=(
-                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Altocrustacea; "
-                "Allotriocarida; Hexapoda; Insecta; Pterygota; Neoptera; "
-                "Eumetabola; Endopterygota; Hymenoptera; Apocrita; Aculeata; "
-                "Apoidea; Anthophila; Apidae; Apis; Apis mellifera"
-            ),
             gene="LOC113219421",
             description="Apis mellifera (Honey bee) U1 spliceosomal RNA",
             references=[pubs.reference("doi:10.1093/nar/gkx1011")],

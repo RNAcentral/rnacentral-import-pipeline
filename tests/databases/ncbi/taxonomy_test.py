@@ -17,8 +17,8 @@ from io import StringIO
 
 import pytest
 
-from rnacentral_pipeline.databases.ncbi import taxonomy
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
+from rnacentral_pipeline.databases.ncbi import taxonomy
 
 # --- nodes.dmp fixtures ---
 # Real format: taxid \t|\t parent_taxid \t|\t rank \t|\t ...more fields... \t|\n
@@ -32,8 +32,7 @@ NODES_DMP = (
 # 15 preamble lines, then tab-separated data with taxid in column 1 (0-indexed)
 STATS_HEADER = "".join(f"preamble line {i}\n" for i in range(15))
 STATS_DATA = (
-    "UP000005640\t9606\tHomo sapiens\t20600\n"
-    "UP000000589\t10090\tMus musculus\t17100\n"
+    "UP000005640\t9606\tHomo sapiens\t20600\nUP000000589\t10090\tMus musculus\t17100\n"
 )
 
 # --- fullnamelineage.dmp fixture ---
@@ -57,7 +56,7 @@ MERGED_DMP = ""
 # --- delnodes.dmp fixture ---
 # Real format: deleted_taxid \t|\n (just a bare id per line). 2 is deleted; 9606
 # is included to check that a still-live node is never emitted as deleted.
-DELNODES_DMP = "2\t|\n" "9606\t|\n"
+DELNODES_DMP = "2\t|\n9606\t|\n"
 
 # --- delnodes.dmp fixture (empty — no deleted taxids) ---
 DELNODES_DMP_EMPTY = ""
@@ -109,6 +108,44 @@ def test_taxonomy_entry_build_defaults():
     assert entry.reference_proteome is False
 
 
+def _build_with_names(*names):
+    return taxonomy.TaxonomyEntry.build(
+        entry=["9606", "Homo sapiens", "Eukaryota; Metazoa; "],
+        names=[("9606", n, "", c) for n, c in names],
+    )
+
+
+def test_common_name_prefers_genbank():
+    entry = _build_with_names(
+        ("Homo sapiens", "scientific name"),
+        ("human", "common name"),
+        ("man", "genbank common name"),
+    )
+    assert entry.common_name == "man"
+    # genbank wins regardless of the order the names appear in
+    entry = _build_with_names(
+        ("man", "genbank common name"),
+        ("human", "common name"),
+    )
+    assert entry.common_name == "man"
+
+
+def test_common_name_falls_back_to_common_name():
+    entry = _build_with_names(("human", "common name"))
+    assert entry.common_name == "human"
+
+
+def test_common_name_empty_when_absent():
+    entry = _build_with_names(("Homo sapiens", "scientific name"))
+    assert entry.common_name == ""
+
+
+def test_common_name_is_written_after_lineage():
+    entry = _build_with_names(("man", "genbank common name"))
+    row = next(iter(entry.writeable()))
+    assert row[3] == "man"
+
+
 def test_taxonomy_entry_writeable_includes_rank_and_proteome():
     entry = taxonomy.TaxonomyEntry.build(
         entry=["9606", "Homo sapiens", "Eukaryota; Metazoa; "],
@@ -119,9 +156,9 @@ def test_taxonomy_entry_writeable_includes_rank_and_proteome():
     rows = list(entry.writeable())
     assert len(rows) == 1
     row = rows[0]
-    assert row[5] == "species"
-    assert row[6] is True
-    assert row[7] is False
+    assert row[6] == "species"
+    assert row[7] is True
+    assert row[8] is False
 
 
 def test_taxonomy_entry_build_deleted():
@@ -132,7 +169,7 @@ def test_taxonomy_entry_build_deleted():
     assert entry.lineage == ""
     assert entry.replaced_by is None
     row = list(entry.writeable())[0]
-    assert row[7] is True
+    assert row[8] is True
 
 
 def test_parse_integrates_rank_and_proteome():

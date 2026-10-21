@@ -50,13 +50,13 @@ def validate(rna_type: str, sequence: Sequence) -> QaResult:
     required = EXPECTED_MATCHES[rna_type]
     hits = {h.model for h in sequence.rfam_hits}
     if not hits.intersection(required):
-        possible = sorted(EXPECTED_MATCHES[rna_type])
+        possible = sorted(required)
 
         article = "the"
         if len(possible) > 1:
             article = "a"
 
-        models = [href(p) for p in sorted(possible)]
+        models = [href(p) for p in possible]
         expected = ", ".join(models)
         message = f"No match to {article} {rna_type} Rfam model ({expected})"
         return QaResult.not_ok("missing_rfam_match", message)

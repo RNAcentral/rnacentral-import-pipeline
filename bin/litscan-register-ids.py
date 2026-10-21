@@ -12,6 +12,7 @@ successfully registered IDs to <output_file>.
 Environment variables:
     PSYCOPG_CONN   PostgreSQL connection URI
 """
+
 import datetime
 import os
 import sys
@@ -51,7 +52,7 @@ def main():
                 WHERE NOT EXISTS (
                     SELECT 1 FROM litscan_job j
                     WHERE j.job_id = v.job_id
-                    AND j.status IN ('pending', 'success')
+                    AND j.status = 'success'
                 )
                 ON CONFLICT (job_id) DO UPDATE
                     SET status = 'pending',

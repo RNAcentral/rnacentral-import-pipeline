@@ -6,8 +6,6 @@ include { sequences } from './text-search/sequences'
 include { genes } from './text-search/genes'
 
 process create_release_note {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
   input:
   path('count*')
 
@@ -24,6 +22,7 @@ process create_release_note {
 // This deletes the old data and then moves the new data in place.
 process atomic_publish {
   queue 'datamover'
+  containerOptions "${params.common_container} --bind $launchDir"
 
   input:
   path('release_note.txt')

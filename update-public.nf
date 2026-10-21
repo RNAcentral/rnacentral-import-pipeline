@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 process dump_data {
-  
+
   time '2d'
 
   output:
@@ -18,6 +18,7 @@ process dump_data {
     -h ${prod.host} -U ${prod.user} -d ${prod.db_name} -j 4 --schema ${prod.schema} -F d -O -f 'prod-dump' \
     --exclude-table=auth_group \
     --exclude-table=auth_group_permissions \
+    --exclude-table=auth_permission \
     --exclude-table=auth_user \
     --exclude-table=auth_user_groups \
     --exclude-table=auth_user_user_permissions \
@@ -48,7 +49,7 @@ process dump_data {
 }
 
 process populate_public {
-  
+
   time '4d'
 
   input:

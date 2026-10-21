@@ -240,9 +240,6 @@ def test_can_correctly_parse_data():
             xref_data={
                 "REFSEQ": ["NR_133553.1"],
             },
-            species=None,
-            common_name=None,
-            lineage=None,
             gene="FBgn0267497",
             locus_tag="Dmel_CR45837",
             description="Drosophila melanogaster (fruit fly) 28S ribosomal RNA:CR45837",
@@ -332,9 +329,6 @@ def test_can_correctly_parse_lncipedia_data():
             ],
             # product='long non-coding RNA lnc-CLEC18B-3:5',
             description="Homo sapiens (human) non-protein coding lnc-CLEC18B-3:5",
-            species=None,
-            common_name=None,
-            lineage=None,
         )
     )
 
@@ -367,9 +361,6 @@ def test_can_correctly_parse_mirbase_data():
             },
             optional_id="rno-mir-335",
             description="Rattus norvegicus miR-335 stem-loop",
-            species=None,
-            common_name=None,
-            lineage=None,
             references=[
                 pub.reference(17604727),
                 pub.reference(14691248),
@@ -410,9 +401,6 @@ def test_can_correct_fetch_related_sequences():
             },
             gene_synonyms=["TARBASE:hsa-miR-576-3p"],
             description="Homo sapiens (human) hsa-miR-576-3p",
-            species=None,
-            common_name=None,
-            lineage=None,
             references=[
                 pub.reference(22100165),
                 pub.reference(22291592),
@@ -2684,9 +2672,6 @@ def test_can_correctly_find_isoforms():
                 "LOC101927560",
             ],
             description="Homo sapiens (human) non-protein coding LINC01725:19",
-            species=None,
-            common_name=None,
-            lineage=None,
             references=[],
             related_sequences=[
                 dat.RelatedSequence(
@@ -2849,9 +2834,6 @@ def test_does_get_correct_lncbook_genes():
             xref_data={
                 "NONCODE": ["NONHSAT000005.2"],
             },
-            species=None,
-            common_name=None,
-            lineage=None,
             gene="HSALNG0000002",
             description="Homo sapiens (human) HSALNT0000002",
             references=[

@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from rnacentral_pipeline.databases.evlncrnas import helpers, parser
+from rnacentral_pipeline.databases.evlncrnas import parser
 
 
 def test_can_parse_evlncrnas3_fixture(monkeypatch, tmp_path):
@@ -46,7 +46,6 @@ def test_can_parse_evlncrnas3_fixture(monkeypatch, tmp_path):
     monkeypatch.setattr(parser, "get_ncbi_accessions", enrich)
     monkeypatch.setattr(parser, "get_db_matches", fake_empty_matches)
     monkeypatch.setattr(parser.lookup, "as_mapping", lambda *_args, **_kwargs: {})
-    monkeypatch.setattr(helpers, "lineage", lambda _record: "Eukaryota; Metazoa; Mammalia")
 
     dump = tmp_path / "ev_lookup.csv"
     dump.write_text("urs,taxid,external_id\n", encoding="utf-8")
@@ -62,7 +61,10 @@ def test_can_parse_evlncrnas3_fixture(monkeypatch, tmp_path):
     assert entry.database == "EVLNCRNAS"
     assert entry.sequence == "ACGTACGTACGT"
     assert entry.rna_type == "SO:0001463"
-    assert entry.url == "https://www.sdklab-biophysics-dzu.net/EVLncRNAs3/#/detail?id=EL3692"
+    assert (
+        entry.url
+        == "https://www.sdklab-biophysics-dzu.net/EVLncRNAs3/#/detail?id=EL3692"
+    )
     assert entry.gene_synonyms == [
         "MALAT1",
         "HCN",
@@ -71,7 +73,10 @@ def test_can_parse_evlncrnas3_fixture(monkeypatch, tmp_path):
         "NEAT2",
         "PRO2853",
     ]
-    assert sorted(ref.external_id for ref in entry.references) == ["31174563", "33235630"]
+    assert sorted(ref.external_id for ref in entry.references) == [
+        "31174563",
+        "33235630",
+    ]
     assert entry.note_data == {}
     assert json.loads(entry.note) == {
         "url": "https://www.sdklab-biophysics-dzu.net/EVLncRNAs3/#/detail?id=EL3692"

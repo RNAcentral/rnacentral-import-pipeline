@@ -12,6 +12,7 @@ Environment variables:
     PSYCOPG_CONN    PostgreSQL connection URI
     LITSCAN_MODEL   Path to the scikit-learn SVC pipeline .pkl file
 """
+
 import argparse
 import datetime
 import gzip
@@ -105,7 +106,6 @@ def parse_body_to_dict(body_elem, ignore_tags):
 
     # Find every <sec> tag anywhere in the body
     for i, sec in enumerate(body_elem.findall(".//sec")):
-
         # 1. Grab the Title
         title_tag = sec.find("title")
         if title_tag is not None:
@@ -129,7 +129,7 @@ def parse_body_to_dict(body_elem, ignore_tags):
 
         # Prevent key collisions (e.g., if there are two "Results" sub-sections)
         if key in sections_dict:
-            key = f"{key}_{i+1}"
+            key = f"{key}_{i + 1}"
 
         # 2. Grab the Text (excluding nested sections)
         section_text = get_section_text(sec, ignore_tags)
@@ -290,7 +290,7 @@ def finalize_for_job(base, pmcid, job_id, cite_count):
 
 def classify_abstract(abstract_text, rna_pipeline):
     probability = rna_pipeline.predict_proba([abstract_text])[0][1]
-    rna_related = probability >= 0.5
+    rna_related = bool(probability >= 0.5)
     probability = round(float(probability), 2)
 
     return probability, rna_related

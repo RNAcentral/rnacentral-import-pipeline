@@ -52,3 +52,25 @@ def test_can_generate_rna_type(filename, index, rna_type):
     with open(filename) as raw:
         data = list(helpers.ncrnas(raw))
         assert helpers.row_rna_type(data[index]) == rna_type
+
+
+def test_can_parse_xref_data():
+    row = {"dbXrefs": "MIM:138670,HGNC:HGNC:4171,Ensembl:ENSG00000109061"}
+    assert helpers.xref_data(row) == {
+        "MIM": ["138670"],
+        "HGNC": ["HGNC:4171"],
+        "Ensembl": ["ENSG00000109061"],
+    }
+
+
+def test_xref_data_is_empty_when_not_given():
+    assert helpers.xref_data({"dbXrefs": "-"}) == {}
+
+
+def test_no_ncrna_in_the_sample_has_xrefs():
+    """
+    Every ncRNA row in the sample has dbXrefs of '-', which is why the parsing
+    branch above went years without anyone noticing it raised NameError.
+    """
+    with open("data/ncbi_gene/simple.txt") as raw:
+        assert all(helpers.xref_data(r) == {} for r in helpers.ncrnas(raw))

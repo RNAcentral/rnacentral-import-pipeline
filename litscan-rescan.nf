@@ -44,6 +44,8 @@ include { find_manually_annotated } from './workflows/litscan/litscan-manually-a
 include { export_articles }         from './workflows/litscan/litscan-export-articles'
 include { export_metadata }         from './workflows/litscan/litscan-export-metadata'
 
+include { slack_closure } from './workflows/utils/slack'
+
 params.rescan_finished_before = null
 params.rescan_databases       = null
 
@@ -82,6 +84,7 @@ process select_rescan_ids {
 }
 
 workflow {
+  main:
   if (!params.rescan_finished_before && !params.rescan_databases) {
     error "Must supply at least one of --rescan_finished_before YYYY-MM-DD or --rescan_databases db1,db2"
   }
@@ -94,4 +97,15 @@ workflow {
   find_manually_annotated(find_retracted_articles.out)
   export_articles(find_manually_annotated.out)
   export_metadata(find_manually_annotated.out, export_articles.out)
+
+  // See analyze.nf: an onError section crashes on Nextflow 26.04.
+  onComplete:
+    try {
+      def msg = workflow.success
+        ? "LitScan rescan workflow completed"
+        : "LitScan rescan workflow failed"
+      slack_closure(msg)
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
 }

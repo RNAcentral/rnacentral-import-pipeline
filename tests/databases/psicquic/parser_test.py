@@ -54,9 +54,6 @@ def test_can_parse_correctly(data):
         seq_version="1",
         description="Homo sapiens (human) hsa-let-7e-5p",
         references=[pub.reference("PMID:23671334"), pub.reference("PMID:30670152")],
-        species="Homo sapiens",
-        common_name="human",
-        lineage="Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens",
         interactions=[
             Interaction(
                 ids=(

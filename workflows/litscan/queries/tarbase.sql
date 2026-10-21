@@ -1,6 +1,6 @@
 -- TARBASE
 select
-    upi,
+    urs,
     taxid,
     external_id,
     optional_id

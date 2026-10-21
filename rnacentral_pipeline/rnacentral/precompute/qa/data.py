@@ -80,15 +80,15 @@ class QaStatus:
                 messages.append(result.message)
         return messages
 
-    def writeable(self, upi: str, taxid: int) -> ty.List[str]:
+    def writeable(self, urs: str, taxid: int) -> ty.List[str]:
         """
         Create a writeable array for writing CSV files.
         """
 
         fields = (getattr(self, f.name) for f in attr.fields(self.__class__))
         data = [
-            f"{upi}_{taxid}",
-            upi,
+            f"{urs}_{taxid}",
+            urs,
             str(taxid),
             str(int(self.has_issue)),
         ]

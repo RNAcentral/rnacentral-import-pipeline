@@ -131,15 +131,6 @@ def test_it_does_not_create_entries_for_pseudogenes(human_12):
 
 
 @pytest.mark.slow
-def test_it_normalizes_lineage_to_standard_one(human_12):
-    assert entry_for(human_12, "ENST00000540868.1").lineage == (
-        "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-        "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; "
-        "Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens"
-    )
-
-
-@pytest.mark.slow
 def test_calls_lincRNA_lncRNA(human_12):
     assert entry_for(human_12, "ENST00000538041.2").rna_type == "SO:0001877"
 
@@ -270,15 +261,8 @@ def test_it_builds_correct_entries(human_12):
             rna_type="SO:0000655",
             url="http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t=ENST00000620330.1",
             seq_version="1",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; "
-                "Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens"
-            ),
             chromosome="12",
             parent_accession="chromosome:GRCh38:12:1:366344:1",
-            common_name="human",
-            species="Homo sapiens",
             gene="ENSG00000278469.1",
             locus_tag="Metazoa_SRP",
             optional_id="ENSG00000278469.1",
@@ -379,15 +363,8 @@ def test_can_build_gencode_entries(human_12):
             rna_type="SO:0000655",
             url="",
             seq_version="1",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; "
-                "Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens"
-            ),
             chromosome="12",
             parent_accession="chromosome:GRCh38:12:1:366344:1",
-            common_name="human",
-            species="Homo sapiens",
             gene="ENSG00000278469.1",
             locus_tag="Metazoa_SRP",
             optional_id=None,

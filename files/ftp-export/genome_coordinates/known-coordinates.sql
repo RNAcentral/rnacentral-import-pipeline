@@ -4,4 +4,5 @@ select distinct
   assembly.ensembl_url,
   assembly.taxid
 from ensembl_assembly assembly
+where assembly.selected_genome = true
 ) TO STDOUT CSV
