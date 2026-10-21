@@ -41,7 +41,6 @@ def test_builds_entries_from_a_full_set():
     assert entry.rna_type == "SO:0001035"
     assert entry.sequence == "TGGTACGTACGTTAACCGTGC"
     assert entry.description == "Caenorhabditis elegans piRNA piR-cel-1"
-    assert entry.species == "Caenorhabditis elegans"
     # piRBase publishes BED only against assemblies RNAcentral no longer
     # carries, and maps these sequences itself.
     assert entry.regions == []

@@ -346,6 +346,7 @@ TAXONOMY = pa.schema(
         pa.field("taxid", pa.int64(), nullable=False),
         pa.field("name", pa.string(), nullable=False),
         pa.field("lineage", pa.string(), nullable=False),
+        pa.field("common_name", pa.string(), nullable=False),
         pa.field("aliases", pa.string(), nullable=False),
         pa.field("replaced_by", pa.int64()),
         pa.field("rank", pa.string(), nullable=False),

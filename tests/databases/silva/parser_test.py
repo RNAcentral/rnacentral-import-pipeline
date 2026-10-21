@@ -82,9 +82,6 @@ def test_parses_data_correctly(taxonomy_path):
         url="https://www.arb-silva.de/browser/ssu/FN662328",
         seq_version="1",
         inference="Bacteria; Chloroflexi; TK10",
-        common_name=None,
-        species="uncultured eukaryote",
-        lineage="Eukaryota; environmental samples; uncultured eukaryote",
         references=[
             pubs.reference("doi:10.1093/nar/gks1219"),
         ],
@@ -122,13 +119,6 @@ def test_can_parse_lsu_data_correctly(taxonomy_path):
             "Eukaryota; Amorphea; Obazoa; Opisthokonta; Nucletmycea; Fungi; "
             "Dikarya; Ascomycota; Pezizomycotina; Sordariomycetes; Hypocreales; "
             "Nectriaceae; Fusarium"
-        ),
-        common_name=None,
-        species="Cytospora ceratosperma",
-        lineage=(
-            "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; "
-            "Sordariomycetes; Sordariomycetidae; Diaporthales; Cytosporaceae; "
-            "Cytospora; Cytospora ceratosperma"
         ),
         references=[
             pubs.reference("doi:10.1093/nar/gks1219"),

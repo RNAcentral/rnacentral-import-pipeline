@@ -62,9 +62,10 @@ def test_it_labels_y_rna_correctly():
 
 
 def test_it_parses_all_data():
-    with open("data/rfam/families.tsv") as mapping_handle, open(
-        "data/rfam/sequence_info.tsv"
-    ) as handle:
+    with (
+        open("data/rfam/families.tsv") as mapping_handle,
+        open("data/rfam/sequence_info.tsv") as handle,
+    ):
         assert (
             len(list(parse(mapping_handle, handle, "data/rfam/sequences.fasta")))
             == 1000
@@ -72,9 +73,10 @@ def test_it_parses_all_data():
 
 
 def test_it_builds_first_entry_correctly():
-    with open("data/rfam/families.tsv") as mapping_handle, open(
-        "data/rfam/sequence_info.tsv"
-    ) as handle:
+    with (
+        open("data/rfam/families.tsv") as mapping_handle,
+        open("data/rfam/sequence_info.tsv") as handle,
+    ):
         assert attr.asdict(
             next(parse(mapping_handle, handle, "data/rfam/sequences.fasta"))
         ) == attr.asdict(
@@ -95,18 +97,11 @@ def test_it_builds_first_entry_correctly():
                     "SO": ["SO:0000253"],
                     "GO": ["GO:0030533"],
                 },
-                species="Stegodyphus mimosarum",
-                lineage=(
-                    "Eukaryota; Metazoa; Arthropoda; Chelicerata; Arachnida; Araneae; "
-                    "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; "
-                    "Stegodyphus mimosarum"
-                ),
                 references=[
                     reference(29112718),
                     reference(8256282),
                     reference(9023104),
                 ],
-                common_name=None,
                 optional_id="tRNA",
                 parent_accession="KK113858",
                 description="Stegodyphus mimosarum tRNA",
@@ -120,9 +115,10 @@ def test_it_builds_first_entry_correctly():
 
 
 def test_it_can_parse_with_similar_accessions_correctly():
-    with open("data/rfam/families.tsv") as mapping_handle, open(
-        "data/rfam/sequence_info-duplicates.tsv"
-    ) as handle:
+    with (
+        open("data/rfam/families.tsv") as mapping_handle,
+        open("data/rfam/sequence_info-duplicates.tsv") as handle,
+    ):
         data = list(
             parse(mapping_handle, handle, "data/rfam/sequences-duplicates.fasta")
         )

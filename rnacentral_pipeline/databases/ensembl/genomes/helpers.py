@@ -18,11 +18,10 @@ import re
 import attr
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.helpers import embl
-
 from rnacentral_pipeline.databases.ensembl.data import TranscriptInfo
-from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
 from rnacentral_pipeline.databases.ensembl.genomes.data import Context
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
+from rnacentral_pipeline.databases.helpers import embl
 
 EXCLUDED_TYPES = {
     "nontranslating_CDS",
@@ -82,10 +81,9 @@ def seq_version(feature) -> str:
     return version
 
 
-def description(gene, entry) -> str:
-    species = entry.species
-    if entry.common_name:
-        species += " (%s)" % entry.common_name
+def description(gene, entry, species, common_name=None) -> str:
+    if common_name:
+        species += " (%s)" % common_name
 
     gene_name = ensembl.notes(gene)
     if gene_name and len(gene_name) == 1:
@@ -138,9 +136,6 @@ def as_entry(context: Context, record, current_gene, feature) -> data.Entry:
         rna_type=info.so_rna_type,
         url="",
         seq_version=seq_version(feature),
-        lineage=embl.lineage(record),
-        common_name=common_name,
-        species=species,
         gene=embl.gene(current_gene),
         locus_tag=embl.locus_tag(current_gene),
         xref_data=xref_data(feature),
@@ -148,4 +143,6 @@ def as_entry(context: Context, record, current_gene, feature) -> data.Entry:
         references=context.references,
     )
 
-    return attr.evolve(entry, description=description(current_gene, entry))
+    return attr.evolve(
+        entry, description=description(current_gene, entry, species, common_name)
+    )

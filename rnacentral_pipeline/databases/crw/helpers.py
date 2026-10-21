@@ -62,9 +62,6 @@ def as_entry(info, sequences) -> ty.Optional[data.Entry]:
             url="",
             seq_version="1",
             description=description(info),
-            species=phy.species(info.taxid),
-            common_name=phy.common_name(info.taxid),
-            lineage=phy.lineage(info.taxid),
             references=[
                 pub.reference(11869452),
             ],

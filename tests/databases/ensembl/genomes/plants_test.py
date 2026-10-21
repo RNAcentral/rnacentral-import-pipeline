@@ -109,15 +109,6 @@ def test_can_parse_data(cress_2):
                 "GO": ["GO:0003735", "GO:0005840"],
                 "RNAcentral": ["URS000008172F"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G01010",
             locus_tag="AT2G01010",
             description="Arabidopsis thaliana (thale-cress) 18S ribosomal RNA",
@@ -187,15 +178,6 @@ def test_can_create_tair_entry(cress_2):
                 "GO": ["GO:0003735", "GO:0005840"],
                 "RNAcentral": ["URS000008172F"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G01010",
             locus_tag="AT2G01010",
             description="Arabidopsis thaliana (thale-cress) 18S ribosomal RNA",
@@ -237,15 +219,6 @@ def test_can_get_with_odd_rna_type(cress_2):
                 "RefSeq_ncRNA": ["NR_139974"],
                 "RNAcentral": ["URS0000A76CC2"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G03895",
             locus_tag="AT2G03895",
             description="Arabidopsis thaliana (thale-cress) ncRNA",
@@ -285,15 +258,6 @@ def test_can_parse_a_trna(cress_2):
                 "GO": ["GO:0006412", "GO:0030533"],
                 "RNAcentral": ["URS00002FBDA1"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G07752",
             description="Arabidopsis thaliana (thale-cress) misc RNA AT2G07752",
             references=[pubs.reference(29092050)],
@@ -334,15 +298,6 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
                 "RefSeq_ncRNA": ["NR_139975"],
                 "RNAcentral": ["URS0000A7703F"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G03905",
             locus_tag="AT2G03905",
             description="Arabidopsis thaliana (thale-cress) ncRNA",
@@ -388,15 +343,6 @@ def test_can_parse_premirna(cress_2):
                 "miRBase_trans_name": ["ath-MIR5639-201", "noid"],
                 "RNAcentral": ["URS000078C7F0"],
             },
-            species="Arabidopsis thaliana",
-            common_name="thale-cress",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; "
-                "Brassicales; Brassicaceae; Camelineae; Arabidopsis; "
-                "Arabidopsis thaliana"
-            ),
             gene="AT2G08015",
             locus_tag="ath-MIR5639",
             description=(
@@ -441,14 +387,6 @@ def test_can_parse_rice_trna(oryza_9):
                 "RNAcentral": ["URS00001F06B0"],
                 "TRNASCAN_SE_trans_name": ["tRNA-Glu-201"],
             },
-            species="Oryza barthii",
-            common_name="African wild rice",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; "
-                "Oryzeae; Oryzinae; Oryza; Oryza barthii"
-            ),
             gene="ENSRNA049456349",
             locus_tag="tRNA-Glu",
             description="Oryza barthii (African wild rice) misc RNA tRNA-Glu",
@@ -483,14 +421,6 @@ def test_can_parse_rice_snorna(oryza_9):
                 "RFAM_trans_name": ["snoR74-201"],
                 "RNAcentral": ["URS0000653525"],
             },
-            species="Oryza barthii",
-            common_name="African wild rice",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; "
-                "Oryzeae; Oryzinae; Oryza; Oryza barthii"
-            ),
             gene="ENSRNA049475670",
             locus_tag="snoR74",
             description="Oryza barthii (African wild rice) misc RNA snoR74",
@@ -525,14 +455,6 @@ def test_can_parse_rice_pre_mirna(oryza_9):
                 "RFAM_trans_name": ["MIR1846-201"],
                 "RNAcentral": ["URS0000BFFA82"],
             },
-            species="Oryza barthii",
-            common_name="African wild rice",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; "
-                "Oryzeae; Oryzinae; Oryza; Oryza barthii"
-            ),
             gene="ENSRNA049475651",
             locus_tag="MIR1846",
             description="Oryza barthii (African wild rice) misc RNA MIR1846",
@@ -573,14 +495,6 @@ def test_can_parse_rice_u6(oryza_9):
                 "RFAM_trans_name": ["U6-201"],
                 "RNAcentral": ["URS0000C52597"],
             },
-            species="Oryza barthii",
-            common_name="African wild rice",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; "
-                "Oryzeae; Oryzinae; Oryza; Oryza barthii"
-            ),
             gene="ENSRNA049475710",
             locus_tag="U6",
             description="Oryza barthii (African wild rice) misc RNA U6",
@@ -622,14 +536,6 @@ def test_can_parse_zea_lincrna(zea_7):
             url="",
             seq_version="1",
             xref_data={"RNAcentral": ["URS00021F5853"]},
-            species="Zea mays",
-            common_name="maize",
-            lineage=(
-                "Eukaryota; Viridiplantae; Streptophyta; "
-                "Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; "
-                "Liliopsida; Poales; Poaceae; PACMAD clade; Panicoideae; "
-                "Andropogonodae; Andropogoneae; Tripsacinae; Zea; Zea mays"
-            ),
             gene="Zm00001eb302990",
             description="Zea mays (maize) misc RNA Zm00001eb302990",
             references=[pubs.reference(29092050)],

@@ -61,8 +61,6 @@ def test_it_generates_correct_entries(other_euk):
             chromosome="scaffold00844",
             # gtrnadb_entries() doesn't set species/lineage on Entry directly -
             # they're only folded into the description string below.
-            species=None,
-            lineage=None,
             gene="tRNA-Ala-AGC-1-1",
             gene_synonyms=["scaffold00844.trna1-AlaAGC"],
             optional_id="tRNA-Ala-AGC-1-1",

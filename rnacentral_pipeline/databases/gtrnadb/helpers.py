@@ -19,12 +19,10 @@ import typing as ty
 
 import requests
 import six
-from sqlitedict import SqliteDict
 
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 import rnacentral_pipeline.databases.helpers.publications as pub
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.ncbi.taxonomy import TaxonomyEntry
 
 
 class InvalidDotBracket(Exception):
@@ -102,16 +100,6 @@ def chromosome(location):
 def taxid(data: ty.Dict[str, str]) -> int:
     _, taxid = data["taxonId"].split(":", 1)
     return int(taxid)
-
-
-def lineage(taxonomy: SqliteDict, data):
-    """
-    Get a standardized lineage for the given taxon id.
-    """
-    ncbi_taxid = taxid(data)
-    if str(ncbi_taxid) in taxonomy:
-        return taxonomy[ncbi_taxid].lineage
-    return phy.lineage(ncbi_taxid)
 
 
 _species_cache = {}

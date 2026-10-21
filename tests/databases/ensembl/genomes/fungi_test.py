@@ -93,14 +93,6 @@ def test_can_produce_correct_data(asp_1):
             seq_version="1",
             note_data={},
             xref_data={"RFAM": ["RF00004"]},
-            species="Aspergillus nidulans FGSC A4",
-            common_name=None,
-            lineage=(
-                "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; "
-                "Eurotiomycetes; Eurotiomycetidae; Eurotiales; Aspergillaceae; "
-                "Aspergillus; Aspergillus subgen. Nidulantes; "
-                "Aspergillus nidulans FGSC A4"
-            ),
             gene="EBG00005235662",
             locus_tag="U2",
             description="Aspergillus nidulans FGSC A4 misc RNA U2",
