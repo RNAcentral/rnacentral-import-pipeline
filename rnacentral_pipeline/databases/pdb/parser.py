@@ -39,8 +39,6 @@ def as_entry(info: ChainInfo, reference_mapping: ReferenceMapping):
         product=helpers.product(info),
         optional_id=info.chain_id,
         description=helpers.description(info),
-        species=helpers.species(info),
-        lineage=helpers.lineage(info),
         parent_accession=info.pdb_id.upper(),
         references=helpers.references_for(info, reference_mapping),
     )

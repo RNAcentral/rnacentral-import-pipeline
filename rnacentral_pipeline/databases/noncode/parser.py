@@ -109,7 +109,6 @@ def as_entry(
         url=url(accession),
         seq_version=seq_version(accession),
         description=description(species, accession),
-        species=species.name,
     )
 
 

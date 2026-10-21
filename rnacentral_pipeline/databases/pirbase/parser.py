@@ -83,7 +83,6 @@ def as_entry(species: Species, record) -> data.Entry:
         url="",
         seq_version="1",
         description=description(species, record.id),
-        species=species.name,
     )
 
 

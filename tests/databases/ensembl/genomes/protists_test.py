@@ -97,13 +97,6 @@ def test_can_parse_expected_data(leis_36):
             seq_version="1",
             note_data={},
             xref_data={},
-            species="Leishmania major",
-            common_name=None,
-            lineage=(
-                "Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; "
-                "Trypanosomatida; Trypanosomatidae; Leishmaniinae; Leishmania; "
-                "Leishmania major strain Friedlin"
-            ),
             gene="LMJF_36_TRNAGLY_01",
             description="Leishmania major tRNA-Gly",
             references=[pubs.reference("doi:10.1093/nar/gkx1011")],

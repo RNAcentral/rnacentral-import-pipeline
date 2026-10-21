@@ -20,9 +20,9 @@ from contextlib import contextmanager
 import pytest
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.helpers import publications as pub
 from rnacentral_pipeline.databases.genecards_suite import genecards as gene
 from rnacentral_pipeline.databases.genecards_suite.core import lookup
+from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 @contextmanager
@@ -76,13 +76,5 @@ def test_can_create_correct_data(simple_data):
         seq_version=1,
         gene="1A9N_Q-015",
         description="Homo sapiens (human) miscellaneous RNA",
-        species="Homo sapiens",
-        common_name="human",
-        lineage=(
-            "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-            "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
-            "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
-            "Homo sapiens"
-        ),
         references=[pub.reference(27322403)],
     )
