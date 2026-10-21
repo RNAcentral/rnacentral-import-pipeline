@@ -21,6 +21,7 @@ import pytest
 SEARCH_EXPORT = Path("files/search-export/parts/r2dt.sql")
 PRECOMPUTE = Path("files/precompute/queries/r2dt-hits.sql")
 UPDATE_CTL = Path("files/r2dt/should-show/update.ctl")
+LOAD_CTL = Path("files/r2dt/load.ctl")
 
 pytestmark = [pytest.mark.r2dt, pytest.mark.db]
 
@@ -28,14 +29,14 @@ pytestmark = [pytest.mark.r2dt, pytest.mark.db]
 CTL_SECTIONS = ("BEFORE LOAD DO", "WITH", "AFTER LOAD DO")
 
 
-def ctl_blocks(section):
+def ctl_blocks(section, path=UPDATE_CTL):
     """The $$-quoted SQL statements under a DO section of the pgloader CTL."""
-    text = UPDATE_CTL.read_text()
+    text = path.read_text()
     start = text.index(section) + len(section)
     later = [text.index(s) for s in CTL_SECTIONS if s != section]
     stop = min((p for p in later if p > start), default=len(text))
     blocks = re.findall(r"\$\$(.*?)\$\$", text[start:stop], flags=re.DOTALL)
-    assert blocks, f"No SQL found under {section} in {UPDATE_CTL}"
+    assert blocks, f"No SQL found under {section} in {path}"
     return [b.strip() for b in blocks]
 
 
@@ -214,3 +215,39 @@ def test_should_show_update_leaves_manual_assignments_alone(db):
 
     # the manual assignment still wins in the display queries
     assert len(copy_query(db, SEARCH_EXPORT)) == 1
+
+
+def test_load_stores_force_fits_hidden(db):
+    # The website reads should_show directly and has no length check of its own.
+    load_case(db, "URS0000000001", 100, 100, None, True, model_id=1)
+    load_case(db, "URS0000000002", 2000, 200, None, True, model_id=2)
+
+    with db.cursor() as cur:
+        for statement in ctl_blocks("BEFORE LOAD DO", LOAD_CTL):
+            cur.execute(statement)
+        cur.execute(
+            """INSERT INTO load_secondary (urs, model_id, inferred_should_show)
+               VALUES ('URS0000000001', 1, true), ('URS0000000002', 2, true)"""
+        )
+        cur.execute(ctl_blocks("AFTER LOAD DO", LOAD_CTL)[0])
+
+        cur.execute("SELECT urs, inferred_should_show FROM load_secondary ORDER BY urs")
+        assert cur.fetchall() == [
+            ("URS0000000001", True),
+            ("URS0000000002", False),
+        ]
+
+
+def test_should_show_update_keeps_force_fits_hidden(db):
+    load_case(db, "URS0000000001", 2000, 200, None, False, model_id=1)
+
+    with db.cursor() as cur:
+        for statement in ctl_blocks("BEFORE LOAD DO"):
+            cur.execute(statement)
+        cur.execute(
+            "INSERT INTO load_secondary_should_show (urs, should_show) VALUES ('URS0000000001', true)"
+        )
+        cur.execute(ctl_blocks("AFTER LOAD DO")[0])
+
+        cur.execute("SELECT inferred_should_show FROM r2dt_results")
+        assert cur.fetchone() == (False,)

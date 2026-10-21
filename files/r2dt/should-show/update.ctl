@@ -28,10 +28,14 @@ AFTER LOAD DO
 $$
 UPDATE r2dt_results layout
 SET
+  -- The classifier must not re-show a force-fit that load.ctl stored hidden.
   inferred_should_show = load.should_show
-FROM load_secondary_should_show load
+    AND coalesce(rna.len::numeric / nullif(m.model_length, 0) < 1.25, true)
+FROM load_secondary_should_show load, rna, r2dt_models m
 WHERE
   layout.urs = load.urs
+  AND rna.urs = layout.urs
+  AND m.id = layout.model_id
 ;
 $$,
 $$

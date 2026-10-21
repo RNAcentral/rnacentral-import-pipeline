@@ -24,7 +24,8 @@ WHERE acc.rna_type IN (
   'SO:0002120', -- 3prime_overlapping_ncrna
   'SO:0000644', -- antisense_RNA
   'SO:0000646', -- siRNA
-  'SO:0000454'  -- rasiRNA
+  'SO:0000454', -- rasiRNA
+  'SO:0001035'  -- piRNA
 );
 
 CREATE INDEX ON excluded (urs);
@@ -39,6 +40,8 @@ FROM rna
 JOIN urs_to_fetch ON rna.urs = urs_to_fetch.urs
 LEFT JOIN excluded ON excluded.urs = rna.urs
 WHERE rna.len < :max_len
+-- Too short for a meaningful drawing; these only ever force-fit.
+AND rna.len >= 40
 AND excluded.urs IS NULL
 LIMIT :sequence_count
 ) TO STDOUT;
