@@ -216,7 +216,7 @@ jobs:
   singularity-conversion:
     needs:
       - create-docker-image
-    uses: rnacentral/rnacentral-import-pipeline/.github/workflows/singularity.yaml@experimental/parquet-internals
+    uses: ./.github/workflows/singularity.yaml
     secrets: inherit
     with:
       tag: ${{ inputs.tag }}
