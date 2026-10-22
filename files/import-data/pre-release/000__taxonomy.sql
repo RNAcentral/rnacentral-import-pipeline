@@ -13,7 +13,7 @@ SELECT
   taxid,
   name,
   lineage,
-  common_name,
+  nullif(common_name, ''),
   ARRAY(select json_array_elements_text(aliases)),
   replaced_by,
   rank,
