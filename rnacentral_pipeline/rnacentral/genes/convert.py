@@ -12,15 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import tempfile
 from pathlib import Path
 
 import gffutils
 import polars as pl
-import psycopg2 as pg
 from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.rnacentral.genes.random_forest import data
+from rnacentral_pipeline.rnacentral.genes import merge as data
 
 insdc_so_lookup = {
     "ncRNA": "SO:0000655",
@@ -169,40 +169,3 @@ def gff_to_polars(path: Path, taxid: int, regions_data: Path) -> pl.DataFrame:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
     return load_coordinates(path, taxid, regions_data)
-
-
-def database_to_bed(
-    output_path: Path, taxid: int, assembly_id: str, conn_str: str
-) -> None:
-    """
-    Convert transcript data from the database to a BED file format.
-
-    Args:
-        output_path (Path): Path to save the output BED file.
-        taxid (int): Taxonomy ID for the transcripts.
-        conn_str (str): Database connection string to fetch transcript data.
-    """
-    conn = pg.connect(conn_str)
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        SELECT chromosome, start-1, stop, public_name, 0, strand
-        FROM rnc_genes
-        WHERE assembly_id = %s
-        AND taxid = %s
-        ORDER BY chromosome, start
-    """,
-        (
-            assembly_id,
-            taxid,
-        ),
-    )
-
-    with open(output_path, "w") as f:
-        for row in cur.fetchall():
-            chrom = f"chr{row[0]}" if not str(row[0]).startswith("chr") else str(row[0])
-            f.write(f"{chrom}\t{row[1]}\t{row[2]}\t{row[3]}\t{row[4]}\t{row[5]}\n")
-
-    cur.close()
-    conn.close()

@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import hashlib
 import io
 import multiprocessing as mp
@@ -31,9 +32,6 @@ from psycopg2.extras import RealDictCursor
 from tqdm import tqdm
 
 from rnacentral_pipeline.databases.data import Database
-from rnacentral_pipeline.rnacentral.genes.random_forest.preprocessing import (
-    exon_overlap,
-)
 from rnacentral_pipeline.rnacentral.precompute import utils
 
 SO_ONTOLOGY_URL = "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/refs/heads/master/Ontology_Files/so-simple.obo"
@@ -140,6 +138,31 @@ type_scores = {
     Database.rfam.value.descr: 100,
     "R2DT": 100,  ## Can be very specific
 }
+
+
+def exon_overlap(exon_a_start, exon_a_end, exon_b_start, exon_b_end):
+    """
+    Calculates overlap of exon b with exon a
+    """
+    # Early exit if no overlap possible
+    if exon_a_end <= exon_b_start or exon_b_end <= exon_a_start:
+        return 0
+
+    length_a = abs(exon_a_end - exon_a_start)
+    length_b = abs(exon_b_end - exon_b_start)
+
+    # Early exit for invalid exons
+    if length_a == 0 or length_b == 0:
+        return 0
+
+    overlap_start = max(exon_a_start, exon_b_start)
+    overlap_stop = min(exon_a_end, exon_b_end)
+    overlap_length = abs(overlap_stop - overlap_start)
+
+    overlap_a = overlap_length / length_a
+    overlap_b = overlap_length / length_b
+
+    return min(overlap_a, overlap_b)
 
 
 @lru_cache()
@@ -884,7 +907,6 @@ def get_cm_hits(urs_taxids, db_str):
     def get_rfam():
         conn = pg.connect(db_str)
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-
             cur.execute(
                 """
                     WITH g(urs_taxid, urs) AS (

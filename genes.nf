@@ -21,19 +21,6 @@ process fetch_taxids {
   """
 }
 
-process fetch_rf_model {
-  input:
-    val(_flag)
-
-  output:
-    path("genes_model.pkl")
-
-  script:
-  """
-  wget -O genes_model.pkl ${params.genes.rf_model_url}
-  """
-}
-
 process fetch_so_model{
   input:
     val(_flag)
@@ -63,45 +50,27 @@ process fetch_transcripts {
 
   script:
   """
-  rnac genes infer fetch --taxid ${taxid} --output transcripts.pq
+  rnac genes utils fetch --taxid ${taxid} --output transcripts.pq
   """
 }
 
 
-process preprocess_transcripts {
-  memory '256 GB'
+// Placeholder for the GNN inference container (infer_genes.py). It must emit
+// genes_<taxid>.json in the name_genes shape; fails loudly until it is wired up.
+process infer_genes {
   tag { taxid }
 
   input:
     tuple val(taxid), path(transcripts), path(so_model)
 
   output:
-    tuple val(taxid), path('features.pq'), path(transcripts)
+    tuple val(taxid), path("genes_${taxid}.json")
 
   script:
   """
-  rnac genes infer preprocess --transcripts_file ${transcripts} --output features.pq --so_model_path ${so_model}
+  echo "GNN inference is not wired up yet" >&2
+  exit 1
   """
-}
-
-
-process classify_transcripts {
-  memory { 64.GB * task.attempt }
-  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
-  maxRetries 4
-  tag { taxid }
-
-  input:
-    tuple val(taxid), path(features), path(transcripts), path(model)
-
-  output:
-    tuple val(taxid), path("*.json")
-
-  script:
-  """
-  rnac genes infer classify --features_file ${features} --transcripts_file ${transcripts} --model_path ${model} --taxid ${taxid} --output_dir .
-  """
-
 }
 
 
@@ -246,7 +215,6 @@ workflow genes {
 
   main:
   channel.of(true) | fetch_so_model | set { so_model }
-  channel.of(true) | fetch_rf_model | set { rf_model }
   channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
 
   taxa \
@@ -255,9 +223,7 @@ workflow genes {
   | fetch_transcripts \
   | filter {_taxid, transcripts -> transcripts.size() > 0 } \
   | combine( so_model ) \
-  | preprocess_transcripts \
-  | combine( rf_model ) \
-  | classify_transcripts \
+  | infer_genes \
   | filter {_taxid, genes -> genes.size() > 2 } \
   | fetch_previous_genes \
   | branch { row ->
