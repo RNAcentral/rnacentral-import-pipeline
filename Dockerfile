@@ -107,10 +107,12 @@ COPY --from=samtools /usr/local/lib/libhts* /usr/local/lib/
 # Run ldconfig to register shared libraries
 RUN ldconfig
 
-# Install blat (pre-compiled)
-RUN wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip -O blat.zip && \
-    unzip blat.zip -d blat_suite && \
-    rm blat.zip
+# Install blat and faToTwoBit (pre-compiled), the only UCSC tools the pipeline uses. They are fetched one by one
+# from hgdownload: the blatSuite zip on hgwdev.gi.ucsc.edu now answers 403 to everyone.
+RUN mkdir blat_suite && \
+    wget -q https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/blat/blat -O blat_suite/blat && \
+    wget -q https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit -O blat_suite/faToTwoBit && \
+    chmod +x blat_suite/blat blat_suite/faToTwoBit
 
 # Install seqkit (pre-compiled)
 RUN mkdir seqkit && \
