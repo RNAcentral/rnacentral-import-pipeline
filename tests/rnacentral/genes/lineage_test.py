@@ -274,6 +274,18 @@ def test_deactivate_fraction_guard():
         run(s1, [[1]], 2)
 
 
+def test_assembly_switch_does_not_trip_the_guard_but_mass_loss_on_a_kept_assembly_does():
+    old = L.as_state(
+        run(L.empty_state(), [[1, 2], [3, 4], [5, 6]], 1, cl={"assembly": "A1"}).genes
+    )
+    ## the whole taxon moves to a new assembly: every A1 gene retires, which is expected
+    p = L.plan(old, clusters([1, 2], [3, 4], assembly="A2"), 2, PREFIX)
+    assert p.stats["deactivated"] == 3 and p.stats["created"] == 2
+    ## but losing most of an assembly that is still present is still refused
+    with pytest.raises(ValueError, match="limit"):
+        L.plan(old, clusters([1, 2], assembly="A1"), 2, PREFIX)
+
+
 def test_cluster_spanning_two_strands_raises():
     cl = pl.concat(
         [

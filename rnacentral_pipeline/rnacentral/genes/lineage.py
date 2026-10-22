@@ -533,14 +533,15 @@ def plan(
     deactivated = state.filter(
         pl.col("is_active") & ~pl.col("internal_name").is_in(heir_names)
     )
-    if (
-        active_old.height
-        and deactivated.height / active_old.height > max_deactivate_fraction
-        and not (allow_empty and cl.is_empty())
-    ):
+    ## An assembly with no clusters at all was replaced or dropped, which explains retiring all of its
+    ## genes; the guard is for losing most of an assembly that is still there (a bad or partial input).
+    present = set(cl["assembly_id"].to_list())
+    guarded_old = active_old.filter(pl.col("assembly_id").is_in(present)).height
+    guarded_gone = deactivated.filter(pl.col("assembly_id").is_in(present)).height
+    if guarded_old and guarded_gone / guarded_old > max_deactivate_fraction:
         raise ValueError(
-            f"{deactivated.height} of {active_old.height} active genes would be "
-            f"deactivated, over the {max_deactivate_fraction} limit"
+            f"{guarded_gone} of {guarded_old} active genes on the assemblies in this release "
+            f"would be deactivated, over the {max_deactivate_fraction} limit"
         )
     gone = deactivated.with_columns(
         pl.lit(False).alias("is_active"),

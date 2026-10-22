@@ -25,9 +25,9 @@ from rnacentral_pipeline.rnacentral.genes import lineage as L
 
 GFF = """##gff-version 3
 #!genome-version GRCh38
-1\tRNAcentral\ttranscript\t100\t400\t.\t+\t.\tID=URS0000000001_9606@1/100-150%2C300-400:+;Name=URS0000000001_9606;type=lncRNA
-1\tRNAcentral\texon\t300\t400\t.\t+\t.\tID=e2;Parent=URS0000000001_9606@1/100-150%2C300-400:+
-1\tRNAcentral\texon\t100\t150\t.\t+\t.\tID=e1;Parent=URS0000000001_9606@1/100-150%2C300-400:+
+1\tRNAcentral\ttranscript\t100\t400\t.\t+\t.\tID=URS0000000001_9606.0;Name=URS0000000001_9606;type=lncRNA
+1\tRNAcentral\texon\t300\t400\t.\t+\t.\tID=e2;Parent=URS0000000001_9606.0
+1\tRNAcentral\texon\t100\t150\t.\t+\t.\tID=e1;Parent=URS0000000001_9606.0
 1\tRNAcentral\ttranscript\t500\t600\t.\t-\t.\tID=t2;Name=URS0000000002;type=miRNA
 1\tRNAcentral\ttranscript\t800\t900\t.\t+\t.\tID=t3;Name=URS0000000003;type=circRNA
 1\tRNAcentral\tpredicted_gene\t90\t700\t.\t+\t.\tID=RNACENSG00000000001.1;Name=RNACENSG00000000001
@@ -47,7 +47,7 @@ def test_assembly_id_skips_the_regions_join_and_keeps_every_transcript(gff):
     assert set(df["assembly_id"]) == {"GRCh38"}
 
 
-def test_region_name_is_taken_from_the_gff_id_and_rebuilt_otherwise(gff):
+def test_region_name_is_rebuilt_from_the_exons_because_the_gff_id_is_not_it(gff):
     df = convert.gff_to_polars(gff, 9606, assembly_id="GRCh38").sort("region_name")
     assert df["region_name"].to_list() == [
         "URS0000000001_9606@1/100-150,300-400:+",

@@ -68,10 +68,6 @@ def get_assembly(path: Path) -> str:
 ## circRNAs are not clustered into genes; this is the `type` the GFF export writes
 EXCLUDED_RNA_TYPES = {"circRNA"}
 
-## The GFF export has written the region_name as the transcript ID since 2018, so
-## use it when it is there rather than rebuilding it from the exons.
-REGION_NAME = re.compile(r"^URS[0-9A-F]{10}_\d+@")
-
 
 def load_coordinates(
     path: Path,
@@ -132,9 +128,8 @@ def load_coordinates(
                 raise ValueError(
                     f"{path}: transcript {ncrna_gene.id} is not a URS_taxid"
                 )
-            given_id = ncrna_gene.id if REGION_NAME.match(ncrna_gene.id or "") else None
             if len(exons) == 0:
-                region_id = given_id or (
+                region_id = (
                     f"{urs_taxid}@{chromosome}/{region_start}-{region_stop}:{strand}"
                 )
                 transcript_dict = {
@@ -154,9 +149,8 @@ def load_coordinates(
                 exon_regions = ",".join(
                     [f"{e['exon_start']}-{e['exon_stop']}" for e in exons]
                 )
-                region_id = given_id or (
-                    f"{urs_taxid}@{chromosome}/{exon_regions}:{strand}"
-                )
+                # the GFF ID is <urs_taxid>.<n>, not the region name, so rebuild it as the database does
+                region_id = f"{urs_taxid}@{chromosome}/{exon_regions}:{strand}"
                 for e in exons:
                     e["region_name"] = region_id
                 transcript_data.extend(exons)
