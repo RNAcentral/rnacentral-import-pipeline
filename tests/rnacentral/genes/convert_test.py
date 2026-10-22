@@ -233,3 +233,26 @@ def test_collect_gathers_a_chain_of_releases(tmp_path):
     assert pl.read_parquet(final / "state.parquet").equals(
         pl.read_parquet(tmp_path / "r2" / "state.parquet")
     )
+
+
+START0_GFF = """##gff-version 3
+#!genome-version ASM294v2
+III\tRNAcentral\ttranscript\t0\t1390\t.\t-\t.\tName=URS00005D2A8E_4896;type=rRNA;ID=URS00005D2A8E_4896.3725
+III\tRNAcentral\texon\t0\t1390\t.\t-\t.\tID=e1;Parent=URS00005D2A8E_4896.3725
+III\tRNAcentral\ttranscript\t2000\t2100\t.\t+\t.\tName=URS0000000002_4896;type=tRNA;ID=URS0000000002_4896.0
+"""
+
+
+def test_a_start_of_zero_does_not_break_the_index_and_keeps_the_files_coordinates(
+    tmp_path,
+):
+    # gffutils' bin calculation returns a set for start 0, which sqlite cannot bind
+    path = tmp_path / "s.gff3"
+    path.write_text(START0_GFF)
+    df = convert.gff_to_polars(path, 4896, assembly_id="ASM294v2").sort("region_name")
+    assert df.height == 2
+    assert df["region_name"].to_list() == [
+        "URS0000000002_4896@III/2000-2100:+",
+        "URS00005D2A8E_4896@III/0-1390:-",
+    ]
+    assert df["region_start"].to_list() == [2000, 0]

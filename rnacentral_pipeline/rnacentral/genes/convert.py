@@ -69,6 +69,29 @@ def get_assembly(path: Path) -> str:
 EXCLUDED_RNA_TYPES = {"circRNA"}
 
 
+def keep_valid_start(feature):
+    """
+    gffutils index transform: a GFF start below 1 is invalid and makes gffutils' bin calculation
+    return a set, which SQLite cannot store (and gffutils then hides that error behind a
+    misleading `str has no attribute decode`). Some exports contain such features (a start of 0 on the first
+    bases of a sequence). Index it with start 1, and keep the value from the file in `raw_start` so the
+    region name, which includes the coordinates, is still what the file says.
+    """
+    if feature.start < 1:
+        feature.attributes["raw_start"] = [str(feature.start)]
+        feature.start = 1
+    return feature
+
+
+def file_start(feature):
+    """The start as written in the file."""
+    return (
+        int(feature.attributes["raw_start"][0])
+        if "raw_start" in feature.attributes
+        else feature.start
+    )
+
+
 def load_coordinates(
     path: Path,
     taxid: int,
@@ -92,9 +115,9 @@ def load_coordinates(
     transcript_data = []
 
     with tempfile.NamedTemporaryFile() as tmp:
-        db = gffutils.create_db(str(path), tmp.name)
+        db = gffutils.create_db(str(path), tmp.name, transform=keep_valid_start)
         for ncrna_gene in db.features_of_type(("transcript")):
-            region_start = ncrna_gene.start
+            region_start = file_start(ncrna_gene)
             region_stop = ncrna_gene.stop
             chromosome = ncrna_gene.chrom
             strand = ncrna_gene.strand
@@ -110,7 +133,7 @@ def load_coordinates(
 
             exons = []
             for exon in sorted(db.children(ncrna_gene.id), key=lambda f: f.start):
-                exon_start = exon.start
+                exon_start = file_start(exon)
                 exon_stop = exon.stop
                 exon_dict = {
                     "chromosome": chromosome,
