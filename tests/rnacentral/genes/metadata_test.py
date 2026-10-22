@@ -17,7 +17,7 @@ import networkx as nx
 import polars as pl
 import pytest
 
-from rnacentral_pipeline.rnacentral.genes import merge
+from rnacentral_pipeline.rnacentral.genes import metadata as meta_module
 from rnacentral_pipeline.rnacentral.genes.metadata import (
     EVIDENCE_SCHEMA,
     compute_metadata,
@@ -30,7 +30,7 @@ MISC, MIRNA, PRE = "SO:0000673", "SO:0000276", "SO:0001244"
 def tiny_so_graph(monkeypatch):
     g = nx.DiGraph()
     g.add_edges_from([(MIRNA, MISC), (PRE, MIRNA), ("SO:0000655", MISC)])
-    monkeypatch.setattr(merge, "get_so_graph", lambda: g)
+    monkeypatch.setattr(meta_module, "get_so_graph", lambda: g)
 
 
 def members(**genes):

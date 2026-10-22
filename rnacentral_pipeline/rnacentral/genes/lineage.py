@@ -630,6 +630,53 @@ def plan(
     return Plan(genes, events, deltas, stats)
 
 
+def clusters_from_assignments(transcripts, assignments, assembly_id=None):
+    """
+    Turn gene assignments (region_name, gene_id) from the GNN into the cluster frame
+    that plan() takes, using the transcripts frame produced by `genes utils convert`.
+
+    This is the one place strand changes from 1/-1 to "+"/"-". Transcripts the GNN did
+    not assign (single-member clusters are never genes) are simply not in the result.
+    Pass assembly_id when transcripts holds several assemblies; the GNN keys its nodes
+    on region_name alone, so it must have been run for one assembly at a time.
+    """
+    if assembly_id is not None:
+        transcripts = transcripts.filter(pl.col("assembly_id") == assembly_id)
+    transcripts = transcripts.select(
+        "assembly_id",
+        "chromosome",
+        "region_name",
+        "region_start",
+        "region_stop",
+        "strand",
+    ).unique(subset=["assembly_id", "region_name"])
+    if transcripts["region_name"].n_unique() != transcripts.height:
+        raise ValueError(
+            "a region_name is on more than one assembly; pass assembly_id and run the "
+            "GNN once per assembly"
+        )
+    assignments = assignments.select("region_name", "gene_id").unique()
+    joined = assignments.join(transcripts, on="region_name", how="left")
+    unknown = joined.filter(pl.col("assembly_id").is_null())
+    if unknown.height:
+        raise ValueError(
+            f"{unknown.height} assigned regions are not in the transcripts, "
+            f"e.g. {unknown['region_name'][0]}"
+        )
+    return joined.select(
+        (pl.col("assembly_id") + "|" + pl.col("gene_id")).alias("cluster_id"),
+        "region_name",
+        "assembly_id",
+        "chromosome",
+        pl.when(pl.col("strand") == 1)
+        .then(pl.lit("+"))
+        .otherwise(pl.lit("-"))
+        .alias("strand"),
+        pl.col("region_start").cast(pl.Int64),
+        pl.col("region_stop").cast(pl.Int64),
+    )
+
+
 def as_state(genes):
     """The genes frame of one plan, ready to be the state of the next release."""
     return genes.select(list(STATE_SCHEMA))

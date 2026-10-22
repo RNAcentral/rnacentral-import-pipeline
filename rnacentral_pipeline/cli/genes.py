@@ -13,12 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 from pathlib import Path
 
 import click
+import polars as pl
 
 from rnacentral_pipeline.rnacentral.genes import convert as gff_convert
-from rnacentral_pipeline.rnacentral.genes import merge as data
+from rnacentral_pipeline.rnacentral.genes import extract as data
+from rnacentral_pipeline.rnacentral.genes import lineage, metadata, store
 
 
 @click.group("genes")
@@ -47,29 +50,30 @@ def utils_cli():
 )
 @click.option("--taxid", type=int, required=True, help="Taxonomy ID to fetch data for")
 @click.option(
-    "--output",
+    "--output_dir",
     required=True,
-    help="Output file path for transcript data (parquet format)",
+    type=click.Path(),
+    help="Directory for transcripts__<assembly>.pq, one parquet per assembly",
 )
-def fetch(conn_str, taxid, output):
+def fetch(conn_str, taxid, output_dir):
     """
-    Fetch transcript data from the database for a given taxonomy ID.
+    Fetch the transcripts of a taxon from the database, one parquet file per assembly.
 
-    This command queries the database to retrieve all transcripts for the specified
-    taxonomy ID and saves them to a parquet file for later processing.
+    The GNN keys its nodes on region_name, which can be the same on two assemblies, so
+    it must be run on one assembly at a time. Writes nothing for a taxon with no
+    transcripts.
     """
     click.echo(f"Fetching data for taxid {taxid}...")
-
     transcripts = data.fetch_data(taxid, conn_str)
-
-    # Ensure output directory exists
-    output_path = Path(output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    if transcripts.height > 0:
-        transcripts.write_parquet(output)
-    else:
-        output_path.touch(exist_ok=True)
-    click.echo(f"Saved {transcripts.height} transcripts to {output}")
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    if transcripts.height == 0:
+        click.echo("No transcripts")
+        return
+    for (assembly,), frame in transcripts.group_by("assembly_id"):
+        safe = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in assembly)
+        frame.write_parquet(out / f"transcripts__{safe}.pq")
+        click.echo(f"Saved {frame.height} transcripts for {assembly}")
 
 
 @utils_cli.command("convert")
@@ -77,10 +81,15 @@ def fetch(conn_str, taxid, output):
 @click.option("--taxid", type=int, help="Taxonomy ID for the GFF file")
 @click.option(
     "--regions_data",
-    required=True,
-    help="Path to extracted region data for this taxid, csv format",
+    default=None,
+    help="Path to extracted region data for this taxid, ndjson. Not needed with --assembly_id",
 )
-def convert(gff_file, taxid, regions_data):
+@click.option(
+    "--assembly_id",
+    default=None,
+    help="Assembly of this GFF. Skips the regions lookup, so old releases can be replayed",
+)
+def convert(gff_file, taxid, regions_data, assembly_id):
     """
     Convert GFF file to parquet format.
 
@@ -89,10 +98,15 @@ def convert(gff_file, taxid, regions_data):
     """
     if not Path(gff_file).exists():
         raise click.ClickException(f"GFF file not found: {gff_file}")
+    if not regions_data and not assembly_id:
+        raise click.ClickException("one of --regions_data or --assembly_id is required")
     output_name = Path(gff_file).stem + "_transcripts.parquet"
     output_path = Path(gff_file).parent / output_name
     transcripts_table = gff_convert.gff_to_polars(
-        Path(gff_file), taxid=taxid, regions_data=Path(regions_data)
+        Path(gff_file),
+        taxid=taxid,
+        regions_data=Path(regions_data) if regions_data else None,
+        assembly_id=assembly_id,
     )
     transcripts_table.write_parquet(output_path)
     click.echo(
@@ -100,188 +114,205 @@ def convert(gff_file, taxid, regions_data):
     )
 
 
-@utils_cli.command("merge")
-@click.option("--previous_genes", required=True, help="Path to previous genes file")
-@click.option("--next_genes", required=True, help="Path to new genes file")
-@click.option("--output", required=True, help="Output file path for merged genes")
+@utils_cli.command("clusters")
+@click.option("--transcripts", required=True, type=click.Path(exists=True))
+@click.option("--assignments", required=True, type=click.Path(exists=True))
 @click.option(
-    "--inactive_ids",
+    "--assembly_id", default=None, help="Only use transcripts of this assembly"
+)
+@click.option("--output", required=True, type=click.Path())
+def clusters(transcripts, assignments, assembly_id, output):
+    """
+    Turn the GNN's region_name -> gene_id assignments into a clusters parquet for `plan`.
+    """
+    result = lineage.clusters_from_assignments(
+        pl.read_parquet(transcripts), pl.read_parquet(assignments), assembly_id
+    )
+    result.write_parquet(output)
+    click.echo(f"Wrote {result.height} clustered regions to {output}")
+
+
+@utils_cli.command("plan")
+@click.option(
+    "--state",
+    default="-",
+    help="State parquet from the previous release, or - for none",
+)
+@click.option(
+    "--clusters",
+    "cluster_files",
+    multiple=True,
     type=click.Path(exists=True),
+    help="Clusters of each assembly; none means the taxon has no genes (needs --allow_empty)",
+)
+@click.option("--release", type=int, required=True)
+@click.option(
+    "--prefix", default=None, help="Ensembl stable prefix; needed only to create genes"
+)
+@click.option(
+    "--meta",
     default=None,
-    help="Path to inactive IDs file. Should be a CSV with one column of URS'.",
+    type=click.Path(exists=True),
+    help="meta.json from fetch-state; supplies the prefix",
 )
+@click.option("--out_dir", required=True, type=click.Path())
 @click.option(
-    "--prev_release_number", type=int, default=None, help="Previous release number"
+    "--allow_empty", is_flag=True, help="Allow no clusters at all (retires every gene)"
 )
-@click.option(
-    "--next_release_number", type=int, default=None, help="Next release number"
-)
-def merge(
-    previous_genes,
-    next_genes,
-    output,
-    inactive_ids,
-    prev_release_number,
-    next_release_number,
+@click.option("--max_deactivate_fraction", type=float, default=0.5, show_default=True)
+@click.option("--min_inherit", type=float, default=0.5, show_default=True)
+@click.option("--min_relation", type=float, default=0.2, show_default=True)
+def plan(
+    state,
+    cluster_files,
+    release,
+    prefix,
+    meta,
+    out_dir,
+    allow_empty,
+    max_deactivate_fraction,
+    min_inherit,
+    min_relation,
 ):
     """
-    Merge two gene files, updating IDs and handling inactive genes.
+    Work out how one release's genes follow on from the previous release's.
 
-    This command takes two gene files (previous and next), merges them, updates IDs,
-    and handles any inactive genes based on the provided inactive IDs file.
-
-    The merge is done based on one of two conditions:
-    1. If the previous gene has a perfect overlap, the two are merged and the version is updated
-    2. Within 1kb around each gene, we merge genes that have total region overlap > 0.9, and update the version
-
-    If a gene is present in the previous release but not the next, it is discarded. Genes present in the next
-    release but not the previous are added as new genes.
+    Writes genes, state (feed it to the next release), events, member_deltas and
+    stats.json to --out_dir. Nothing is written to the database.
     """
-    previous_genes = Path(previous_genes)
-    next_genes = Path(next_genes)
-    output = Path(output)
-
-    if not previous_genes.exists():
-        raise click.ClickException(f"Previous genes file not found: {previous_genes}")
-    if not next_genes.exists():
-        raise click.ClickException(f"Next genes file not found: {next_genes}")
-
-    merged_genes = data.merge_genes(
-        previous_genes,
-        next_genes,
-        output,
-        inactive_ids,
-        prev_release_number,
-        next_release_number,
+    previous = lineage.empty_state() if state == "-" else pl.read_parquet(state)
+    if prefix is None and meta:
+        prefix = json.loads(Path(meta).read_text())["prefix"]
+    if cluster_files:
+        found = pl.concat([pl.read_parquet(f) for f in cluster_files])
+    else:
+        found = pl.DataFrame(schema={c: pl.Utf8 for c in lineage.CLUSTER_COLUMNS})
+    result = lineage.plan(
+        previous,
+        found,
+        release,
+        prefix,
+        allow_empty=allow_empty,
+        max_deactivate_fraction=max_deactivate_fraction,
+        min_inherit=min_inherit,
+        min_relation=min_relation,
     )
-
-    merged_genes.write_json(output)
-    click.echo(f"Merged genes saved to {output}")
-
-
-@utils_cli.command("init")
-@click.option("--genes", required=True, help="Path to genes file")
-@click.option("--output", required=True, help="Output file path")
-@click.option("--release_number", type=int, required=True, help="Release number")
-def init(genes, output, release_number):
-    """
-    Initialize version tracking for a single release.
-
-    Use this when only one release is available for a taxon and no merging
-    is needed. Adds release tracking columns (first_release, last_release)
-    and ensures consistent name formatting.
-    """
-    genes_path = Path(genes)
-    output_path = Path(output)
-
-    if not genes_path.exists():
-        raise click.ClickException(f"Genes file not found: {genes_path}")
-
-    initialized = data.init_genes(genes_path, release_number)
-    initialized.write_json(output_path)
-    click.echo(
-        f"Initialized {len(initialized)} genes for release {release_number} -> {output_path}"
-    )
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    result.genes.write_parquet(out / "genes.parquet")
+    lineage.as_state(result.genes).write_parquet(out / "state.parquet")
+    result.events.write_parquet(out / "events.parquet")
+    result.member_deltas.write_parquet(out / "member_deltas.parquet")
+    (out / "stats.json").write_text(json.dumps(result.stats))
+    click.echo(f"Release {release}: {result.stats}")
 
 
-@utils_cli.command("process-metadata")
-@click.argument("final_genes", type=click.Path(exists=True))
-@click.argument("metadata_output", type=click.Path())
-@click.option("--db_str", envvar="PGDATABASE")
-def process_metadata(final_genes, metadata_output, db_str):
-    metadata = data.get_metadata(final_genes, db_str)
-    metadata.write_json(metadata_output)
-    click.echo(f"Metadata written to {metadata_output}")
-
-
-@utils_cli.command("store-genes")
-@click.argument("final_genes", type=click.Path(exists=True))
-@click.option("--taxid", type=int)
+@utils_cli.command("collect")
 @click.option(
-    "--db_str",
-    envvar="PGDATABASE",
+    "--plan_dir",
+    "plan_dirs",
+    multiple=True,
+    required=True,
+    type=click.Path(exists=True),
+    help="Plan directories from `plan`, oldest release first",
 )
-def store(final_genes, taxid, db_str):
+@click.option("--output_dir", required=True, type=click.Path())
+def collect(plan_dirs, output_dir):
     """
-    Store final genes in the database.
+    Gather the plans of a chain of releases into one set of files for a bulk load.
 
-    This command reads the final genes file and stores the gene annotations
-    in the specified database.
+    Writes events.parquet and member_deltas.parquet (all releases), and the genes and
+    state of the last release. The result has the file names of a plan, so it can be
+    loaded with `apply --include_inactive`.
     """
-    final_genes = Path(final_genes)
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    for name in ("events", "member_deltas"):
+        pl.concat(
+            [pl.read_parquet(Path(d) / f"{name}.parquet") for d in plan_dirs]
+        ).write_parquet(out / f"{name}.parquet")
+    last = Path(plan_dirs[-1])
+    pl.read_parquet(last / "genes.parquet").write_parquet(out / "genes.parquet")
+    pl.read_parquet(last / "state.parquet").write_parquet(out / "state.parquet")
+    click.echo(f"Collected {len(plan_dirs)} releases into {out}")
 
-    if not final_genes.exists():
-        raise click.ClickException(f"Final genes file not found: {final_genes}")
 
-    data.store_genes(final_genes, taxid, db_str)
-    click.echo(f"Stored genes from {final_genes} into the database.")
-
-
-@utils_cli.command("store-metadata")
-@click.argument("metadata_file", type=click.Path(exists=True))
+@utils_cli.command("fetch-state")
+@click.option("--taxid", type=int, required=True)
 @click.option(
-    "--db_str",
-    envvar="PGDATABASE",
+    "--output", required=True, type=click.Path(), help="State parquet for `plan`"
 )
-def store_metadata(metadata_file, db_str):
-    """
-    Store gene metadata in the database.
-
-    This command reads the gene metadata file and stores the metadata
-    in the specified database.
-    """
-    metadata_file = Path(metadata_file)
-
-    if not metadata_file.exists():
-        raise click.ClickException(f"Metadata file not found: {metadata_file}")
-
-    data.store_metadata(metadata_file, db_str)
-    click.echo(f"Stored metadata from {metadata_file} into the database.")
-
-
-@utils_cli.command("fetch-stored")
-@click.option("--taxid", type=int, required=True, help="Taxonomy ID to fetch genes for")
-@click.option("--output", required=True, help="Output JSON path for the stored genes")
 @click.option(
-    "--release_output",
-    default="prev_release.txt",
-    help="Path to write the previous release number (empty for a new taxon)",
+    "--meta", required=True, type=click.Path(), help="JSON with the Ensembl prefix"
 )
 @click.option("--db_str", envvar="PGDATABASE")
-def fetch_stored(taxid, output, release_output, db_str):
+def fetch_state(taxid, output, meta, db_str):
     """
-    Reconstruct the stored genes for a taxon from the database.
-
-    Writes the genes as merge-format JSON (the inverse of store-genes) so they
-    can be used as the previous_genes input to a forward merge. Also writes the
-    previous release number to a file. An empty JSON array means no genes are
-    stored yet for this taxon (a new taxon) and the caller should use init.
+    Read the stored genes of a taxon, with their member history, as the state for `plan`.
+    Read-only.
     """
-    genes, prev_release_number = data.fetch_stored_genes(taxid, db_str)
-    genes.write_json(Path(output))
-    with open(release_output, "w") as handle:
-        handle.write("" if prev_release_number is None else str(prev_release_number))
-    click.echo(
-        f"Fetched {genes.height} stored genes for taxid {taxid} "
-        f"(previous release: {prev_release_number}) -> {output}"
-    )
+    state, info = store.fetch_state(taxid, db_str)
+    state.write_parquet(output)
+    Path(meta).write_text(json.dumps(info))
+    click.echo(f"Fetched {state.height} genes for taxid {taxid} ({info})")
 
 
-@utils_cli.command("deactivate-discarded")
-@click.option("--merged", required=True, help="Path to the merged genes file")
-@click.option("--taxid", type=int, required=True, help="Taxonomy ID being processed")
+@utils_cli.command("metadata")
+@click.option(
+    "--genes",
+    required=True,
+    type=click.Path(exists=True),
+    help="genes.parquet from `plan`",
+)
+@click.option("--taxid", type=int, required=True)
+@click.option("--output", required=True, type=click.Path())
 @click.option("--db_str", envvar="PGDATABASE")
-def deactivate_discarded(merged, taxid, db_str):
+def compute_metadata(genes, taxid, output, db_str):
     """
-    Mark genes dropped by the merge as inactive in the database.
-
-    Genes present for this taxon in the database but absent from the merged file
-    have is_active set to false (their version history is preserved). Run this
-    after store-genes, which re-activates the genes that are still present.
+    Pick a description and RNA type for every active gene. Reads evidence from the
+    database in bulk and scores it here; writes nothing to the database.
     """
-    merged_path = Path(merged)
-    if not merged_path.exists():
-        raise click.ClickException(f"Merged genes file not found: {merged_path}")
+    active = pl.read_parquet(genes).filter(pl.col("is_active"))
+    members = (
+        active.select("internal_name", pl.col("members").alias("region_name"))
+        .explode("region_name")
+        .drop_nulls("region_name")
+    )
+    result, missing = metadata.compute_metadata(
+        members, store.fetch_evidence(taxid, db_str)
+    )
+    result.write_parquet(output)
+    if missing.height:
+        click.echo(
+            f"{missing.height} genes have no evidence, e.g. {missing['internal_name'][0]}"
+        )
+    click.echo(f"Wrote metadata for {result.height} genes to {output}")
 
-    data.deactivate_discarded(merged_path, taxid, db_str)
-    click.echo(f"Deactivated discarded genes for taxid {taxid}.")
+
+@utils_cli.command("apply")
+@click.option("--plan_dir", required=True, type=click.Path(exists=True))
+@click.option("--metadata", "metadata_file", default=None, type=click.Path(exists=True))
+@click.option("--taxid", type=int, required=True)
+@click.option("--release", type=int, required=True)
+@click.option(
+    "--allow_unresolved",
+    is_flag=True,
+    help="Load even if some members are not in rnc_sequence_regions",
+)
+@click.option(
+    "--include_inactive",
+    is_flag=True,
+    help="Also write genes that ended inactive; for loading a replayed history",
+)
+@click.option("--db_str", envvar="PGDATABASE")
+def apply(
+    plan_dir, metadata_file, taxid, release, allow_unresolved, include_inactive, db_str
+):
+    """
+    Write a plan (genes, members, history, member history, metadata) in ONE transaction.
+    """
+    meta = pl.read_parquet(metadata_file) if metadata_file else None
+    result = store.apply_plan(
+        plan_dir, taxid, release, db_str, meta, allow_unresolved, include_inactive
+    )
+    click.echo(f"Applied plan for taxid {taxid}: {result}")

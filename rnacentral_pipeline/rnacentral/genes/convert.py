@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import tempfile
 from pathlib import Path
 
@@ -20,7 +21,7 @@ import gffutils
 import polars as pl
 from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.rnacentral.genes import merge as data
+from rnacentral_pipeline.rnacentral.genes import extract as data
 
 insdc_so_lookup = {
     "ncRNA": "SO:0000655",
@@ -59,21 +60,39 @@ def get_assembly(path: Path) -> str:
                 break
             if line.startswith("#!genome-version"):
                 parts = line.split(" ", 1)
-                return parts[1]
+                return parts[1].strip()
 
     raise ValueError(f"Could not find assembly id in {path}")
 
 
-def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
+## circRNAs are not clustered into genes; this is the `type` the GFF export writes
+EXCLUDED_RNA_TYPES = {"circRNA"}
+
+## The GFF export has written the region_name as the transcript ID since 2018, so
+## use it when it is there rather than rebuilding it from the exons.
+REGION_NAME = re.compile(r"^URS[0-9A-F]{10}_\d+@")
+
+
+def load_coordinates(
+    path: Path,
+    taxid: int,
+    regions_data: Path | None = None,
+    assembly_id: str | None = None,
+) -> pl.DataFrame:
     """
     Load transcript coordinates from a GFF3 file and return a Polars DataFrame.
     Args:
         path (Path): Path to the GFF3 file.
         taxid (int): Taxonomy ID for the transcripts.
-        regions_data (Path): path to the regions data in CSV
+        regions_data (Path): regions of the taxid, used to find each region's assembly
+        assembly_id (str): stamp every transcript with this assembly instead of
+            joining to regions_data. Needed to replay old releases, whose regions
+            are no longer in the database.
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
+    if assembly_id is None and regions_data is None:
+        raise ValueError("either assembly_id or regions_data is required")
     transcript_data = []
 
     with tempfile.NamedTemporaryFile() as tmp:
@@ -85,6 +104,8 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
             strand = ncrna_gene.strand
             urs = ncrna_gene.attributes["Name"][0]
             rna_insdc_type = ncrna_gene.attributes["type"][0]
+            if rna_insdc_type in EXCLUDED_RNA_TYPES:
+                continue
             rna_so_type = insdc_so_lookup.get(rna_insdc_type, "SO:0000655")
             if "_" in urs:
                 urs_taxid = urs
@@ -92,7 +113,7 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
                 urs_taxid = f"{urs}_{taxid}"
 
             exons = []
-            for exon in db.children(ncrna_gene.id):
+            for exon in sorted(db.children(ncrna_gene.id), key=lambda f: f.start):
                 exon_start = exon.start
                 exon_stop = exon.stop
                 exon_dict = {
@@ -107,8 +128,13 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
                     "so_type": rna_so_type,
                 }
                 exons.append(exon_dict)
+            if not urs_taxid.startswith("URS"):
+                raise ValueError(
+                    f"{path}: transcript {ncrna_gene.id} is not a URS_taxid"
+                )
+            given_id = ncrna_gene.id if REGION_NAME.match(ncrna_gene.id or "") else None
             if len(exons) == 0:
-                region_id = (
+                region_id = given_id or (
                     f"{urs_taxid}@{chromosome}/{region_start}-{region_stop}:{strand}"
                 )
                 transcript_dict = {
@@ -128,18 +154,24 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
                 exon_regions = ",".join(
                     [f"{e['exon_start']}-{e['exon_stop']}" for e in exons]
                 )
-                region_id = f"{urs_taxid}@{chromosome}/{exon_regions}:{strand}"
+                region_id = given_id or (
+                    f"{urs_taxid}@{chromosome}/{exon_regions}:{strand}"
+                )
                 for e in exons:
                     e["region_name"] = region_id
                 transcript_data.extend(exons)
 
     transcript_dataframe = pl.DataFrame(transcript_data)
-    ## Assembly ID is not guaranteed to be in the filename, so query it from the DB here
-    ## - Is it possible for a region ID to be on multiple assemblies?
-    ## I don't _think_ it is, but if things go wrong, check here
-    transcript_dataframe = data.add_assembly_region_ids(
-        transcript_dataframe, regions_data
-    )
+    if assembly_id is not None:
+        transcript_dataframe = transcript_dataframe.with_columns(
+            pl.lit(assembly_id).alias("assembly_id")
+        )
+    else:
+        ## A region_name can exist on several assemblies, so the regions must
+        ## be for the assembly of this file or transcripts are duplicated
+        transcript_dataframe = data.add_assembly_region_ids(
+            transcript_dataframe, regions_data
+        )
 
     transcript_dataframe = transcript_dataframe.group_by(
         ["assembly_id", "chromosome", "region_name"], maintain_order=True
@@ -156,7 +188,12 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
     return transcript_dataframe
 
 
-def gff_to_polars(path: Path, taxid: int, regions_data: Path) -> pl.DataFrame:
+def gff_to_polars(
+    path: Path,
+    taxid: int,
+    regions_data: Path | None = None,
+    assembly_id: str | None = None,
+) -> pl.DataFrame:
     """
     Convert a GFF3 file to a Polars DataFrame containing transcript coordinates.
 
@@ -168,4 +205,4 @@ def gff_to_polars(path: Path, taxid: int, regions_data: Path) -> pl.DataFrame:
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
-    return load_coordinates(path, taxid, regions_data)
+    return load_coordinates(path, taxid, regions_data, assembly_id)
