@@ -111,10 +111,22 @@ pub enum GeneFields {
     HasLitsumm,
     HasEditingEvent,
     SoRnaTypeName,
+    TaxString,
 }
 
 #[derive(strum_macros::EnumIter, Debug, PartialEq, strum_macros::Display)]
 #[strum(serialize_all = "snake_case")]
 pub enum SoRnaTreeField {
     SoRnaType,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use strum::IntoEnumIterator;
+
+    #[test]
+    fn genes_export_tax_string() {
+        assert!(GeneFields::iter().any(|f| f.to_string() == "tax_string"));
+    }
 }

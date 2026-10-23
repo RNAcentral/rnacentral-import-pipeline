@@ -94,6 +94,10 @@ impl Gene {
         expert_dbs
     }
 
+    pub fn tax_strings(&self) -> HashSet<&String> {
+        self.members.iter().flat_map(|m| m.accessions().tax_strings()).collect()
+    }
+
     pub fn length(&self) -> usize {
         self.region.start().abs_diff(self.region.stop())
     }
@@ -169,6 +173,7 @@ impl SearchEntry<GeneEntry> for Gene {
             GeneFields::InsdcRNAType => "Gene".into(),
             GeneFields::SoRnaTypeName => self.so_names().into(),
             GeneFields::PubliGeneName => self.region.gene_name().into(),
+            GeneFields::TaxString => self.tax_strings().into(),
         }
     }
 
