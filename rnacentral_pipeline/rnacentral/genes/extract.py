@@ -42,8 +42,8 @@ join rnc_sequence_exons ex on ex.region_id = sr.id
 join rnc_rna_precomputed pc on pc.urs_taxid = sr.urs_taxid
 
 where pc.taxid = %s
-  -- circRNAs (circular_ncRNA) are not clustered into genes
-  and pc.so_rna_type <> 'SO:0002291'
+  -- circRNAs (circular_ncRNA) and piRNAs are not clustered into genes
+  and pc.so_rna_type not in ('SO:0002291', 'SO:0001035')
 """
 
 
