@@ -195,6 +195,27 @@ def test_gene_that_grows_still_inherits():
     assert p.stats["changed"] == 1 and p.stats["created"] == 0
 
 
+def test_tiny_gene_does_not_lend_its_identity_to_a_cluster_it_barely_touches():
+    state = L.as_state(run(L.empty_state(), [[1, 2]], 1).genes)
+    p = run(state, [list(range(1, 101))], 2, max_deactivate_fraction=1.0)
+    ## all of the old gene's members are in the cluster, but they are 2% of it
+    assert p.stats["created"] == 1 and p.stats["deactivated"] == 1
+    assert p.stats["changed"] == 0
+
+
+def test_a_big_enough_contribution_inherits_even_if_the_cluster_is_far_bigger():
+    state = L.as_state(run(L.empty_state(), [list(range(1, 26))], 1).genes)
+    p = run(state, [list(range(1, 601))], 2)
+    ## 25 members is only 4% of the cluster, but is enough support in absolute terms
+    assert p.stats["changed"] == 1 and p.stats["created"] == 0
+
+
+def test_the_floor_is_adjustable():
+    state = L.as_state(run(L.empty_state(), [[1, 2]], 1).genes)
+    p = run(state, [list(range(1, 101))], 2, min_new_fraction=0.0, min_support=0)
+    assert p.stats["changed"] == 1 and p.stats["created"] == 0
+
+
 def test_extent_fallback_when_every_region_was_remapped():
     old = [region(1, 1000, 1100), region(2, 1200, 1300)]
     new = [region(1, 1001, 1101), region(2, 1201, 1301)]

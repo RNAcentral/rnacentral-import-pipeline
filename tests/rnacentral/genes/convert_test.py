@@ -42,13 +42,17 @@ def gff(tmp_path):
 
 
 def test_assembly_id_skips_the_regions_join_and_keeps_every_transcript(gff):
-    df = convert.gff_to_polars(gff, 9606, assembly_id="GRCh38")
+    df = convert.gff_to_polars(
+        gff, 9606, assembly_id="GRCh38", min_chromosome_transcripts=0
+    )
     assert df.height == 2
     assert set(df["assembly_id"]) == {"GRCh38"}
 
 
 def test_region_name_is_rebuilt_from_the_exons_because_the_gff_id_is_not_it(gff):
-    df = convert.gff_to_polars(gff, 9606, assembly_id="GRCh38").sort("region_name")
+    df = convert.gff_to_polars(
+        gff, 9606, assembly_id="GRCh38", min_chromosome_transcripts=0
+    ).sort("region_name")
     assert df["region_name"].to_list() == [
         "URS0000000001_9606@1/100-150,300-400:+",
         "URS0000000002_9606@1/500-600:-",
@@ -56,13 +60,49 @@ def test_region_name_is_rebuilt_from_the_exons_because_the_gff_id_is_not_it(gff)
 
 
 def test_predicted_genes_are_not_transcripts(gff):
-    df = convert.gff_to_polars(gff, 9606, assembly_id="GRCh38")
+    df = convert.gff_to_polars(
+        gff, 9606, assembly_id="GRCh38", min_chromosome_transcripts=0
+    )
     assert df["urs_taxid"].str.starts_with("URS").all()
 
 
 def test_circrnas_are_left_out(gff):
-    df = convert.gff_to_polars(gff, 9606, assembly_id="GRCh38")
+    df = convert.gff_to_polars(
+        gff, 9606, assembly_id="GRCh38", min_chromosome_transcripts=0
+    )
     assert "URS0000000003_9606" not in set(df["urs_taxid"])
+
+
+def test_pirnas_are_left_out(tmp_path):
+    path = tmp_path / "p.gff3"
+    path.write_text(
+        GFF
+        + "1\tRNAcentral\ttranscript\t10\t40\t.\t+\t.\tID=t9;Name=URS0000000009;type=piRNA\n"
+    )
+    df = convert.gff_to_polars(
+        path, 9606, assembly_id="GRCh38", min_chromosome_transcripts=0
+    )
+    assert "URS0000000009_9606" not in set(df["urs_taxid"])
+    assert df.height == 2
+
+
+def test_chromosomes_with_too_few_transcripts_are_dropped(tmp_path):
+    rows = "".join(
+        f"1\tRNAcentral\ttranscript\t{i}00\t{i}50\t.\t+\t.\tID=t{i};Name=URS{i:010d};type=lncRNA\n"
+        for i in range(1, 11)
+    )
+    rows += "KI1\tRNAcentral\ttranscript\t5\t50\t.\t+\t.\tID=k;Name=URS0000000099;type=lncRNA\n"
+    path = tmp_path / "c.gff3"
+    path.write_text("##gff-version 3\n" + rows)
+    df = convert.gff_to_polars(path, 9606, assembly_id="GRCh38")
+    assert df.height == 10
+    assert set(df["chromosome"]) == {"1"}
+    assert (
+        convert.gff_to_polars(
+            path, 9606, assembly_id="GRCh38", min_chromosome_transcripts=0
+        ).height
+        == 11
+    )
 
 
 def test_get_assembly_has_no_trailing_newline(gff):
@@ -249,7 +289,9 @@ def test_a_start_of_zero_does_not_break_the_index_and_keeps_the_files_coordinate
     # gffutils' bin calculation returns a set for start 0, which sqlite cannot bind
     path = tmp_path / "s.gff3"
     path.write_text(START0_GFF)
-    df = convert.gff_to_polars(path, 4896, assembly_id="ASM294v2").sort("region_name")
+    df = convert.gff_to_polars(
+        path, 4896, assembly_id="ASM294v2", min_chromosome_transcripts=0
+    ).sort("region_name")
     assert df.height == 2
     assert df["region_name"].to_list() == [
         "URS0000000002_4896@III/2000-2100:+",
