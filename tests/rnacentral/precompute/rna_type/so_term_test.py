@@ -107,7 +107,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS00000101E5_9606", "antisense_lncRNA"),
         ("URS0000016972_6239", "miRNA"),
         ("URS000001E7BA_559292", "glutaminyl_tRNA"),
-        ("URS00000478B7_9606", "circular_ncRNA"),
+        ("URS00000478B7_9606", "SRP_RNA"),
         ("URS00000490A3_6239", "snRNA"),
         ("URS000006F31F_4932", "snoRNA"),
         ("URS0000086133_9606", "transcript"),
@@ -123,7 +123,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS0000130A6B_3702", "pre_miRNA"),
         ("URS00001380AF_9606", "U5_snRNA"),
         ("URS000013F331_9606", "RNase_P_RNA"),
-        ("URS0000149178_9606", "circular_ncRNA"),
+        ("URS0000149178_9606", "U4_snRNA"),
         ("URS0000157BA2_4896", "antisense_RNA"),
         ("URS000015995E_4615", "miRNA"),
         ("URS000015F227_9606", "scaRNA"),
@@ -193,7 +193,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS00005A245E_10090", "tRNA"),
         ("URS00005A2612_9606", "scaRNA"),
         ("URS00005CDD41_352472", "RNase_P_RNA"),
-        ("URS00005CF03F_9606", "circular_ncRNA"),
+        ("URS00005CF03F_9606", "Y_RNA"),
         ("URS00005D0BAB_9606", "piRNA"),
         ("URS00005EB5B7_78454", "pre_miRNA"),
         ("URS00005EB5B7_9447", "pre_miRNA"),
@@ -423,6 +423,63 @@ def test_rfam_hit_still_corrects_a_generic_database():
     result = so_term.rna_type_of(context, sequence)
     assert result is not None
     assert result.so_term.name == "tRNA"
+
+
+@pytest.mark.parametrize("circ_db", ["CIRCATLAS", "CIRCPEDIA"])
+@pytest.mark.parametrize(
+    "other_db,so_id,expected",
+    [
+        ("ENSEMBL", "SO:0000275", "snoRNA"),
+        ("HGNC", "SO:0000274", "snRNA"),
+        ("PIRBASE", "SO:0001035", "piRNA"),
+        ("ENA", "SO:0002291", "circular_ncRNA"),
+        ("ENA", "SO:0000655", "circular_ncRNA"),
+    ],
+)
+def test_circrna_database_defers_to_a_specific_linear_type(
+    circ_db, other_db, so_id, expected
+):
+    # Small RNAs reported as circRNAs share a URS with the linear RNA; only a
+    # bare ncRNA from another database leaves the circRNA call standing.
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession(circ_db, "SO:0002291"), as_accession(other_db, so_id)], []
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == expected
+
+
+@pytest.mark.parametrize(
+    "database,so_id",
+    [
+        ("CIRCPEDIA", "SO:0002291"),
+        ("PIRBASE", "SO:0001035"),
+    ],
+)
+def test_agreeing_database_keeps_the_type_safe_from_a_stray_rfam_hit(database, so_id):
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession(database, so_id), as_accession("ENA", so_id)],
+        [as_rfam_hit("RF00005", "SO:0000253")],
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == RnaType.from_so_id(SO_TREE, so_id).so_term.name
+
+
+@pytest.mark.parametrize("mirna_db", ["MIRBASE", "MIRGENEDB", "FLYBASE"])
+def test_pirbase_defers_to_a_mature_mirna(mirna_db):
+    # piRBase lists many mature miRNAs; with two trusted databases the first
+    # accession used to win, so the same miRNA could come out as piRNA
+    context = ctx.Context(so_tree=SO_TREE)
+    for accessions in (
+        [as_accession("PIRBASE", "SO:0001035"), as_accession(mirna_db, "SO:0000276")],
+        [as_accession(mirna_db, "SO:0000276"), as_accession("PIRBASE", "SO:0001035")],
+    ):
+        result = so_term.rna_type_of(context, as_sequence(accessions, []))
+        assert result is not None
+        assert result.so_term.name == "miRNA"
 
 
 @pytest.mark.parametrize(
