@@ -177,6 +177,20 @@ def clusters(transcripts, assignments, assembly_id, output):
 @click.option("--max_deactivate_fraction", type=float, default=0.5, show_default=True)
 @click.option("--min_inherit", type=float, default=0.5, show_default=True)
 @click.option("--min_relation", type=float, default=0.2, show_default=True)
+@click.option(
+    "--min_new_fraction",
+    type=float,
+    default=0.05,
+    show_default=True,
+    help="An old gene inherits only if it supplied this share of the cluster...",
+)
+@click.option(
+    "--min_support",
+    type=int,
+    default=20,
+    show_default=True,
+    help="...or at least this many members",
+)
 def plan(
     state,
     cluster_files,
@@ -188,6 +202,8 @@ def plan(
     max_deactivate_fraction,
     min_inherit,
     min_relation,
+    min_new_fraction,
+    min_support,
 ):
     """
     Work out how one release's genes follow on from the previous release's.
@@ -211,6 +227,8 @@ def plan(
         max_deactivate_fraction=max_deactivate_fraction,
         min_inherit=min_inherit,
         min_relation=min_relation,
+        min_new_fraction=min_new_fraction,
+        min_support=min_support,
     )
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)

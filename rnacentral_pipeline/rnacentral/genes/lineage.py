@@ -232,8 +232,19 @@ def _score_edges(state, cl):
     )
 
 
-def _find_heirs(state, cl, edges, min_inherit, min_extent):
-    eligible = edges.filter(pl.col("frac_old") >= min_inherit).sort(
+def _find_heirs(
+    state, cl, edges, min_inherit, min_extent, min_new_fraction, min_support
+):
+    ## Reciprocity: an old gene must have supplied a real share of the cluster, or enough
+    ## members in absolute terms. Otherwise a 4-member gene can carry its identity into a
+    ## 950-member cluster just because all 4 of its members ended up there.
+    eligible = edges.filter(
+        (pl.col("frac_old") >= min_inherit)
+        & (
+            (pl.col("s") / pl.col("new_n") >= min_new_fraction)
+            | (pl.col("s") >= min_support)
+        )
+    ).sort(
         [
             "s",
             "jaccard",
@@ -428,6 +439,8 @@ def plan(
     min_inherit=0.5,
     min_relation=0.2,
     min_extent=0.9,
+    min_new_fraction=0.05,
+    min_support=20,
     allow_empty=False,
     max_deactivate_fraction=0.5,
 ):
@@ -466,7 +479,13 @@ def plan(
     edges = _score_edges(state, cl) if state.height and cl.height else None
     if edges is None:
         edges = _score_edges(empty_state(), cl.clear()).clear()
-    heirs = _find_heirs(state, cl, edges, min_inherit, min_extent) if cl.height else {}
+    heirs = (
+        _find_heirs(
+            state, cl, edges, min_inherit, min_extent, min_new_fraction, min_support
+        )
+        if cl.height
+        else {}
+    )
 
     ## One row per cluster, with the heir's old state alongside
     heir_frame = pl.DataFrame(
