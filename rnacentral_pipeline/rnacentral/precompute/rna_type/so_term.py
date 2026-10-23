@@ -57,6 +57,11 @@ ACCEPTED_DATABASES = {
     Database.gencode,
 }
 
+CIRCULAR_DATABASES = {
+    Database.circatlas,
+    Database.circpedia,
+}
+
 MODEL_GROUPS = {
     "SO:0000209": {
         "RF02543",
@@ -293,6 +298,16 @@ def all_annotations(
         if accession.database in EXCLUDED_DATABASES:
             continue
         annotations.append(RnaTypeAnnotation.from_accession(context, accession))
+
+    def is_circular(annotation):
+        return annotation.source_matches(
+            lambda s: s.is_database() and s.data.database in CIRCULAR_DATABASES
+        )
+
+    # A circRNA identical to a typed linear RNA shares its URS; report the linear type
+    if any(a.is_specific() and not is_circular(a) for a in annotations):
+        annotations = [a for a in annotations if not is_circular(a)]
+
     for r2dt in sequence.r2dt_hits:
         if r2dt.paired_ratio() is None or r2dt.paired_ratio() > 0.80:
             annotations.append(RnaTypeAnnotation.from_r2dt(context, r2dt))
