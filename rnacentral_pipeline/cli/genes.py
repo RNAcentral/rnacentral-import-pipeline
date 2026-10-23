@@ -55,7 +55,14 @@ def utils_cli():
     type=click.Path(),
     help="Directory for transcripts__<assembly>.pq, one parquet per assembly",
 )
-def fetch(conn_str, taxid, output_dir):
+@click.option(
+    "--min_chromosome_transcripts",
+    type=int,
+    default=data.MIN_CHROMOSOME_TRANSCRIPTS,
+    show_default=True,
+    help="Drop chromosomes/scaffolds with fewer transcripts than this",
+)
+def fetch(conn_str, taxid, output_dir, min_chromosome_transcripts):
     """
     Fetch the transcripts of a taxon from the database, one parquet file per assembly.
 
@@ -64,7 +71,7 @@ def fetch(conn_str, taxid, output_dir):
     transcripts.
     """
     click.echo(f"Fetching data for taxid {taxid}...")
-    transcripts = data.fetch_data(taxid, conn_str)
+    transcripts = data.fetch_data(taxid, conn_str, min_chromosome_transcripts)
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     if transcripts.height == 0:
@@ -89,7 +96,14 @@ def fetch(conn_str, taxid, output_dir):
     default=None,
     help="Assembly of this GFF. Skips the regions lookup, so old releases can be replayed",
 )
-def convert(gff_file, taxid, regions_data, assembly_id):
+@click.option(
+    "--min_chromosome_transcripts",
+    type=int,
+    default=data.MIN_CHROMOSOME_TRANSCRIPTS,
+    show_default=True,
+    help="Drop chromosomes/scaffolds with fewer transcripts than this",
+)
+def convert(gff_file, taxid, regions_data, assembly_id, min_chromosome_transcripts):
     """
     Convert GFF file to parquet format.
 
@@ -107,6 +121,7 @@ def convert(gff_file, taxid, regions_data, assembly_id):
         taxid=taxid,
         regions_data=Path(regions_data) if regions_data else None,
         assembly_id=assembly_id,
+        min_chromosome_transcripts=min_chromosome_transcripts,
     )
     transcripts_table.write_parquet(output_path)
     click.echo(

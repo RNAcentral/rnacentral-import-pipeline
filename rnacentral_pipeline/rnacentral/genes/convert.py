@@ -97,6 +97,7 @@ def load_coordinates(
     taxid: int,
     regions_data: Path | None = None,
     assembly_id: str | None = None,
+    min_chromosome_transcripts: int = data.MIN_CHROMOSOME_TRANSCRIPTS,
 ) -> pl.DataFrame:
     """
     Load transcript coordinates from a GFF3 file and return a Polars DataFrame.
@@ -107,6 +108,7 @@ def load_coordinates(
         assembly_id (str): stamp every transcript with this assembly instead of
             joining to regions_data. Needed to replay old releases, whose regions
             are no longer in the database.
+        min_chromosome_transcripts (int): drop chromosomes with fewer transcripts than this
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
@@ -202,7 +204,9 @@ def load_coordinates(
         pl.col("so_type").first(),
     )
 
-    return transcript_dataframe
+    return data.drop_sparse_chromosomes(
+        transcript_dataframe, min_chromosome_transcripts
+    )
 
 
 def gff_to_polars(
@@ -210,6 +214,7 @@ def gff_to_polars(
     taxid: int,
     regions_data: Path | None = None,
     assembly_id: str | None = None,
+    min_chromosome_transcripts: int = data.MIN_CHROMOSOME_TRANSCRIPTS,
 ) -> pl.DataFrame:
     """
     Convert a GFF3 file to a Polars DataFrame containing transcript coordinates.
@@ -222,4 +227,6 @@ def gff_to_polars(
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
-    return load_coordinates(path, taxid, regions_data, assembly_id)
+    return load_coordinates(
+        path, taxid, regions_data, assembly_id, min_chromosome_transcripts
+    )

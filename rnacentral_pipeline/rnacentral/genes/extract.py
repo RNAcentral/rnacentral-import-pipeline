@@ -47,7 +47,21 @@ where pc.taxid = %s
 """
 
 
-def fetch_data(taxid, conn_str):
+## Chromosomes (or scaffolds, patches) with fewer transcripts than this are not worth
+## clustering: assemblies carry many of them and they only slow the GNN down.
+MIN_CHROMOSOME_TRANSCRIPTS = 10
+
+
+def drop_sparse_chromosomes(transcripts, minimum=MIN_CHROMOSOME_TRANSCRIPTS):
+    """
+    Drop every transcript on an (assembly, chromosome) that has fewer than `minimum`
+    transcripts. Expects one row per transcript, as both fetch_data and the GFF
+    conversion produce.
+    """
+    return transcripts.filter(pl.len().over("assembly_id", "chromosome") >= minimum)
+
+
+def fetch_data(taxid, conn_str, min_chromosome_transcripts=MIN_CHROMOSOME_TRANSCRIPTS):
     """
     Query the database to fetch all transcripts for a given taxid
 
@@ -77,6 +91,7 @@ def fetch_data(taxid, conn_str):
             pl.col("strand").first(),
             pl.col("so_type").first(),
         )
+        transcripts = drop_sparse_chromosomes(transcripts, min_chromosome_transcripts)
 
     return transcripts
 
