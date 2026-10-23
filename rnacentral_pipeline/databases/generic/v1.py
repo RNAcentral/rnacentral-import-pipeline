@@ -423,7 +423,11 @@ def inferred_phylogeny(record):
 
 
 def coordinate_system(metadata):
-    system = metadata.get("genomicCoordinateSystem", "1-start, fully-closed")
+    default = "1-start, fully-closed"
+    # LNCipedia's file declares no system but its exons are BED-style.
+    if metadata.get("dataProvider") == "LNCIPEDIA":
+        default = "0-start, half-open"
+    system = metadata.get("genomicCoordinateSystem", default)
     if not system:
         raise ValueError("Could not find coordinate system for: %s" % metadata)
     return data.CoordinateSystem.from_name(system)

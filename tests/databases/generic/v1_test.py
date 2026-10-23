@@ -291,7 +291,7 @@ def test_can_correctly_parse_lncipedia_data():
                     ],
                     assembly_id="GRCh37",
                     coordinate_system=dat.CoordinateSystem.from_name(
-                        "1-start, fully-closed"
+                        "0-start, half-open"
                     ),
                 ),
                 dat.SequenceRegion(
@@ -305,7 +305,7 @@ def test_can_correctly_parse_lncipedia_data():
                     ],
                     assembly_id="GRCh38",
                     coordinate_system=dat.CoordinateSystem.from_name(
-                        "1-start, fully-closed"
+                        "0-start, half-open"
                     ),
                 ),
             ],
@@ -2652,7 +2652,7 @@ def test_can_correctly_find_isoforms():
                     ],
                     assembly_id="GRCh38",
                     coordinate_system=dat.CoordinateSystem.from_name(
-                        "1-start, fully-closed"
+                        "0-start, half-open"
                     ),
                 ),
             ],
@@ -2716,19 +2716,19 @@ def test_can_properly_handle_shifting_lncipedia_coordinates():
             strand="-",
             exons=[dat.Exon(start=97665305, stop=97670289)],
             assembly_id="GRCh38",
-            coordinate_system=dat.CoordinateSystem.from_name("1-start, fully-closed"),
+            coordinate_system=dat.CoordinateSystem.from_name("0-start, half-open"),
         ),
     ]
 
     assert list(data[0].regions[0].writeable(data[0].accession)) == [
         [
             "LNCIPEDIA:LINC00923:10",
-            "@15/97665305-97670289:-",
+            "@15/97665306-97670289:-",
             "15",
             -1,
             "GRCh38",
             1,
-            97665305,
+            97665306,
             97670289,
         ]
     ]
