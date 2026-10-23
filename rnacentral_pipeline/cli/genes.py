@@ -13,42 +13,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 from pathlib import Path
 
 import click
+import polars as pl
 
-from rnacentral_pipeline.rnacentral.genes.random_forest import classify as rf_classify
-from rnacentral_pipeline.rnacentral.genes.random_forest import convert as gff_convert
-from rnacentral_pipeline.rnacentral.genes.random_forest import (
-    data,
-    evaluate,
-    preprocessing,
-    train,
-)
+from rnacentral_pipeline.rnacentral.genes import convert as gff_convert
+from rnacentral_pipeline.rnacentral.genes import extract as data
+from rnacentral_pipeline.rnacentral.genes import lineage, metadata, store
 
 
 @click.group("genes")
 def cli():
     """
     A group of commands dealing with building genes.
-    """
-    pass
-
-
-# Training subgroup
-@cli.group("train")
-def train_cli():
-    """
-    Commands for training gene classification models.
-    """
-    pass
-
-
-# Inference subgroup
-@cli.group("infer")
-def infer_cli():
-    """
-    Commands for running gene inference/classification.
     """
     pass
 
@@ -61,10 +40,8 @@ def utils_cli():
     pass
 
 
-## New RF based gene models
-
-## Inference commands to fetch, preprocess and classify transcripts
-@infer_cli.command("fetch")
+## Extract transcripts for the GNN gene model
+@utils_cli.command("fetch")
 @click.option(
     "--conn_str",
     envvar="PGDATABASE",
@@ -73,126 +50,37 @@ def utils_cli():
 )
 @click.option("--taxid", type=int, required=True, help="Taxonomy ID to fetch data for")
 @click.option(
-    "--output",
+    "--output_dir",
     required=True,
-    help="Output file path for transcript data (parquet format)",
+    type=click.Path(),
+    help="Directory for transcripts__<assembly>.pq, one parquet per assembly",
 )
-def fetch(conn_str, taxid, output):
+@click.option(
+    "--min_chromosome_transcripts",
+    type=int,
+    default=data.MIN_CHROMOSOME_TRANSCRIPTS,
+    show_default=True,
+    help="Drop chromosomes/scaffolds with fewer transcripts than this",
+)
+def fetch(conn_str, taxid, output_dir, min_chromosome_transcripts):
     """
-    Fetch transcript data from the database for a given taxonomy ID.
+    Fetch the transcripts of a taxon from the database, one parquet file per assembly.
 
-    This command queries the database to retrieve all transcripts for the specified
-    taxonomy ID and saves them to a parquet file for later processing.
+    The GNN keys its nodes on region_name, which can be the same on two assemblies, so
+    it must be run on one assembly at a time. Writes nothing for a taxon with no
+    transcripts.
     """
     click.echo(f"Fetching data for taxid {taxid}...")
-
-    transcripts = data.fetch_data(taxid, conn_str)
-
-    # Ensure output directory exists
-    output_path = Path(output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    if transcripts.height > 0:
-        transcripts.write_parquet(output)
-    else:
-        output_path.touch(exist_ok=True)
-    click.echo(f"Saved {transcripts.height} transcripts to {output}")
-
-
-@infer_cli.command("preprocess")
-@click.option(
-    "--transcripts_file",
-    required=True,
-    help="Input parquet file containing transcript data",
-)
-@click.option(
-    "--regions_data",
-    help="Region data for this taxid, csv format",
-)
-@click.option("--so_model_path", required=True, help="SO Node2Vec model path")
-@click.option(
-    "--output", required=True, help="Output file path for features (parquet format)"
-)
-@click.option(
-    "--nearby_distance",
-    default=1000,
-    type=int,
-    help="Distance threshold for identifying nearby transcripts (default: 1000)",
-)
-def preprocess(
-    transcripts_file,
-    regions_data,
-    so_model_path,
-    output,
-    nearby_distance,
-):
-    """
-    Generate features by comparing nearby transcripts.
-
-    This command loads transcript data and generates pairwise comparison features
-    for transcripts that are within the specified distance threshold.
-    """
-    if not Path(transcripts_file).exists():
-        raise click.ClickException(f"Transcripts file not found: {transcripts_file}")
-
-    if not Path(so_model_path).exists():
-        raise click.ClickException(f"Transcripts file not found: {so_model_path}")
-
-    if regions_data and not Path(regions_data).exists():
-        raise click.ClickException(f"Regions data file not found: {regions_data}")
-
-    click.echo(f"Loading transcripts from {transcripts_file}...")
-
-    n_features = preprocessing.run_preprocessing(
-        transcripts_file,
-        regions_data,
-        so_model_path,
-        nearby_distance,
-        output_path=str(output),
-    )
-
-    click.echo(f"Generated {n_features} feature comparisons, saved to {output}")
-
-
-@infer_cli.command("classify")
-@click.option(
-    "--features_file", required=True, help="Input parquet file containing features"
-)
-@click.option(
-    "--transcripts_file", required=True, help="Input parquet file containing features"
-)
-@click.option("--model_path", required=True, help="Path to trained model pickle file")
-@click.option("--taxid", type=int, required=True, help="Taxonomy ID for gene naming")
-@click.option(
-    "--conn_str",
-    envvar="PGDATABASE",
-    required=True,
-    help="Database connection string (can use PGDATABASE env var)",
-)
-@click.option("--output_dir", required=True, help="Output directory for results")
-@click.option(
-    "--seed",
-    default=20240520,
-    type=int,
-    help="Random seed for gene naming (default: 20240520)",
-)
-def classify(
-    features_file, transcripts_file, model_path, taxid, conn_str, output_dir, seed
-):
-    """
-    Apply machine learning model to classify transcript pairs and generate genes.
-
-    This command loads features, applies the trained model to classify transcript
-    pairs as belonging to the same gene, then uses community detection to group
-    transcripts into genes.
-    """
-    genes_table = rf_classify.run_final_classification(
-        features_file, transcripts_file, model_path, taxid, conn_str, seed
-    )
-    # Ensure output directory exists
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    genes_table.write_json(output_path / f"genes_{taxid}.json")
+    transcripts = data.fetch_data(taxid, conn_str, min_chromosome_transcripts)
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    if transcripts.height == 0:
+        click.echo("No transcripts")
+        return
+    for (assembly,), frame in transcripts.group_by("assembly_id"):
+        safe = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in assembly)
+        frame.write_parquet(out / f"transcripts__{safe}.pq")
+        click.echo(f"Saved {frame.height} transcripts for {assembly}")
 
 
 @utils_cli.command("convert")
@@ -200,10 +88,22 @@ def classify(
 @click.option("--taxid", type=int, help="Taxonomy ID for the GFF file")
 @click.option(
     "--regions_data",
-    required=True,
-    help="Path to extracted region data for this taxid, csv format",
+    default=None,
+    help="Path to extracted region data for this taxid, ndjson. Not needed with --assembly_id",
 )
-def convert(gff_file, taxid, regions_data):
+@click.option(
+    "--assembly_id",
+    default=None,
+    help="Assembly of this GFF. Skips the regions lookup, so old releases can be replayed",
+)
+@click.option(
+    "--min_chromosome_transcripts",
+    type=int,
+    default=data.MIN_CHROMOSOME_TRANSCRIPTS,
+    show_default=True,
+    help="Drop chromosomes/scaffolds with fewer transcripts than this",
+)
+def convert(gff_file, taxid, regions_data, assembly_id, min_chromosome_transcripts):
     """
     Convert GFF file to parquet format.
 
@@ -212,10 +112,16 @@ def convert(gff_file, taxid, regions_data):
     """
     if not Path(gff_file).exists():
         raise click.ClickException(f"GFF file not found: {gff_file}")
+    if not regions_data and not assembly_id:
+        raise click.ClickException("one of --regions_data or --assembly_id is required")
     output_name = Path(gff_file).stem + "_transcripts.parquet"
     output_path = Path(gff_file).parent / output_name
     transcripts_table = gff_convert.gff_to_polars(
-        Path(gff_file), taxid=taxid, regions_data=Path(regions_data)
+        Path(gff_file),
+        taxid=taxid,
+        regions_data=Path(regions_data) if regions_data else None,
+        assembly_id=assembly_id,
+        min_chromosome_transcripts=min_chromosome_transcripts,
     )
     transcripts_table.write_parquet(output_path)
     click.echo(
@@ -223,424 +129,223 @@ def convert(gff_file, taxid, regions_data):
     )
 
 
-@utils_cli.command("create-bedfile")
-@click.option("--bed_file", required=True, help="BEDfile output path")
-@click.option("--taxid", type=int, help="Taxonomy ID for the BED file")
-@click.option("--assembly_id", help="Assembly ID to filter transcripts")
+@utils_cli.command("clusters")
+@click.option("--transcripts", required=True, type=click.Path(exists=True))
+@click.option("--assignments", required=True, type=click.Path(exists=True))
 @click.option(
-    "--conn_str",
-    envvar="PGDATABASE",
-    required=True,
-    help="Database connection string (can use PGDATABASE env var)",
+    "--assembly_id", default=None, help="Only use transcripts of this assembly"
 )
-def create_bedfile(bed_file, taxid, assembly_id, conn_str):
+@click.option("--output", required=True, type=click.Path())
+def clusters(transcripts, assignments, assembly_id, output):
     """
-    Query the genes table in the database and convert the data there into a bed file for analysis.
+    Turn the GNN's region_name -> gene_id assignments into a clusters parquet for `plan`.
     """
-    gff_convert.database_to_bed(
-        output_path=Path(bed_file),
-        taxid=taxid,
-        assembly_id=assembly_id,
-        conn_str=conn_str,
+    result = lineage.clusters_from_assignments(
+        pl.read_parquet(transcripts), pl.read_parquet(assignments), assembly_id
     )
+    result.write_parquet(output)
+    click.echo(f"Wrote {result.height} clustered regions to {output}")
 
-    click.echo(f"Converted database records to {bed_file} with.")
 
-
-@utils_cli.command("merge")
-@click.option("--previous_genes", required=True, help="Path to previous genes file")
-@click.option("--next_genes", required=True, help="Path to new genes file")
-@click.option("--output", required=True, help="Output file path for merged genes")
+@utils_cli.command("plan")
 @click.option(
-    "--inactive_ids",
+    "--state",
+    default="-",
+    help="State parquet from the previous release, or - for none",
+)
+@click.option(
+    "--clusters",
+    "cluster_files",
+    multiple=True,
     type=click.Path(exists=True),
+    help="Clusters of each assembly; none means the taxon has no genes (needs --allow_empty)",
+)
+@click.option("--release", type=int, required=True)
+@click.option(
+    "--prefix", default=None, help="Ensembl stable prefix; needed only to create genes"
+)
+@click.option(
+    "--meta",
     default=None,
-    help="Path to inactive IDs file. Should be a CSV with one column of URS'.",
+    type=click.Path(exists=True),
+    help="meta.json from fetch-state; supplies the prefix",
 )
+@click.option("--out_dir", required=True, type=click.Path())
 @click.option(
-    "--prev_release_number", type=int, default=None, help="Previous release number"
+    "--allow_empty", is_flag=True, help="Allow no clusters at all (retires every gene)"
 )
+@click.option("--max_deactivate_fraction", type=float, default=0.5, show_default=True)
+@click.option("--min_inherit", type=float, default=0.5, show_default=True)
+@click.option("--min_relation", type=float, default=0.2, show_default=True)
 @click.option(
-    "--next_release_number", type=int, default=None, help="Next release number"
-)
-def merge(
-    previous_genes,
-    next_genes,
-    output,
-    inactive_ids,
-    prev_release_number,
-    next_release_number,
-):
-    """
-    Merge two gene files, updating IDs and handling inactive genes.
-
-    This command takes two gene files (previous and next), merges them, updates IDs,
-    and handles any inactive genes based on the provided inactive IDs file.
-
-    The merge is done based on one of two conditions:
-    1. If the previous gene has a perfect overlap, the two are merged and the version is updated
-    2. Within 1kb around each gene, we merge genes that have total region overlap > 0.9, and update the version
-
-    If a gene is present in the previous release but not the next, it is discarded. Genes present in the next
-    release but not the previous are added as new genes.
-    """
-    previous_genes = Path(previous_genes)
-    next_genes = Path(next_genes)
-    output = Path(output)
-
-    if not previous_genes.exists():
-        raise click.ClickException(f"Previous genes file not found: {previous_genes}")
-    if not next_genes.exists():
-        raise click.ClickException(f"Next genes file not found: {next_genes}")
-
-    merged_genes = data.merge_genes(
-        previous_genes,
-        next_genes,
-        output,
-        inactive_ids,
-        prev_release_number,
-        next_release_number,
-    )
-
-    merged_genes.write_json(output)
-    click.echo(f"Merged genes saved to {output}")
-
-
-@utils_cli.command("init")
-@click.option("--genes", required=True, help="Path to genes file")
-@click.option("--output", required=True, help="Output file path")
-@click.option("--release_number", type=int, required=True, help="Release number")
-def init(genes, output, release_number):
-    """
-    Initialize version tracking for a single release.
-
-    Use this when only one release is available for a taxon and no merging
-    is needed. Adds release tracking columns (first_release, last_release)
-    and ensures consistent name formatting.
-    """
-    genes_path = Path(genes)
-    output_path = Path(output)
-
-    if not genes_path.exists():
-        raise click.ClickException(f"Genes file not found: {genes_path}")
-
-    initialized = data.init_genes(genes_path, release_number)
-    initialized.write_json(output_path)
-    click.echo(
-        f"Initialized {len(initialized)} genes for release {release_number} -> {output_path}"
-    )
-
-
-@utils_cli.command("process-metadata")
-@click.argument("final_genes", type=click.Path(exists=True))
-@click.argument("metadata_output", type=click.Path())
-@click.option("--db_str", envvar="PGDATABASE")
-def process_metadata(final_genes, metadata_output, db_str):
-    metadata = data.get_metadata(final_genes, db_str)
-    metadata.write_json(metadata_output)
-    click.echo(f"Metadata written to {metadata_output}")
-
-
-@utils_cli.command("store-genes")
-@click.argument("final_genes", type=click.Path(exists=True))
-@click.option("--taxid", type=int)
-@click.option(
-    "--db_str",
-    envvar="PGDATABASE",
-)
-def store(final_genes, taxid, db_str):
-    """
-    Store final genes in the database.
-
-    This command reads the final genes file and stores the gene annotations
-    in the specified database.
-    """
-    final_genes = Path(final_genes)
-
-    if not final_genes.exists():
-        raise click.ClickException(f"Final genes file not found: {final_genes}")
-
-    data.store_genes(final_genes, taxid, db_str)
-    click.echo(f"Stored genes from {final_genes} into the database.")
-
-
-@utils_cli.command("store-metadata")
-@click.argument("metadata_file", type=click.Path(exists=True))
-@click.option(
-    "--db_str",
-    envvar="PGDATABASE",
-)
-def store_metadata(metadata_file, db_str):
-    """
-    Store gene metadata in the database.
-
-    This command reads the gene metadata file and stores the metadata
-    in the specified database.
-    """
-    metadata_file = Path(metadata_file)
-
-    if not metadata_file.exists():
-        raise click.ClickException(f"Metadata file not found: {metadata_file}")
-
-    data.store_metadata(metadata_file, db_str)
-    click.echo(f"Stored metadata from {metadata_file} into the database.")
-
-
-@utils_cli.command("fetch-stored")
-@click.option("--taxid", type=int, required=True, help="Taxonomy ID to fetch genes for")
-@click.option("--output", required=True, help="Output JSON path for the stored genes")
-@click.option(
-    "--release_output",
-    default="prev_release.txt",
-    help="Path to write the previous release number (empty for a new taxon)",
-)
-@click.option("--db_str", envvar="PGDATABASE")
-def fetch_stored(taxid, output, release_output, db_str):
-    """
-    Reconstruct the stored genes for a taxon from the database.
-
-    Writes the genes as merge-format JSON (the inverse of store-genes) so they
-    can be used as the previous_genes input to a forward merge. Also writes the
-    previous release number to a file. An empty JSON array means no genes are
-    stored yet for this taxon (a new taxon) and the caller should use init.
-    """
-    genes, prev_release_number = data.fetch_stored_genes(taxid, db_str)
-    genes.write_json(Path(output))
-    with open(release_output, "w") as handle:
-        handle.write("" if prev_release_number is None else str(prev_release_number))
-    click.echo(
-        f"Fetched {genes.height} stored genes for taxid {taxid} "
-        f"(previous release: {prev_release_number}) -> {output}"
-    )
-
-
-@utils_cli.command("deactivate-discarded")
-@click.option("--merged", required=True, help="Path to the merged genes file")
-@click.option("--taxid", type=int, required=True, help="Taxonomy ID being processed")
-@click.option("--db_str", envvar="PGDATABASE")
-def deactivate_discarded(merged, taxid, db_str):
-    """
-    Mark genes dropped by the merge as inactive in the database.
-
-    Genes present for this taxon in the database but absent from the merged file
-    have is_active set to false (their version history is preserved). Run this
-    after store-genes, which re-activates the genes that are still present.
-    """
-    merged_path = Path(merged)
-    if not merged_path.exists():
-        raise click.ClickException(f"Merged genes file not found: {merged_path}")
-
-    data.deactivate_discarded(merged_path, taxid, db_str)
-    click.echo(f"Deactivated discarded genes for taxid {taxid}.")
-
-
-@train_cli.command("convert-csv")
-@click.option("--input_csv", required=True, help="Input CSV file path")
-@click.option("--output_parquet", required=True, help="Output Parquet file path")
-def convert_csv(input_csv, output_parquet):
-    """
-    Convert the CSV dumped by psql into a parquet file for further processing
-    """
-    if not Path(input_csv).exists():
-        raise click.ClickException(f"Input CSV file not found: {input_csv}")
-
-    train.convert_csv_2_parquet(input_csv, output_parquet)
-    click.echo(f"Converted {input_csv} to {output_parquet}")
-
-
-@train_cli.command("fetch-training-data")
-@click.option("--transcripts_parquet", required=True, help="The input transcripts")
-@click.option(
-    "--nearby_distance",
-    default=1000,
-    type=int,
-    help="Distance to search for candidate genes to compare",
-)
-@click.option("--output_parquet", required=True, help="Output Parquet file path")
-def fetch_training_data(transcripts_parquet, nearby_distance, output_parquet):
-    """
-    Fetch training data by finding nearby transcripts and labeling them.
-
-    This command processes the input transcripts to find nearby candidates
-    within the specified distance and labels them for training.
-    """
-    if not Path(transcripts_parquet).exists():
-        raise click.ClickException(
-            f"Input transcripts file not found: {transcripts_parquet}"
-        )
-    candidates_df = train.fetch_training_data(transcripts_parquet, nearby_distance)
-    candidates_df.write_parquet(output_parquet)
-    click.echo(f"Fetched training data and saved to {output_parquet}")
-
-
-@train_cli.command("prepare-features")
-@click.option(
-    "--candidates_parquet", required=True, help="Input Parquet file with candidates"
-)
-@click.option(
-    "--transcripts_parquet", required=True, help="Input Parquet file with transcripts"
-)
-@click.option("--so_model_path", required=True, help="SO Node2Vec model path")
-@click.option("--output_parquet", required=True, help="Output Parquet file path")
-def prepare_features(
-    candidates_parquet, transcripts_parquet, so_model_path, output_parquet
-):
-    """
-    Prepare features for training the model.
-
-    This command generates features for the candidate transcript pairs
-    using the specified SO Node2Vec model.
-    """
-    if not Path(candidates_parquet).exists():
-        raise click.ClickException(
-            f"Input candidates file not found: {candidates_parquet}"
-        )
-    if not Path(so_model_path).exists():
-        raise click.ClickException(f"SO model file not found: {so_model_path}")
-
-    features = train.build_training_features(
-        candidates_parquet, transcripts_parquet, so_model_path
-    )
-    features.write_parquet(output_parquet)
-    click.echo(f"Prepared features and saved to {output_parquet}")
-
-
-@train_cli.command("split-dataset")
-@click.option(
-    "--features_parquet", required=True, help="Input Parquet file with features"
-)
-@click.option(
-    "--train_path", required=True, help="Output Parquet file for training data"
-)
-@click.option(
-    "--val_path", required=True, help="Output Parquet file for validation data"
-)
-@click.option("--test_path", required=True, help="Output Parquet file for testing data")
-@click.option(
-    "--test_frac",
-    default=0.2,
+    "--min_new_fraction",
     type=float,
-    help="Proportion of data to use for testing (default: 0.2)",
+    default=0.05,
+    show_default=True,
+    help="An old gene inherits only if it supplied this share of the cluster...",
 )
 @click.option(
-    "--val_frac",
-    default=0.2,
-    type=float,
-    help="Proportion of data to use for validation (default: 0.2)",
-)
-@click.option(
-    "--seed",
-    default=1337,
+    "--min_support",
     type=int,
-    help="Random seed for reproducibility (default: 1337)",
+    default=20,
+    show_default=True,
+    help="...or at least this many members",
 )
-@click.option(
-    "--hub_path", default=None, help="Repo to upload dataset to on huggingface hub"
-)
-def split_dataset(
-    features_parquet,
-    train_path,
-    val_path,
-    test_path,
-    test_frac,
-    val_frac,
-    seed,
-    hub_path,
+def plan(
+    state,
+    cluster_files,
+    release,
+    prefix,
+    meta,
+    out_dir,
+    allow_empty,
+    max_deactivate_fraction,
+    min_inherit,
+    min_relation,
+    min_new_fraction,
+    min_support,
 ):
     """
-    Split the dataset into training, validation, and testing sets.
+    Work out how one release's genes follow on from the previous release's.
 
-    This command takes the full feature dataset and splits it into
-    training, validation, and testing subsets based on the specified proportions.
+    Writes genes, state (feed it to the next release), events, member_deltas and
+    stats.json to --out_dir. Nothing is written to the database.
     """
-    if not Path(features_parquet).exists():
-        raise click.ClickException(f"Input features file not found: {features_parquet}")
-
-    train.split_datasets(
-        features_parquet,
-        train_path,
-        val_path,
-        test_path,
-        test_frac,
-        val_frac,
-        seed,
-        hub_path,
+    previous = lineage.empty_state() if state == "-" else pl.read_parquet(state)
+    if prefix is None and meta:
+        prefix = json.loads(Path(meta).read_text())["prefix"]
+    if cluster_files:
+        found = pl.concat([pl.read_parquet(f) for f in cluster_files])
+    else:
+        found = pl.DataFrame(schema={c: pl.Utf8 for c in lineage.CLUSTER_COLUMNS})
+    result = lineage.plan(
+        previous,
+        found,
+        release,
+        prefix,
+        allow_empty=allow_empty,
+        max_deactivate_fraction=max_deactivate_fraction,
+        min_inherit=min_inherit,
+        min_relation=min_relation,
+        min_new_fraction=min_new_fraction,
+        min_support=min_support,
     )
-    click.echo(
-        f"Split dataset into train ({train_path}), val ({val_path}), and test ({test_path})"
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    result.genes.write_parquet(out / "genes.parquet")
+    lineage.as_state(result.genes).write_parquet(out / "state.parquet")
+    result.events.write_parquet(out / "events.parquet")
+    result.member_deltas.write_parquet(out / "member_deltas.parquet")
+    (out / "stats.json").write_text(json.dumps(result.stats))
+    click.echo(f"Release {release}: {result.stats}")
+
+
+@utils_cli.command("collect")
+@click.option(
+    "--plan_dir",
+    "plan_dirs",
+    multiple=True,
+    required=True,
+    type=click.Path(exists=True),
+    help="Plan directories from `plan`, oldest release first",
+)
+@click.option("--output_dir", required=True, type=click.Path())
+def collect(plan_dirs, output_dir):
+    """
+    Gather the plans of a chain of releases into one set of files for a bulk load.
+
+    Writes events.parquet and member_deltas.parquet (all releases), and the genes and
+    state of the last release. The result has the file names of a plan, so it can be
+    loaded with `apply --include_inactive`.
+    """
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    for name in ("events", "member_deltas"):
+        pl.concat(
+            [pl.read_parquet(Path(d) / f"{name}.parquet") for d in plan_dirs]
+        ).write_parquet(out / f"{name}.parquet")
+    last = Path(plan_dirs[-1])
+    pl.read_parquet(last / "genes.parquet").write_parquet(out / "genes.parquet")
+    pl.read_parquet(last / "state.parquet").write_parquet(out / "state.parquet")
+    click.echo(f"Collected {len(plan_dirs)} releases into {out}")
+
+
+@utils_cli.command("fetch-state")
+@click.option("--taxid", type=int, required=True)
+@click.option(
+    "--output", required=True, type=click.Path(), help="State parquet for `plan`"
+)
+@click.option(
+    "--meta", required=True, type=click.Path(), help="JSON with the Ensembl prefix"
+)
+@click.option("--db_str", envvar="PGDATABASE")
+def fetch_state(taxid, output, meta, db_str):
+    """
+    Read the stored genes of a taxon, with their member history, as the state for `plan`.
+    Read-only.
+    """
+    state, info = store.fetch_state(taxid, db_str)
+    state.write_parquet(output)
+    Path(meta).write_text(json.dumps(info))
+    click.echo(f"Fetched {state.height} genes for taxid {taxid} ({info})")
+
+
+@utils_cli.command("metadata")
+@click.option(
+    "--genes",
+    required=True,
+    type=click.Path(exists=True),
+    help="genes.parquet from `plan`",
+)
+@click.option("--taxid", type=int, required=True)
+@click.option("--output", required=True, type=click.Path())
+@click.option("--db_str", envvar="PGDATABASE")
+def compute_metadata(genes, taxid, output, db_str):
+    """
+    Pick a description and RNA type for every active gene. Reads evidence from the
+    database in bulk and scores it here; writes nothing to the database.
+    """
+    active = pl.read_parquet(genes).filter(pl.col("is_active"))
+    members = (
+        active.select("internal_name", pl.col("members").alias("region_name"))
+        .explode("region_name")
+        .drop_nulls("region_name")
     )
+    result, missing = metadata.compute_metadata(
+        members, store.fetch_evidence(taxid, db_str)
+    )
+    result.write_parquet(output)
+    if missing.height:
+        click.echo(
+            f"{missing.height} genes have no evidence, e.g. {missing['internal_name'][0]}"
+        )
+    click.echo(f"Wrote metadata for {result.height} genes to {output}")
 
 
-@train_cli.command("train-model")
+@utils_cli.command("apply")
+@click.option("--plan_dir", required=True, type=click.Path(exists=True))
+@click.option("--metadata", "metadata_file", default=None, type=click.Path(exists=True))
+@click.option("--taxid", type=int, required=True)
+@click.option("--release", type=int, required=True)
 @click.option(
-    "--train_data", required=True, help="Input Parquet file with training data"
+    "--allow_unresolved",
+    is_flag=True,
+    help="Load even if some members are not in rnc_sequence_regions",
 )
 @click.option(
-    "--model_output", required=True, help="Output folder for the trained models"
+    "--include_inactive",
+    is_flag=True,
+    help="Also write genes that ended inactive; for loading a replayed history",
 )
-@click.option(
-    "--folds", default=5, type=int, help="Number of cross-validation folds (default: 5)"
-)
-@click.option("--exclude", multiple=True, help="Columns to exclude from features")
-@click.option(
-    "--seed",
-    default=1337,
-    type=int,
-    help="Random seed for reproducibility (default: 1337)",
-)
-@click.option(
-    "--basename",
-    default="rf_model",
-    help="Base name for output model files (default: rf_model)",
-)
-@click.option(
-    "--n_estimators",
-    default=100,
-    type=int,
-    help="Number of trees in the random forest (default: 100)",
-)
-def train_model(train_data, model_output, folds, exclude, seed, basename, n_estimators):
+@click.option("--db_str", envvar="PGDATABASE")
+def apply(
+    plan_dir, metadata_file, taxid, release, allow_unresolved, include_inactive, db_str
+):
     """
-    Train a Random Forest model using the provided training data.
-
-    This command trains a Random Forest classifier with cross-validation
-    and saves the trained model to the specified output folder.
+    Write a plan (genes, members, history, member history, metadata) in ONE transaction.
     """
-    if not Path(train_data).exists():
-        raise click.ClickException(f"Input training data file not found: {train_data}")
-    if not Path(model_output).exists():
-        Path(model_output).mkdir(parents=True, exist_ok=True)
-
-    train.train(train_data, model_output, folds, exclude, seed, basename, n_estimators)
-    click.echo(f"Trained models saved to {model_output}")
-
-
-@train_cli.command("evaluate-model")
-@click.option("--model_path", required=True, help="Path to the trained model file")
-@click.option("--test_data", required=True, help="Input Parquet file with testing data")
-@click.option(
-    "--metric_output", required=True, help="Output file for metrics (should be ndjson)"
-)
-@click.option("--exclude", "-e", default=None, multiple=True, help="Columns to exclude")
-def evaluate_model(model_path, test_data, metric_output, exclude):
-    """
-    Evaluate the trained model on the test dataset.
-
-    This command loads the trained model and evaluates its performance
-    on the provided test dataset, printing out relevant metrics.
-    """
-    if not Path(model_path).exists():
-        raise click.ClickException(f"Trained model file not found: {model_path}")
-    if not Path(test_data).exists():
-        raise click.ClickException(f"Input testing data file not found: {test_data}")
-
-    excluded_columns = ["label", "comparison"]
-    if exclude is not None:
-        excluded_columns.extend(list(exclude))
-
-    metrics = evaluate.evaluate_model(model_path, test_data, excluded_columns)
-    click.echo("Model evaluation metrics:")
-
-    click.echo(metrics)
-    # Save metrics to output file
-    metrics.write_ndjson(metric_output)
+    meta = pl.read_parquet(metadata_file) if metadata_file else None
+    result = store.apply_plan(
+        plan_dir, taxid, release, db_str, meta, allow_unresolved, include_inactive
+    )
+    click.echo(f"Applied plan for taxid {taxid}: {result}")
