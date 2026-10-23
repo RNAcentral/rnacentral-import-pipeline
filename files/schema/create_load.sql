@@ -12,7 +12,7 @@ CREATE UNLOGGED TABLE load_rnc_accessions (
     non_coding_id character varying(200) NULL,
     database character varying(40) NULL,
     external_id character varying(300) NULL,
-    optional_id character varying(200) NULL,
+    optional_id text NULL,
     allele character varying(100) NULL,
     anticodon character varying(200) NULL,
     chromosome character varying(200) NULL,
@@ -122,7 +122,7 @@ CREATE UNLOGGED TABLE
     seq_long text NULL,
     database character varying(40) NULL,
     ac character varying(200) NULL,
-    optional_id character varying(100) NULL,
+    optional_id text NULL,
     version integer NULL,
     taxid bigint NULL,
     md5 character varying(32) NULL
@@ -137,7 +137,7 @@ CREATE UNLOGGED TABLE
     seq_long text NULL,
     database character varying(40) NULL,
     ac character varying(200) NULL,
-    optional_id character varying(100) NULL,
+    optional_id text NULL,
     version integer NULL,
     taxid bigint NULL,
     md5 character varying(32) NULL
