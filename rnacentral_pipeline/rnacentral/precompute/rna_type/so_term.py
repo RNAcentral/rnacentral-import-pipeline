@@ -57,10 +57,13 @@ ACCEPTED_DATABASES = {
     Database.gencode,
 }
 
-CIRCULAR_DATABASES = {
-    Database.circatlas,
-    Database.circpedia,
-}
+# These collect reads from every kind of RNA, so a sequence they share with a
+# differently typed RNA from another database takes that database's type.
+# Least trusted first: circRNA databases also yield to piRBase.
+DEFERRING_TIERS = [
+    {Database.circatlas, Database.circpedia},
+    {Database.pirbase},
+]
 
 MODEL_GROUPS = {
     "SO:0000209": {
@@ -299,14 +302,20 @@ def all_annotations(
             continue
         annotations.append(RnaTypeAnnotation.from_accession(context, accession))
 
-    def is_circular(annotation):
-        return annotation.source_matches(
-            lambda s: s.is_database() and s.data.database in CIRCULAR_DATABASES
-        )
+    for tier in DEFERRING_TIERS:
 
-    # A circRNA identical to a typed linear RNA shares its URS; report the linear type
-    if any(a.is_specific() and not is_circular(a) for a in annotations):
-        annotations = [a for a in annotations if not is_circular(a)]
+        def defers(annotation):
+            return annotation.source_matches(
+                lambda s: s.is_database() and s.data.database in tier
+            )
+
+        deferring = [a for a in annotations if defers(a)]
+        others = [a for a in annotations if not defers(a)]
+        if any(
+            o.is_specific() and not any(o.is_mergeable(d) for d in deferring)
+            for o in others
+        ):
+            annotations = others
 
     for r2dt in sequence.r2dt_hits:
         if r2dt.paired_ratio() is None or r2dt.paired_ratio() > 0.80:

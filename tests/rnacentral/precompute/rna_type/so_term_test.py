@@ -451,6 +451,38 @@ def test_circrna_database_defers_to_a_specific_linear_type(
 
 
 @pytest.mark.parametrize(
+    "database,so_id",
+    [
+        ("CIRCPEDIA", "SO:0002291"),
+        ("PIRBASE", "SO:0001035"),
+    ],
+)
+def test_agreeing_database_keeps_the_type_safe_from_a_stray_rfam_hit(database, so_id):
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession(database, so_id), as_accession("ENA", so_id)],
+        [as_rfam_hit("RF00005", "SO:0000253")],
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == RnaType.from_so_id(SO_TREE, so_id).so_term.name
+
+
+@pytest.mark.parametrize("mirna_db", ["MIRBASE", "MIRGENEDB", "FLYBASE"])
+def test_pirbase_defers_to_a_mature_mirna(mirna_db):
+    # piRBase lists many mature miRNAs; with two trusted databases the first
+    # accession used to win, so the same miRNA could come out as piRNA
+    context = ctx.Context(so_tree=SO_TREE)
+    for accessions in (
+        [as_accession("PIRBASE", "SO:0001035"), as_accession(mirna_db, "SO:0000276")],
+        [as_accession(mirna_db, "SO:0000276"), as_accession("PIRBASE", "SO:0001035")],
+    ):
+        result = so_term.rna_type_of(context, as_sequence(accessions, []))
+        assert result is not None
+        assert result.so_term.name == "miRNA"
+
+
+@pytest.mark.parametrize(
     "intron_so_id,expected",
     [
         ("SO:0000588", "autocatalytically_spliced_intron"),
