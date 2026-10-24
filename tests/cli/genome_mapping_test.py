@@ -143,3 +143,31 @@ def test_url_for_still_fails_when_the_lookup_breaks(monkeypatch):
         )
         assert result.exit_code != 0
         assert result.exit_code != gm.NO_REMOTE_FILE
+
+
+@pytest.mark.cli
+def test_compare_exports_writes_missing_ids(monkeypatch):
+    import gzip
+
+    import polars as pl
+
+    from rnacentral_pipeline.rnacentral.genome_mapping import compare
+
+    monkeypatch.setattr(
+        compare,
+        "database_ids",
+        lambda _: pl.DataFrame(
+            {"urs_taxid": ["URS0000000001_9606", "URS0000000002_9606"]}
+        ),
+    )
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        os.mkdir("ftp")
+        with gzip.open("ftp/a.bed.gz", "wt") as out:
+            out.write("1\t0\t9\tURS0000000001_9606\t0\t+\n")
+        result = runner.invoke(
+            gm.cli, ["compare-exports", "bed", "ftp", "missing.csv", "--db-url", "x"]
+        )
+        assert result.exit_code == 0, result.output
+        with open("missing.csv") as raw:
+            assert raw.read().split() == ["urs_taxid", "URS0000000002_9606"]

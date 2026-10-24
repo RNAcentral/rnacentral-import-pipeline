@@ -13,13 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import click
 
 from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
 from rnacentral_pipeline.rnacentral.genome_mapping import (
     blat,
+    compare,
     igv,
     update_assemblies,
     urls,
@@ -168,3 +168,16 @@ def find_url_and_create_json(species, assembly_id, output):
     Check which files are available to be used by IGV
     """
     igv.create_json(species, assembly_id, output)
+
+
+@cli.command("compare-exports")
+@click.argument("kind", type=click.Choice(sorted(compare.GLOBS)))
+@click.argument("ftp_path", type=click.Path(exists=True))
+@click.argument("output", type=click.Path())
+@click.option("--db-url", envvar="PGDATABASE")
+def compare_exports(kind, ftp_path, output, db_url):
+    """
+    Write a CSV of URS_taxids the database says have coordinates but which are
+    missing from the exported gff3 or bed files in FTP_PATH.
+    """
+    compare.missing_from_files(ftp_path, db_url, kind).write_csv(output)
