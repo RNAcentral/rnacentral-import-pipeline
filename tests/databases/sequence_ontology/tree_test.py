@@ -172,7 +172,6 @@ def ontology():
                 ("SO:0000655", "ncRNA"),
                 ("SO:0002247", "sncRNA"),
                 ("SO:0000370", "small_regulatory_ncRNA"),
-                ("SO:0000276", "miRNA"),
                 ("SO:0001244", "pre_miRNA"),
             ],
         ),
