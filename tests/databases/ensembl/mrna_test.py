@@ -113,6 +113,42 @@ def test_only_protein_coding_transcripts_are_kept_with_their_tags(tmp_path):
     }
 
 
+def test_genes_stand_in_only_when_the_gff3_has_no_transcripts(tmp_path):
+    gff = tmp_path / "genes.gff3"
+    gff.write_text(
+        "1\tena\tgene\t1\t9\t.\t+\t.\tID=gene:G1;biotype=protein_coding\n"
+        "1\tena\tgene\t1\t9\t.\t+\t.\tID=gene:G2;biotype=nontranslating_CDS\n"
+    )
+    assert mrna.protein_coding(gff) == {"G1": ("G1", [])}
+    with gff.open("a") as raw:
+        raw.write(
+            "1\tena\tmRNA\t1\t9\t.\t+\t.\tID=transcript:T1;Parent=gene:G1;"
+            "biotype=nonsense_mediated_decay\n"
+        )
+    assert mrna.protein_coding(gff) == {}
+
+
+def test_a_gff3_with_only_genes_still_yields_the_mrnas(entries, tmp_path):
+    # Some genomes (e.g. Methanosarcina acetivorans) list genes but no
+    # transcripts in the GFF3, while the EMBL still has the mRNAs.
+    genes = {
+        line.split("Parent=gene:")[1].split(";")[0]
+        for line in GFF.read_text().splitlines()
+        if "\tmRNA\t" in line
+    }
+    gff = tmp_path / "genes.gff3"
+    gff.write_text(
+        "#!genome-build-accession GCA_000001405.29\n"
+        + "".join(
+            f"1\tena\tgene\t1\t9\t.\t+\t.\tID=gene:{g};biotype=protein_coding\n"
+            for g in sorted(genes)
+        )
+    )
+    with open("data/ensembl/Homo_sapiens.GRCh38.mrna.embl", "r") as raw:
+        found = {e.accession for e in mrna.parse(raw, gff)}
+    assert found == set(entries)
+
+
 def test_the_mrna_keeps_its_protein_xrefs_and_tags(entries):
     entry = entries["ENST00000361390.2"]
     assert entry.xref_data == {

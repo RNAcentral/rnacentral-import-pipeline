@@ -58,17 +58,26 @@ def protein_coding(gff_file: Path) -> ty.Dict[str, ty.Tuple[str, ty.List[str]]]:
     transcripts, so these come from the GFF3.
     """
     transcripts = {}
+    genes = {}
+    has_mrnas = False
     with gff_file.open("r") as raw:
         for line in raw:
             parts = line.rstrip("\n").split("\t")
-            if len(parts) != 9 or parts[2] != "mRNA":
+            if len(parts) != 9 or parts[2] not in {"mRNA", "gene"}:
                 continue
             attrs = dict(a.split("=", 1) for a in parts[8].split(";") if "=" in a)
-            if attrs.get("biotype") == "protein_coding":
+            if attrs.get("biotype") != "protein_coding":
+                has_mrnas |= parts[2] == "mRNA"
+            elif parts[2] == "gene":
+                gene = attrs["ID"].split(":", 1)[1]
+                genes[gene] = (gene, [])
+            else:
+                has_mrnas = True
                 tags = [t for t in attrs.get("tag", "").split(",") if t in TAGS]
                 gene = attrs["Parent"].split(":", 1)[1]
                 transcripts[attrs["ID"].split(":", 1)[1]] = (gene, sorted(tags))
-    return transcripts
+    # Some genomes list only genes in the GFF3, so their EMBL mRNAs are found by gene
+    return transcripts if has_mrnas else genes
 
 
 def xref_data(gene, cds) -> ty.Dict[str, ty.List[str]]:
@@ -186,9 +195,11 @@ def parse(raw: ty.IO, gff_file: Path) -> ty.Iterable[data.Entry]:
                 mrnas[helpers.primary_id(feature)] = (gene, feature)
             elif feature.type == "CDS":
                 pid = helpers.primary_id(feature)
-                if pid in wanted and pid in mrnas:
+                gene_id = (embl.qualifier_string(feature, "gene") or "").split(".")[0]
+                found = wanted.get(pid) or wanted.get(gene_id)
+                if found and pid in mrnas:
                     mrna_gene, mrna = mrnas.pop(pid)
-                    tags = wanted[pid][1]
+                    tags = found[1]
                     yield from transcript_entries(
                         record, mrna_gene, mrna, feature, tags, gca
                     )
