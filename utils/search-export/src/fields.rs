@@ -110,8 +110,8 @@ pub enum GeneFields {
     HasLitScan,
     HasLitsumm,
     HasEditingEvent,
-    SoRnaTypeName,
     TaxString,
+    SoRnaTypeName,
 }
 
 #[derive(strum_macros::EnumIter, Debug, PartialEq, strum_macros::Display)]
