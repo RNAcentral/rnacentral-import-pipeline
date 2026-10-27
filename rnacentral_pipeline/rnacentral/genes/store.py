@@ -284,8 +284,10 @@ def assemble_state(gene_rows, member_rows):
             .otherwise(pl.col("last_members"))
             .alias("last_members")
         )
-        .select(list(lineage.STATE_SCHEMA))
     )
+    ## The stored history only keeps each region's latest change, so the peak
+    ## membership of the last releases cannot be rebuilt here; start from last_members.
+    state = lineage.with_ref_defaults(state).select(list(lineage.STATE_SCHEMA))
     return state.cast(lineage.STATE_SCHEMA)
 
 

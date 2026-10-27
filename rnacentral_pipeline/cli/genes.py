@@ -191,6 +191,14 @@ def clusters(transcripts, assignments, assembly_id, output):
     show_default=True,
     help="...or at least this many members",
 )
+@click.option(
+    "--ref_releases",
+    type=int,
+    default=3,
+    show_default=True,
+    help="Also match genes still without a cluster against their largest membership "
+    "within this many releases (0 turns it off)",
+)
 def plan(
     state,
     cluster_files,
@@ -204,6 +212,7 @@ def plan(
     min_relation,
     min_new_fraction,
     min_support,
+    ref_releases,
 ):
     """
     Work out how one release's genes follow on from the previous release's.
@@ -229,6 +238,7 @@ def plan(
         min_relation=min_relation,
         min_new_fraction=min_new_fraction,
         min_support=min_support,
+        ref_releases=ref_releases,
     )
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)

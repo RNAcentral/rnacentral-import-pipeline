@@ -55,6 +55,10 @@ STATE_SCHEMA = {
     "strand": pl.Utf8,
     "members": pl.List(pl.Utf8),
     "last_members": pl.List(pl.Utf8),
+    ## Largest membership within the last few releases, and when it was seen. A gene that
+    ## shrank for a release (partial input) can then still be recognised when it grows back.
+    "ref_members": pl.List(pl.Utf8),
+    "ref_release": pl.Int64,
 }
 
 CLUSTER_COLUMNS = [
@@ -105,6 +109,15 @@ class Plan(NamedTuple):
 
 def empty_state():
     return pl.DataFrame(schema=STATE_SCHEMA)
+
+
+def with_ref_defaults(state):
+    """Fill the reference columns from last_members for state written before they existed."""
+    if "ref_members" not in state.columns:
+        state = state.with_columns(pl.col("last_members").alias("ref_members"))
+    if "ref_release" not in state.columns:
+        state = state.with_columns(pl.col("last_release").alias("ref_release"))
+    return state
 
 
 def _extent_overlap(a_start, a_stop, b_start, b_stop):
@@ -180,12 +193,12 @@ def build_clusters(clusters):
     )
 
 
-def _score_edges(state, cl):
+def _score_edges(state, cl, members_col="last_members"):
     """One row per (old gene, cluster) pair sharing members, with the sort-key columns."""
     old = state.select(
         "internal_name",
         "assembly_id",
-        pl.col("last_members").alias("region_name"),
+        pl.col(members_col).alias("region_name"),
     ).explode("region_name")
     new = cl.select(
         "cluster_key", "assembly_id", pl.col("members").alias("region_name")
@@ -232,9 +245,7 @@ def _score_edges(state, cl):
     )
 
 
-def _find_heirs(
-    state, cl, edges, min_inherit, min_extent, min_new_fraction, min_support
-):
+def _eligible_greedy(edges, min_inherit, min_new_fraction, min_support):
     ## Reciprocity: an old gene must have supplied a real share of the cluster, or enough
     ## members in absolute terms. Otherwise a 4-member gene can carry its identity into a
     ## 950-member cluster just because all 4 of its members ended up there.
@@ -256,7 +267,38 @@ def _find_heirs(
         ],
         descending=[True, True, True, True, False, False, False],
     )
-    heirs = _greedy(zip(eligible["internal_name"], eligible["cluster_key"]))
+    return _greedy(zip(eligible["internal_name"], eligible["cluster_key"]))
+
+
+def _find_heirs(
+    state,
+    cl,
+    edges,
+    release,
+    min_inherit,
+    min_extent,
+    min_new_fraction,
+    min_support,
+    ref_releases,
+):
+    heirs = _eligible_greedy(edges, min_inherit, min_new_fraction, min_support)
+
+    ## Reference pass: for clusters still without an heir, retry the genes still without
+    ## a cluster, this time against the largest membership they had in the last few
+    ## releases. This is what lets a gene that was cut down for a release (and whose
+    ## remnant fails the reciprocity floor) take back the cluster it grew into again.
+    if ref_releases > 0:
+        ref_old = state.filter(
+            ~pl.col("internal_name").is_in(set(heirs.values()))
+            & (release - pl.col("ref_release") <= ref_releases)
+            & (pl.col("ref_members").list.len() > pl.col("last_members").list.len())
+        ).with_columns(pl.col("ref_members").alias("last_members"))
+        ref_new = cl.filter(~pl.col("cluster_key").is_in(set(heirs)))
+        if ref_old.height and ref_new.height:
+            ref_edges = _score_edges(ref_old, ref_new)
+            heirs.update(
+                _eligible_greedy(ref_edges, min_inherit, min_new_fraction, min_support)
+            )
 
     ## Extent fallback: only active old genes that share no members with any cluster
     ## (e.g. remapped, so every region_name changed) and clusters that share none with
@@ -264,9 +306,12 @@ def _find_heirs(
     has_edge_old = set(edges["internal_name"])
     has_edge_new = set(edges["cluster_key"])
     left_old = state.filter(
-        pl.col("is_active") & ~pl.col("internal_name").is_in(has_edge_old)
+        pl.col("is_active")
+        & ~pl.col("internal_name").is_in(has_edge_old | set(heirs.values()))
     ).select("internal_name", "assembly_id", "chromosome", "strand", "start", "stop")
-    left_new = cl.filter(~pl.col("cluster_key").is_in(has_edge_new)).select(
+    left_new = cl.filter(
+        ~pl.col("cluster_key").is_in(has_edge_new | set(heirs))
+    ).select(
         "cluster_key",
         "assembly_id",
         "chromosome",
@@ -441,6 +486,7 @@ def plan(
     min_extent=0.9,
     min_new_fraction=0.05,
     min_support=20,
+    ref_releases=3,
     allow_empty=False,
     max_deactivate_fraction=0.5,
 ):
@@ -452,7 +498,9 @@ def plan(
     release  - the release being produced; must not be older than anything in state
     prefix   - Ensembl stable prefix of the taxon, only needed to mint new genes
     """
-    state = state.cast(STATE_SCHEMA) if state.height else empty_state()
+    state = (
+        with_ref_defaults(state).cast(STATE_SCHEMA) if state.height else empty_state()
+    )
     if state["internal_name"].n_unique() != state.height:
         raise ValueError("duplicate internal_name in state")
     if state.height and release < state["last_release"].max():
@@ -481,7 +529,15 @@ def plan(
         edges = _score_edges(empty_state(), cl.clear()).clear()
     heirs = (
         _find_heirs(
-            state, cl, edges, min_inherit, min_extent, min_new_fraction, min_support
+            state,
+            cl,
+            edges,
+            release,
+            min_inherit,
+            min_extent,
+            min_new_fraction,
+            min_support,
+            ref_releases,
         )
         if cl.height
         else {}
@@ -524,6 +580,20 @@ def plan(
         .then(pl.col("o_version"))
         .otherwise(pl.col("o_version") + 1)
     )
+    ## Keep the old reference while it is recent and larger than the current membership.
+    ## When the peak ages out, fall back to the previous release's membership, so the
+    ## reference decays instead of snapping to a gene that has just been cut down.
+    larger = lambda col: pl.col(col).list.len() > pl.col("members").list.len()
+    keep_ref = (
+        pl.col("o_ref_members").is_not_null()
+        & (release - pl.col("o_ref_release") <= ref_releases)
+        & larger("o_ref_members")
+    )
+    keep_last = (
+        pl.col("o_last_members").is_not_null()
+        & (release - pl.col("o_last_release") <= ref_releases)
+        & larger("o_last_members")
+    )
     new_genes = (
         rows.with_columns(status.alias("status"))
         .with_columns(version.cast(pl.Int64).alias("version"))
@@ -544,6 +614,18 @@ def plan(
             "strand",
             "members",
             pl.col("members").alias("last_members"),
+            pl.when(keep_ref)
+            .then(pl.col("o_ref_members"))
+            .when(keep_last)
+            .then(pl.col("o_last_members"))
+            .otherwise(pl.col("members"))
+            .alias("ref_members"),
+            pl.when(keep_ref)
+            .then(pl.col("o_ref_release"))
+            .when(keep_last)
+            .then(pl.col("o_last_release"))
+            .otherwise(pl.lit(release, dtype=pl.Int64))
+            .alias("ref_release"),
             "status",
         )
     )

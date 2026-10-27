@@ -471,3 +471,53 @@ def test_history_properties(seed):
         assert not (new_active & deactivated)
 
         state = L.as_state(p.genes)
+
+
+def shrink_and_regrow(ref_releases, gap=1):
+    """A has 100 members at release 1, a 3-member remnant for `gap` releases, then 100 again."""
+    full = list(range(1, 101))
+    state = L.as_state(run(L.empty_state(), [full], 1).genes)
+    name = state["internal_name"][0]
+    for r in range(2, 2 + gap):
+        state = L.as_state(run(state, [[1, 2, 3]], r, ref_releases=ref_releases).genes)
+    p = run(
+        state, [full], 2 + gap, ref_releases=ref_releases, max_deactivate_fraction=1.0
+    )
+    return name, p
+
+
+def test_reference_membership_lets_a_regrown_gene_take_its_cluster_back():
+    name, p = shrink_and_regrow(3)
+    assert set(active(p.genes)["internal_name"]) == {name}
+    assert p.stats["created"] == 0
+
+
+def test_without_reference_membership_the_remnant_loses_the_cluster():
+    name, p = shrink_and_regrow(0)
+    assert name not in set(active(p.genes)["internal_name"])
+    assert p.stats["created"] == 1
+
+
+def test_reference_membership_expires():
+    name, p = shrink_and_regrow(3, gap=4)
+    assert name not in set(active(p.genes)["internal_name"])
+
+
+def test_state_without_reference_columns_still_plans():
+    s1 = L.as_state(run(L.empty_state(), [[1, 2]], 1).genes).drop(
+        "ref_members", "ref_release"
+    )
+    p = run(s1, [[1, 2]], 2)
+    assert p.stats["continued"] == 1
+
+
+def test_reference_decays_to_the_previous_release_when_the_peak_ages_out():
+    full = list(range(1, 101))
+    state = L.as_state(run(L.empty_state(), [full], 1).genes)
+    name = state["internal_name"][0]
+    ## 80 members from release 2 on: the peak (100, release 1) expires at release 5
+    for r in range(2, 6):
+        state = L.as_state(run(state, [full[:80]], r).genes)
+    state = L.as_state(run(state, [full[:3]], 6).genes)
+    p = run(state, [full], 7, max_deactivate_fraction=1.0)
+    assert set(active(p.genes)["internal_name"]) == {name}
