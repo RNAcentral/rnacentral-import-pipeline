@@ -17,6 +17,7 @@ SELECT
   load.karyotype_rank
 FROM load_coordinate_info load
 JOIN ensembl_assembly ensembl ON ensembl.assembly_id = load.assembly_id
+WHERE ensembl.selected_genome = true
 )
 ON CONFLICT (chromosome, assembly_id) DO UPDATE
 SET

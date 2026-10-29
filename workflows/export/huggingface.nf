@@ -57,6 +57,8 @@ process upload_active_sequences {
 
   script:
   """
+  # container home is read-only; xet writes its cache and logs under HF_HOME
+  export HF_HOME=\$PWD/.hf
   rnac huggingface upload-data $release_num $parquet_file
   """
 }
@@ -69,6 +71,7 @@ process upload_readme {
 
   script:
   """
+  export HF_HOME=\$PWD/.hf
   rnac huggingface create-readme $release_num $update_specs
   rnac huggingface upload-data $release_num README.md
   """

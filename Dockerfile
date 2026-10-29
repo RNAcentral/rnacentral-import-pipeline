@@ -40,7 +40,7 @@ COPY --from=rust-utils /rna/wheels/*.whl /tmp/wheels/
 RUN uv pip install /tmp/wheels/*.whl
 
 # Download NLTK data
-RUN /app/.venv/bin/python3 -m nltk.downloader words
+RUN /app/.venv/bin/python3 -m nltk.downloader -d /app/.venv/nltk_data words punkt punkt_tab
 
 # Stage 5: Final runtime image
 FROM python:${PYTHON_VERSION}
@@ -51,11 +51,19 @@ ENV RNA=/rna
 WORKDIR $RNA
 
 # Install ONLY runtime dependencies (no gcc, no -dev packages)
+# postgresql-16 isn't in Debian trixie's own repos (trixie only ships 17), so
+# pull it from the PGDG apt repo, which carries every supported major version.
 RUN apt update && apt upgrade -y && \
+    apt install -y ca-certificates curl gnupg && \
+    install -d /usr/share/postgresql-common/pgdg && \
+    curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+    https://www.postgresql.org/media/keys/ACCC4CF8.asc && \
+    . /etc/os-release && \
+    echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
+    > /etc/apt/sources.list.d/pgdg.list && \
+    apt update && \
     apt install -y \
     bedtools \
-    ca-certificates \
-    curl \
     default-mysql-client \
     gawk \
     git \
@@ -74,13 +82,14 @@ RUN apt update && apt upgrade -y && \
     openssl \
     pandoc \
     pgloader \
-    postgresql-17 \
-    postgresql-client-17 \
+    postgresql-16 \
+    postgresql-client-16 \
     procps \
     python3 \
     python3-pip \
     rsync \
     sbcl \
+    tabix \
     tar \
     time \
     unzip \
@@ -98,10 +107,12 @@ COPY --from=samtools /usr/local/lib/libhts* /usr/local/lib/
 # Run ldconfig to register shared libraries
 RUN ldconfig
 
-# Install blat (pre-compiled)
-RUN wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.38.zip -O blat.zip && \
-    unzip blat.zip -d blat_suite && \
-    rm blat.zip
+# Install blat and faToTwoBit (pre-compiled), the only UCSC tools the pipeline uses. They are fetched one by one
+# from hgdownload: the blatSuite zip on hgwdev.gi.ucsc.edu now answers 403 to everyone.
+RUN mkdir blat_suite && \
+    wget -q https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/blat/blat -O blat_suite/blat && \
+    wget -q https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit -O blat_suite/faToTwoBit && \
+    chmod +x blat_suite/blat blat_suite/faToTwoBit
 
 # Install seqkit (pre-compiled)
 RUN mkdir seqkit && \
@@ -152,5 +163,6 @@ ENV PATH="$RNA/blat_suite:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE/bin:$PATH"
 ENV PATH="$RNA/venv/bin:$PATH"
+ENV NLTK_DATA="$RNA/venv/nltk_data"
 
 ENTRYPOINT ["/bin/bash"]

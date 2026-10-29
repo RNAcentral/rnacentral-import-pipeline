@@ -67,11 +67,12 @@ def get_inferred_genus_taxid(inferred_lineage: str) -> ty.Optional[int]:
 
 @lru_cache
 def get_inferred_family_taxid(inferred_lineage: str) -> ty.Optional[int]:
-    family = re.findall(r";f__(.*)[;g|$]", inferred_lineage)
+    family = re.findall(r"[;,]f__([^;,]*)", inferred_lineage)
     if not family or not family[0]:
         ## There is no family in the inferred phylogeny, so try next layer up
         return None
 
+    family = family[0]
     try:
         return phy.taxid(f"{family} bacterium")
     except:
@@ -92,10 +93,11 @@ def get_inferred_order_taxid(inferred_lineage: str) -> ty.Optional[int]:
     >>> get_inferred_order_taxid("Chromatophores,d__Eukaryota,p__Cercozoa,c__Imbricatea,o__Euglyphida")
     178369
     """
-    order = re.findall("[;,]o__(.*)[;,]f", inferred_lineage)
+    order = re.findall("[;,]o__([^;,]*)", inferred_lineage)
     if not order or not order[0]:
         ## There is no order in the inferred phylogeny, so try next layer up
         return None
+    order = order[0]
     try:
         return phy.taxid(f"{order}")
     except:

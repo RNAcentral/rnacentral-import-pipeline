@@ -13,7 +13,12 @@ DECLARE
       SELECT distinct
         d2.id
       FROM
-          load_rnacentral_all d1,
+          -- WormBase comes out of the ENA parse, so every ENA run releases it: a run
+          -- can delete WormBase records without loading any.
+          (SELECT database FROM load_rnacentral_all
+           UNION ALL
+           SELECT 'WORMBASE' WHERE EXISTS (
+             SELECT 1 FROM load_rnacentral_all WHERE database = 'ENA')) d1,
           rnc_database d2
       WHERE
         d1.DATABASE = d2.descr

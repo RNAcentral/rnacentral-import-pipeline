@@ -49,6 +49,7 @@ class TaxonomyEntry(object):
     name = attr.ib(validator=is_a(str))
     lineage = attr.ib(validator=is_a(str))
     aliases = attr.ib(validator=is_a(list), hash=False)
+    common_name = attr.ib(validator=is_a(str))
     replaced_by = attr.ib(validator=optional(is_a(int)))
     rank = attr.ib(validator=is_a(str), default="")
     reference_proteome = attr.ib(validator=is_a(bool), default=False)
@@ -57,17 +58,24 @@ class TaxonomyEntry(object):
     @classmethod
     def build(cls, entry, names, rank="", reference_proteome=False):
         aliases = set()
+        common = ""
         for name_entry in names:
             (tax_id, name, _, name_class) = name_entry
             assert tax_id == entry[0]
             if name_class in NAME_ALIASES:
                 aliases.add(name)
+            ## Take common name, preferring genbank if available
+            if name_class == "genbank common name":
+                common = name
+            elif name_class == "common name" and not common:
+                common = name
 
         return cls(
             tax_id=int(entry[0]),
             name=entry[1],
             lineage=entry[2] + entry[1],
             aliases=sorted(aliases),
+            common_name=common,
             replaced_by=None,
             rank=rank,
             reference_proteome=reference_proteome,
@@ -90,6 +98,7 @@ class TaxonomyEntry(object):
             tax_id=int(tax_id),
             name=name,
             lineage="{}{}".format(lineage, name),
+            common_name=data.get("commonName") or "",
             aliases=[],
             replaced_by=None,
             rank=data.get("rank") or "",
@@ -108,6 +117,7 @@ class TaxonomyEntry(object):
             tax_id=int(tax_id),
             name="deleted taxid {}".format(tax_id),
             lineage="",
+            common_name="",
             aliases=[],
             replaced_by=None,
             rank="",
@@ -120,6 +130,7 @@ class TaxonomyEntry(object):
             self.tax_id,
             self.name,
             self.lineage,
+            self.common_name,
             json.dumps(self.aliases),
             self.replaced_by,
             self.rank,
@@ -188,7 +199,7 @@ def parse(
         )
         yield entry
 
-        for (old_tax_id, replaced) in merged.get(raw[0], []):
+        for old_tax_id, replaced in merged.get(raw[0], []):
             assert int(replaced) == entry.tax_id
             yield attr.evolve(entry, tax_id=int(old_tax_id), replaced_by=entry.tax_id)
 

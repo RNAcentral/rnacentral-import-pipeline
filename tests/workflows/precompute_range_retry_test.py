@@ -27,6 +27,7 @@ PRECOMPUTE = (ROOT / "precompute.nf").read_text()
 CONFIGS = sorted(ROOT.glob("**/*.config"))
 
 RANGE_MEMORY = re.compile(r"^\s*range\.memory\s*=\s*(.+?)\s*$", re.MULTILINE)
+RANGE_TIME = re.compile(r"^\s*range\.time\s*=\s*(.+?)\s*$", re.MULTILINE)
 
 
 def process_range_directives() -> str:
@@ -71,17 +72,37 @@ def test_process_range_memory_grows_with_the_attempt():
     )
 
 
+def test_process_range_time_grows_with_the_attempt():
+    directives = process_range_directives()
+
+    time = [
+        line.strip()
+        for line in directives.splitlines()
+        if line.strip().startswith("time")
+    ]
+
+    assert time, (
+        "process_range has no time directive, so it gets the cluster's 1d "
+        "default and the largest ranges are killed at 24h on every attempt"
+    )
+    assert "task.attempt" in time[0], (
+        f"process_range time is fixed ({time[0]!r}): retrying a walltime kill "
+        "with the same limit only burns the retries"
+    )
+
+
 def test_range_memory_is_a_memory_literal_everywhere():
     string_valued = []
 
     for config in CONFIGS:
         if ".venv" in config.parts or "work" in config.parts:
             continue
-        for value in RANGE_MEMORY.findall(config.read_text()):
+        text = config.read_text()
+        for value in RANGE_MEMORY.findall(text) + RANGE_TIME.findall(text):
             if value.startswith(("'", '"')):
                 string_valued.append(f"{config.relative_to(ROOT)}: {value}")
 
     assert string_valued == [], (
-        "range.memory is multiplied by task.attempt, so a string value is "
+        "range.memory and range.time are multiplied by task.attempt, so a string value is "
         f"repeated rather than scaled: {string_valued}"
     )

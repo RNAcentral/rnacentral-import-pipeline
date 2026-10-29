@@ -18,7 +18,6 @@ import json
 import logging
 import operator as op
 import typing as ty
-from collections import Counter
 
 import attr
 from attr.validators import and_
@@ -63,9 +62,7 @@ class Entry:
     primary_id: str = attr.ib(validator=is_a(str))
     accession: str = attr.ib(validator=is_a(str))
     ncbi_tax_id: int = attr.ib(validator=is_a(int))
-    database: str = attr.ib(
-        validator=is_a(str),
-    )
+    database: str = attr.ib(validator=is_a(str), converter=str.upper)
     sequence: str = attr.ib(validator=is_a(str))
     regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
     rna_type: str = attr.ib(
@@ -85,9 +82,6 @@ class Entry:
     related_diseases: ty.List[str] = utils.possibly_empty(list)
 
     chromosome: str = utils.optionally(str)
-    species: str = utils.optionally(str)
-    common_name: str = utils.optionally(str)
-    lineage: str = utils.optionally(str)
     gene: str = utils.optionally(str)
     locus_tag: str = utils.optionally(str)
     optional_id: str = utils.optionally(str)

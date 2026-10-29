@@ -158,24 +158,11 @@ def external_id(record):
 
 
 def species(ncrna):
-    """
-    Get the specis information using the taxid.
-    """
     return phy.species(taxid(ncrna))
 
 
 def common_name(ncrna):
-    """
-    Get the common name using the taxid.
-    """
     return phy.common_name(taxid(ncrna))
-
-
-def lineage(ncrna):
-    """
-    Look up the lineage using the taxid.
-    """
-    return phy.lineage(taxid(ncrna))
 
 
 def add_organism_preifx(ncrna, suffix):
@@ -436,7 +423,11 @@ def inferred_phylogeny(record):
 
 
 def coordinate_system(metadata):
-    system = metadata.get("genomicCoordinateSystem", "1-start, fully-closed")
+    default = "1-start, fully-closed"
+    # LNCipedia's file declares no system but its exons are BED-style.
+    if metadata.get("dataProvider") == "LNCIPEDIA":
+        default = "0-start, half-open"
+    system = metadata.get("genomicCoordinateSystem", default)
     if not system:
         raise ValueError("Could not find coordinate system for: %s" % metadata)
     return data.CoordinateSystem.from_name(system)
@@ -467,9 +458,6 @@ def as_entry(record, context):
         note_data=note_data(record),
         xref_data=xrefs(record),
         related_sequences=related_sequences(record),
-        species=None,
-        lineage=None,
-        common_name=None,
         secondary_structure=secondary_structure(record),
         references=references(record),
         organelle=record.get("localization", None),

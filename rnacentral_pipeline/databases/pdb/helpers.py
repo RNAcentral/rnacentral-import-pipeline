@@ -222,9 +222,12 @@ def note_data(info: ChainInfo) -> ty.Dict[str, str]:
 
 def description(info: ChainInfo, max_length=80) -> str:
     compound = product(info)[:max_length] + (product(info)[max_length:] and "...")
+    source = info.organism_scientific_name
+    if source in (None, "", "None"):
+        return f"{compound} (PDB {info.pdb_id.upper()}, chain {info.chain_id})"
     return "{compound} from {source} (PDB {pdb}, chain {chain})".format(
         compound=compound,
-        source=info.organism_scientific_name,
+        source=source,
         pdb=info.pdb_id.upper(),
         chain=info.chain_id,
     )
@@ -238,10 +241,6 @@ def product(info: ChainInfo) -> str:
 
 def reference_mapping_id(info: ChainInfo) -> str:
     return info.pdb_id
-
-
-def lineage(info: ChainInfo) -> str:
-    return phy.lineage(taxid(info))
 
 
 def species(info: ChainInfo) -> str:

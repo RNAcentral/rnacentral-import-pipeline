@@ -1,6 +1,6 @@
 -- ENSEMBL METAZOA
 select
-    upi,
+    urs,
     taxid,
     external_id,
     gene, -- Also search for everything up to the first '.'

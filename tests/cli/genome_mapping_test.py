@@ -62,6 +62,7 @@ def test_blat_commands_handle_empty_inputs(command, extra):
     [
         os.path.join("data/genome-mapping/", f)
         for f in os.listdir("data/genome-mapping/")
+        if f.endswith(".psl")
     ],
 )
 def test_always_produces_output(filename):
@@ -91,20 +92,19 @@ def test_sorting_works_correctly():
     filename = os.path.abspath("data/genome-mapping/results.psl")
     parts = 1000
     with open(filename, "r") as raw:
-        lines = raw.readline()
-        lines = random.shuffle(lines)
+        lines = raw.readlines()
+        random.shuffle(lines)
 
     with runner.isolated_filesystem():
         for index, chunk in enumerate(chunked(lines, parts)):
             chunk_name = "results-%i" % index
-            psl = "%s.psl"
-            stored = "%s.pickle"
-            selected = "%s-selected.pickle"
+            psl = "%s.psl" % chunk_name
+            stored = "%s.pickle" % chunk_name
             with open(psl, "w") as out:
                 out.writelines(chunk)
 
-            cmd = ["blat", "serialize", chunk_name, stored]
-            runner.invoke(gm.cli, cmd)
+            cmd = ["blat", "serialize", "a", psl, stored]
+            result = runner.invoke(gm.cli, cmd)
             assert result.exit_code == 0
             assert os.path.exists(stored)
 

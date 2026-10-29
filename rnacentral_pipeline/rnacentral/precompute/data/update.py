@@ -103,6 +103,9 @@ class SequenceUpdate:
             if species:
                 name = species.pop()
             description = f"{name} {insdc_rna_type}"
+        short_description = (
+            sequence.previous_update.get("short_description") or description
+        )
 
         so_rna_type = RnaType.from_so_id(
             context.so_tree, INSDC_SO_MAPPING.get(insdc_rna_type, "SO:0000655")
@@ -112,7 +115,7 @@ class SequenceUpdate:
             insdc_rna_type=insdc_rna_type,
             so_rna_type=so_rna_type,
             description=description,
-            short_description=description,
+            short_description=short_description,
             qa_status=None,
         )
 
@@ -151,7 +154,7 @@ class SequenceUpdate:
 
         yield [
             self.sequence.rna_id,
-            self.sequence.upi,
+            self.sequence.urs,
             str(self.sequence.taxid),
             str(int(self.sequence.is_active)),
             self.description,
@@ -172,4 +175,4 @@ class SequenceUpdate:
                 raise ValueError(f"No QA status for active update {self}")
             return
 
-        yield self.qa_status.writeable(self.sequence.upi, self.sequence.taxid)
+        yield self.qa_status.writeable(self.sequence.urs, self.sequence.taxid)

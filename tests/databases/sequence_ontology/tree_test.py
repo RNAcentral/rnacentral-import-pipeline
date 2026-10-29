@@ -18,11 +18,12 @@ import tempfile
 import pytest
 
 from rnacentral_pipeline.databases.sequence_ontology import tree as so
+from tests.helpers import SO_ONTOLOGY_PATH
 
 
 @pytest.fixture(scope="module")
 def ontology():
-    return so.load_ontology(so.REMOTE_ONTOLOGY)
+    return so.load_ontology(SO_ONTOLOGY_PATH)
 
 
 @pytest.mark.parametrize(
@@ -168,7 +169,9 @@ def ontology():
         (
             "pre_miRNA",
             [
-                ("SO:0000673", "transcript"),
+                ("SO:0000655", "ncRNA"),
+                ("SO:0002247", "sncRNA"),
+                ("SO:0000370", "small_regulatory_ncRNA"),
                 ("SO:0001244", "pre_miRNA"),
             ],
         ),

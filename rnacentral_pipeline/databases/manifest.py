@@ -165,21 +165,23 @@ def resolve_source_ids(
     if not paths:
         return {}
     with conn.cursor() as cur:
-        execute_values(
+        # DO UPDATE (a no-op: path can only equal its own conflict target)
+        # rather than DO NOTHING so RETURNING also fires for paths the files
+        # table already had - one insert-or-fetch round trip instead of an
+        # insert then a separate select for the ids it didn't just assign.
+        rows = execute_values(
             cur,
             f"""
             INSERT INTO {FILES_TABLE} (database, path, signature)
             VALUES %s
-            ON CONFLICT (database, path) DO NOTHING
+            ON CONFLICT (database, path) DO UPDATE SET path = excluded.path
+            RETURNING path, id
             """,
             [(database, path, "") for path in paths],
             page_size=5000,
+            fetch=True,
         )
-        cur.execute(
-            f"SELECT path, id FROM {FILES_TABLE} WHERE database = %s AND path = ANY(%s)",
-            (database, paths),
-        )
-        return dict(cur.fetchall())
+        return dict(rows)
 
 
 def store_file_signatures(

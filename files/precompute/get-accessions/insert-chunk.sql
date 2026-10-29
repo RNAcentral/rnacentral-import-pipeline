@@ -66,18 +66,21 @@ SELECT
     acc.description,
     acc.gene,
     acc.optional_id,
-    acc.species,
-    acc.common_name,
+    tax.name,
+    tax.common_name,
     acc.feature_name,
     acc.ncrna_class,
     acc.locus_tag,
     acc.organelle,
-    acc.classification,
+    tax.lineage,
     acc.rna_type
 FROM temp_current_urs_with_accession todo
 JOIN rnc_accessions acc
 ON
     acc.accession = todo.accession
+LEFT JOIN rnc_taxonomy tax
+ON
+    tax.id = todo.taxid
 WHERE
     acc.database = :'db_name'
 );

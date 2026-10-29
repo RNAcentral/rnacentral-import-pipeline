@@ -72,6 +72,7 @@ process create_fasta {
 process atomic_publish {
   stageInMode 'copy'
   queue 'datamover'
+  container ''
 
   input:
   path(fasta)

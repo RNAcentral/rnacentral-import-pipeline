@@ -34,9 +34,6 @@ def _entry(**kwargs):
         rna_type="SO:0000655",
         url="https://example.org/ACC.1",
         seq_version="1",
-        species="Homo sapiens",
-        common_name="human",
-        lineage="Eukaryota; Metazoa; Homo sapiens",
         description='A ncRNA, with a comma and a " quote',
         gene="GENE1",
         product="a product",
@@ -92,9 +89,6 @@ ENTRY_CASES = {
     "with_go_annotations": lambda: _entry(go_annotations=[_go_annotation()]),
     "long_sequence": lambda: _entry(sequence="ACGT" * 1000),
     "no_optional_metadata": lambda: _entry(
-        species=None,
-        common_name=None,
-        lineage=None,
         gene=None,
         product=None,
         mol_type=None,
@@ -104,23 +98,7 @@ ENTRY_CASES = {
     ),
 }
 
-# Pre-existing bug, not introduced by this PR and present on dev too:
-# SecondaryStructure.md5 passes a str to helpers.hashes.md5, which calls
-# hashlib.md5() and needs bytes. Any entry carrying a secondary structure
-# raises TypeError, on the CSV path as much as the parquet one. xfail_strict
-# is on repo-wide, so this turns red the moment someone fixes it.
-BROKEN_UPSTREAM = {
-    "with_secondary_structure": pytest.mark.xfail(
-        reason="hashes.md5 needs bytes; SecondaryStructure.md5 passes str",
-        raises=TypeError,
-        strict=True,
-    )
-}
-
-ENTRY_PARAMS = [
-    pytest.param(name, marks=[BROKEN_UPSTREAM[name]] if name in BROKEN_UPSTREAM else [])
-    for name in sorted(ENTRY_CASES)
-]
+ENTRY_PARAMS = sorted(ENTRY_CASES)
 
 
 @pytest.mark.parametrize("case", ENTRY_PARAMS)

@@ -10,9 +10,9 @@ include { rediportal } from './ftp/rediportal.nf'
 include { active_sequences } from './active-sequences'
 include { huggingface } from './huggingface'
 
-process release_note {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+include { slack_closure } from '../utils/slack'
 
+process release_note {
   publishDir "${params.export.ftp.publish}/", mode: 'copy'
 
   input:
@@ -162,5 +162,17 @@ workflow ftp {
 }
 
 workflow {
+  main:
   ftp(channel.of('ready'), active_sequences())
+
+  // See analyze.nf: an onError section crashes on Nextflow 26.04.
+  onComplete:
+    try {
+      def msg = workflow.success
+        ? "FTP export workflow completed"
+        : "FTP export workflow failed"
+      slack_closure(msg)
+    } catch (Exception e) {
+      log.warn "Could not send Slack notification: ${e}"
+    }
 }

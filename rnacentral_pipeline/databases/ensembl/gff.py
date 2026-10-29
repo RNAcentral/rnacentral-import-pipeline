@@ -65,13 +65,14 @@ IGNORED_TRANSCRIPTS = {
 
 
 def get_assembly(path: Path) -> str:
+    path = Path(path)
     with path.open("r") as raw:
         for line in raw:
             if not line.startswith("#"):
                 break
             if line.startswith("#!genome-version"):
                 parts = line.split(" ", 1)
-                return parts[1]
+                return parts[1].strip()
 
     raise ValueError(f"Could not find assembly id in {path}")
 

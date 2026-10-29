@@ -50,7 +50,13 @@ def cli():
     default=None,
     type=click.File("r"),
 )
-def process_pdb(output, skip_references=False, override_chains=None):
+@click.option(
+    "--limit",
+    default=None,
+    type=int,
+    help="Only fetch up to this many RNA chains, instead of all of them",
+)
+def process_pdb(output, skip_references=False, override_chains=None, limit=None):
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
@@ -61,7 +67,7 @@ def process_pdb(output, skip_references=False, override_chains=None):
         LOGGER.info("Loading chain overrides")
         overrides = helpers.load_overrides(override_chains)
         LOGGER.info("Loaded %i chain overrides", len(pdb_ids))
-    chain_info = fetch.rna_chains(overrides)
+    chain_info = fetch.rna_chains(overrides, limit=limit)
     LOGGER.info("Loaded %i chains", len(chain_info))
     references = {}
     try:

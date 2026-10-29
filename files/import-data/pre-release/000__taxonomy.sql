@@ -2,6 +2,7 @@ INSERT INTO rnc_taxonomy (
   id,
   name,
   lineage,
+  common_name,
   aliases,
   replaced_by,
   rank,
@@ -12,6 +13,7 @@ SELECT
   taxid,
   name,
   lineage,
+  nullif(common_name, ''),
   ARRAY(select json_array_elements_text(aliases)),
   replaced_by,
   rank,
@@ -25,6 +27,7 @@ from load_taxonomy
 SET
   name = CASE WHEN EXCLUDED.is_deleted THEN rnc_taxonomy.name ELSE EXCLUDED.name END,
   lineage = CASE WHEN EXCLUDED.is_deleted THEN rnc_taxonomy.lineage ELSE EXCLUDED.lineage END,
+  common_name = CASE WHEN EXCLUDED.is_deleted THEN rnc_taxonomy.common_name ELSE EXCLUDED.common_name END,
   aliases = CASE WHEN EXCLUDED.is_deleted THEN rnc_taxonomy.aliases ELSE EXCLUDED.aliases END,
   rank = CASE WHEN EXCLUDED.is_deleted THEN rnc_taxonomy.rank ELSE EXCLUDED.rank END,
   reference_proteome = CASE WHEN EXCLUDED.is_deleted THEN rnc_taxonomy.reference_proteome ELSE EXCLUDED.reference_proteome END,

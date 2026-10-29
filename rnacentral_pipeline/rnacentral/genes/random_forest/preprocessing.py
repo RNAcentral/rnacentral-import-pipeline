@@ -13,15 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import logging
 import tempfile
 from functools import lru_cache
 from pathlib import Path
 
-## Use rust preprocessing code
-## Must be built using the Makefile in an activated environment
-import gene_preprocessing as gpp
 import numpy as np
 import polars as pl
 from tqdm import tqdm
@@ -193,6 +189,11 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
 
     May be removed in future, in favour of a faster preprocessor
     """
+    # Lazy: rnac's cli/__init__ imports every subcommand module eagerly, so an
+    # import-time dependency here breaks every `rnac` command, not just the
+    # ones that train gene models. Must be built via the Makefile first.
+    import gene_preprocessing as gpp
+
     comparisons = set()
     similarity_comparisons = set()
     similarity_cache = {}
@@ -405,7 +406,7 @@ def sink_preprocessing(transcripts, output_path, nearby_distance=1000, label=Non
             out.write_parquet(output_path)
             return 0
 
-        lazy = pl.scan_parquet([str(p) for p in paths])
+        lazy = pl.scan_parquet([str(p) for p in paths]).drop_nulls()
         if label is not None:
             lazy = lazy.with_columns(pl.lit(label).alias("label"))
         lazy.sink_parquet(output_path)
