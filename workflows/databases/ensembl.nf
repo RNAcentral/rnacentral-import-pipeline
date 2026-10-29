@@ -33,7 +33,8 @@ process find_urls {
 
 process fetch_species_data {
   tag { species }
-  errorStrategy { task.exitStatus == 8 && task.attempt <= 10 ? 'retry' : 'ignore' }
+  // wget: 4 is a network failure, 8 a server error; both are transient on this FTP.
+  errorStrategy { task.exitStatus in [4, 8] && task.attempt <= 10 ? 'retry' : 'ignore' }
   maxRetries 10
   maxForks 10
 
