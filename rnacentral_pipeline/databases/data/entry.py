@@ -247,7 +247,7 @@ class Entry:
             LOGGER.warn("%s has too many (%i/%i) N's", self.accession, counts, length)
             return False
 
-        if self.rna_type == "SO:0000234" and self.database != "ENSEMBL_MRNA":
+        if self.rna_type == "SO:0000234" and self.database != "ENSEMBL_CODING":
             LOGGER.warn("Skipping a mRNA")
             return False
 

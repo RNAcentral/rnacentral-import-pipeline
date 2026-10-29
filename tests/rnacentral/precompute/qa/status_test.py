@@ -143,7 +143,7 @@ def test_mrna_only_sequences_are_not_qa_checked():
         "RF00177", "SO:0000650", sequence_completeness=0.3, model_domain="Bacteria"
     )
     mrna = builders.sequence(
-        accessions=[builders.accession("ENSEMBL_MRNA", "SO:0000204")],
+        accessions=[builders.accession("ENSEMBL_CODING", "SO:0000204")],
         rfam_hits=[hit],
     )
     status = qa.status(builders.context(), mrna, "ncRNA")
@@ -153,7 +153,7 @@ def test_mrna_only_sequences_are_not_qa_checked():
 
     shared = builders.sequence(
         accessions=[
-            builders.accession("ENSEMBL_MRNA", "SO:0000204"),
+            builders.accession("ENSEMBL_CODING", "SO:0000204"),
             builders.accession("ENA", "SO:0000204"),
         ],
         rfam_hits=[hit],

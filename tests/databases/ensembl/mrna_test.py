@@ -42,7 +42,7 @@ def test_builds_one_entry_per_mrna_and_utr(entries):
     assert types.count("SO:0000234") == 17
     assert types.count("SO:0000204") == 4
     assert types.count("SO:0000205") == 4
-    assert all(e.database == "ENSEMBL_MRNA" for e in entries.values())
+    assert all(e.database == "ENSEMBL_CODING" for e in entries.values())
     assert all(e.is_valid() for e in entries.values())
 
 

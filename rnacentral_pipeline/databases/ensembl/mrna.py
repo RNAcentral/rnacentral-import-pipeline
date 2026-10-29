@@ -125,7 +125,7 @@ def as_entry(record, gene, feature, accession, rna_type, label, gca) -> data.Ent
         primary_id=helpers.primary_id(feature),
         accession=accession,
         ncbi_tax_id=embl.taxid(record),
-        database="ENSEMBL_MRNA",
+        database="ENSEMBL_CODING",
         sequence=embl.sequence(record, feature),
         regions=common.regions(record, feature),
         rna_type=rna_type,

@@ -36,7 +36,7 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
 
     # These checks judge ncRNAs; on Ensembl's mRNAs and UTRs they only raise
     # meaningless flags, so a sequence known only from there is not checked.
-    if all(acc.database == Database.ensembl_mrna for acc in sequence.accessions):
+    if all(acc.database == Database.ensembl_coding for acc in sequence.accessions):
         fields = attr.fields(QaStatus)
         return QaStatus(**{f.name: QaResult.null(f.name) for f in fields})
 

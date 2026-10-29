@@ -44,7 +44,7 @@ Plants, Metazoa, Fungi and Protists divisions.
    says `116`, and species.json has no release number. One option is the
    species.json `last_updated` date.
 
-## Ensembl mRNA (`ENSEMBL_MRNA`, branch `update/Ensembl-mrna`)
+## Ensembl coding (`ENSEMBL_CODING`, branch `update/Ensembl-mrna`)
 
 ### Before the test run
 
@@ -57,7 +57,7 @@ Plants, Metazoa, Fungi and Protists divisions.
     ```sql
     BEGIN;
     INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr)
-    VALUES (61, now(), 'RNACEN', 'ENSEMBL_MRNA', 'Y', 'Ensembl mRNA', 'Ensembl mRNA');
+    VALUES (61, now(), 'RNACEN', 'ENSEMBL_CODING', 'Y', 'Ensembl coding', 'Ensembl coding');
 
     CREATE TABLE rnacen.xref_p61 PARTITION OF rnacen.xref FOR VALUES IN (61) PARTITION BY LIST (deleted);
     CREATE TABLE rnacen.xref_p61_deleted PARTITION OF rnacen.xref_p61 FOR VALUES IN ('Y');
