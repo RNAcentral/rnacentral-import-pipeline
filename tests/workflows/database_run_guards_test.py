@@ -14,7 +14,11 @@ DATABASE_INCLUDE_RE = re.compile(
 PROCESS_RUN_GUARD_RE = re.compile(
     r"^\s*when:\s*(?:\{[^\n]*params\.databases[^\n]*\.run[^\n]*\}|"
     r"params\.databases[^\n]*\.run)\s*$"
-    r"|^\s*when:\s*\n\s*params\.databases[^\n]*\.run",
+    r"|^\s*when:\s*\n\s*params\.databases[^\n]*\.run"
+    # Some workflows guard the whole workflow body instead of a per-process
+    # `when:` (eg. pirbase.nf, quickgo.nf): `if (params.databases.X?.run) {
+    # ... } else { channel.empty() | set { data } }`.
+    r"|^\s*if\s*\(\s*params\.databases[^\n]*\.run[^\n]*\)",
     re.MULTILINE,
 )
 WORKFLOW_RUN_GUARD_RE = re.compile(

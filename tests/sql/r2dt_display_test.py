@@ -10,6 +10,7 @@ The query files are executed verbatim, so these guard the shipped artifacts:
   files/r2dt/should-show/update.ctl      - how classifier output reaches the DB
 """
 
+import csv
 import io
 import json
 import re
@@ -20,6 +21,7 @@ import pytest
 SEARCH_EXPORT = Path("files/search-export/parts/r2dt.sql")
 PRECOMPUTE = Path("files/precompute/queries/r2dt-hits.sql")
 UPDATE_CTL = Path("files/r2dt/should-show/update.ctl")
+LOAD_CTL = Path("files/r2dt/load.ctl")
 
 pytestmark = [pytest.mark.r2dt, pytest.mark.db]
 
@@ -27,28 +29,58 @@ pytestmark = [pytest.mark.r2dt, pytest.mark.db]
 CTL_SECTIONS = ("BEFORE LOAD DO", "WITH", "AFTER LOAD DO")
 
 
-def ctl_blocks(section):
+def ctl_blocks(section, path=UPDATE_CTL):
     """The $$-quoted SQL statements under a DO section of the pgloader CTL."""
-    text = UPDATE_CTL.read_text()
+    text = path.read_text()
     start = text.index(section) + len(section)
     later = [text.index(s) for s in CTL_SECTIONS if s != section]
     stop = min((p for p in later if p > start), default=len(text))
     blocks = re.findall(r"\$\$(.*?)\$\$", text[start:stop], flags=re.DOTALL)
-    assert blocks, f"No SQL found under {section} in {UPDATE_CTL}"
+    assert blocks, f"No SQL found under {section} in {path}"
     return [b.strip() for b in blocks]
 
 
 def copy_query(db, path):
-    """Run a `COPY (...) TO STDOUT` file and parse the JSON it emits."""
+    """
+    Run a query file and return its rows as a list of dict-like objects.
+
+    Two shapes exist among the files this test guards: older files are
+    already `COPY (SELECT json_build_object(...) ...) TO STDOUT` (one JSON
+    object per line); files rewritten for the typed-Parquet extraction
+    path (see files/precompute/queries/*.sql) are plain typed `SELECT`s
+    with a `:min`/`:max` range placeholder (see
+    rnacentral_pipeline.rnacentral.precompute.extract) and no COPY wrapper
+    at all - psycopg2's copy_expert requires a literal COPY statement, and
+    raw Postgres has no idea what `:min` means outside that substitution.
+    Detect which shape a file is and normalize to the same COPY-wrapped,
+    CSV-with-header form either way, so callers get uniform dict rows
+    (json.loads already gives dict-shaped rows for the old files; csv.DictReader
+    gives the same shape for the new ones).
+    """
+    text = path.read_text()
+    if text.strip().upper().startswith("COPY"):
+        out = io.StringIO()
+        with db.cursor() as cur:
+            cur.copy_expert(text, out)
+        return [
+            json.loads(line) for line in out.getvalue().splitlines() if line.strip()
+        ]
+
+    from rnacentral_pipeline.rnacentral.precompute.extract import _substitute_range
+
+    unranged = _substitute_range(text, None)
     out = io.StringIO()
     with db.cursor() as cur:
-        cur.copy_expert(path.read_text(), out)
-    return [json.loads(line) for line in out.getvalue().splitlines() if line.strip()]
+        cur.copy_expert(
+            f"COPY ({unranged}) TO STDOUT WITH (FORMAT csv, HEADER true)", out
+        )
+    out.seek(0)
+    return list(csv.DictReader(out))
 
 
 def load_case(db, urs, seq_len, model_length, assigned, inferred, model_id=1):
     with db.cursor() as cur:
-        cur.execute("INSERT INTO rna (upi, len) VALUES (%s, %s)", (urs, seq_len))
+        cur.execute("INSERT INTO rna (urs, len) VALUES (%s, %s)", (urs, seq_len))
         cur.execute(
             """INSERT INTO r2dt_models
                (id, model_name, model_source, model_length, model_basepair_count, so_term_id)
@@ -152,8 +184,10 @@ def test_should_show_update_writes_back_to_r2dt_results(db):
     with db.cursor() as cur:
         for statement in ctl_blocks("BEFORE LOAD DO"):
             cur.execute(statement)
-        cur.execute("""INSERT INTO load_secondary_should_show (urs, should_show)
-               VALUES ('URS0000000001', false), ('URS0000000002', true)""")
+        cur.execute(
+            """INSERT INTO load_secondary_should_show (urs, should_show)
+               VALUES ('URS0000000001', false), ('URS0000000002', true)"""
+        )
 
         update = ctl_blocks("AFTER LOAD DO")[0]
         cur.execute(update)
@@ -181,3 +215,39 @@ def test_should_show_update_leaves_manual_assignments_alone(db):
 
     # the manual assignment still wins in the display queries
     assert len(copy_query(db, SEARCH_EXPORT)) == 1
+
+
+def test_load_stores_force_fits_hidden(db):
+    # The website reads should_show directly and has no length check of its own.
+    load_case(db, "URS0000000001", 100, 100, None, True, model_id=1)
+    load_case(db, "URS0000000002", 2000, 200, None, True, model_id=2)
+
+    with db.cursor() as cur:
+        for statement in ctl_blocks("BEFORE LOAD DO", LOAD_CTL):
+            cur.execute(statement)
+        cur.execute(
+            """INSERT INTO load_secondary (urs, model_id, inferred_should_show)
+               VALUES ('URS0000000001', 1, true), ('URS0000000002', 2, true)"""
+        )
+        cur.execute(ctl_blocks("AFTER LOAD DO", LOAD_CTL)[0])
+
+        cur.execute("SELECT urs, inferred_should_show FROM load_secondary ORDER BY urs")
+        assert cur.fetchall() == [
+            ("URS0000000001", True),
+            ("URS0000000002", False),
+        ]
+
+
+def test_should_show_update_keeps_force_fits_hidden(db):
+    load_case(db, "URS0000000001", 2000, 200, None, False, model_id=1)
+
+    with db.cursor() as cur:
+        for statement in ctl_blocks("BEFORE LOAD DO"):
+            cur.execute(statement)
+        cur.execute(
+            "INSERT INTO load_secondary_should_show (urs, should_show) VALUES ('URS0000000001', true)"
+        )
+        cur.execute(ctl_blocks("AFTER LOAD DO")[0])
+
+        cur.execute("SELECT inferred_should_show FROM r2dt_results")
+        assert cur.fetchone() == (False,)

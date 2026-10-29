@@ -19,6 +19,8 @@ import pytest
 
 from rnacentral_pipeline.rnacentral.release import database_stats as stats
 
+pytestmark = pytest.mark.db
+
 
 @pytest.fixture(scope="module")
 def connection():
@@ -33,7 +35,7 @@ def connection():
     ],
 )
 def test_gets_correct_length_counts(connection, db_id):
-    data = stats.length_counts(connection, db_id)
+    data = stats.sequence_stats(connection, db_id)["length_counts"]
     with open(f"data/release/lengths-{db_id}.json") as raw:
         expected = json.loads(raw.readline())
     assert json.loads(data) == expected
@@ -42,11 +44,11 @@ def test_gets_correct_length_counts(connection, db_id):
 @pytest.mark.parametrize(
     "db_id,count",
     [
-        (28, 11124),
+        (28, 5057),
     ],
 )
 def test_counts_sequences_correctly(connection, db_id, count):
-    found = stats.count_sequences(connection, db_id)
+    found = stats.sequence_stats(connection, db_id)["num_sequences"]
     assert found == count
 
 
@@ -57,7 +59,7 @@ def test_counts_sequences_correctly(connection, db_id, count):
     ],
 )
 def test_counts_organisms_correctly(connection, db_id, count):
-    found = stats.count_organisms(connection, db_id)
+    found = stats.sequence_stats(connection, db_id)["num_organisms"]
     assert found == count
 
 

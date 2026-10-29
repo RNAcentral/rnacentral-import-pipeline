@@ -16,15 +16,8 @@ limitations under the License.
 from rnacentral_pipeline.databases.data import RnaType
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
-from rnacentral_pipeline.rnacentral.precompute.rna_type import insdc, so_term
+from rnacentral_pipeline.rnacentral.precompute.rna_type import so_term
 
 
 def rna_type_of(context: Context, data: Sequence) -> RnaType:
-    rna_type = so_term.rna_type_of(context, data)
-    if rna_type:
-        return rna_type
-
-    insdc_rna_type = insdc.rna_type_of(data) or "ncRNA"
-    if isinstance(insdc_rna_type, RnaType):
-        return insdc_rna_type
-    return context.so_term_for(insdc_rna_type)
+    return so_term.rna_type_of(context, data)

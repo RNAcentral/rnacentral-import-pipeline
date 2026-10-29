@@ -145,8 +145,6 @@ def as_entry(
             rna_type=rna_type(row),
             url=url(row),
             seq_version=version(row),
-            species=species(taxonomy, row, cache),
-            lineage=lineage(taxonomy, row, cache),
             references=[
                 pubs.reference("doi:10.1093/nar/gks1219"),
             ],

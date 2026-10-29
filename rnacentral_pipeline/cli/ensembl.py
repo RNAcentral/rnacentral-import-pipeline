@@ -31,7 +31,6 @@ from rnacentral_pipeline.databases.ensembl import (
 from rnacentral_pipeline.databases.ensembl.metadata import (
     assemblies,
     compara,
-    coordinate_systems,
     proteins,
 )
 from rnacentral_pipeline.output_format import format_option
@@ -150,19 +149,6 @@ def ensembl_write_assemblies(example_file, ucsc_file, output, location, db_url=N
     Write the ensembl_assembly rows for the genesets selected from species.json.
     """
     assemblies.write(location, example_file, ucsc_file, Path(output), db_url)
-
-
-@cli.command("coordinate-systems")
-@click.argument("connections", default="databases.json", type=click.File("r"))
-@click.argument("query", default="query.sql", type=click.File("r"))
-@click.argument("output", default="coordinate_systems.csv", type=click.Path())
-@format_option
-def ensembl_coordinates(connections, query, output):
-    """
-    Turn the tsv from the ensembl query into a csv that can be imported into
-    the database.
-    """
-    coordinate_systems.write(connections, query, Path(output))
 
 
 @cli.command("proteins")

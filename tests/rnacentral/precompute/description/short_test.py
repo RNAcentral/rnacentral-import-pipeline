@@ -18,6 +18,8 @@ import pytest
 from rnacentral_pipeline.rnacentral.precompute.description import short
 from tests.rnacentral.precompute.helpers import load_data
 
+pytestmark = pytest.mark.db
+
 
 @pytest.mark.parametrize(
     "rna_id,description,expected",

@@ -18,7 +18,6 @@ import logging
 import typing as ty
 
 import attr
-import networkx as nx
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases.data import Database, RnaType
@@ -58,6 +57,14 @@ ACCEPTED_DATABASES = {
     Database.pdbe,
     Database.gencode,
 }
+
+# These collect reads from every kind of RNA, so a sequence they share with a
+# differently typed RNA from another database takes that database's type.
+# Least trusted first: circRNA databases also yield to piRBase.
+DEFERRING_TIERS = [
+    {Database.circatlas, Database.circpedia},
+    {Database.pirbase},
+]
 
 MODEL_GROUPS = {
     "SO:0000209": {
@@ -171,7 +178,7 @@ class RnaTypeAnnotation:
     def is_parent_of(self, other: "RnaTypeAnnotation") -> bool:
         if len(self.path) >= len(other.path):
             return False
-        for (left, right) in zip(self.path, other.path):
+        for left, right in zip(self.path, other.path):
             if left != right:
                 return False
         return True
@@ -295,6 +302,22 @@ def all_annotations(
         if accession.database in EXCLUDED_DATABASES:
             continue
         annotations.append(RnaTypeAnnotation.from_accession(context, accession))
+
+    for tier in DEFERRING_TIERS:
+
+        def defers(annotation):
+            return annotation.source_matches(
+                lambda s: s.is_database() and s.data.database in tier
+            )
+
+        deferring = [a for a in annotations if defers(a)]
+        others = [a for a in annotations if not defers(a)]
+        if any(
+            o.is_specific() and not any(o.is_mergeable(d) for d in deferring)
+            for o in others
+        ):
+            annotations = others
+
     for r2dt in sequence.r2dt_hits:
         if r2dt.paired_ratio() is None or r2dt.paired_ratio() > 0.80:
             annotations.append(RnaTypeAnnotation.from_r2dt(context, r2dt))
@@ -309,9 +332,7 @@ def all_annotations(
     return annotations
 
 
-def rna_type_of(
-    context: context.Context, sequence: seq.Sequence
-) -> ty.Optional[RnaType]:
+def rna_type_of(context: context.Context, sequence: seq.Sequence) -> RnaType:
 
     annotations = all_annotations(context, sequence)
     if len(annotations) == 0:

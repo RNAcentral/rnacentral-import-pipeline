@@ -7,8 +7,10 @@ import pytest
 from rnacentral_pipeline.databases import manifest
 
 # A database key no real import uses, so the db-backed tests can seed and scrub it
-# without touching live pipeline_tracking_import rows.
-TEST_DB = "__manifest_dup_test__"
+# without touching live pipeline_tracking_import rows. Unique per test (see the
+# test_db fixture below), not a single shared constant: dump_signatures' COPY is
+# cached by query text alone, so every test sharing one fixed name would collide
+# on the same cassette key and replay whichever test happened to record first.
 
 
 def test_signature_is_stable_regardless_of_key_order():
@@ -83,7 +85,12 @@ def test_write_artifacts_records_the_source_of_each_record(tmp_path):
 
 
 @pytest.fixture
-def conn():
+def test_db(request):
+    return f"__manifest_test_{request.node.name}__"
+
+
+@pytest.fixture
+def conn(test_db):
     connection = psycopg2.connect(os.environ["PGDATABASE"])
     try:
         yield connection
@@ -93,10 +100,10 @@ def conn():
         # accumulate one per run.
         with connection.cursor() as cur:
             cur.execute(
-                f"DROP TABLE IF EXISTS rnacen.{manifest.partition_name(TEST_DB)}"
+                f"DROP TABLE IF EXISTS rnacen.{manifest.partition_name(test_db)}"
             )
             cur.execute(
-                f"DELETE FROM {manifest.FILES_TABLE} WHERE database = %s", (TEST_DB,)
+                f"DELETE FROM {manifest.FILES_TABLE} WHERE database = %s", (test_db,)
             )
         connection.commit()
         connection.close()
@@ -221,12 +228,12 @@ def test_diff_manifests_deletes_records_of_a_vanished_source(tmp_path):
 
 
 @pytest.mark.db
-def test_dump_signatures_round_trips_through_the_polars_diff(conn, tmp_path):
+def test_dump_signatures_round_trips_through_the_polars_diff(conn, test_db, tmp_path):
     """The COPY out is the only database work the diff does; it must feed the join."""
-    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2"})
+    manifest.store_signatures(conn, test_db, {"acc1": "sig1", "acc2": "sig2"})
 
     stored = tmp_path / "stored.csv"
-    manifest.dump_signatures(conn, TEST_DB, stored)
+    manifest.dump_signatures(conn, test_db, stored)
 
     assert sorted(csv.reader(stored.open())) == [
         ["acc1", "sig1", ""],
@@ -261,9 +268,9 @@ def test_partition_name_is_a_safe_identifier():
 
 
 @pytest.mark.db
-def test_store_signatures_creates_the_databases_partition(conn):
+def test_store_signatures_creates_the_databases_partition(conn, test_db):
     """Writes need a partition; the parent holds no rows itself."""
-    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1"})
+    manifest.store_signatures(conn, test_db, {"acc1": "sig1"})
 
     with conn.cursor() as cur:
         cur.execute(
@@ -274,11 +281,11 @@ def test_store_signatures_creates_the_databases_partition(conn):
             JOIN pg_class p ON p.oid = i.inhparent
             WHERE p.relname = 'pipeline_tracking_import' AND c.relname = %s
             """,
-            (manifest.partition_name(TEST_DB),),
+            (manifest.partition_name(test_db),),
         )
         assert cur.fetchone()[0] == 1
 
-    assert manifest.load_signatures(conn, TEST_DB) == {"acc1": "sig1"}
+    assert manifest.load_signatures(conn, test_db) == {"acc1": "sig1"}
 
 
 @pytest.mark.db
@@ -288,35 +295,35 @@ def test_load_signatures_for_unparsed_database_is_empty(conn):
 
 
 @pytest.mark.db
-def test_restoring_identical_signatures_does_not_rewrite_rows(conn):
+def test_restoring_identical_signatures_does_not_rewrite_rows(conn, test_db):
     """The upsert's IS DISTINCT FROM guard; a moving xmin means a needless rewrite."""
-    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2"})
+    manifest.store_signatures(conn, test_db, {"acc1": "sig1", "acc2": "sig2"})
     with conn.cursor() as cur:
         cur.execute(
             f"SELECT accession, xmin::text FROM {manifest.MANIFEST_TABLE} "
             "WHERE database = %s ORDER BY accession",
-            (TEST_DB,),
+            (test_db,),
         )
         before = cur.fetchall()
     conn.commit()
 
-    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2"})
+    manifest.store_signatures(conn, test_db, {"acc1": "sig1", "acc2": "sig2"})
     with conn.cursor() as cur:
         cur.execute(
             f"SELECT accession, xmin::text FROM {manifest.MANIFEST_TABLE} "
             "WHERE database = %s ORDER BY accession",
-            (TEST_DB,),
+            (test_db,),
         )
         assert cur.fetchall() == before
 
 
 @pytest.mark.db
-def test_changed_signature_still_updates_despite_the_guard(conn):
+def test_changed_signature_still_updates_despite_the_guard(conn, test_db):
     """The guard must not suppress a genuine change."""
-    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "sig2"})
-    manifest.store_signatures(conn, TEST_DB, {"acc1": "sig1", "acc2": "CHANGED"})
+    manifest.store_signatures(conn, test_db, {"acc1": "sig1", "acc2": "sig2"})
+    manifest.store_signatures(conn, test_db, {"acc1": "sig1", "acc2": "CHANGED"})
 
-    assert manifest.load_signatures(conn, TEST_DB) == {
+    assert manifest.load_signatures(conn, test_db) == {
         "acc1": "sig1",
         "acc2": "CHANGED",
     }
@@ -341,17 +348,17 @@ def test_diff_manifests_retires_a_vanished_source_with_no_new_signatures(tmp_pat
 
 
 @pytest.mark.db
-def test_store_signatures_records_the_source_of_each_record(conn, tmp_path):
+def test_store_signatures_records_the_source_of_each_record(conn, test_db, tmp_path):
     """The source has to survive into the dump, since that is what scopes deletion."""
     manifest.store_signatures(
         conn,
-        TEST_DB,
+        test_db,
         {"acc1": "sig1", "acc2": "sig2"},
         sources={"acc1": "/src/aaa", "acc2": "/src/aab"},
     )
 
     stored = tmp_path / "stored.csv"
-    manifest.dump_signatures(conn, TEST_DB, stored)
+    manifest.dump_signatures(conn, test_db, stored)
 
     assert sorted(csv.reader(stored.open())) == [
         ["acc1", "sig1", "/src/aaa"],
@@ -360,7 +367,7 @@ def test_store_signatures_records_the_source_of_each_record(conn, tmp_path):
 
 
 @pytest.mark.db
-def test_forgetting_a_source_forgets_its_records_too(conn):
+def test_forgetting_a_source_forgets_its_records_too(conn, test_db):
     """
     A source that has gone takes its manifest rows with it. Left behind, they would
     still match on signature if the source ever returned, so its records would be
@@ -368,28 +375,28 @@ def test_forgetting_a_source_forgets_its_records_too(conn):
     """
     manifest.store_signatures(
         conn,
-        TEST_DB,
+        test_db,
         {"acc1": "sig1", "acc2": "sig2"},
         sources={"acc1": "/src/kept", "acc2": "/src/gone"},
     )
     manifest.store_file_signatures(
-        conn, TEST_DB, {"/src/kept": "s1", "/src/gone": "s2"}
+        conn, test_db, {"/src/kept": "s1", "/src/gone": "s2"}
     )
 
     manifest.store_file_signatures(
-        conn, TEST_DB, {"/src/kept": "s1"}, dropped=["/src/gone"]
+        conn, test_db, {"/src/kept": "s1"}, dropped=["/src/gone"]
     )
 
-    assert manifest.load_signatures(conn, TEST_DB) == {"acc1": "sig1"}
-    assert manifest.load_file_signatures(conn, TEST_DB) == {"/src/kept": "s1"}
+    assert manifest.load_signatures(conn, test_db) == {"acc1": "sig1"}
+    assert manifest.load_file_signatures(conn, test_db) == {"/src/kept": "s1"}
 
 
 @pytest.mark.db
-def test_apply_artifacts_upserts_deletes_and_resolves_sources(conn, tmp_path):
-    manifest.store_signatures(conn, TEST_DB, {"old": "s0", "gone": "s9"})
+def test_apply_artifacts_upserts_deletes_and_resolves_sources(conn, test_db, tmp_path):
+    manifest.store_signatures(conn, test_db, {"old": "s0", "gone": "s9"})
     manifest.write_artifacts(
         tmp_path,
-        TEST_DB,
+        test_db,
         {"old": "s1", "new": "s2"},
         ["gone"],
         {"old": "/src/aaa", "new": "/src/aab"},
@@ -400,7 +407,7 @@ def test_apply_artifacts_upserts_deletes_and_resolves_sources(conn, tmp_path):
     )
 
     stored = tmp_path / "stored.csv"
-    manifest.dump_signatures(conn, TEST_DB, stored)
+    manifest.dump_signatures(conn, test_db, stored)
     assert sorted(csv.reader(stored.open())) == [
         ["new", "s2", "/src/aab"],
         ["old", "s1", "/src/aaa"],
@@ -408,7 +415,7 @@ def test_apply_artifacts_upserts_deletes_and_resolves_sources(conn, tmp_path):
 
 
 @pytest.mark.db
-def test_apply_artifacts_tolerates_a_record_listed_twice(conn, tmp_path):
+def test_apply_artifacts_tolerates_a_record_listed_twice(conn, test_db, tmp_path):
     """
     ENA's dump repeats some records, so the manifest can list an accession more
     than once with the same signature. The dict-based apply hid that; the
@@ -417,9 +424,9 @@ def test_apply_artifacts_tolerates_a_record_listed_twice(conn, tmp_path):
     path = _write(
         tmp_path,
         "manifest.csv",
-        [[TEST_DB, "acc1", "s1", ""], [TEST_DB, "acc1", "s1", ""]],
+        [[test_db, "acc1", "s1", ""], [test_db, "acc1", "s1", ""]],
     )
 
     manifest.apply_artifacts(conn, path)
 
-    assert manifest.load_signatures(conn, TEST_DB) == {"acc1": "s1"}
+    assert manifest.load_signatures(conn, test_db) == {"acc1": "s1"}

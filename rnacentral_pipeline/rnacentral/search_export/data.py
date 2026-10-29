@@ -56,7 +56,11 @@ POPULAR_SPECIES = set(
 
 INSDC_PATTERN = re.compile(r"(Submitted \(\d{2}\-\w{3}\-\d{4}\) to the INSDC\. ?)")
 
-ONTOLOGIES = {"GO", "SO", "ECO"}
+
+# A tuple, not a set: note_references() below iterates this to build the
+# output list, and set iteration order depends on Python's per-process hash
+# randomization, which made the reference ordering non-deterministic.
+ONTOLOGIES = ("GO", "SO", "ECO")
 
 
 def create_tag(root, name, value, attrib={}):
@@ -701,6 +705,30 @@ def entry_type(_urs):
     return "Sequence"
 
 
+# Same split as the per-kingdom folders in workflows/export/ftp/sequences.nf.
+KINGDOMS = [
+    ("bacteria", "Bacteria"),
+    ("archaea", "Archaea"),
+    ("viruses", "Viruses"),
+    ("plants", "Viridiplantae"),
+    ("fungi", "Fungi"),
+    ("vertebrates", "Vertebrata"),
+    ("metazoa", "Metazoa"),
+    ("environmental", "unclassified entries"),
+]
+
+
+def kingdom(tax_string):
+    for name, marker in KINGDOMS:
+        if marker in tax_string:
+            return name
+    return "protists"
+
+
+def kingdoms(tax_strings):
+    return sorted({kingdom(t) for t in tax_strings})
+
+
 def has_publications(counts):
     return str(bool(counts))
 
@@ -811,6 +839,7 @@ builder = entry(
                 fields("qc_warning", rfam_problems, keys="qa_status"),
                 field("qc_warning_found", problem_found, keys="qa_status"),
                 fields("tax_string", values, keys="tax_strings"),
+                fields("kingdom", kingdoms, keys="tax_strings"),
                 fields("involved_in", involved_in, keys="go_annotations"),
                 fields("part_of", part_of, keys="go_annotations"),
                 fields("enables", enables, keys="go_annotations"),

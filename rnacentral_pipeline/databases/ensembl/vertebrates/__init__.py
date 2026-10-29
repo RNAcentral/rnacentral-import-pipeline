@@ -16,9 +16,8 @@ limitations under the License.
 import typing as ty
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.ensembl.vertebrates import parser
-
 from rnacentral_pipeline.databases.ensembl.data import Pseudogene
+from rnacentral_pipeline.databases.ensembl.vertebrates import parser
 
 
 def parse(

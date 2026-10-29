@@ -174,6 +174,12 @@ AND r.dbid IN (
     SELECT DISTINCT d.id
     FROM rnacen.load_rnacentral_all l
     JOIN rnacen.rnc_database d ON l.database = d.descr
+    UNION ALL
+    -- WormBase comes out of the ENA parse, so prepare_releases gives it a release on
+    -- every ENA run, WormBase rows or not.
+    SELECT d.id FROM rnacen.rnc_database d
+    WHERE d.descr = 'WORMBASE'
+      AND EXISTS (SELECT 1 FROM rnacen.load_rnacentral_all WHERE database = 'ENA')
 )
 ORDER BY r.id
 """

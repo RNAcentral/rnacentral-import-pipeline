@@ -286,3 +286,32 @@ def test_mrna_rows_carry_the_homology_file_when_there_is_one():
     assert got["Homo_sapiens"].writeable(kind="mrna")[-1] == "B/p/homology.tsv.gz"
     assert got["Pan_paniscus"].writeable(kind="mrna")[-1] == ""
     assert len(got["Homo_sapiens"].writeable()) == 4
+
+
+# Genome mapping downloads this file, so it must come from the selected assembly.
+def test_carries_the_selected_assemblys_unmasked_genome():
+    chosen = assembly("chromosome", {"ensembl": build("2026_04", "new")})
+    chosen["assembly"] = {
+        "files": {"genome_sequences": {"unmasked.fa.bgz": "g/unmasked.fa.bgz"}}
+    }
+    other = assembly("scaffold", {"ensembl": build("2026_04", "old")})
+    other["assembly"] = {
+        "files": {"genome_sequences": {"unmasked.fa.bgz": "o/unmasked.fa.bgz"}}
+    }
+    got = select({"Danio_rerio": species(**{"GCA_1.1": chosen, "GCA_2.1": other})})
+    assert got["Danio_rerio"].genome_url == "B/g/unmasked.fa.bgz"
+
+
+def test_genome_is_absent_when_species_json_lists_none():
+    got = select(
+        {
+            "Danio_rerio": species(
+                **{
+                    "GCA_1.1": assembly(
+                        "chromosome", {"ensembl": build("2026_04", "x")}
+                    )
+                }
+            )
+        }
+    )
+    assert got["Danio_rerio"].genome_url is None

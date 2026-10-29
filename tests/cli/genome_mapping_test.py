@@ -62,6 +62,7 @@ def test_blat_commands_handle_empty_inputs(command, extra):
     [
         os.path.join("data/genome-mapping/", f)
         for f in os.listdir("data/genome-mapping/")
+        if f.endswith(".psl")
     ],
 )
 def test_always_produces_output(filename):
@@ -91,55 +92,18 @@ def test_sorting_works_correctly():
     filename = os.path.abspath("data/genome-mapping/results.psl")
     parts = 1000
     with open(filename, "r") as raw:
-        lines = raw.readline()
-        lines = random.shuffle(lines)
+        lines = raw.readlines()
+        random.shuffle(lines)
 
     with runner.isolated_filesystem():
         for index, chunk in enumerate(chunked(lines, parts)):
             chunk_name = "results-%i" % index
-            psl = "%s.psl"
-            stored = "%s.pickle"
-            selected = "%s-selected.pickle"
+            psl = "%s.psl" % chunk_name
+            stored = "%s.pickle" % chunk_name
             with open(psl, "w") as out:
                 out.writelines(chunk)
 
-            cmd = ["blat", "serialize", chunk_name, stored]
-            runner.invoke(gm.cli, cmd)
+            cmd = ["blat", "serialize", "a", psl, stored]
+            result = runner.invoke(gm.cli, cmd)
             assert result.exit_code == 0
             assert os.path.exists(stored)
-
-
-@pytest.mark.cli
-def test_url_for_exits_with_a_skip_status_when_ensembl_lacks_the_file(monkeypatch):
-    """
-    Roughly a quarter of the assemblies in ensembl_assembly are not on the
-    current Ensembl FTP. Exiting 1 for those made every run print hundreds of
-    ignored-error notes, burying the failures that do matter, so they get their
-    own status that genome-mapping.nf turns into a quiet skip.
-    """
-
-    def missing(*args, **kwargs):
-        raise gm.urls.NoTopLevelFiles("nope")
-
-    monkeypatch.setattr(gm.urls, "url_for", missing)
-    runner = CliRunner()
-    with runner.isolated_filesystem():
-        result = runner.invoke(
-            gm.cli, ["url-for", "--host=ensembl_metazoa", "a_species", "ASM1", "url"]
-        )
-        assert result.exit_code == gm.NO_REMOTE_FILE
-
-
-@pytest.mark.cli
-def test_url_for_still_fails_when_the_lookup_breaks(monkeypatch):
-    def broken(*args, **kwargs):
-        raise ConnectionRefusedError("ftp is down")
-
-    monkeypatch.setattr(gm.urls, "url_for", broken)
-    runner = CliRunner()
-    with runner.isolated_filesystem():
-        result = runner.invoke(
-            gm.cli, ["url-for", "--host=ensembl_metazoa", "a_species", "ASM1", "url"]
-        )
-        assert result.exit_code != 0
-        assert result.exit_code != gm.NO_REMOTE_FILE

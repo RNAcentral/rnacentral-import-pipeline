@@ -95,7 +95,7 @@ def parse_location_field(location_str: str) -> ty.Optional[ty.Dict[str, ty.Any]]
     Expected format: "V:15874634-15876408(-)" or "chr1:100-200(+)"
     Components:
         - Chromosome: V, chr1, I, II, X, etc.
-        - Start:End coordinates (1-based, fully-closed)
+        - Start:End coordinates (0-based, half-open)
         - Strand: (+) or (-)
 
     Args:
@@ -157,7 +157,7 @@ def accession(circ_id: str, location: ty.Dict[str, ty.Any]) -> str:
         location: Location dict with chromosome, start, end
 
     Returns:
-        Accession string prefixed with database name (e.g., "CIRCPEDIA:hsa_circ_0001_1:100-200")
+        Accession string prefixed with database name (e.g., "CIRCPEDIA:hsa_circ_0001|1:100-200")
     """
     # Prefix with database name to avoid ID conflicts across databases
     # Include location to ensure uniqueness when a circRNA appears at multiple locations
@@ -190,9 +190,8 @@ def regions(
     """
     Build sequence regions from location data.
 
-    CIRCpedia uses standard genomic coordinates (chr:start-end format)
-    which follow the 1-based, fully-closed coordinate system (same as
-    GFF/GTF format). Both start and end positions are inclusive.
+    CIRCpedia locations (chr:start-end format) are 0-based, half-open (same
+    as BED): for unspliced circRNAs end - start equals the sequence length.
 
     Args:
         location: Location dict with chromosome, start, end, strand
@@ -211,7 +210,7 @@ def regions(
             strand=location["strand"],
             exons=exons,
             assembly_id=assembly_id or "unknown",
-            coordinate_system=CoordinateSystem.one_based(),
+            coordinate_system=CoordinateSystem.zero_based(),
         )
     ]
 
@@ -237,9 +236,9 @@ def note_data_from_tsv(
     notes = {}
 
     # Add genomic location
-    notes[
-        "genomic_location"
-    ] = f"{location['chromosome']}:{location['start']}-{location['end']}"
+    notes["genomic_location"] = (
+        f"{location['chromosome']}:{location['start']}-{location['end']}"
+    )
 
     # Add circular RNA name if available
     if row.get("circname"):

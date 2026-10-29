@@ -33,6 +33,25 @@ use serde::{
 use super::gene_member::GeneMember;
 use log;
 
+// Same split as the sequence export and the FTP export's per-kingdom folders.
+const KINGDOMS: [(&str, &str); 8] = [
+    ("bacteria", "Bacteria"),
+    ("archaea", "Archaea"),
+    ("viruses", "Viruses"),
+    ("plants", "Viridiplantae"),
+    ("fungi", "Fungi"),
+    ("vertebrates", "Vertebrata"),
+    ("metazoa", "Metazoa"),
+    ("environmental", "unclassified entries"),
+];
+
+fn kingdom(tax_string: &str) -> &'static str {
+    KINGDOMS
+        .iter()
+        .find(|(_, marker)| tax_string.contains(marker))
+        .map_or("protists", |(name, _)| name)
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Gene {
     region: GeneRegion,
@@ -92,6 +111,14 @@ impl Gene {
             expert_dbs.extend(member.precompute_summary().databases());
         }
         expert_dbs
+    }
+
+    pub fn tax_strings(&self) -> HashSet<&String> {
+        self.members.iter().flat_map(|m| m.accessions().tax_strings()).collect()
+    }
+
+    pub fn kingdoms(&self) -> HashSet<&'static str> {
+        self.tax_strings().into_iter().map(|t| kingdom(t)).collect()
     }
 
     pub fn length(&self) -> usize {
@@ -169,6 +196,8 @@ impl SearchEntry<GeneEntry> for Gene {
             GeneFields::InsdcRNAType => "Gene".into(),
             GeneFields::SoRnaTypeName => self.so_names().into(),
             GeneFields::PubliGeneName => self.region.gene_name().into(),
+            GeneFields::TaxString => self.tax_strings().into(),
+            GeneFields::Kingdom => self.kingdoms().into(),
         }
     }
 
@@ -186,6 +215,29 @@ impl SearchEntry<GeneEntry> for Gene {
                 let (root, children) = self.so_type_tree();
                 (root.to_string(), children.into_iter().map(|c| c.to_string()).collect())
             },
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn kingdom_follows_the_lineage() {
+        let cases = [
+            ("Eukaryota; Metazoa; Chordata; Vertebrata; Homo sapiens", "vertebrates"),
+            ("Eukaryota; Metazoa; Arthropoda; Drosophila melanogaster", "metazoa"),
+            ("Eukaryota; Viridiplantae; Streptophyta; Arabidopsis thaliana", "plants"),
+            ("Eukaryota; Fungi; Ascomycota; Saccharomyces cerevisiae", "fungi"),
+            ("Bacteria; Pseudomonadota; Escherichia coli", "bacteria"),
+            ("Archaea; Euryarchaeota; Methanococcus", "archaea"),
+            ("Viruses; Riboviria; Influenza A virus", "viruses"),
+            ("unclassified entries; environmental samples; marine metagenome", "environmental"),
+            ("Eukaryota; Apicomplexa; Plasmodium falciparum", "protists"),
+        ];
+        for (tax_string, expected) in cases {
+            assert_eq!(kingdom(tax_string), expected, "{}", tax_string);
         }
     }
 }

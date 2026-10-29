@@ -6,11 +6,11 @@
 VACUUM ANALYZE rnacen.rnc_rna_precomputed;
 
 BEGIN TRANSACTION;
--- We have the DB to ourselves for this step, and the anti-join below sorts
--- ~230M rows for a merge join - work_mem bounds that sort. Safe to raise:
--- max_parallel_workers_per_gather=0 keeps this serial, so it's normal
--- backend memory, not the /dev/shm segments that broke parallel before.
-SET LOCAL work_mem = '2GB';
+-- The query below plans two hash joins, and each may take work_mem times
+-- hash_mem_multiplier. At 2GB x 2 a 22M-accession ENA delta ran the DB host
+-- out of memory; cap each hash at 512MB and let it spill to disk instead.
+SET LOCAL work_mem = '512MB';
+SET LOCAL hash_mem_multiplier = 1;
 -- Speed up the CREATE INDEX rebuilds below, which are the dominant cost at large
 -- scale. Index builds use maintenance_work_mem, not work_mem.
 SET LOCAL maintenance_work_mem = '2GB';

@@ -41,7 +41,8 @@ BLAT_GENOMES = {
     "homo_sapiens",
     "mus_musculus",
     "plasmodium_falciparum",
-    "rattus_norvegicus" "saccharomyces_cerevisiae",
+    "rattus_norvegicus",
+    "saccharomyces_cerevisiae",
     "schizosaccharomyces_pombe",
 }
 

@@ -13,22 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import attr
 
 from rnacentral_pipeline.databases.data import Database
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
-from rnacentral_pipeline.rnacentral.precompute.qa import contamination
+from rnacentral_pipeline.rnacentral.precompute.qa import coding_potential, contamination
 from rnacentral_pipeline.rnacentral.precompute.qa import (
     incomplete_sequence as incomplete,
 )
 from rnacentral_pipeline.rnacentral.precompute.qa import missing_rfam_match as missing
-from rnacentral_pipeline.rnacentral.precompute.qa import (
-    possible_orf,
-    possible_orf_stopfree,
-    possible_orf_tcode,
-)
 from rnacentral_pipeline.rnacentral.precompute.qa import (
     repetitive_regions as repetitive,
 )
@@ -46,12 +40,13 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
         fields = attr.fields(QaStatus)
         return QaStatus(**{f.name: QaResult.null(f.name) for f in fields})
 
+    orf, stopfree, tcode = coding_potential.validate(sequence)
     return QaStatus(
         incomplete_sequence=incomplete.validate(sequence),
         possible_contamination=contamination.validate(rna_type, sequence),
         missing_rfam_match=missing.validate(rna_type, sequence),
         from_repetitive_region=repetitive.validate(context, sequence),
-        possible_orf=possible_orf.validate(sequence),
-        possible_orf_stopfree=possible_orf_stopfree.validate(sequence),
-        possible_orf_tcode=possible_orf_tcode.validate(sequence),
+        possible_orf=orf,
+        possible_orf_stopfree=stopfree,
+        possible_orf_tcode=tcode,
     )

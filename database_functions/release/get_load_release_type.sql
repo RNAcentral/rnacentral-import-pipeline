@@ -27,12 +27,17 @@ BEGIN
         RETURN 'F';
     END IF;
 
+    -- WormBase xrefs come out of the ENA parse, so a load holds only the ENA sources
+    -- re-parsed that run. FULL would retire the rest, so it follows ENA's manifest.
+    IF v_descr = 'WORMBASE' THEN
+        v_descr := 'ENA';
+    END IF;
+
     IF to_regclass('rnacen.pipeline_tracking_import') IS NOT NULL THEN
         SELECT EXISTS (
             SELECT 1
             FROM rnacen.pipeline_tracking_import m
-            JOIN rnacen.rnc_database d ON d.descr = m.database
-            WHERE d.id = in_dbid
+            WHERE m.database = v_descr
         ) INTO v_is_delta;
     END IF;
 

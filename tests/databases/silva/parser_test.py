@@ -17,29 +17,42 @@ import csv
 
 import attr
 import pytest
+from sqlitedict import SqliteDict
 
 import rnacentral_pipeline.databases.helpers.publications as pubs
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.silva import helpers, parser
+
+# parser.parse() looks up each row's taxon in this SqliteDict first, falling
+# back to the (offline-cached, see tests/conftest.py) phylogeny helpers on a
+# miss - so an empty dict is enough to exercise real species/lineage data
+# without vendoring a taxonomy dump.
+
+
+@pytest.fixture
+def taxonomy_path(tmp_path):
+    path = tmp_path / "taxonomy.db"
+    SqliteDict(filename=str(path)).commit()
+    return str(path)
 
 
 @pytest.mark.silva
 @pytest.mark.parametrize(
     "filename,count",
     [
-        ("data/silva/sample.tsv", 8),
+        ("data/silva/sample.tsv", 9),
         ("data/silva/lsu.tsv", 9),
     ],
 )
-def test_parses_all_data(filename, count):
+def test_parses_all_data(filename, count, taxonomy_path):
     with open(filename, "r") as raw:
-        assert len(list(parser.parse(raw))) == count
+        assert len(list(parser.parse(raw, taxonomy_path))) == count
 
 
 @pytest.mark.silva
-def test_parses_data_correctly():
+def test_parses_data_correctly(taxonomy_path):
     with open("data/silva/sample.tsv", "r") as raw:
-        val = next(parser.parse(raw))
+        val = next(parser.parse(raw, taxonomy_path))
 
     assert val == data.Entry(
         primary_id="SILVA:FN662328.1:1..957",
@@ -69,9 +82,6 @@ def test_parses_data_correctly():
         url="https://www.arb-silva.de/browser/ssu/FN662328",
         seq_version="1",
         inference="Bacteria; Chloroflexi; TK10",
-        common_name=None,
-        species="uncultured eukaryote",
-        lineage="Eukaryota; environmental samples; uncultured eukaryote",
         references=[
             pubs.reference("doi:10.1093/nar/gks1219"),
         ],
@@ -80,9 +90,9 @@ def test_parses_data_correctly():
 
 
 @pytest.mark.silva
-def test_can_parse_lsu_data_correctly():
+def test_can_parse_lsu_data_correctly(taxonomy_path):
     with open("data/silva/lsu.tsv", "r") as raw:
-        val = next(parser.parse(raw))
+        val = next(parser.parse(raw, taxonomy_path))
 
     assert val == data.Entry(
         primary_id="SILVA:KF848653.1:<1..>566",
@@ -109,13 +119,6 @@ def test_can_parse_lsu_data_correctly():
             "Eukaryota; Amorphea; Obazoa; Opisthokonta; Nucletmycea; Fungi; "
             "Dikarya; Ascomycota; Pezizomycotina; Sordariomycetes; Hypocreales; "
             "Nectriaceae; Fusarium"
-        ),
-        common_name=None,
-        species="Cytospora ceratosperma",
-        lineage=(
-            "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; "
-            "Sordariomycetes; Sordariomycetidae; Diaporthales; Valsaceae; "
-            "Cytospora; Cytospora ceratosperma"
         ),
         references=[
             pubs.reference("doi:10.1093/nar/gks1219"),

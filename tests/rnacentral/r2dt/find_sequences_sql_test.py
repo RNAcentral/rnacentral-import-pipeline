@@ -13,10 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 find-sequences.sql builds the set of URS whose types R2DT has no template for,
-then selects what to draw. The upi -> urs rename (3e0b95e0) silently restored
-an older final query that ignored that set, so lncRNAs went back to being
-force-fitted and the per-row xref probe that once stalled extraction for 14h
-came back.
+then selects what to draw. Merge 36926745 kept an older final query that
+ignored that set, so lncRNAs went back to being force-fitted and the per-row
+xref probe that once stalled extraction for 14h came back.
 """
 
 from pathlib import Path
@@ -39,3 +38,12 @@ def test_whole_mrnas_are_never_sent_to_r2dt():
     assert "'SO:0000234'" in EXCLUDED
     assert "'SO:0000204'" not in EXCLUDED
     assert "'SO:0000205'" not in EXCLUDED
+
+
+def test_pirnas_are_excluded():
+    # piRNAs are 24-32 nt, so any drawing is a force-fit onto a larger model.
+    assert "'SO:0001035'" in EXCLUDED
+
+
+def test_sequences_under_40_nt_are_not_drawn():
+    assert "rna.len >= 40" in FINAL

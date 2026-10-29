@@ -25,6 +25,7 @@ WHERE acc.rna_type IN (
   'SO:0000644', -- antisense_RNA
   'SO:0000646', -- siRNA
   'SO:0000454', -- rasiRNA
+  'SO:0001035', -- piRNA
   'SO:0000234'  -- mRNA (its UTRs are kept)
 );
 
@@ -40,6 +41,8 @@ FROM rna
 JOIN urs_to_fetch ON rna.urs = urs_to_fetch.urs
 LEFT JOIN excluded ON excluded.urs = rna.urs
 WHERE rna.len < :max_len
+-- Too short for a meaningful drawing; these only ever force-fit.
+AND rna.len >= 40
 AND excluded.urs IS NULL
 LIMIT :sequence_count
 ) TO STDOUT;

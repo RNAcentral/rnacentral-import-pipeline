@@ -27,6 +27,7 @@ def db():
     return os.environ["PGDATABASE"]
 
 
+@pytest.mark.db
 def test_lookups_expected_count(db):
     urs = [
         "URS00008BD1D3_9606",
@@ -36,11 +37,12 @@ def test_lookups_expected_count(db):
     assert len(list(lk.lookup(db, urs, gc.QUERY))) == len(urs)
 
 
+@pytest.mark.db
 def test_produces_correct_data(db):
     urs = ["URS0000D58B85_9606"]
     results = list(lk.lookup(db, urs, gc.QUERY))
     assert len(results) == 1
-    assert results[0] == {
+    assert dict(results[0]) == {
         "rna_id": "URS0000D58B85_9606",
         "rna_type": "lncRNA",
         "sequence": (
@@ -64,6 +66,7 @@ def test_produces_correct_data(db):
     }
 
 
+@pytest.mark.db
 def test_can_lookup_and_index(db):
     urs = [
         "URS00008BD1D3_9606",
@@ -77,12 +80,14 @@ def test_can_lookup_and_index(db):
         assert rna_id in data
 
 
+@pytest.mark.db
 def test_can_write_and_load_a_mapping(db):
     with tempfile.NamedTemporaryFile() as tmp:
-        lk.write_mapping(db, ["URS0000D58B85_9606"], gc.QUERY, tmp)
+        lk.write_mapping(db, ["URS0000D58B85_9606"], gc.QUERY, tmp, key="rna_id")
         tmp.flush()
-        with open(tmp.name, "r") as raw:
+        with open(tmp.name, "rb") as raw:
             data = lk.load_mapping(raw)
+        data = {k: dict(v) for k, v in data.items()}
         assert data == {
             "URS0000D58B85_9606": {
                 "rna_id": "URS0000D58B85_9606",

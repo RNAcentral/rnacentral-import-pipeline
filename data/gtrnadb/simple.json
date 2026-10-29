@@ -1,0 +1,52 @@
+[
+  {
+    "crossReferenceIds": [
+      "RNACENTRAL:URS000098129A"
+    ],
+    "gene": {
+      "geneId": "GTRNADB:tRNA-Ala-AGC-1-1",
+      "symbol": "tRNA-Ala-AGC-1-1",
+      "synonyms": [
+        "scaffold00844.trna1-AlaAGC"
+      ]
+    },
+    "genomeLocations": [
+      {
+        "assembly": "AplCal3.0",
+        "exons": [
+          {
+            "INSDC_accession": "KB942240.1",
+            "chromosome": "scaffold00844",
+            "endPosition": 40100,
+            "startPosition": 40028,
+            "strand": "+"
+          }
+        ],
+        "gca_accession": "GCA_000002075.2",
+        "ucsc_assembly": ""
+      }
+    ],
+    "matureSequence": "GGGGCTGTAGCTCAGGTGGTAGAGCGCTCGCTTAGCATGTGAGAGGTACCGGGATCGATACCCGGCAGCTCCA",
+    "name": "tRNA-Ala (AGC)",
+    "primaryId": "GTRNADB:tRNA-Ala-AGC-1-1",
+    "pseudogene": false,
+    "secondaryStructure": ">>>>>>>..>>>>........<<<<.>>>>>.......<<<<<.....>>>>>.......<<<<<<<<<<<<.",
+    "sequence": "GGGGCTGTAGCTCAGGTGGTAGAGCGCTCGCTTAGCATGTGAGAGGTACCGGGATCGATACCCGGCAGCTCCA",
+    "sequenceFeatures": {
+      "anticodon": {
+        "indexes": [
+          34,
+          35,
+          36
+        ],
+        "sequence": "AGC"
+      },
+      "isotype": "Ala",
+      "score": "63.1"
+    },
+    "soTermId": "SO:0000254",
+    "taxonId": "NCBITaxon:6500",
+    "url": "http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Ala-AGC-1-1.html",
+    "version": "1"
+  }
+]

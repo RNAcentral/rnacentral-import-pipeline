@@ -7,19 +7,12 @@ CREATE UNLOGGED TABLE load_rnc_accessions (
     feature_end bigint NULL,
     feature_name character varying(80) NULL,
     ordinal bigint NULL,
-    division character varying(6) NULL,
-    keywords character varying(200) NULL,
     description character varying(500) NULL,
-    species character varying(300) NULL,
     organelle character varying(200) NULL,
-    classification character varying(1000) NULL,
-    project character varying(100) NULL,
-    is_composite character varying(2) NULL,
     non_coding_id character varying(200) NULL,
     database character varying(40) NULL,
     external_id character varying(300) NULL,
-    optional_id character varying(200) NULL,
-    common_name character varying(200) NULL,
+    optional_id text NULL,
     allele character varying(100) NULL,
     anticodon character varying(200) NULL,
     chromosome character varying(200) NULL,
@@ -129,7 +122,7 @@ CREATE UNLOGGED TABLE
     seq_long text NULL,
     database character varying(40) NULL,
     ac character varying(200) NULL,
-    optional_id character varying(100) NULL,
+    optional_id text NULL,
     version integer NULL,
     taxid bigint NULL,
     md5 character varying(32) NULL
@@ -144,7 +137,7 @@ CREATE UNLOGGED TABLE
     seq_long text NULL,
     database character varying(40) NULL,
     ac character varying(200) NULL,
-    optional_id character varying(100) NULL,
+    optional_id text NULL,
     version integer NULL,
     taxid bigint NULL,
     md5 character varying(32) NULL
@@ -171,15 +164,6 @@ DROP TABLE IF EXISTS load_compara;
 CREATE UNLOGGED TABLE load_compara (
   homology_group text not null,
   ensembl_transcript text not null
-);
-
-DROP TABLE IF EXISTS load_coordinate_info;
-CREATE UNLOGGED TABLE load_coordinate_info (
-  chromosome text NOT NULL,
-  coordinate_system text NOT NULL,
-  assembly_id text,
-  is_reference bool,
-  karyotype_rank int
 );
 
 DROP TABLE IF EXISTS load_ensembl_analysis_status;
@@ -334,6 +318,7 @@ CREATE UNLOGGED TABLE load_taxonomy (
     taxid int,
     name text,
     lineage text,
+    common_name text,
     aliases json,
     replaced_by int,
     rank text,
@@ -352,7 +337,7 @@ CREATE UNLOGGED TABLE load_overlaps (
 DROP TABLE IF EXISTS load_qa_status;
 CREATE UNLOGGED TABLE load_qa_status (
   rna_id varchar(44) NOT NULL,
-  upi varchar(26) NOT NULL,
+  urs varchar(26) NOT NULL,
   taxid int8 NOT NULL,
   has_issue bool,
   incomplete_sequence bool,

@@ -22,6 +22,10 @@ from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 LOGGER = logging.getLogger(__name__)
 
 
+def _words(text: str) -> ty.Set[str]:
+    return set(re.split(r"[\s-]+", text.lower())) - {""}
+
+
 def short_description(initial: str, sequence: Sequence) -> str:
     """
     Shorten a description to remove the leading species (common name) from
@@ -35,23 +39,47 @@ def short_description(initial: str, sequence: Sequence) -> str:
         patterns.update(re.escape(str(s)) for s in acc.all_species if s)
         patterns.update(re.escape(f"({c})") for c in acc.all_common_names if c)
 
-    for pattern in patterns:
-        cleaned = re.sub("^" + pattern, "", description, flags=re.IGNORECASE)
-        cleaned = cleaned.strip()
-        if not cleaned:
-            LOGGER.error(
-                "Pattern %s emptied description: %s (%s, %s)",
-                pattern,
-                description,
-                initial,
-                sequence,
-            )
-            continue
-        description = cleaned
+    # A single pass over an unordered set can miss a strip: the common-name
+    # parenthetical only becomes a leading match once the species name ahead
+    # of it is gone, so a pattern tried before that happens is skipped for
+    # good. Repeat full passes until one makes no further change.
+    changed = True
+    while changed:
+        changed = False
+        for pattern in patterns:
+            cleaned = re.sub("^" + pattern, "", description, flags=re.IGNORECASE)
+            cleaned = cleaned.strip()
+            if not cleaned:
+                LOGGER.error(
+                    "Pattern %s emptied description: %s (%s, %s)",
+                    pattern,
+                    description,
+                    initial,
+                    sequence,
+                )
+                continue
+            if cleaned != description:
+                description = cleaned
+                changed = True
+
+    # Sources word the common name differently from NCBI taxonomy ("(mouse)"
+    # vs "house mouse", "(thale-cress)" vs "thale cress"), so the exact match
+    # above can miss it. Also drop a leading parenthetical whose words are all
+    # drawn from a known common name.
+    leading = re.match(r"^\s*\(([^()]*)\)\s*", description)
+    if leading:
+        words = _words(leading.group(1))
+        known = (
+            _words(c) for acc in sequence.accessions for c in acc.all_common_names if c
+        )
+        rest = description[leading.end() :].strip()
+        if words and rest and any(words <= k for k in known):
+            description = rest
 
     trimmed = re.sub(r"^\s*(\(\))?\s*", "", description)
     if not trimmed:
         return description
+    description = trimmed
 
     if (
         description.startswith("(")

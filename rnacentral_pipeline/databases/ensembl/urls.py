@@ -68,6 +68,7 @@ class GenesetUrls:
     gff_url: str = attr.ib(validator=is_a(str))
     accession: str = attr.ib(validator=is_a(str))
     homology_url: str = attr.ib(validator=is_a(str), default="")
+    genome_url: ty.Optional[str] = attr.ib(default=None)
 
     def writeable(self, kind=None) -> ty.Tuple[str, ...]:
         row = (self.species, str(self.taxid), self.embl_url, self.gff_url)
@@ -150,6 +151,14 @@ def _select_geneset(
         LOGGER.warning("Missing EMBL/GFF3 for %s, skipping", species)
         return None
 
+    genome = (
+        info["assemblies"][accession]
+        .get("assembly", {})
+        .get("files", {})
+        .get("genome_sequences", {})
+        .get("unmasked.fa.bgz")
+    )
+
     return GenesetUrls(
         species=species,
         taxid=info["taxid"],
@@ -157,6 +166,7 @@ def _select_geneset(
         gff_url=f"{base_url}/{gff}",
         accession=accession,
         homology_url=f"{base_url}/{homology}" if homology else "",
+        genome_url=f"{base_url}/{genome}" if genome else None,
     )
 
 

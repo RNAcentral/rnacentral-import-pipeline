@@ -1,12 +1,14 @@
 # RNAcentral data import pipeline
 
+[![Unit tests](https://github.com/RNAcentral/rnacentral-import-pipeline/actions/workflows/tests.yaml/badge.svg)](https://github.com/RNAcentral/rnacentral-import-pipeline/actions/workflows/tests.yaml)
+
 ## About
 
 This is the main pipeline that is used internally for loading the data into the
 RNAcentral database. [More
 information](http://www.ebi.ac.uk/seqdb/confluence/display/RNAC/RNAcentral+data+import+pipeline).
 The pipeline is [nextflow](https://www.nextflow.io) based and the main entry
-point is main.nf. 
+point is main.nf.
 
 The pipeline is typically run as:
 
@@ -14,7 +16,7 @@ The pipeline is typically run as:
 nextflow run -profile env -with-singularity pipeline.sif main.nf
 ```
 
-The pipeline is meant to run 
+The pipeline is meant to run
 
 ## Configuring the pipeline
 

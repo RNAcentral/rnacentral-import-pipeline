@@ -861,25 +861,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "precompute"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "csv",
- "itertools 0.10.5",
- "log",
- "rnc-core",
- "rnc-utils",
- "serde",
- "serde_json",
- "simplelog",
- "sorted-iter",
- "structopt",
- "strum 0.21.0",
- "strum_macros 0.21.1",
-]
-
-[[package]]
 name = "proc-macro-error"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

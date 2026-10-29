@@ -3,6 +3,8 @@ COPY (
     ensembl_url,
     assembly_id,
     taxid,
-    division
+    gca_accession
   FROM ensembl_assembly
+  WHERE
+    selected_genome = true
 ) TO STDOUT CSV;

@@ -84,12 +84,6 @@ def test_creates_simple_entry():
             seq_version="1",
             xref_data={"ena_refs": {"BIOSAMPLE": ("SAMN02953587", None)}},
             chromosome="VIII",
-            species="Aspergillus nidulans FGSC A4",
-            lineage=(
-                "Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; "
-                "Eurotiomycetes; Eurotiomycetidae; Eurotiales; Aspergillaceae; "
-                "Aspergillus; Aspergillus nidulans FGSC A4"
-            ),
             product="tRNA-Pro",
             parent_accession="AACD01000002",
             description="Aspergillus nidulans FGSC A4 tRNA-Pro",
@@ -214,11 +208,6 @@ def test_can_find_correct_ncRNA_type():
             seq_version="1",
             note_data={"text": ["Rfam score 66"]},
             xref_data={"ena_refs": {"BIOSAMPLE": ("SAMN00008855", None)}},
-            species="Providencia rustigianii DSM 4541",
-            lineage=(
-                "Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; "
-                "Morganellaceae; Providencia; Providencia rustigianii DSM 4541"
-            ),
             product="RybB RNA",
             parent_accession="ABXV02000002",
             description="Providencia rustigianii DSM 4541 RybB RNA",
@@ -297,14 +286,6 @@ def test_can_parse_all_example_entries():
             rna_type="SO:0000673",
             url="https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330787.1:1..34:misc_RNA",
             seq_version="1",
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
-                "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
-                "Homo sapiens"
-            ),
-            species="Homo sapiens",
-            common_name="human",
             description="Homo sapiens (human) miscellaneous RNA",
             parent_accession="AB330787",
             note_data={
@@ -329,14 +310,6 @@ def test_can_parse_all_example_entries():
             url="https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330786.1:1..27:misc_RNA",
             seq_version="1",
             xref_data={"ena_refs": {"RFAM": ("RF00005", "tRNA")}},
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
-                "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
-                "Homo sapiens"
-            ),
-            species="Homo sapiens",
-            common_name="human",
             description="Homo sapiens (human) miscellaneous RNA",
             parent_accession="AB330786",
             note_data={
@@ -361,14 +334,6 @@ def test_can_parse_all_example_entries():
             url="https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330785.1:1..34:misc_RNA",
             seq_version="1",
             xref_data={"ena_refs": {"SRPDB": ("Xeno.laev._DC015625", None)}},
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
-                "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
-                "Homo sapiens"
-            ),
-            species="Homo sapiens",
-            common_name="human",
             description="Homo sapiens (human) miscellaneous RNA",
             note_data={
                 "text": [
@@ -393,14 +358,6 @@ def test_can_parse_all_example_entries():
             url="https://www.ebi.ac.uk/ena/data/view/Non-coding:HAAO01001079.1:1..21:ncRNA",
             seq_version="1",
             xref_data={"ena_refs": {"MIRBASE": ("MIMAT0022742", "hsa-miR-1273g-3p")}},
-            lineage=(
-                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
-                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
-                "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
-                "Homo sapiens"
-            ),
-            species="Homo sapiens",
-            common_name="human",
             description="Homo sapiens (human) microRNA hsa-miR-1273g-3p",
             product="microRNA hsa-miR-1273g-3p",
             mol_type="transcribed RNA",
@@ -434,8 +391,6 @@ def test_can_parse_all_example_entries():
                 "text": ["Tag:(A)ANNVKFAPAYAKAA*"],
             },
             xref_data={"ena_refs": {"TMRNA-WEBSITE": ("Campy_jejun_700819", None)}},
-            lineage="unclassified sequences; unidentified",
-            species="unidentified",
             description="unidentified transfer-messenger mRNA Campy_jejun_700819",
             product="transfer-messenger mRNA Campy_jejun_700819",
             gene="tmRNA Campy_jejun_700819",
@@ -504,7 +459,6 @@ def test_can_handle_file_with_invalid_fields():
 
     assert data.accession == "KM079256.1:1..1300:rRNA"
     assert data.mol_type == "genomic DNA"
-    assert data.species == 'Candidatus Stammerula sp. of Trupanea "pohakuloa"'
     assert data.ncbi_tax_id == 1630665
     assert data.product == "16S ribosomal RNA"
 
@@ -626,7 +580,6 @@ def test_can_handle_unclosed_parens():
     assert data.ncbi_tax_id == 1200666
     assert data.gene == "tRNA-Ser"
     assert data.product == "transfer RNA Serine"
-    assert data.species == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012"
     assert data.organelle == "mitochondrion"
     assert (
         data.description == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine"

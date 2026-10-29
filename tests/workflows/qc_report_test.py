@@ -36,6 +36,10 @@ QC_SQL_RE = re.compile(r"file\('files/qc/([\w-]+\.sql)'\)")
 SQL_VAR_RE = re.compile(r"(?<!:):'?([a-z_][a-z0-9_]*)'?")
 SQL_IF_RE = re.compile(r"^\s*\\if\s+:\{\?(\w+)\}")
 SQL_SET_RE = re.compile(r"^\s*\\set\s+(\w+)")
+# `SELECT ... AS name \gset` defines :name for later lines from the query's
+# own result, same as \set does for a literal - not a var the caller must pass.
+SQL_GSET_RE = re.compile(r"\\gset\b")
+SQL_GSET_ALIAS_RE = re.compile(r"\bAS\s+(\w+)", re.IGNORECASE)
 
 
 def blocks(text, pattern):
@@ -109,6 +113,10 @@ def required_vars(sql_text, defined):
         assignment = SQL_SET_RE.match(line)
         if assignment:
             defined.add(assignment.group(1))
+            continue
+
+        if SQL_GSET_RE.search(line):
+            defined.update(SQL_GSET_ALIAS_RE.findall(line))
             continue
 
         required.update(SQL_VAR_RE.findall(line.split("--")[0]))

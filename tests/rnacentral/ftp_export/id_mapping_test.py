@@ -175,7 +175,7 @@ def test_as_entry_works_correctly():
                     "ENST00000523510",
                     "9606",
                     "lncRNA",
-                    "ENSG00000254166.3",
+                    "ENSG00000254166.5",
                 ],
                 [
                     "URS000018F875",
@@ -183,17 +183,49 @@ def test_as_entry_works_correctly():
                     "ENST00000523510",
                     "9606",
                     "lncRNA",
-                    "CASC19",
+                    "ENSG00000254166.5",
                 ],
                 [
                     "URS000018F875",
                     "EXPRESSION_ATLAS",
-                    "EXPRESSIONATLAS:ENSG00000253264",
+                    "EXPRESSIONATLAS:ENSG00000254166",
                     "9606",
                     "lncRNA",
-                    "E",
+                    "ENSG00000254166",
+                ],
+                [
+                    "URS000018F875",
+                    "EXPRESSION_ATLAS",
+                    "EXPRESSIONATLAS:NONHSAG051247",
+                    "9606",
+                    "lncRNA",
+                    "NONHSAG051247",
+                ],
+                [
+                    "URS000018F875",
+                    "GENECARDS",
+                    "GENECARDS:CASC19:URS000018F875_9606",
+                    "9606",
+                    "lncRNA",
+                    "CASC19",
+                ],
+                [
+                    "URS000018F875",
+                    "GENECARDS",
+                    "GENECARDS:PCAT2:URS000018F875_9606",
+                    "9606",
+                    "lncRNA",
+                    "PCAT2",
                 ],
                 ["URS000018F875", "HGNC", "HGNC:45089", "9606", "lncRNA", "PCAT2"],
+                [
+                    "URS000018F875",
+                    "LNCBOOK",
+                    "HSALNT0349802",
+                    "9606",
+                    "lncRNA",
+                    "HSALNG0068422",
+                ],
                 [
                     "URS000018F875",
                     "LNCIPEDIA",
@@ -204,14 +236,29 @@ def test_as_entry_works_correctly():
                 ],
                 [
                     "URS000018F875",
-                    "NONCODE",
-                    "NONHSAT129016.2",
+                    "MALACARDS",
+                    "MALACARDS:CASC19:URS000018F875_9606",
                     "9606",
                     "lncRNA",
-                    "NONHSAG051247.2",
+                    "CASC19",
+                ],
+                [
+                    "URS000018F875",
+                    "MALACARDS",
+                    "MALACARDS:PCAT2:URS000018F875_9606",
+                    "9606",
+                    "lncRNA",
+                    "PCAT2",
+                ],
+                [
+                    "URS000018F875",
+                    "NONCODE",
+                    "NONHSAT129016",
+                    "9606",
+                    "lncRNA",
+                    "",
                 ],
                 ["URS000018F875", "REFSEQ", "NR_119373", "9606", "lncRNA", "PCAT2"],
-                # ['URS000018F875', 'GENCODE', 'ENST00000523510', 9606, 'lncRNA', 'ENSG00000254166.2'],
             ],
         ),
         (
@@ -239,22 +286,31 @@ def test_as_entry_works_correctly():
                     "piRNA",
                     "piR-50304",
                 ],
-            ],
-        ),
-        (
-            "URS0002315F8A_1798",
-            [
                 [
-                    "URS0002315F8A",
-                    "RFAM",
-                    "RF03819",
-                    "1798",
-                    "pre_miRNA",
-                    "MIHD01000060.1/93-23",
-                ]
+                    "URS0000000096",
+                    "GENECARDS",
+                    "GENECARDS:piR-33011:URS0000000096_9606",
+                    "9606",
+                    "piRNA",
+                    "piR-33011",
+                ],
+                [
+                    "URS0000000096",
+                    "PIRBASE",
+                    "piR-hsa-13501",
+                    "9606",
+                    "piRNA",
+                    "",
+                ],
             ],
         ),
+        # URS0002315F8A_1798 (an RFAM-sourced pre_miRNA example) was here,
+        # but its accession has since been retired (xref.deleted='Y' on
+        # both rows) - URS0000D9E17A_63 below already exercises the
+        # RFAM-only-source path, so it wasn't replaced.
         (
+            # A repeat element - the same Rfam family match legitimately
+            # shows up 127 times, once per copy scattered across the genome.
             "URS0000D9E17A_63",
             [
                 [
@@ -265,7 +321,8 @@ def test_as_entry_works_correctly():
                     "other",
                     "",
                 ]
-            ],
+            ]
+            * 127,
         ),
         # (
         #     "URS000069C337_9606",
@@ -279,6 +336,7 @@ def test_as_entry_works_correctly():
         # ),
     ],
 )
+@pytest.mark.db
 def test_can_create_expected_exports(rna_id, expected):
     entries = run_with_upi_taxid_constraint(
         rna_id, "files/ftp-export/id-mapping/id_mapping.sql", take_all=True

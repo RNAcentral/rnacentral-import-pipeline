@@ -41,7 +41,6 @@ ALWAYS_RUN = {"000__populate_precompute.sql", "999__cleanup.sql"}
 DESTINATION_TABLES = {
     "ensembl_assembly",
     "ensembl_compara",
-    "ensembl_coordinate_systems",
     "ensembl_import_tracking",
     "ensembl_pseudogene_exons",
     "ensembl_pseudogene_regions",

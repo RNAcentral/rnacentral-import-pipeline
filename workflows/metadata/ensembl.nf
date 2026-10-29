@@ -63,25 +63,6 @@ process proteins {
   """
 }
 
-process coordinate_systems {
-  errorStrategy 'retry'
-  maxRetries 10
-
-  input:
-  path(connections)
-  path(query)
-
-  output:
-  path("coordinate_systems.${params.writer_format}")
-
-  when: params.databases.ensembl?.metadata?.run
-
-  script:
-  """
-  rnac ensembl coordinate-systems $connections $query coordinate_systems.${params.writer_format}
-  """
-}
-
 workflow compara {
   main:
     fetch_compara | flatten | process_compara | set { data }
@@ -93,14 +74,12 @@ workflow ensembl {
     channel.fromPath('config/databases.json') | set { conn }
 
     channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
-    channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
 
     channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
 
     channel.empty() \
     | mix(
       assemblies(examples),
-      coordinate_systems(conn, coordinate_systems_sql),
       proteins(conn, protein_sql),
       compara(),
     ) \

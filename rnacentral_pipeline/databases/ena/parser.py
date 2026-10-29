@@ -19,11 +19,8 @@ from pathlib import Path
 
 from Bio import SeqIO
 
-import rnacentral_pipeline.databases.helpers.embl as embl
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.ena import context, dr, helpers
-from rnacentral_pipeline.databases.ena import mapping as tpa
-from rnacentral_pipeline.databases.ena import ribovore
+from rnacentral_pipeline.databases.ena import context, helpers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +68,7 @@ def parse(ctx: context.Context, path: Path) -> ty.Iterable[Entry]:
         entry = helpers.as_entry(ctx, record, feature)
         if ctx.ribovore is not None:
             ribo_result = ctx.ribovore.get(record.id, None)
-            if helpers.is_skippable_sequence(entry, ribo_result):
+            if helpers.is_skippable_sequence(entry, record, ribo_result):
                 LOGGER.info(f"Skipping record ({record.id}) excluded by ribotyper")
                 ctx.add_riboytper_skip()
                 continue

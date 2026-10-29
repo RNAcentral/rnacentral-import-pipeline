@@ -80,8 +80,11 @@ ALTERNATES = {
         ("SO:0001877", "lncRNA"),
         ("SO:0001904", "antisense_lncRNA"),
     ],
+    # Deviates from SO (under transcript); issue: The-Sequence-Ontology/SO-Ontologies#690
     "SO:0001244": [
-        ("SO:0000673", "transcript"),
+        ("SO:0000655", "ncRNA"),
+        ("SO:0002247", "sncRNA"),
+        ("SO:0000370", "small_regulatory_ncRNA"),
         ("SO:0001244", "pre_miRNA"),
     ],
 }

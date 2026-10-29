@@ -346,6 +346,7 @@ TAXONOMY = pa.schema(
         pa.field("taxid", pa.int64(), nullable=False),
         pa.field("name", pa.string(), nullable=False),
         pa.field("lineage", pa.string(), nullable=False),
+        pa.field("common_name", pa.string(), nullable=False),
         pa.field("aliases", pa.string(), nullable=False),
         pa.field("replaced_by", pa.int64()),
         pa.field("rank", pa.string(), nullable=False),
@@ -447,7 +448,7 @@ R2DT_ATTEMPTED = pa.schema(
 PRECOMPUTE_DATA = pa.schema(
     [
         pa.field("id", pa.string(), nullable=False),
-        pa.field("upi", pa.string(), nullable=False),
+        pa.field("urs", pa.string(), nullable=False),
         pa.field("taxid", pa.int64(), nullable=False),
         pa.field("is_active", pa.bool_(), nullable=False),
         pa.field("description", pa.string()),
@@ -471,7 +472,7 @@ PRECOMPUTE_DATA = pa.schema(
 PRECOMPUTE_QA = pa.schema(
     [
         pa.field("rna_id", pa.string(), nullable=False),
-        pa.field("upi", pa.string(), nullable=False),
+        pa.field("urs", pa.string(), nullable=False),
         pa.field("taxid", pa.int64(), nullable=False),
         pa.field("has_issue", pa.bool_(), nullable=False),
         pa.field("incomplete_sequence", pa.bool_(), nullable=False),
@@ -575,19 +576,6 @@ ASSEMBLIES = pa.schema(
         pa.field("example_start", pa.int32()),
         pa.field("example_end", pa.int32()),
         pa.field("blat_mapping", pa.int32()),
-    ]
-)
-
-
-# rnac ensembl coordinate-systems -> coordinate_systems.parquet
-# Source: files/import-data/load/coordinate-systems.ctl
-COORDINATE_SYSTEMS = pa.schema(
-    [
-        pa.field("chromosome", pa.string(), nullable=False),
-        pa.field("coordinate_system", pa.string(), nullable=False),
-        pa.field("assembly_id", pa.string()),
-        pa.field("is_reference", pa.bool_()),
-        pa.field("karyotype_rank", pa.int32()),
     ]
 )
 
@@ -701,7 +689,6 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "taxonomy": "load_taxonomy",
     "rfam_ontology_mappings": "load_rfam_go_terms",
     "assemblies": "load_assemblies",
-    "coordinate_systems": "load_coordinate_info",
     "proteins": "load_protein_info",
     "ensembl-pseudogenes": "load_ensembl_pseudogenes",
     "rfam-families": "load_rfam_models",
