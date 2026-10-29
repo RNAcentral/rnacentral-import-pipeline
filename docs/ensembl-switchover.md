@@ -44,6 +44,72 @@ Plants, Metazoa, Fungi and Protists divisions.
    says `116`, and species.json has no release number. One option is the
    species.json `last_updated` date.
 
+## Ensembl mRNA (`ENSEMBL_MRNA`, branch `update/Ensembl-mrna`)
+
+### Before the test run
+
+9. **Check that dbid 61 is free in the target database.** The public copy tops
+   out at 59, but production may be ahead of it.
+10. **Create the database row and its xref partitions.** `xref` is partitioned
+    by `dbid`, then by `deleted`. The legacy `xref_insert_trigger` isn't used.
+    This copies the layout of dbid 59:
+
+    ```sql
+    BEGIN;
+    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr)
+    VALUES (61, now(), 'RNACEN', 'ENSEMBL_MRNA', 'Y', 'Ensembl mRNA', 'Ensembl mRNA');
+
+    CREATE TABLE rnacen.xref_p61 PARTITION OF rnacen.xref FOR VALUES IN (61) PARTITION BY LIST (deleted);
+    CREATE TABLE rnacen.xref_p61_deleted PARTITION OF rnacen.xref_p61 FOR VALUES IN ('Y');
+    CREATE TABLE rnacen.xref_p61_not_deleted PARTITION OF rnacen.xref_p61 FOR VALUES IN ('N');
+
+    DO $$
+    DECLARE t text; flag text;
+    BEGIN
+      FOR t, flag IN VALUES ('xref_p61_deleted', 'Y'), ('xref_p61_not_deleted', 'N') LOOP
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I CHECK (dbid = 61 AND deleted = %L)', t, t || '_check', flag);
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (created) REFERENCES rnacen.rnc_release(id)', t, t || '_fk1');
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (dbid) REFERENCES rnacen.rnc_database(id)', t, t || '_fk2');
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (last) REFERENCES rnacen.rnc_release(id)', t, t || '_fk3');
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (urs) REFERENCES rnacen.rna(urs)', t, t || '_fk4');
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (ac)', t || '$ac', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (created)', t || '$created', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (dbid)', t || '$dbid', t);
+        EXECUTE format('CREATE UNIQUE INDEX %I ON rnacen.%I (id)', t || '$id', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (last)', t || '$last', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (taxid)', t || '$taxid', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (urs)', t || '$upi', t);
+      END LOOP;
+    END $$;
+    COMMIT;
+    ```
+
+11. **Add the three relationship types the UTR links use.** Run these outside a
+    transaction:
+
+    ```sql
+    ALTER TYPE rnacen.related_sequence_relationship ADD VALUE IF NOT EXISTS 'five_prime_utr';
+    ALTER TYPE rnacen.related_sequence_relationship ADD VALUE IF NOT EXISTS 'three_prime_utr';
+    ALTER TYPE rnacen.related_sequence_relationship ADD VALUE IF NOT EXISTS 'mrna';
+    ```
+
+12. **Run the import with only `databases.ensembl_mrna.run = true`.** It already
+    limits itself to `['homo_sapiens', 'mus_musculus']`.
+
+### After the test run
+
+13. **Check the counts:** one mRNA per Ensembl `protein_coding` transcript on the
+    primary assembly, each with up to two UTRs, and links both ways in
+    `rnc_related_sequences`. UTRs under 10 nt are dropped.
+14. **IGV relies on run order.** For human and mouse, the coordinate export
+    replaces genome mapping's `<species>.<assembly>.ensembl.gff3.gz` with mRNA gene
+    models. That only works because the export runs after genome mapping.
+15. **Move the mRNA test fixture into the `test-data` submodule.** The branch
+    predates the submodule.
+16. **Still to decide:** whether mRNAs go into text search, sequence search and
+    the FTP FASTA and ID-mapping exports, and how the website shows UTR links and
+    tags (web team).
+
 ## Decisions to confirm
 
 8. **Description weight for Ensembl bacteria and archaea is 10.** Ensembl never
