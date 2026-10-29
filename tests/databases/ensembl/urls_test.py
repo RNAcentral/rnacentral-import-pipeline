@@ -267,3 +267,32 @@ def test_the_used_assembly_list_holds_only_reference_genomes():
     assert {"GCA_000001405", "GCA_016699485", "GCA_000001735"} <= legacy
     assert "GCA_000002315" not in legacy
     assert all(re.fullmatch(r"GC[AF]_\d{9}", a) for a in legacy)
+
+
+# Genome mapping downloads this file, so it must come from the selected assembly.
+def test_carries_the_selected_assemblys_unmasked_genome():
+    chosen = assembly("chromosome", {"ensembl": build("2026_04", "new")})
+    chosen["assembly"] = {
+        "files": {"genome_sequences": {"unmasked.fa.bgz": "g/unmasked.fa.bgz"}}
+    }
+    other = assembly("scaffold", {"ensembl": build("2026_04", "old")})
+    other["assembly"] = {
+        "files": {"genome_sequences": {"unmasked.fa.bgz": "o/unmasked.fa.bgz"}}
+    }
+    got = select({"Danio_rerio": species(**{"GCA_1.1": chosen, "GCA_2.1": other})})
+    assert got["Danio_rerio"].genome_url == "B/g/unmasked.fa.bgz"
+
+
+def test_genome_is_absent_when_species_json_lists_none():
+    got = select(
+        {
+            "Danio_rerio": species(
+                **{
+                    "GCA_1.1": assembly(
+                        "chromosome", {"ensembl": build("2026_04", "x")}
+                    )
+                }
+            )
+        }
+    )
+    assert got["Danio_rerio"].genome_url is None
