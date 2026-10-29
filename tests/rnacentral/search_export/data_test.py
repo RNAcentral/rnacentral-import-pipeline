@@ -15,6 +15,7 @@ limitations under the License.
 
 import json
 
+import pytest
 from lxml import etree as ET
 
 from rnacentral_pipeline.rnacentral.search_export import data
@@ -32,11 +33,11 @@ def test_create_tag_with_complete_dict():
 
 def create_tag_can_handle_unicode():
     root = ET.Element("a")
-    entry = u"tRNA Asp ⊄UC"
+    entry = "tRNA Asp ⊄UC"
     element = data.create_tag(root, "example", entry)
     assert element.tag == "example"
     assert element.attrib == {}
-    assert element.text == u"tRNA Asp ⊄UC"
+    assert element.text == "tRNA Asp ⊄UC"
     assert element in list(root)
 
 
@@ -146,3 +147,29 @@ def notes_can_parse_weird_notes():
     ]
     refs = data.note_references(notes)
     assert refs
+
+
+# Same split as the FTP export's per-kingdom folders, so the facet and the downloads agree.
+@pytest.mark.parametrize(
+    "tax_string,expected",
+    [
+        ("Eukaryota; Metazoa; Chordata; Vertebrata; Homo sapiens", "vertebrates"),
+        ("Eukaryota; Metazoa; Arthropoda; Insecta; Drosophila melanogaster", "metazoa"),
+        ("Eukaryota; Viridiplantae; Streptophyta; Arabidopsis thaliana", "plants"),
+        ("Eukaryota; Fungi; Ascomycota; Saccharomyces cerevisiae", "fungi"),
+        ("Bacteria; Pseudomonadota; Escherichia coli", "bacteria"),
+        ("Archaea; Euryarchaeota; Methanococcus", "archaea"),
+        ("Viruses; Riboviria; Influenza A virus", "viruses"),
+        (
+            "unclassified entries; environmental samples; marine metagenome",
+            "environmental",
+        ),
+        ("Eukaryota; Apicomplexa; Plasmodium falciparum", "protists"),
+    ],
+)
+def test_kingdom_follows_the_lineage(tax_string, expected):
+    assert data.kingdoms([tax_string]) == [expected]
+
+
+def test_kingdoms_are_deduplicated():
+    assert data.kingdoms(["Bacteria; A", "Bacteria; B"]) == ["bacteria"]
