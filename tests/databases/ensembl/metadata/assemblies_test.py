@@ -142,3 +142,8 @@ def test_loading_never_blanks_an_existing_ucsc_alias():
         sql,
         re.IGNORECASE,
     )
+
+
+# A missing comma once fused these two into one string, so neither got blat_mapping.
+def test_rat_and_yeast_are_blat_genomes():
+    assert {"rattus_norvegicus", "saccharomyces_cerevisiae"} <= assem.BLAT_GENOMES
