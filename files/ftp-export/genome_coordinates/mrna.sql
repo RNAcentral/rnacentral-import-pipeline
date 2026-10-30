@@ -11,12 +11,12 @@ SELECT
     -- A transcript's UTRs are imported as <accession>:<five|three>_prime_UTR
     'five_prime_utr', (
       SELECT utr.urs || '_' || utr.taxid FROM xref utr
-      WHERE utr.dbid = 61 AND utr.deleted = 'N'
+      WHERE utr.dbid = 60 AND utr.deleted = 'N'
         AND utr.ac = acc.accession || ':five_prime_UTR'
     ),
     'three_prime_utr', (
       SELECT utr.urs || '_' || utr.taxid FROM xref utr
-      WHERE utr.dbid = 61 AND utr.deleted = 'N'
+      WHERE utr.dbid = 60 AND utr.deleted = 'N'
         AND utr.ac = acc.accession || ':three_prime_UTR'
     ),
     'chromosome', regions.chromosome,
@@ -32,7 +32,7 @@ JOIN rnc_accession_sequence_region sra ON sra.accession = acc.accession
 JOIN rnc_sequence_regions regions ON regions.id = sra.region_id
 JOIN rnc_sequence_exons exons ON exons.region_id = regions.id
 WHERE
-  xref.dbid = 61
+  xref.dbid = 60
   AND xref.deleted = 'N'
   AND acc.feature_name = 'mRNA'
   AND regions.assembly_id = :'assembly_id'

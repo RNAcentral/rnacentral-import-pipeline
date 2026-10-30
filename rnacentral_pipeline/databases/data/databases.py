@@ -97,8 +97,8 @@ class Database(enum.Enum):
     mirtrondb = DatabaseValue(56, "mirtronDB", "MIRTRONDB")
     japonicusdb = DatabaseValue(58, "JaponicusDB", "JAPONICUSDB")
     circatlas = DatabaseValue(59, "circAtlas", "CIRCATLAS")
-    circpedia = DatabaseValue(60, "CIRCpedia", "CIRCPEDIA")
-    ensembl_coding = DatabaseValue(61, "Ensembl coding", "ENSEMBL_CODING")
+    circpedia = DatabaseValue(57, "CIRCpedia", "CIRCPEDIA")
+    ensembl_coding = DatabaseValue(60, "Ensembl coding", "ENSEMBL_CODING")
 
     @classmethod
     def build(cls, name: str) -> Database:

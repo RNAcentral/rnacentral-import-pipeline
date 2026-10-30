@@ -8,7 +8,7 @@ ALTER TABLE load_compara
   ADD COLUMN dbid int
 ;
 
--- Ensembl ncRNA (25) and Ensembl coding (61) transcripts, retired ones included
+-- Ensembl ncRNA (25) and Ensembl coding (60) transcripts, retired ones included
 -- so their old rows can be replaced. The mRNA database keeps each transcript's
 -- UTRs under the same external_id, so only its mRNA entry stands for it.
 CREATE TEMP TABLE compara_transcripts AS
@@ -20,7 +20,7 @@ select
 from xref
 join rnc_accessions acc on acc.accession = xref.ac
 where
-  xref.dbid IN (25, 61)
+  xref.dbid IN (25, 60)
   and (xref.dbid = 25 or acc.feature_name = 'mRNA')
 ;
 

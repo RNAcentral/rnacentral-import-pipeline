@@ -48,7 +48,7 @@ Plants, Metazoa, Fungi and Protists divisions.
 
 ### Before the test run
 
-9. **Check that dbid 61 is free in the target database.** The public copy tops
+9. **Check that dbid 60 is free in the target database.** The public copy tops
    out at 59, but production may be ahead of it.
 10. **Create the database row and its xref partitions.** `xref` is partitioned
     by `dbid`, then by `deleted`. The legacy `xref_insert_trigger` isn't used.
@@ -57,17 +57,17 @@ Plants, Metazoa, Fungi and Protists divisions.
     ```sql
     BEGIN;
     INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr)
-    VALUES (61, now(), 'RNACEN', 'ENSEMBL_CODING', 'Y', 'Ensembl coding', 'Ensembl coding');
+    VALUES (60, now(), 'RNACEN', 'ENSEMBL_CODING', 'Y', 'Ensembl coding', 'Ensembl coding');
 
-    CREATE TABLE rnacen.xref_p61 PARTITION OF rnacen.xref FOR VALUES IN (61) PARTITION BY LIST (deleted);
-    CREATE TABLE rnacen.xref_p61_deleted PARTITION OF rnacen.xref_p61 FOR VALUES IN ('Y');
-    CREATE TABLE rnacen.xref_p61_not_deleted PARTITION OF rnacen.xref_p61 FOR VALUES IN ('N');
+    CREATE TABLE rnacen.xref_p60 PARTITION OF rnacen.xref FOR VALUES IN (60) PARTITION BY LIST (deleted);
+    CREATE TABLE rnacen.xref_p60_deleted PARTITION OF rnacen.xref_p60 FOR VALUES IN ('Y');
+    CREATE TABLE rnacen.xref_p60_not_deleted PARTITION OF rnacen.xref_p60 FOR VALUES IN ('N');
 
     DO $$
     DECLARE t text; flag text;
     BEGIN
-      FOR t, flag IN VALUES ('xref_p61_deleted', 'Y'), ('xref_p61_not_deleted', 'N') LOOP
-        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I CHECK (dbid = 61 AND deleted = %L)', t, t || '_check', flag);
+      FOR t, flag IN VALUES ('xref_p60_deleted', 'Y'), ('xref_p60_not_deleted', 'N') LOOP
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I CHECK (dbid = 60 AND deleted = %L)', t, t || '_check', flag);
         EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (created) REFERENCES rnacen.rnc_release(id)', t, t || '_fk1');
         EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (dbid) REFERENCES rnacen.rnc_database(id)', t, t || '_fk2');
         EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (last) REFERENCES rnacen.rnc_release(id)', t, t || '_fk3');
