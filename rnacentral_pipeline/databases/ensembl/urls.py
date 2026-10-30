@@ -58,6 +58,8 @@ LEGACY_ASSEMBLIES = (
     / "ensembl"
     / "legacy-assemblies.txt"
 )
+# The exact versions RNAcentral selects today, so a species keeps its version too
+CURRENT_ASSEMBLIES = LEGACY_ASSEMBLIES.with_name("current-assemblies.txt")
 
 
 @attr.s()
@@ -82,8 +84,10 @@ def _load(location: str):
         return json.load(handle)
 
 
-def legacy_assemblies(path: Path = LEGACY_ASSEMBLIES) -> ty.FrozenSet[str]:
-    return frozenset(path.read_text().split())
+def legacy_assemblies(
+    path: Path = LEGACY_ASSEMBLIES, current: Path = CURRENT_ASSEMBLIES
+) -> ty.FrozenSet[str]:
+    return frozenset(path.read_text().split() + current.read_text().split())
 
 
 def _provider_tier(provider: str) -> int:
@@ -95,11 +99,17 @@ def _provider_tier(provider: str) -> int:
 
 
 def _candidate_key(
-    is_legacy: bool, provider: str, level: str, latest: str
-) -> ty.Tuple[bool, int, int, str]:
+    is_current: bool, is_legacy: bool, provider: str, level: str, latest: str
+) -> ty.Tuple[bool, bool, int, int, str]:
     # The assembly RNAcentral already uses wins, then provider so a species keeps
     # its Ensembl (or other non-NCBI) build, then assembly level, then newest build.
-    return (is_legacy, _provider_tier(provider), LEVEL_RANK.get(level, 0), latest)
+    return (
+        is_current,
+        is_legacy,
+        _provider_tier(provider),
+        LEVEL_RANK.get(level, 0),
+        latest,
+    )
 
 
 def _select_geneset(
@@ -116,7 +126,11 @@ def _select_geneset(
         is_legacy = accession.split(".")[0] in legacy
         for provider, releases in assembly.get("genebuild_providers", {}).items():
             key = _candidate_key(
-                is_legacy, provider, assembly.get("level"), max(releases)
+                accession in legacy,
+                is_legacy,
+                provider,
+                assembly.get("level"),
+                max(releases),
             )
             if best is None or key > best[0]:
                 best = (key, accession, releases)
