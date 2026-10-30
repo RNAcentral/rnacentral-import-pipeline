@@ -161,3 +161,11 @@ def test_mrna_only_sequences_are_not_qa_checked():
     assert qa.status(
         builders.context(), shared, "ncRNA"
     ).possible_contamination.has_issue
+
+
+def test_sgd_coding_only_sequences_are_not_qa_checked():
+    from .. import builders
+
+    utr = builders.sequence(accessions=[builders.accession("SGD_CODING", "SO:0000205")])
+    status = qa.status(builders.context(), utr, "ncRNA")
+    assert not any(getattr(status, f.name).has_issue for f in attr.fields(type(status)))

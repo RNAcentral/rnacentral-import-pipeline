@@ -48,6 +48,7 @@ ACCEPTED_DATABASES = {
     Database.plncdb,
     Database.pombase,
     # Database.sgd, This is excluded because they tend ot use things like rRNA_gene, which we don't like as much as the transcript terms
+    Database.sgd_coding,
     Database.snodb,
     Database.snopy,
     Database.snorna_database,

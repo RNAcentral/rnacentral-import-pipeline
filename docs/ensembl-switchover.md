@@ -110,6 +110,15 @@ Plants, Metazoa, Fungi and Protists divisions.
     the FTP FASTA and ID-mapping exports, and how the website shows UTR links and
     tags (web team).
 
+## SGD coding (`SGD_CODING`, branch `update/SGD-coding`)
+
+17. **Create the database row and xref partitions for dbid 61.** Run item 10's SQL
+    with `61`, `'SGD_CODING'` and `'SGD coding'` in place of `60`,
+    `'ENSEMBL_CODING'` and `'Ensembl coding'`. Item 11's link types are shared.
+18. **Run the import with `databases.sgd_coding.run = true`.** It reads SGD's GFF,
+    which carries the Pelechano 2013 transcript ends and the genome sequence.
+    Dubious ORFs are left out.
+
 ## Decisions to confirm
 
 8. **Description weight for Ensembl bacteria and archaea is 10.** Ensembl never
