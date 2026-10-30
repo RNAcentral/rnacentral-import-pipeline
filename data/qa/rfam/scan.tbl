@@ -130,12 +130,3 @@
 1    mir-26               RF00244   URS0000A77A95        -         -          cm        1       74        7       77      +    no    1 0.54   0.0   71.6   2.5e-18  !   *       -      -      -      -      -      - -
 1    U6                   RF00026   URS0000A77A9A        -         CL00009    cm        1      104        1      103      +    no    1 0.41   0.0   66.0   1.5e-16  !   *       -      -      -      -      -      - -
 #
-# Program:         cmscan
-# Version:         1.1.2 (July 2016)
-# Pipeline mode:   SCAN
-# Query file:      /hps/nobackup/production/xfam/rfam/RNAcentral/release7/chunks/rnac7_0000.fa
-# Target file:     /hps/nobackup/production/xfam/rfam/CMs/Rfam12_2.cm
-# Option settings: /nfs/research2/nobackup/rfamp/infernal1.2/infernal-1.1.2/bin/cmscan -o /hps/nobackup/production/xfam/rnac7_subs_clancompeted/H/rnac7_0000.fa.inf --tblout /hps/nobackup/production/xfam/rnac7_subs_clancompeted/H/rnac7_0000.fa.tbl --fmt 2 --acc --notextw --cut_ga --rfam --nohmmonly --clanin /hps/nobackup/production/xfam/rfam/CMs/Rfam12_2.clanin --oclan --mpi /hps/nobackup/production/xfam/rfam/CMs/Rfam12_2.cm /hps/nobackup/production/xfam/rfam/RNAcentral/release7/chunks/rnac7_0000.fa
-# Current dir:     /nfs/production/xfam/users/ikalvari/rfamp/code
-# Date:            Fri Aug 11 12:57:41 2017
-# [ok]

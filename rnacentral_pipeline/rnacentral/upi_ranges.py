@@ -14,8 +14,11 @@ limitations under the License.
 """
 
 import csv
+import re
 
 from ..db import cursor
+
+TABLE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
 def ranges_between(start, stop, max_size):
@@ -35,6 +38,9 @@ def upi_ranges(dbconf, table_name, max_size):
     """
     This will create range of the ids for all UPI's in the database.
     """
+
+    if not TABLE_NAME.fullmatch(table_name):
+        raise ValueError(f"Invalid table name: {table_name!r}")
 
     with cursor(dbconf) as cur:
         cur.execute("select max(id) from %s" % table_name)

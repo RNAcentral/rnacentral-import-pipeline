@@ -67,3 +67,9 @@ def test_can_get_range_of_all_upis():
 
     assert len(ranges) >= 135
     assert ranges[-1][-1] == stop
+
+
+@pytest.mark.parametrize("name", ["rna; drop table rna", "rna--", "a.b", "", "1rna"])
+def test_upi_ranges_rejects_unsafe_table_names(name):
+    with pytest.raises(ValueError):
+        upi_ranges("unused", name, 100)
