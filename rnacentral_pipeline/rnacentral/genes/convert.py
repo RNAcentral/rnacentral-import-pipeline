@@ -12,15 +12,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
+import re
 import tempfile
 from pathlib import Path
 
 import gffutils
 import polars as pl
-import psycopg2 as pg
 from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.rnacentral.genes.random_forest import data
+from rnacentral_pipeline.rnacentral.genes import extract as data
 
 insdc_so_lookup = {
     "ncRNA": "SO:0000655",
@@ -59,32 +60,73 @@ def get_assembly(path: Path) -> str:
                 break
             if line.startswith("#!genome-version"):
                 parts = line.split(" ", 1)
-                return parts[1]
+                return parts[1].strip()
 
     raise ValueError(f"Could not find assembly id in {path}")
 
 
-def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
+## circRNAs and piRNAs are not clustered into genes; these are the `type`s the GFF export writes
+EXCLUDED_RNA_TYPES = {"circRNA", "piRNA"}
+
+
+def keep_valid_start(feature):
+    """
+    gffutils index transform: a GFF start below 1 is invalid and makes gffutils' bin calculation
+    return a set, which SQLite cannot store (and gffutils then hides that error behind a
+    misleading `str has no attribute decode`). Some exports contain such features (a start of 0 on the first
+    bases of a sequence). Index it with start 1, and keep the value from the file in `raw_start` so the
+    region name, which includes the coordinates, is still what the file says.
+    """
+    if feature.start < 1:
+        feature.attributes["raw_start"] = [str(feature.start)]
+        feature.start = 1
+    return feature
+
+
+def file_start(feature):
+    """The start as written in the file."""
+    return (
+        int(feature.attributes["raw_start"][0])
+        if "raw_start" in feature.attributes
+        else feature.start
+    )
+
+
+def load_coordinates(
+    path: Path,
+    taxid: int,
+    regions_data: Path | None = None,
+    assembly_id: str | None = None,
+    min_chromosome_transcripts: int = data.MIN_CHROMOSOME_TRANSCRIPTS,
+) -> pl.DataFrame:
     """
     Load transcript coordinates from a GFF3 file and return a Polars DataFrame.
     Args:
         path (Path): Path to the GFF3 file.
         taxid (int): Taxonomy ID for the transcripts.
-        regions_data (Path): path to the regions data in CSV
+        regions_data (Path): regions of the taxid, used to find each region's assembly
+        assembly_id (str): stamp every transcript with this assembly instead of
+            joining to regions_data. Needed to replay old releases, whose regions
+            are no longer in the database.
+        min_chromosome_transcripts (int): drop chromosomes with fewer transcripts than this
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
+    if assembly_id is None and regions_data is None:
+        raise ValueError("either assembly_id or regions_data is required")
     transcript_data = []
 
     with tempfile.NamedTemporaryFile() as tmp:
-        db = gffutils.create_db(str(path), tmp.name)
+        db = gffutils.create_db(str(path), tmp.name, transform=keep_valid_start)
         for ncrna_gene in db.features_of_type(("transcript")):
-            region_start = ncrna_gene.start
+            region_start = file_start(ncrna_gene)
             region_stop = ncrna_gene.stop
             chromosome = ncrna_gene.chrom
             strand = ncrna_gene.strand
             urs = ncrna_gene.attributes["Name"][0]
             rna_insdc_type = ncrna_gene.attributes["type"][0]
+            if rna_insdc_type in EXCLUDED_RNA_TYPES:
+                continue
             rna_so_type = insdc_so_lookup.get(rna_insdc_type, "SO:0000655")
             if "_" in urs:
                 urs_taxid = urs
@@ -92,8 +134,8 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
                 urs_taxid = f"{urs}_{taxid}"
 
             exons = []
-            for exon in db.children(ncrna_gene.id):
-                exon_start = exon.start
+            for exon in sorted(db.children(ncrna_gene.id), key=lambda f: f.start):
+                exon_start = file_start(exon)
                 exon_stop = exon.stop
                 exon_dict = {
                     "chromosome": chromosome,
@@ -107,6 +149,10 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
                     "so_type": rna_so_type,
                 }
                 exons.append(exon_dict)
+            if not urs_taxid.startswith("URS"):
+                raise ValueError(
+                    f"{path}: transcript {ncrna_gene.id} is not a URS_taxid"
+                )
             if len(exons) == 0:
                 region_id = (
                     f"{urs_taxid}@{chromosome}/{region_start}-{region_stop}:{strand}"
@@ -128,18 +174,23 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
                 exon_regions = ",".join(
                     [f"{e['exon_start']}-{e['exon_stop']}" for e in exons]
                 )
+                # the GFF ID is <urs_taxid>.<n>, not the region name, so rebuild it as the database does
                 region_id = f"{urs_taxid}@{chromosome}/{exon_regions}:{strand}"
                 for e in exons:
                     e["region_name"] = region_id
                 transcript_data.extend(exons)
 
     transcript_dataframe = pl.DataFrame(transcript_data)
-    ## Assembly ID is not guaranteed to be in the filename, so query it from the DB here
-    ## - Is it possible for a region ID to be on multiple assemblies?
-    ## I don't _think_ it is, but if things go wrong, check here
-    transcript_dataframe = data.add_assembly_region_ids(
-        transcript_dataframe, regions_data
-    )
+    if assembly_id is not None:
+        transcript_dataframe = transcript_dataframe.with_columns(
+            pl.lit(assembly_id).alias("assembly_id")
+        )
+    else:
+        ## A region_name can exist on several assemblies, so the regions must
+        ## be for the assembly of this file or transcripts are duplicated
+        transcript_dataframe = data.add_assembly_region_ids(
+            transcript_dataframe, regions_data
+        )
 
     transcript_dataframe = transcript_dataframe.group_by(
         ["assembly_id", "chromosome", "region_name"], maintain_order=True
@@ -153,10 +204,18 @@ def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
         pl.col("so_type").first(),
     )
 
-    return transcript_dataframe
+    return data.drop_sparse_chromosomes(
+        transcript_dataframe, min_chromosome_transcripts
+    )
 
 
-def gff_to_polars(path: Path, taxid: int, regions_data: Path) -> pl.DataFrame:
+def gff_to_polars(
+    path: Path,
+    taxid: int,
+    regions_data: Path | None = None,
+    assembly_id: str | None = None,
+    min_chromosome_transcripts: int = data.MIN_CHROMOSOME_TRANSCRIPTS,
+) -> pl.DataFrame:
     """
     Convert a GFF3 file to a Polars DataFrame containing transcript coordinates.
 
@@ -168,41 +227,6 @@ def gff_to_polars(path: Path, taxid: int, regions_data: Path) -> pl.DataFrame:
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
-    return load_coordinates(path, taxid, regions_data)
-
-
-def database_to_bed(
-    output_path: Path, taxid: int, assembly_id: str, conn_str: str
-) -> None:
-    """
-    Convert transcript data from the database to a BED file format.
-
-    Args:
-        output_path (Path): Path to save the output BED file.
-        taxid (int): Taxonomy ID for the transcripts.
-        conn_str (str): Database connection string to fetch transcript data.
-    """
-    conn = pg.connect(conn_str)
-    cur = conn.cursor()
-
-    cur.execute(
-        """
-        SELECT chromosome, start-1, stop, public_name, 0, strand
-        FROM rnc_genes
-        WHERE assembly_id = %s
-        AND taxid = %s
-        ORDER BY chromosome, start
-    """,
-        (
-            assembly_id,
-            taxid,
-        ),
+    return load_coordinates(
+        path, taxid, regions_data, assembly_id, min_chromosome_transcripts
     )
-
-    with open(output_path, "w") as f:
-        for row in cur.fetchall():
-            chrom = f"chr{row[0]}" if not str(row[0]).startswith("chr") else str(row[0])
-            f.write(f"{chrom}\t{row[1]}\t{row[2]}\t{row[3]}\t{row[4]}\t{row[5]}\n")
-
-    cur.close()
-    conn.close()
