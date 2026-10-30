@@ -94,7 +94,7 @@ Plants, Metazoa, Fungi and Protists divisions.
     ```
 
 12. **Run the import with only `databases.ensembl_coding.run = true`.** It already
-    limits itself to `['homo_sapiens', 'mus_musculus']`.
+    limits itself to the species in `databases.ensembl_coding.species`.
 
 ### After the test run
 
