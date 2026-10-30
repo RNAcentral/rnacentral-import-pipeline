@@ -93,7 +93,7 @@ Plants, Metazoa, Fungi and Protists divisions.
     ALTER TYPE rnacen.related_sequence_relationship ADD VALUE IF NOT EXISTS 'mrna';
     ```
 
-12. **Run the import with only `databases.ensembl_mrna.run = true`.** It already
+12. **Run the import with only `databases.ensembl_coding.run = true`.** It already
     limits itself to `['homo_sapiens', 'mus_musculus']`.
 
 ### After the test run

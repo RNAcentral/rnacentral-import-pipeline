@@ -6,7 +6,7 @@ process find_mrna_urls {
   output:
   path('species.csv')
 
-  when: params.databases.ensembl_mrna?.run
+  when: params.databases.ensembl_coding?.run
 
   script:
   """
@@ -70,7 +70,7 @@ workflow ensembl_mrna {
   main:
     find_mrna_urls() \
     | splitCsv \
-    | filter { row -> row[0].toLowerCase() in params.databases.ensembl_mrna.species } \
+    | filter { row -> row[0].toLowerCase() in params.databases.ensembl_coding.species } \
     | set { selected }
 
     selected \
