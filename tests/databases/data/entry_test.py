@@ -283,9 +283,10 @@ def test_write_ac_info_truncates_long_description_for_load_table():
         ("ENA", False),
         ("ENSEMBL", False),
         ("ENSEMBL_CODING", True),
+        ("SGD_CODING", True),
     ],
 )
-def test_only_ensembl_coding_may_import_mrna(database, valid):
+def test_only_coding_databases_may_import_mrna(database, valid):
     entry = data.Entry(
         primary_id="a",
         accession="b",

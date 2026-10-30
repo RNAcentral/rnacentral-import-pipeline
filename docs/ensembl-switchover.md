@@ -180,6 +180,15 @@ proper review and clean-up. Checked against species.json on 2026-10-30:
   (TAIR12) have newer genomes with better UTR coverage. Moving a species is a
   whole-species decision, ncRNAs included.
 
+## SGD coding (`SGD_CODING`, branch `update/SGD-coding`)
+
+17. **Create the database row and xref partitions for dbid 61.** Run item 10's SQL
+    with `61`, `'SGD_CODING'` and `'SGD coding'` in place of `60`,
+    `'ENSEMBL_CODING'` and `'Ensembl coding'`. Item 11's link types are shared.
+18. **Run the import with `databases.sgd_coding.run = true`.** It reads SGD's GFF,
+    which carries the Pelechano 2013 transcript ends and the genome sequence.
+    Dubious ORFs are left out.
+
 ## Decisions to confirm
 
 8. **Description weight for Ensembl bacteria and archaea is 10.** Ensembl never

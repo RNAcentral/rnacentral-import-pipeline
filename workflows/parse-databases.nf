@@ -34,6 +34,7 @@ include { rfam } from './databases/rfam'
 include { rgd } from './databases/rgd'
 include { ribovision } from './databases/ribovision'
 include { sgd } from './databases/sgd'
+include { sgd_coding } from './databases/sgd_coding'
 include { silva } from './databases/silva'
 include { snodb } from './databases/snodb'
 include { snorna_database } from './databases/snorna_database'
@@ -110,6 +111,7 @@ workflow parse_databases {
       ribovision(),
       ribocentre(),
       sgd(),
+      sgd_coding(),
       silva(context),
       snodb(),
       snorna_database(),

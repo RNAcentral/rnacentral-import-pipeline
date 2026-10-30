@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases.generic import parser as generic
+from rnacentral_pipeline.databases.sgd import coding
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -42,3 +43,16 @@ def process_json_schema(json_file, output):
     entries = generic.parse(json_file)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
+
+
+@cli.command("parse-coding")
+@click.argument("gff_file", type=click.File("r"))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+def process_coding(gff_file, output):
+    """Parse SGD's GFF into mRNAs and their UTRs."""
+    with entry_writer(Path(output)) as writer:
+        writer.write(coding.parse(gff_file))
