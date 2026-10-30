@@ -266,7 +266,8 @@ def test_the_used_assembly_list_holds_only_reference_genomes():
     legacy = urls.legacy_assemblies()
     assert {"GCA_000001405", "GCA_016699485", "GCA_000001735"} <= legacy
     assert "GCA_000002315" not in legacy
-    assert all(re.fullmatch(r"GC[AF]_\d{9}", a) for a in legacy)
+    assert all(re.fullmatch(r"GC[AF]_\d{9}(\.\d+)?", a) for a in legacy)
+    assert {"GCA_000002765.3", "GCA_016772045.2"} <= legacy
 
 
 def test_mrna_rows_carry_the_homology_file_when_there_is_one():
@@ -315,3 +316,19 @@ def test_genome_is_absent_when_species_json_lists_none():
         }
     )
     assert got["Danio_rerio"].genome_url is None
+
+
+def test_keeps_the_exact_version_rnacentral_uses():
+    assemblies = {
+        "GCA_000002765.2": assembly(
+            "chromosome", {"community": build("2017_10", "asm276v2")}
+        ),
+        "GCA_000002765.3": assembly(
+            "primary_assembly", {"community": build("2025_08", "with_utrs")}
+        ),
+    }
+    got = select(
+        {"Plasmodium_falciparum_3D7": species(**assemblies)},
+        legacy={"GCA_000002765", "GCA_000002765.3"},
+    )
+    assert got["Plasmodium_falciparum_3D7"].embl_url == "B/with_utrs.embl.gz"
