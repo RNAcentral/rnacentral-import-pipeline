@@ -61,7 +61,6 @@ DEFAULT_TARGETS = [
     "tests/databases/ena/dr_test.py",
     "tests/databases/europepmc/xml_test.py",
     "tests/databases/data/references_test.py",
-    "tests/databases/ensembl/genomes/urls_test.py",
     "tests/databases/ensembl/metadata/databases_test.py",
     "tests/databases/ensembl/metadata/karyotypes_test.py",
     "tests/databases/sequence_ontology/tree_test.py",

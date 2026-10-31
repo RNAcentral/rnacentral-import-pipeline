@@ -15,25 +15,9 @@ limitations under the License.
 
 import typing as ty
 
-from rnacentral_pipeline.databases.ensembl import fungi
-from rnacentral_pipeline.databases.ensembl import metazoa
-from rnacentral_pipeline.databases.ensembl import plants
-from rnacentral_pipeline.databases.ensembl import protists
 from rnacentral_pipeline.databases.ensembl import vertebrates
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene
 
-from rnacentral_pipeline.databases.ensembl.data import Division, Pseudogene
 
-
-def parse(division: Division, handle: ty.IO) -> ty.Iterable[Pseudogene]:
-    if division == Division.fungi:
-        yield from fungi.pseudogenes(handle)
-    elif division == Division.metazoa:
-        yield from metazoa.pseudogenes(handle)
-    elif division == Division.plants:
-        yield from plants.pseudogenes(handle)
-    elif division == Division.protists:
-        yield from protists.pseudogenes(handle)
-    elif division == Division.vertebrates:
-        yield from vertebrates.pseudogenes(handle)
-    else:
-        raise ValueError(f"Unknown division {division}")
+def parse(handle: ty.IO) -> ty.Iterable[Pseudogene]:
+    yield from vertebrates.pseudogenes(handle)

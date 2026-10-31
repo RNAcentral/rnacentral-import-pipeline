@@ -34,7 +34,7 @@ FROM load_assemblies
 SET
   assembly_full_name = EXCLUDED.assembly_full_name,
   gca_accession = EXCLUDED.gca_accession,
-  assembly_ucsc = EXCLUDED.assembly_ucsc,
+  assembly_ucsc = COALESCE(EXCLUDED.assembly_ucsc, ensembl_assembly.assembly_ucsc),
   common_name = EXCLUDED.common_name,
   taxid = EXCLUDED.taxid,
   ensembl_url = EXCLUDED.ensembl_url,
