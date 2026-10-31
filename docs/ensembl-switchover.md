@@ -139,13 +139,13 @@ proper review and clean-up. Checked against species.json on 2026-10-30:
 
 - **Regenerate `current-assemblies.txt` from production** before the run. The
   public copy may lag behind it.
-- **Renamed assemblies.** At least 33 genomes keep the same GCA but Ensembl's
+- **Renamed assemblies.** 34 genomes keep the same GCA but Ensembl's
   files now give a different assembly name. Examples: Plasmodium falciparum
   (`GCA000002765v3` → `GCA_000002765`), P. vivax, vervet (`ChlSab1.1` →
   `Chlorocebus_sabeus_1.1`), several Aspergillus and Candida, and names with a
-  new `gb` suffix. Another 47 could not be checked because the FTP refused the
-  header requests. Unless the new names are mapped to RNAcentral's existing
-  ones, the import creates a second row and duplicate coordinates for each.
+  new `gb` suffix. Folsomia candida could not be checked: its GTF is missing
+  from the FTP. Unless the new names are mapped to RNAcentral's existing ones,
+  the import creates a second row and duplicate coordinates for each.
 - **Versions Ensembl no longer offers.** 10 genomes only have a different
   version in species.json now (e.g. Amphiprion percula `.1` → `.2`), so they
   move assembly and their old coordinates stay behind.
