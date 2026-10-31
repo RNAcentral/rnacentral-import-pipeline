@@ -75,7 +75,11 @@ def protein_coding(gff_file: Path) -> ty.Dict[str, ty.Tuple[str, ty.List[str]]]:
                 has_mrnas = True
                 tags = [t for t in attrs.get("tag", "").split(",") if t in TAGS]
                 gene = attrs["Parent"].split(":", 1)[1]
-                transcripts[attrs["ID"].split(":", 1)[1]] = (gene, sorted(tags))
+                # Matched against the EMBL's full id: Plasmodium's ids carry a dot
+                transcript = attrs.get("transcript_id", attrs["ID"].split(":", 1)[1])
+                if "version" in attrs:
+                    transcript = f"{transcript}.{attrs['version']}"
+                transcripts[transcript] = (gene, sorted(tags))
     # Some genomes list only genes in the GFF3, so their EMBL mRNAs are found by gene
     return transcripts if has_mrnas else genes
 
@@ -189,9 +193,9 @@ def parse(raw: ty.IO, gff_file: Path) -> ty.Iterable[data.Entry]:
             if embl.is_gene(feature):
                 gene = feature
             elif feature.type == "mRNA":
-                mrnas[helpers.primary_id(feature)] = (gene, feature)
+                mrnas[helpers.accession(feature)] = (gene, feature)
             elif feature.type == "CDS":
-                pid = helpers.primary_id(feature)
+                pid = helpers.accession(feature)
                 gene_id = (embl.qualifier_string(feature, "gene") or "").split(".")[0]
                 found = wanted.get(pid) or wanted.get(gene_id)
                 if found and pid in mrnas:

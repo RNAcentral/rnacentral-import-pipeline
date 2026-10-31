@@ -188,3 +188,19 @@ def test_a_cds_starting_mid_codon_records_its_phase(tmp_path):
     assert all(
         "cds_phase" not in e.note_data for e in found.values() if e not in shifted
     )
+
+
+def test_keeps_isoforms_whose_ids_contain_a_dot():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.mrna.gff3")
+    with open("data/ensembl/Plasmodium_falciparum_3D7.mrna.embl", "r") as raw:
+        found = list(mrna.parse(raw, gff))
+    mrnas = {e.accession: e for e in found if e.rna_type == "SO:0000234"}
+    assert set(mrnas) == {
+        "PF3D7_0206900.1",
+        "PF3D7_0206900.2",
+        "PF3D7_1002400.1",
+        "PF3D7_1002400.2",
+    }
+    for entry in mrnas.values():
+        links = {r.relationship for r in entry.related_sequences}
+        assert links == {"five_prime_utr", "three_prime_utr"}
