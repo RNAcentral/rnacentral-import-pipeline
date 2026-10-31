@@ -148,6 +148,23 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
     to them, mRNAs typed `mRNA` and UTRs typed `ncRNA`. Their import may assume
     everything in it is a non-coding RNA.
 
+## SGD coding (`SGD_CODING`, branch `update/SGD-coding`)
+
+19. **Create the database row and xref partitions for dbid 61.** Use this row, then
+    item 10's partition SQL with `61` in place of `60`. Item 11's link types are
+    shared.
+
+    ```sql
+    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr, description, url, reference)
+    VALUES (61, now(), 'RNACEN', 'SGD_CODING', 'Y', 'SGD coding', 'SGD coding',
+      ': budding yeast mRNAs and their 5'' and 3'' UTRs from the Saccharomyces Genome Database',
+      'https://www.yeastgenome.org',
+      '[{"title":"Saccharomyces Genome Database: the genomics resource of budding yeast","authors":"Cherry JM, Hong EL, Amundsen C, et al.","journal":"Nucleic Acids Research, 2012","pubmed_id":"22110037"},{"title":"Extensive transcriptional heterogeneity revealed by isoform profiling","authors":"Pelechano V, Wei W, Steinmetz LM","journal":"Nature, 2013","pubmed_id":"23615609"}]'::jsonb);
+    ```
+20. **Run the import with `databases.sgd_coding.run = true`.** It reads SGD's GFF,
+    which carries the Pelechano 2013 transcript ends and the genome sequence.
+    Dubious ORFs are left out.
+
 ## Assemblies: review before the first production run
 
 The import now keeps each species on the exact assembly RNAcentral selects today
@@ -179,15 +196,6 @@ proper review and clean-up. Checked against species.json on 2026-10-30:
 - **Newer references not taken up.** Zebrafish (GRCz12tu) and Arabidopsis
   (TAIR12) have newer genomes with better UTR coverage. Moving a species is a
   whole-species decision, ncRNAs included.
-
-## SGD coding (`SGD_CODING`, branch `update/SGD-coding`)
-
-17. **Create the database row and xref partitions for dbid 61.** Run item 10's SQL
-    with `61`, `'SGD_CODING'` and `'SGD coding'` in place of `60`,
-    `'ENSEMBL_CODING'` and `'Ensembl coding'`. Item 11's link types are shared.
-18. **Run the import with `databases.sgd_coding.run = true`.** It reads SGD's GFF,
-    which carries the Pelechano 2013 transcript ends and the genome sequence.
-    Dubious ORFs are left out.
 
 ## Decisions to confirm
 
