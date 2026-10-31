@@ -56,8 +56,11 @@ Plants, Metazoa, Fungi and Protists divisions.
 
     ```sql
     BEGIN;
-    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr)
-    VALUES (60, now(), 'RNACEN', 'ENSEMBL_CODING', 'Y', 'Ensembl coding', 'Ensembl coding');
+    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr, description, url, reference)
+    VALUES (60, now(), 'RNACEN', 'ENSEMBL_CODING', 'Y', 'Ensembl coding', 'Ensembl coding',
+      ': protein-coding mRNAs and their 5'' and 3'' UTRs from Ensembl',
+      'https://www.ensembl.org',
+      '[{"title":"Ensembl 2025","authors":"Dyer SC, Austine-Orimoloye O, Azov AG, et al.","journal":"Nucleic Acids Research, 2025","pubmed_id":"39656687"}]'::jsonb);
 
     CREATE TABLE rnacen.xref_p60 PARTITION OF rnacen.xref FOR VALUES IN (60) PARTITION BY LIST (deleted);
     CREATE TABLE rnacen.xref_p60_deleted PARTITION OF rnacen.xref_p60 FOR VALUES IN ('Y');

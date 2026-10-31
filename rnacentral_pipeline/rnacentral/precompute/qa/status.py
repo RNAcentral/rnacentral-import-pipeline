@@ -38,7 +38,8 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
 
     # These checks judge ncRNAs; on mRNAs and UTRs they only raise meaningless
     # flags, so a sequence known only from a coding database is not checked.
-    if all(acc.database in CODING for acc in sequence.accessions):
+    accessions = sequence.accessions
+    if accessions and all(a.database in CODING for a in accessions):
         fields = attr.fields(QaStatus)
         return QaStatus(**{f.name: QaResult.null(f.name) for f in fields})
 

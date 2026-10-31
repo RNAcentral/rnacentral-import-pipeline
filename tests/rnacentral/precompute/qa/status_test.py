@@ -169,3 +169,14 @@ def test_sgd_coding_only_sequences_are_not_qa_checked():
     utr = builders.sequence(accessions=[builders.accession("SGD_CODING", "SO:0000205")])
     status = qa.status(builders.context(), utr, "ncRNA")
     assert not any(getattr(status, f.name).has_issue for f in attr.fields(type(status)))
+
+
+def test_sequences_without_active_accessions_are_still_qa_checked():
+    from .. import builders
+
+    hit = builders.rfam_hit(
+        "RF00177", "SO:0000650", sequence_completeness=0.3, model_domain="Bacteria"
+    )
+    retired = builders.sequence(accessions=[], rfam_hits=[hit])
+    status = qa.status(builders.context(), retired, "rRNA")
+    assert status.incomplete_sequence.has_issue is not None
