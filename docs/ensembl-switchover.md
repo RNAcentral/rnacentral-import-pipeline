@@ -115,9 +115,17 @@ Plants, Metazoa, Fungi and Protists divisions.
 
 ## SGD coding (`SGD_CODING`, branch `update/SGD-coding`)
 
-17. **Create the database row and xref partitions for dbid 61.** Run item 10's SQL
-    with `61`, `'SGD_CODING'` and `'SGD coding'` in place of `60`,
-    `'ENSEMBL_CODING'` and `'Ensembl coding'`. Item 11's link types are shared.
+17. **Create the database row and xref partitions for dbid 61.** Use this row, then
+    item 10's partition SQL with `61` in place of `60`. Item 11's link types are
+    shared.
+
+    ```sql
+    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr, description, url, reference)
+    VALUES (61, now(), 'RNACEN', 'SGD_CODING', 'Y', 'SGD coding', 'SGD coding',
+      ': budding yeast mRNAs and their 5'' and 3'' UTRs from the Saccharomyces Genome Database',
+      'https://www.yeastgenome.org',
+      '[{"title":"Saccharomyces Genome Database: the genomics resource of budding yeast","authors":"Cherry JM, Hong EL, Amundsen C, et al.","journal":"Nucleic Acids Research, 2012","pubmed_id":"22110037"},{"title":"Extensive transcriptional heterogeneity revealed by isoform profiling","authors":"Pelechano V, Wei W, Steinmetz LM","journal":"Nature, 2013","pubmed_id":"23615609"}]'::jsonb);
+    ```
 18. **Run the import with `databases.sgd_coding.run = true`.** It reads SGD's GFF,
     which carries the Pelechano 2013 transcript ends and the genome sequence.
     Dubious ORFs are left out.
