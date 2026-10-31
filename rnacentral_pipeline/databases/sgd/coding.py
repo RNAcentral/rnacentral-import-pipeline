@@ -71,7 +71,7 @@ def as_entry(genome, mrna, gene, parts, accession, rna_type, label) -> data.Entr
     name = gene.get("gene") or gene["ID"]
     return data.Entry(
         primary_id=accession,
-        accession=accession,
+        accession=f"SGD_CODING:{accession}",
         ncbi_tax_id=TAXID,
         database="SGD_CODING",
         sequence=sequence,
@@ -135,7 +135,7 @@ def transcript_entries(genome, mrna, gene, children) -> ty.Iterable[data.Entry]:
     ]
     yield attr.evolve(entry, related_sequences=related)
     for utr in utrs:
-        back = data.RelatedSequence(sequence_id=accession, relationship="mrna")
+        back = data.RelatedSequence(sequence_id=entry.accession, relationship="mrna")
         yield attr.evolve(utr, related_sequences=[back])
 
 
