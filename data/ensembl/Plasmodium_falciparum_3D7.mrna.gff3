@@ -1,0 +1,11 @@
+##gff-version 3
+#!genome-build GeneDB GCA_000002765
+#!genome-version GCA_000002765
+#!genome-build-accession GCA_000002765.3
+#!genebuild-last-updated 2025-08
+LN999943.1	VectorBase	gene	274946	276712	.	-	.	ID=gene:PF3D7_0206900;Name=MSP5;biotype=protein_coding;description=EGF-like domain-containing protein [Source:UniProtKB/TrEMBL%3BAcc:Q7KWJ3];gene_id=PF3D7_0206900
+LN999943.1	VectorBase	mRNA	274946	276712	.	-	.	ID=transcript:PF3D7_0206900.1;Parent=gene:PF3D7_0206900;biotype=protein_coding;tag=Ensembl_canonical;transcript_id=PF3D7_0206900.1
+LN999943.1	VectorBase	mRNA	274946	276712	.	-	.	ID=transcript:PF3D7_0206900.2;Parent=gene:PF3D7_0206900;biotype=protein_coding;transcript_id=PF3D7_0206900.2
+LN999944.1	VectorBase	gene	120336	125104	.	+	.	ID=gene:PF3D7_1002400;Name=TRA2B;biotype=protein_coding;description=RRM domain-containing protein [Source:UniProtKB/TrEMBL%3BAcc:Q8IK12];gene_id=PF3D7_1002400
+LN999944.1	VectorBase	mRNA	120336	125104	.	+	.	ID=transcript:PF3D7_1002400.2;Parent=gene:PF3D7_1002400;biotype=protein_coding;transcript_id=PF3D7_1002400.2
+LN999944.1	VectorBase	mRNA	120336	125104	.	+	.	ID=transcript:PF3D7_1002400.1;Parent=gene:PF3D7_1002400;biotype=protein_coding;tag=Ensembl_canonical;transcript_id=PF3D7_1002400.1
