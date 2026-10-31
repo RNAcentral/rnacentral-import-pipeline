@@ -161,3 +161,14 @@ def test_mrna_only_sequences_are_not_qa_checked():
     assert qa.status(
         builders.context(), shared, "ncRNA"
     ).possible_contamination.has_issue
+
+
+def test_sequences_without_active_accessions_are_still_qa_checked():
+    from .. import builders
+
+    hit = builders.rfam_hit(
+        "RF00177", "SO:0000650", sequence_completeness=0.3, model_domain="Bacteria"
+    )
+    retired = builders.sequence(accessions=[], rfam_hits=[hit])
+    status = qa.status(builders.context(), retired, "rRNA")
+    assert status.incomplete_sequence.has_issue is not None
