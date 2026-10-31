@@ -13,6 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
+
+from rnacentral_pipeline.databases.data import Database
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa import coding_potential, contamination
@@ -23,13 +26,20 @@ from rnacentral_pipeline.rnacentral.precompute.qa import missing_rfam_match as m
 from rnacentral_pipeline.rnacentral.precompute.qa import (
     repetitive_regions as repetitive,
 )
-from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult, QaStatus
 
 
 def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
     """
     Generate the QaStatus for a given Sequence object
     """
+
+    # These checks judge ncRNAs; on Ensembl's mRNAs and UTRs they only raise
+    # meaningless flags, so a sequence known only from there is not checked.
+    accessions = sequence.accessions
+    if accessions and all(a.database == Database.ensembl_coding for a in accessions):
+        fields = attr.fields(QaStatus)
+        return QaStatus(**{f.name: QaResult.null(f.name) for f in fields})
 
     orf, stopfree, tcode = coding_potential.validate(sequence)
     return QaStatus(

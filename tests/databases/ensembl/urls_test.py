@@ -270,6 +270,25 @@ def test_the_used_assembly_list_holds_only_reference_genomes():
     assert {"GCA_000002765.3", "GCA_016772045.2"} <= legacy
 
 
+def test_mrna_rows_carry_the_homology_file_when_there_is_one():
+    with_homology = release("2026_04", *STANDARD_FILES)
+    with_homology["2026_04"]["paths"]["homologies"] = {
+        "files": {"homology_data": {"homology.tsv.gz": "p/homology.tsv.gz"}}
+    }
+    data = {
+        "Homo_sapiens": species(
+            **{"GCA_1.1": assembly("chromosome", {"ensembl": with_homology})}
+        ),
+        "Pan_paniscus": species(
+            **{"GCA_2.1": assembly("chromosome", {"ensembl": build("2026_04", "q")})}
+        ),
+    }
+    got = select(data)
+    assert got["Homo_sapiens"].writeable(kind="mrna")[-1] == "B/p/homology.tsv.gz"
+    assert got["Pan_paniscus"].writeable(kind="mrna")[-1] == ""
+    assert len(got["Homo_sapiens"].writeable()) == 4
+
+
 # Genome mapping downloads this file, so it must come from the selected assembly.
 def test_carries_the_selected_assemblys_unmasked_genome():
     chosen = assembly("chromosome", {"ensembl": build("2026_04", "new")})

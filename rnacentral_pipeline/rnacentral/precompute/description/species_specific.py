@@ -91,6 +91,8 @@ ORDERING = [
     Database.circatlas,
     Database.circpedia,
     Database.mgnify,
+    # Last, so a shared ncRNA keeps its ncRNA database description
+    Database.ensembl_coding,
 ]
 """
 A dict that defines the ordered choices for each type of RNA. This is the

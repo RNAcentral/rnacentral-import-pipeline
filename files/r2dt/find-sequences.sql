@@ -25,7 +25,8 @@ WHERE acc.rna_type IN (
   'SO:0000644', -- antisense_RNA
   'SO:0000646', -- siRNA
   'SO:0000454', -- rasiRNA
-  'SO:0001035'  -- piRNA
+  'SO:0001035', -- piRNA
+  'SO:0000234'  -- mRNA (its UTRs are kept)
 );
 
 CREATE INDEX ON excluded (urs);

@@ -33,6 +33,8 @@ FROM (
   LEFT JOIN rnc_accession_sequence_region sra ON sra.region_id = regions.id
   LEFT JOIN rnc_accessions ac ON sra.accession = ac.accession
   WHERE pre.is_active = true
+    -- Whole mRNAs and UTRs are exported as gene models by mrna.sql, not here
+    AND COALESCE(pre.so_rna_type, '') NOT IN ('SO:0000234', 'SO:0000204', 'SO:0000205')
   GROUP BY regions.id, regions.region_name, regions.chromosome, regions.strand,
            regions.identity, regions.was_mapped, regions.region_start, pre.urs_taxid,
            pre.short_description, pre.rna_type, pre.databases, genes.public_name, genes.start, genes.stop
