@@ -36,7 +36,7 @@ def piece(chrom, *spans, minus=False):
 
 def entries():
     with open(GFF) as raw:
-        return {e.accession: e for e in coding.parse(raw)}
+        return {e.primary_id: e for e in coding.parse(raw)}
 
 
 def test_builds_mrnas_and_utrs_from_the_mrna_span():
@@ -68,12 +68,12 @@ def test_links_utrs_and_mrnas_both_ways():
     found = entries()
     mrna = found["YAA001W_id001"]
     assert {(r.sequence_id, r.relationship) for r in mrna.related_sequences} == {
-        ("YAA001W_id001:five_prime_UTR", "five_prime_utr"),
-        ("YAA001W_id001:three_prime_UTR", "three_prime_utr"),
+        ("SGD_CODING:YAA001W_id001:five_prime_UTR", "five_prime_utr"),
+        ("SGD_CODING:YAA001W_id001:three_prime_UTR", "three_prime_utr"),
     }
     utr = found["YAA001W_id001:three_prime_UTR"]
     assert [(r.sequence_id, r.relationship) for r in utr.related_sequences] == [
-        ("YAA001W_id001", "mrna")
+        ("SGD_CODING:YAA001W_id001", "mrna")
     ]
 
 
@@ -91,6 +91,7 @@ def test_uses_rnacentral_assembly_and_chromosome_names():
     mrna = found["YAA001W_id001"]
     assert mrna.regions[0].chromosome == "I"
     assert mrna.database == "SGD_CODING"
+    assert mrna.accession == "SGD_CODING:YAA001W_id001"
     assert mrna.ncbi_tax_id == 559292
     assert mrna.gene == "AAA1"
     assert mrna.locus_tag == "YAA001W"
