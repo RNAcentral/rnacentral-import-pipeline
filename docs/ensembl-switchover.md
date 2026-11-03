@@ -12,7 +12,10 @@ Plants, Metazoa, Fungi and Protists divisions.
    twice: once under its old division and once under `ENSEMBL`. Retire
    `ENSEMBL_PLANTS`, `ENSEMBL_METAZOA`, `ENSEMBL_FUNGI` and `ENSEMBL_PROTISTS`
    in the same release. Count the rows first and commit only if the count
-   looks right.
+   looks right. Then set `alive = 'N'` on those four `rnc_database` rows (ids
+   31, 34, 35, 36). A retirement by hand never refreshes their
+   `num_sequences`, so they would stay in the FTP export's database list and
+   each would get an empty FASTA file.
 2. **Run `files/precompute/deactivate-stale.sql` after precompute.** Release-mode
    precompute doesn't reselect a sequence whose only xrefs were the retired
    division ones, so its precompute row would stay active.
