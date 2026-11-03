@@ -114,7 +114,7 @@ def _candidate_key(
 
 def _select_geneset(
     species: str, info: dict, base_url: str, legacy: ty.AbstractSet[str]
-) -> ty.Optional[GenesetUrls]:
+) -> ty.Optional[ty.Tuple[tuple, GenesetUrls]]:
     """
     Pick the single geneset to import for one species: the most preferred
     (provider, assembly) pair, and that provider's latest release on that
@@ -138,7 +138,7 @@ def _select_geneset(
     if best is None:
         return None
 
-    _, accession, releases = best
+    key, accession, releases = best
     # Release keys are zero-padded YYYY_MM, so a string max is the latest.
     _, release = max(releases.items(), key=lambda kv: kv[0])
 
@@ -162,7 +162,7 @@ def _select_geneset(
         .get("unmasked.fa.bgz")
     )
 
-    return GenesetUrls(
+    return key, GenesetUrls(
         species=species,
         taxid=info["taxid"],
         embl_url=f"{base_url}/{embl}",
@@ -172,13 +172,30 @@ def _select_geneset(
     )
 
 
+def _best_by(
+    selections: ty.List[ty.Tuple[tuple, GenesetUrls]],
+    key: ty.Callable[[GenesetUrls], ty.Hashable],
+) -> ty.List[ty.Tuple[tuple, GenesetUrls]]:
+    best: ty.Dict[ty.Hashable, ty.Tuple[tuple, GenesetUrls]] = {}
+    for selected in selections:
+        current = best.get(key(selected[1]))
+        if current is None or selected[0] > current[0]:
+            best[key(selected[1])] = selected
+    return list(best.values())
+
+
 def geneset_urls(
     data: dict, base_url: str = BASE_URL, legacy: ty.AbstractSet[str] = frozenset()
 ) -> ty.Iterable[GenesetUrls]:
+    selections = []
     for species, info in data["species"].items():
         selected = _select_geneset(species, info, base_url, legacy)
         if selected is not None:
-            yield selected
+            selections.append(selected)
+    # A few species are listed twice, under one taxid or one name in another case.
+    selections = _best_by(selections, lambda s: s.taxid)
+    for _, selected in _best_by(selections, lambda s: s.species.lower()):
+        yield selected
 
 
 def urls_for(

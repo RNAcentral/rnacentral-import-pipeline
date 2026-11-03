@@ -313,3 +313,45 @@ def test_keeps_the_exact_version_rnacentral_uses():
         legacy={"GCA_000002765", "GCA_000002765.3"},
     )
     assert got["Plasmodium_falciparum_3D7"].embl_url == "B/with_utrs.embl.gz"
+
+
+def test_one_geneset_per_taxid_when_species_json_lists_a_species_twice():
+    """
+    species.json lists Aspergillus_nidulans_FGSC_A4 (refseq) and
+    Aspergillus_nidulans_fgsc_a4 (community) separately, both taxid 227321.
+    """
+    data = {
+        "Aspergillus_nidulans_FGSC_A4": species(
+            GCA_1=assembly("chromosome", {"refseq": build("2015_02", "refseq")})
+        ),
+        "Aspergillus_nidulans_fgsc_a4": species(
+            GCA_2=assembly("chromosome", {"community": build("2015_03", "community")})
+        ),
+    }
+    got = select(data)
+    assert list(got) == ["Aspergillus_nidulans_fgsc_a4"]
+    assert got["Aspergillus_nidulans_fgsc_a4"].embl_url == "B/community.embl.gz"
+
+
+def test_one_geneset_per_name_when_species_json_lists_a_strain_under_two_taxids():
+    """
+    Fusarium_graminearum_PH_1 (taxid 5518) and Fusarium_graminearum_ph_1 (229533)
+    are one strain; their names would clash as the assembly's ensembl_url.
+    """
+    used = {
+        "taxid": 5518,
+        "assemblies": {
+            "GCA_1.1": assembly("chromosome", {"community": build("2025_08", "used")})
+        },
+    }
+    other = {
+        "taxid": 229533,
+        "assemblies": {
+            "GCA_2.3": assembly("chromosome", {"community": build("2013_11", "other")})
+        },
+    }
+    got = select(
+        {"Fusarium_graminearum_ph_1": other, "Fusarium_graminearum_PH_1": used},
+        legacy={"GCA_1.1"},
+    )
+    assert list(got) == ["Fusarium_graminearum_PH_1"]
