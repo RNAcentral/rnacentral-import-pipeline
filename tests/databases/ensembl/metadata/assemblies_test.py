@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 import re
 from pathlib import Path
 
@@ -111,6 +112,45 @@ def test_never_writes_the_same_assembly_id_twice():
     assert [r.ensembl_url for r in got] == ["amphimedon_queenslandica"]
 
 
+def test_names_a_species_by_its_binomial_unless_another_species_shares_it():
+    """
+    Ensembl called these leishmania_major and escherichia_coli_<strain>; genome
+    mapping joins on the name, so two selected genomes must never share one.
+    """
+    got = rows(
+        Leishmania_major_strain_Friedlin=genome(347515, "GCA_000002725.2", "ASM272v2"),
+        Escherichia_coli_str_K_12_substr_MG1655=genome(
+            511145, "GCA_000005845.2", "ASM584v2"
+        ),
+        Escherichia_coli_o157_h7=genome(83334, "GCA_004100305.1", "ASM410030v1"),
+    )
+    assert [r.ensembl_url for r in got] == [
+        "leishmania_major",
+        "escherichia_coli_str_k_12_substr_mg1655",
+        "escherichia_coli_o157_h7",
+    ]
+
+
+def test_plasmodium_falciparum_keeps_blat_mapping_and_its_example():
+    """
+    Other P. falciparum strains keep 3D7 on its full name, which the BLAT list and
+    example locations must use or the existing row loses both.
+    """
+    examples = json.loads(
+        Path("files/import-data/ensembl/example-locations.json").read_text()
+    )
+    got = rows(
+        examples=examples,
+        Plasmodium_falciparum_3D7=genome(36329, "GCA_000002765.3", "GCA_000002765"),
+        Plasmodium_falciparum_hb3=genome(137071, "GCA_000149665.2", "ASM14966v2"),
+    )
+    assert (got[0].ensembl_url, got[0].blat_mapping) == (
+        "plasmodium_falciparum_3d7",
+        True,
+    )
+    assert got[0].example is not None
+
+
 def test_keys_on_the_assembly_id_ensembl_writes_into_its_files():
     """
     species.json names the elephant assembly Loxafr3.0 but the files, and so every
@@ -142,6 +182,15 @@ def test_loading_never_blanks_an_existing_ucsc_alias():
         sql,
         re.IGNORECASE,
     )
+
+
+def test_loading_keeps_an_existing_ensembl_url():
+    """
+    species.json keys renamed 206 assemblies RNAcentral already holds, e.g.
+    leishmania_major became leishmania_major_strain_friedlin.
+    """
+    sql = LOAD_SQL.read_text()
+    assert not re.search(r"ensembl_url\s*=\s*EXCLUDED\.ensembl_url", sql, re.IGNORECASE)
 
 
 # A missing comma once fused these two into one string, so neither got blat_mapping.

@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections
 import json
 import logging
 import re
@@ -40,7 +41,7 @@ BLAT_GENOMES = {
     "drosophila_melanogaster",
     "homo_sapiens",
     "mus_musculus",
-    "plasmodium_falciparum",
+    "plasmodium_falciparum_3d7",
     "rattus_norvegicus",
     "saccharomyces_cerevisiae",
     "schizosaccharomyces_pombe",
@@ -168,6 +169,14 @@ def ucsc_aliases(ucsc: dict) -> ty.Dict[str, str]:
     return aliases
 
 
+def ensembl_urls(species: ty.Iterable[str]) -> ty.Dict[str, str]:
+    # Like Ensembl's old names: the binomial, unless strains of it need the full name.
+    names = [s.lower() for s in species]
+    binomial = {n: "_".join(n.split("_")[:2]) for n in names}
+    counts = collections.Counter(binomial.values())
+    return {n: binomial[n] if counts[binomial[n]] == 1 else n for n in names}
+
+
 def genome_version(header: str) -> ty.Optional[str]:
     for line in header.splitlines():
         if line.startswith("#!genome-version"):
@@ -207,8 +216,10 @@ def from_species_json(
     it is only the fallback (elephant: Loxafr3.0 there, loxAfr3 in the files).
     """
     aliases = ucsc_aliases(ucsc)
+    selections = list(urls.geneset_urls(data, legacy=legacy))
+    names = ensembl_urls(s.species for s in selections)
     seen = set()
-    for selected in urls.geneset_urls(data, legacy=legacy):
+    for selected in selections:
         info = data["species"][selected.species]
         name = info["assemblies"][selected.accession]["name"]
         assembly_id = versions.get(selected.species)
@@ -224,7 +235,7 @@ def from_species_json(
             continue
         seen.add(assembly_id)
 
-        url = selected.species.lower()
+        url = names[selected.species.lower()]
         example = examples.get(url)
         yield AssemblyInfo(
             assembly_id=assembly_id,
