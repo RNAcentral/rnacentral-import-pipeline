@@ -83,6 +83,9 @@ workflow ensembl {
     | filter { species, taxid, embl_url, gff_url ->
       !params.databases.ensembl.exclude.any { p -> species.toLowerCase() =~ p }
     } \
+    | filter { species, taxid, embl_url, gff_url ->
+      !params.databases.ensembl.species || species.toLowerCase() in params.databases.ensembl.species
+    } \
     | fetch_species_data \
     | combine(families) \
     | parse_data \
