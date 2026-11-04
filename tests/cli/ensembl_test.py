@@ -73,5 +73,21 @@ def test_parse_fails_when_the_gff_has_ncrnas_but_none_are_parsed():
 
 @pytest.mark.cli
 def test_parse_allows_an_empty_result_when_the_gff_has_no_ncrnas():
-    result = parse_plasmodium_with("##gff-version 3\n#!genome-version GCA_000002765\n")
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    result = parse_plasmodium_with(gff.replace("\tncRNA_gene\t", "\tgene\t"))
     assert result.exit_code == 0
+
+
+# Any other error was once caught as "no entries", leaving a partial parse and a passing task.
+@pytest.mark.cli
+def test_parse_fails_loudly_on_any_other_error(monkeypatch):
+    def broken(*args, **kwargs):
+        yield from ()
+        raise ValueError("could not convert string to float: '1:6734..6802'")
+
+    monkeypatch.setattr(ensembl.parser, "parse", broken)
+    result = parse_plasmodium_with(
+        "##gff-version 3\n#!genome-version GCA_000002765\n#!genome-build-accession GCA_000002765.3\n"
+    )
+    assert result.exit_code != 0
+    assert "1:6734..6802" in str(result.exception)
