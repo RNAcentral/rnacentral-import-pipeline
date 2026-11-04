@@ -151,6 +151,24 @@ def test_plasmodium_falciparum_keeps_blat_mapping_and_its_example():
     assert got[0].example is not None
 
 
+def test_anopheles_pest_keeps_blat_mapping_and_its_example():
+    """
+    species.json also lists a 2022 Anopheles_gambiae build, which takes the plain
+    name, so PEST (AgamP4, the assembly RNAcentral uses) keeps its full one.
+    """
+    examples = json.loads(
+        Path("files/import-data/ensembl/example-locations.json").read_text()
+    )
+    got = rows(
+        examples=examples,
+        Anopheles_gambiae_str_PEST=genome(180454, "GCA_000005575.1", "AgamP4"),
+        Anopheles_gambiae=genome(7165, "GCA_943734735.1", "idAnoGambNW_F1_1"),
+    )
+    pest = [r for r in got if r.assembly_id == "AgamP4"][0]
+    assert (pest.ensembl_url, pest.blat_mapping) == ("anopheles_gambiae_str_pest", True)
+    assert pest.example is not None
+
+
 def test_keys_on_the_assembly_id_ensembl_writes_into_its_files():
     """
     species.json names the elephant assembly Loxafr3.0 but the files, and so every

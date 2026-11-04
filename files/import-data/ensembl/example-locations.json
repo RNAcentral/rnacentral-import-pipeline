@@ -79,7 +79,7 @@
     "start": 6180018,
     "end": 6180422
   },
-  "anopheles_gambiae": {
+  "anopheles_gambiae_str_pest": {
     "chromosome": "2R",
     "start": 34644956,
     "end": 34645131

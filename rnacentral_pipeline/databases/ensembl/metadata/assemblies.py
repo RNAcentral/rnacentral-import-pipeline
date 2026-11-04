@@ -33,7 +33,7 @@ from rnacentral_pipeline.databases.ensembl import urls
 from rnacentral_pipeline.parquet_writers import row_writer
 
 BLAT_GENOMES = {
-    "anopheles_gambiae",
+    "anopheles_gambiae_str_pest",
     "arabidopsis_thaliana",
     "bombyx_mori",
     "caenorhabditis_elegans",
