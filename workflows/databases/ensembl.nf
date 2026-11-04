@@ -19,6 +19,9 @@ process fetch_metadata {
 
 process find_urls {
   memory '4GB'
+  // species.json is on the EBI FTP, which refuses connections now and then
+  errorStrategy { sleep(task.attempt * 60000 as long); return 'retry' }
+  maxRetries 3
 
   output:
   path('species.csv')

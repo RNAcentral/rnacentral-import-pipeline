@@ -1,4 +1,7 @@
 process assemblies {
+  // species.json is on the EBI FTP, which refuses connections now and then
+  errorStrategy { sleep(task.attempt * 60000 as long); return 'retry' }
+  maxRetries 3
   input:
   path(examples)
 
