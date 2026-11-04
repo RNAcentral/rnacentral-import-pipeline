@@ -32,12 +32,12 @@ SELECT DISTINCT ON (assembly_id)
 FROM load_assemblies
 ) ON CONFLICT (assembly_id) DO UPDATE
 -- ensembl_url is never updated: species.json renamed species we already hold.
+-- Nor is taxid: species.json can give a strain where the files give the species.
 SET
   assembly_full_name = EXCLUDED.assembly_full_name,
   gca_accession = EXCLUDED.gca_accession,
   assembly_ucsc = COALESCE(EXCLUDED.assembly_ucsc, ensembl_assembly.assembly_ucsc),
   common_name = EXCLUDED.common_name,
-  taxid = EXCLUDED.taxid,
   division = EXCLUDED.division,
   blat_mapping = EXCLUDED.blat_mapping,
   example_chromosome = EXCLUDED.example_chromosome,

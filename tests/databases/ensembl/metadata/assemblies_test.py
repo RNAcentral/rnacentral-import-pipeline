@@ -201,6 +201,15 @@ def test_loading_keeps_an_existing_ensembl_url():
     assert not re.search(r"ensembl_url\s*=\s*EXCLUDED\.ensembl_url", sql, re.IGNORECASE)
 
 
+def test_loading_keeps_an_existing_taxid():
+    """
+    species.json gives Anopheles PEST taxid 180454; its files, and RNAcentral's
+    AgamP4 row and sequences, say 7165.
+    """
+    sql = LOAD_SQL.read_text()
+    assert not re.search(r"\btaxid\s*=\s*EXCLUDED\.taxid", sql, re.IGNORECASE)
+
+
 # A missing comma once fused these two into one string, so neither got blat_mapping.
 def test_rat_and_yeast_are_blat_genomes():
     assert {"rattus_norvegicus", "saccharomyces_cerevisiae"} <= assem.BLAT_GENOMES
