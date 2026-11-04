@@ -39,10 +39,10 @@ process fetch_species_data {
   maxForks 10
 
   input:
-  tuple val(species), val(taxid), val(embl_url), val(gff_url)
+  tuple val(species), val(taxid), val(embl_url), val(gff_url), val(assembly_id)
 
   output:
-  tuple val(species), path("${species}.dat"), path("${species}.gff")
+  tuple val(species), val(assembly_id), path("${species}.dat"), path("${species}.gff")
 
   script:
   """
@@ -63,14 +63,14 @@ process parse_data {
   maxRetries 3
 
   input:
-  tuple val(species), path(embl), path(gff), path(rfam)
+  tuple val(species), val(assembly_id), path(embl), path(gff), path(rfam)
 
   output:
   path('*.{csv,parquet}')
 
   script:
   """
-  rnac ensembl parse --family-file $rfam $embl $gff .
+  rnac ensembl parse --assembly-id '${assembly_id}' --family-file $rfam $embl $gff .
   """
 }
 
@@ -80,10 +80,10 @@ workflow ensembl {
 
     find_urls() \
     | splitCsv \
-    | filter { species, taxid, embl_url, gff_url ->
+    | filter { species, taxid, embl_url, gff_url, assembly_id ->
       !params.databases.ensembl.exclude.any { p -> species.toLowerCase() =~ p }
     } \
-    | filter { species, taxid, embl_url, gff_url ->
+    | filter { species, taxid, embl_url, gff_url, assembly_id ->
       !params.databases.ensembl.species || species.toLowerCase() in params.databases.ensembl.species
     } \
     | fetch_species_data \

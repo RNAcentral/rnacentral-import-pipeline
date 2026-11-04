@@ -113,6 +113,22 @@ def test_keeps_transcripts_whose_id_has_a_dot_that_is_not_a_version():
     ]
 
 
+def test_coordinates_take_the_assembly_id_the_selection_gives():
+    """
+    The GFF header says GCA_000002765; RNAcentral holds this genome as GCA000002765v3.
+    """
+    with open("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl", "r") as raw:
+        entries = list(
+            parse(
+                raw,
+                Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3"),
+                family_file=Path("data/rfam/families.tsv"),
+                assembly_id="GCA000002765v3",
+            )
+        )
+    assert [r.assembly_id for e in entries for r in e.regions] == ["GCA000002765v3"]
+
+
 @pytest.mark.slow
 def test_it_sets_primary_id_to_versionless_transcript_id(human_12):
     assert entry_for(human_12, "ENST00000516089.1").primary_id == "ENST00000516089"

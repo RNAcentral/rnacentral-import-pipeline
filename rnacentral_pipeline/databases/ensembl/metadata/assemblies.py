@@ -18,9 +18,6 @@ import json
 import logging
 import re
 import typing as ty
-import urllib.request
-import zlib
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import attr
@@ -177,57 +174,26 @@ def ensembl_urls(species: ty.Iterable[str]) -> ty.Dict[str, str]:
     return {n: binomial[n] if counts[binomial[n]] == 1 else n for n in names}
 
 
-def genome_version(header: str) -> ty.Optional[str]:
-    for line in header.splitlines():
-        if line.startswith("#!genome-version"):
-            return line.split(" ", 1)[1].strip()
-    return None
-
-
-def fetch_genome_version(selected: urls.GenesetUrls) -> ty.Optional[str]:
-    """
-    The GTF carries the same header as the GFF3 but without the sequence-region
-    lines, so the first couple of KB always hold it.
-    """
-    url = selected.gff_url.replace("genes.gff3.gz", "genes.gtf.gz")
-    request = urllib.request.Request(url, headers={"Range": "bytes=0-2047"})
-    for _ in range(3):
-        try:
-            raw = urllib.request.urlopen(request, timeout=60).read()
-            text = zlib.decompressobj(16 + zlib.MAX_WBITS).decompress(raw)
-            return genome_version(text.decode(errors="replace"))
-        except Exception as err:
-            LOGGER.warning("Could not read %s: %s", url, err)
-    return None
-
-
 def from_species_json(
     data: dict,
     legacy: ty.AbstractSet[str],
+    known: ty.Iterable[ty.Tuple[str, str]],
     examples: dict,
     ucsc: dict,
     lineages: ty.Dict[int, str],
-    versions: ty.Dict[str, str],
 ) -> ty.Iterable[AssemblyInfo]:
     """
-    One row per geneset the import selects, keyed by the assembly id Ensembl
-    writes into the files, which is what the parser puts on every coordinate.
-    species.json's name without its patch suffix agrees ~96% of the time, so
-    it is only the fallback (elephant: Loxafr3.0 there, loxAfr3 in the files).
+    One row per geneset the import selects, keyed by the assembly id the selection
+    gives it, which the parser also puts on every coordinate.
     """
     aliases = ucsc_aliases(ucsc)
-    selections = list(urls.geneset_urls(data, legacy=legacy))
+    selections = list(urls.geneset_urls(data, legacy=legacy, known=known))
     names = ensembl_urls(s.species for s in selections)
     seen = set()
     for selected in selections:
         info = data["species"][selected.species]
         name = info["assemblies"][selected.accession]["name"]
-        assembly_id = versions.get(selected.species)
-        if not assembly_id:
-            assembly_id = re.sub(r"\.p\d+$", "", name)
-            LOGGER.warning(
-                "No genome version for %s, using %s", selected.species, assembly_id
-            )
+        assembly_id = selected.assembly_id
         if assembly_id in seen:
             LOGGER.warning(
                 "Assembly %s already used, skipping %s", assembly_id, selected.species
@@ -271,20 +237,14 @@ def write(location, example_file, ucsc_file, output, db_url):
     """
 
     data = urls._load(location)
-    legacy = urls.legacy_assemblies()
-    selected = list(urls.geneset_urls(data, legacy=legacy))
-    with ThreadPoolExecutor(10) as pool:
-        found = pool.map(fetch_genome_version, selected)
-        versions = {s.species: v for s, v in zip(selected, found) if v}
-
     taxids = [info["taxid"] for info in data["species"].values()]
     rows = from_species_json(
         data,
-        legacy,
+        urls.legacy_assemblies(),
+        urls.known_assemblies(),
         json.load(example_file),
         json.load(ucsc_file),
         load_lineages(db_url, taxids),
-        versions,
     )
     with row_writer(Path(output), schemas.ASSEMBLIES) as writer:
         writer.writerows(row.writeable() for row in rows)

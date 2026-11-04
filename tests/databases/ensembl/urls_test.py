@@ -79,6 +79,7 @@ def test_builds_absolute_urls_from_relative_paths():
         "9606",
         "B/p/genes.embl.gz",
         "B/p/genes.gff3.gz",
+        "GCA1v1",
     )
 
 
@@ -355,3 +356,67 @@ def test_one_geneset_per_name_when_species_json_lists_a_strain_under_two_taxids(
         legacy={"GCA_1.1"},
     )
     assert list(got) == ["Fusarium_graminearum_PH_1"]
+
+
+def named(taxid, accession, name):
+    entry = assembly("chromosome", {"ensembl": build("2026_04", accession)})
+    entry["name"] = name
+    return {"taxid": taxid, "assemblies": {accession: entry}}
+
+
+def ids(data, known=()):
+    selected = urls.geneset_urls({"species": data}, base_url="B", known=known)
+    return {s.species: s.assembly_id for s in selected}
+
+
+def test_keeps_the_assembly_id_rnacentral_holds_for_that_gca():
+    data = {
+        "Plasmodium_falciparum_3D7": named(36329, "GCA_000002765.3", "GCA_000002765")
+    }
+    got = ids(data, known=[("GCA_000002765.3", "GCA000002765v3")])
+    assert got == {"Plasmodium_falciparum_3D7": "GCA000002765v3"}
+
+
+def test_a_refseq_copy_keeps_the_name_rnacentral_holds_for_its_genbank_twin():
+    """
+    RefSeq versions count from 1, so GCF_030179895.1 is the copy of GCA_030179895.2.
+    """
+    data = {
+        "Apis_mellifera": named(7460, "GCF_003254395.2", "Amel_HAv3.1"),
+        "Drosophila_kikkawai": named(30033, "GCF_030179895.1", "DkikHiC1v2"),
+    }
+    known = [("GCA_003254395.2", "Amel_HAv3.1"), ("GCA_030179895.2", "DkikHiC1v2")]
+    assert ids(data, known) == {
+        "Apis_mellifera": "Amel_HAv3.1",
+        "Drosophila_kikkawai": "DkikHiC1v2",
+    }
+
+
+def test_a_name_another_genome_holds_gets_a_gca_based_id():
+    data = {"Acropora_florida": named(70782, "GCA_014634605.1", "Aflo_1.0")}
+    got = ids(data, known=[("GCA_000184785.2", "Aflo_1.0")])
+    assert got == {"Acropora_florida": "GCA014634605v1"}
+
+
+def test_new_genomes_sharing_a_name_get_gca_based_ids():
+    data = {
+        "Amphimedon_queenslandica": named(400682, "GCA_000090795.1", "v1.0"),
+        "Trichoplax_adhaerens": named(10228, "GCA_000150275.1", "v1.0"),
+        "Escherichia_coli": named(511145, "GCA_000005845.2", "ASM584v2"),
+    }
+    assert ids(data) == {
+        "Amphimedon_queenslandica": "GCA000090795v1",
+        "Trichoplax_adhaerens": "GCA000150275v1",
+        "Escherichia_coli": "ASM584v2",
+    }
+
+
+def test_a_new_genome_drops_the_patch_from_its_name():
+    data = {"Homo_sapiens": named(9606, "GCA_000001405.29", "GRCh38.p14")}
+    assert ids(data) == {"Homo_sapiens": "GRCh38"}
+
+
+def test_the_assembly_id_list_covers_the_genomes_rnacentral_selects():
+    known = dict(urls.known_assemblies())
+    assert known["GCA_000001405.29"] == "GRCh38"
+    assert known["GCA_000002765.3"] == "GCA000002765v3"

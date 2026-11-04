@@ -55,6 +55,7 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
 
 
 @cli.command("parse")
+@click.option("--assembly-id", default=None, help="Use instead of the GFF's own")
 @click.option(
     "--family-file",
     default=None,
@@ -72,14 +73,16 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
     ),
 )
 @format_option
-def parse_data(embl_file, gff_file, output, family_file=None):
+def parse_data(embl_file, gff_file, output, family_file=None, assembly_id=None):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
     gff_file = Path(gff_file)
     if family_file:
         family_file = Path(family_file)
-    entries = parser.parse(embl_file, gff_file, family_file=family_file)
+    entries = parser.parse(
+        embl_file, gff_file, family_file=family_file, assembly_id=assembly_id
+    )
     ## Send warning to slack with details about empty parse
     try:
         with entry_writer(Path(output)) as writer:

@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections
 import json
 import logging
+import re
 import typing as ty
 from pathlib import Path
 from urllib.request import urlopen
@@ -60,6 +62,9 @@ LEGACY_ASSEMBLIES = (
 )
 # The exact versions RNAcentral selects today, so a species keeps its version too
 CURRENT_ASSEMBLIES = LEGACY_ASSEMBLIES.with_name("current-assemblies.txt")
+# gca<TAB>assembly_id for every ensembl_assembly row, selected rows first; regenerate
+# from production before a run, as Ensembl's own names collide across genomes
+ASSEMBLY_IDS = LEGACY_ASSEMBLIES.with_name("assembly-ids.tsv")
 
 
 @attr.s()
@@ -70,9 +75,16 @@ class GenesetUrls:
     gff_url: str = attr.ib(validator=is_a(str))
     accession: str = attr.ib(validator=is_a(str))
     genome_url: ty.Optional[str] = attr.ib(default=None)
+    assembly_id: ty.Optional[str] = attr.ib(default=None)
 
-    def writeable(self, kind=None) -> ty.Tuple[str, str, str, str]:
-        return (self.species, str(self.taxid), self.embl_url, self.gff_url)
+    def writeable(self, kind=None) -> ty.Tuple[str, str, str, str, str]:
+        return (
+            self.species,
+            str(self.taxid),
+            self.embl_url,
+            self.gff_url,
+            self.assembly_id or "",
+        )
 
 
 def _load(location: str):
@@ -88,6 +100,46 @@ def legacy_assemblies(
     path: Path = LEGACY_ASSEMBLIES, current: Path = CURRENT_ASSEMBLIES
 ) -> ty.FrozenSet[str]:
     return frozenset(path.read_text().split() + current.read_text().split())
+
+
+def known_assemblies(path: Path = ASSEMBLY_IDS) -> ty.List[ty.Tuple[str, str]]:
+    with path.open() as handle:
+        return [tuple(line.rstrip("\n").split("\t")) for line in handle if line.strip()]
+
+
+def gca_assembly_id(accession: str) -> str:
+    # The form RNAcentral already uses for genomes without a usable name
+    return accession.replace("_", "").replace(".", "v")
+
+
+def _assign_assembly_ids(
+    data: dict, selected: ty.List[GenesetUrls], known: ty.Iterable[ty.Tuple[str, str]]
+) -> None:
+    by_gca: ty.Dict[str, str] = {}
+    gcas_by_id = collections.defaultdict(set)
+    for gca, assembly_id in known:
+        by_gca.setdefault(gca, assembly_id)
+        gcas_by_id[assembly_id].add(gca)
+
+    number = lambda accession: accession.split("_", 1)[-1].split(".")[0]
+    names = {}
+    for s in selected:
+        name = data["species"][s.species]["assemblies"][s.accession].get("name", "")
+        names[s.accession] = re.sub(r"\.p\d+$", "", name)
+    shared = collections.Counter(n for a, n in names.items() if a not in by_gca)
+
+    for s in selected:
+        name = names[s.accession]
+        held = gcas_by_id.get(name, set())
+        if s.accession in by_gca:
+            s.assembly_id = by_gca[s.accession]
+        elif any(number(gca) == number(s.accession) for gca in held):
+            # A RefSeq copy of a GenBank assembly RNAcentral holds under this name
+            s.assembly_id = name
+        elif held or shared[name] > 1 or not name:
+            s.assembly_id = gca_assembly_id(s.accession)
+        else:
+            s.assembly_id = name
 
 
 def _provider_tier(provider: str) -> int:
@@ -185,7 +237,10 @@ def _best_by(
 
 
 def geneset_urls(
-    data: dict, base_url: str = BASE_URL, legacy: ty.AbstractSet[str] = frozenset()
+    data: dict,
+    base_url: str = BASE_URL,
+    legacy: ty.AbstractSet[str] = frozenset(),
+    known: ty.Iterable[ty.Tuple[str, str]] = (),
 ) -> ty.Iterable[GenesetUrls]:
     selections = []
     for species, info in data["species"].items():
@@ -194,8 +249,9 @@ def geneset_urls(
             selections.append(selected)
     # A few species are listed twice, under one taxid or one name in another case.
     selections = _best_by(selections, lambda s: s.taxid)
-    for _, selected in _best_by(selections, lambda s: s.species.lower()):
-        yield selected
+    chosen = [s for _, s in _best_by(selections, lambda s: s.species.lower())]
+    _assign_assembly_ids(data, chosen, known)
+    yield from chosen
 
 
 def urls_for(
@@ -206,5 +262,8 @@ def urls_for(
     to import, one per species.
     """
     yield from geneset_urls(
-        _load(location), base_url=base_url, legacy=legacy_assemblies()
+        _load(location),
+        base_url=base_url,
+        legacy=legacy_assemblies(),
+        known=known_assemblies(),
     )

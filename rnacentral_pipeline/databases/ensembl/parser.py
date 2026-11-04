@@ -68,11 +68,15 @@ def tair_entries(entry: Entry) -> ty.Iterable[Entry]:
 
 
 def parse(
-    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None
+    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None, assembly_id=None
 ) -> ty.Iterable[Entry]:
     accession = gff.get_assembly_accession(gff_file)
     entries = vertebrates.parse(
-        raw, gff_file, family_file=family_file, excluded_file=excluded_file
+        raw,
+        gff_file,
+        family_file=family_file,
+        excluded_file=excluded_file,
+        assembly_id=assembly_id,
     )
     for entry in entries:
         entry = correct_protist_rna_type(entry)

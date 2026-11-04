@@ -60,11 +60,11 @@ def genome(taxid, accession, name, common_name=None):
     }
 
 
-def rows(examples=None, versions=None, **species):
+def rows(examples=None, known=(), **species):
     data = {"species": species}
     return list(
         assem.from_species_json(
-            data, frozenset(), examples or {}, UCSC, LINEAGES, versions or {}
+            data, frozenset(), known, examples or {}, UCSC, LINEAGES
         )
     )
 
@@ -100,16 +100,16 @@ def test_bacteria_get_a_row_now_they_are_imported():
     )
 
 
-def test_never_writes_the_same_assembly_id_twice():
+def test_genomes_sharing_an_assembly_name_each_get_a_row():
     """
     Amphimedon and Trichoplax both call their assembly v1.0; assembly_id is the
-    table's key, so only the first can have a row.
+    table's key, so each gets an id built from its GCA.
     """
     got = rows(
         Amphimedon_queenslandica=genome(400682, "GCA_000090795.1", "v1.0"),
         Trichoplax_adhaerens=genome(10228, "GCA_000150275.1", "v1.0"),
     )
-    assert [r.ensembl_url for r in got] == ["amphimedon_queenslandica"]
+    assert [r.assembly_id for r in got] == ["GCA000090795v1", "GCA000150275v1"]
 
 
 def test_names_a_species_by_its_binomial_unless_another_species_shares_it():
@@ -169,24 +169,14 @@ def test_anopheles_pest_keeps_blat_mapping_and_its_example():
     assert pest.example is not None
 
 
-def test_keys_on_the_assembly_id_ensembl_writes_into_its_files():
+def test_keeps_the_assembly_id_rnacentral_holds_for_the_genome():
     """
-    species.json names the elephant assembly Loxafr3.0 but the files, and so every
-    coordinate the parser writes, say loxAfr3.
+    species.json names the elephant assembly Loxafr3.0; RNAcentral holds it, and
+    every coordinate on it, as loxAfr3.
     """
     elephant = genome(9785, "GCA_000001905.1", "Loxafr3.0")
-    [row] = rows(
-        versions={"Loxodonta_africana": "loxAfr3"}, Loxodonta_africana=elephant
-    )
+    [row] = rows(known=[("GCA_000001905.1", "loxAfr3")], Loxodonta_africana=elephant)
     assert (row.assembly_id, row.assembly_full_name) == ("loxAfr3", "Loxafr3.0")
-
-
-def test_reads_the_genome_version_from_a_gtf_header():
-    header = (
-        "#!genome-build Loxafr3.0\n#!genome-version loxAfr3\n#!genome-date 2009-07\n"
-    )
-    assert assem.genome_version(header) == "loxAfr3"
-    assert assem.genome_version("1\tensembl\tgene\n") is None
 
 
 def test_loading_never_blanks_an_existing_ucsc_alias():

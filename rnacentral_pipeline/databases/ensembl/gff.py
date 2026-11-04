@@ -88,8 +88,8 @@ def get_assembly_accession(path: Path) -> str:
     raise ValueError(f"Could not find assembly accession in {path}")
 
 
-def load_coordinates(path: Path) -> SqliteDict:
-    assembly_id = get_assembly(path)
+def load_coordinates(path: Path, assembly_id: ty.Optional[str] = None) -> SqliteDict:
+    assembly_id = assembly_id or get_assembly(path)
     mapping = SqliteDict()
     # dir="." because singularity --contain gives us a tiny in-memory /tmp
     with tempfile.NamedTemporaryFile(dir=".") as tmp:

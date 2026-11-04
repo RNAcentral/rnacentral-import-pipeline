@@ -145,14 +145,17 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
 
 
 def parse(
-    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None
+    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None, assembly_id=None
 ) -> ty.Iterable[data.Entry]:
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
     context = Context.build(
-        gff_file, family_file=family_file, excluded_file=excluded_file
+        gff_file,
+        family_file=family_file,
+        excluded_file=excluded_file,
+        assembly_id=assembly_id,
     )
     loaded = ncrnas(raw, context)
     grouped = it.groupby(loaded, op.attrgetter("gene"))
