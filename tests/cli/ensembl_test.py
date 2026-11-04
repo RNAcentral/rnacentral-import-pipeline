@@ -45,18 +45,22 @@ def test_can_fetch_assemblies():
             assert len(raw.readlines()) >= 5000
 
 
-def parse_plasmodium_with(gff_text):
+def parse_plasmodium_with(gff_text, embl_text=None):
     runner = CliRunner()
     base = Path(os.curdir).absolute()
     with runner.isolated_filesystem():
         Path("genes.gff3").write_text(gff_text)
+        embl = base / "data" / "ensembl" / "Plasmodium_falciparum_3D7.ncrna.embl"
+        if embl_text is not None:
+            embl = Path("genes.embl")
+            embl.write_text(embl_text)
         return runner.invoke(
             ensembl.cli,
             [
                 "parse",
                 "--family-file",
                 str(base / "data" / "rfam" / "families.tsv"),
-                str(base / "data" / "ensembl" / "Plasmodium_falciparum_3D7.ncrna.embl"),
+                str(embl),
                 "genes.gff3",
                 ".",
             ],
@@ -103,4 +107,18 @@ def test_parse_uses_the_gene_when_the_gff_has_no_transcript_for_an_ncrna():
     )
     gff = "\n".join(l for l in lines if "\tsnoRNA\t" not in l and "\texon\t" not in l)
     result = parse_plasmodium_with(gff)
+    assert result.exit_code == 0, result.output
+
+
+# Bradyrhizobium's only ncRNA is an Rfam ROSE element, which is suppressed on purpose.
+@pytest.mark.cli
+def test_parse_allows_an_empty_result_when_every_ncrna_is_suppressed():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    embl = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl").read_text()
+    embl = embl.replace(
+        'FT                   /note="snoRNA"',
+        'FT                   /db_xref="RFAM_trans_name:RF00435"\n'
+        'FT                   /note="snoRNA"',
+    )
+    result = parse_plasmodium_with(gff, embl)
     assert result.exit_code == 0, result.output

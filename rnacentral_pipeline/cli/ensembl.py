@@ -90,12 +90,6 @@ def parse_data(embl_file, gff_file, output, family_file=None, assembly_id=None):
     except ValueError as err:
         if str(err) not in {"Found no entries to write", "No valid entries to write"}:
             raise
-        # A FULL release would retire every ncRNA the GFF lists but the parse lost
-        with gff_file.open() as gff:
-            if any("\tncRNA_gene\t" in line for line in gff):
-                raise click.ClickException(
-                    f"{gff_file.name} lists ncRNA genes but none were parsed"
-                )
         print("Empty entries, implies no ncRNAs. You should check that")
         message = (
             f"No ncRNA entries found for {embl_file.name}, or {gff_file.name}. "
