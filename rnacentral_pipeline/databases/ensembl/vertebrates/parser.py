@@ -62,6 +62,8 @@ def as_entry(
         pid = helpers.accession(feature)
     if pid in context.gff:
         info = context.gff[pid]
+    elif gene and embl.gene(gene) in context.gff:
+        info = context.gff[embl.gene(gene)]
     else:
         if is_nonchromosomal:
             info = TranscriptInfo.from_feature(record, feature)

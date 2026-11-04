@@ -91,3 +91,16 @@ def test_parse_fails_loudly_on_any_other_error(monkeypatch):
     )
     assert result.exit_code != 0
     assert "1:6734..6802" in str(result.exception)
+
+
+# Some genesets (Thermococcus kodakarensis) list ncRNAs as genes only, with no transcript or exon lines.
+@pytest.mark.cli
+def test_parse_uses_the_gene_when_the_gff_has_no_transcript_for_an_ncrna():
+    lines = (
+        Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3")
+        .read_text()
+        .splitlines()
+    )
+    gff = "\n".join(l for l in lines if "\tsnoRNA\t" not in l and "\texon\t" not in l)
+    result = parse_plasmodium_with(gff)
+    assert result.exit_code == 0, result.output
