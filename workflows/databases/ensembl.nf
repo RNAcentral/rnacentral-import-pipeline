@@ -45,12 +45,18 @@ process fetch_species_data {
   tuple val(species), val(taxid), val(embl_url), val(gff_url), val(assembly_id)
 
   output:
-  tuple val(species), val(assembly_id), path("${species}.dat"), path("${species}.gff")
+  tuple val(species), val(assembly_id), path("${species}.dat"), path("${species}.gff"), optional: true
 
   script:
   def embl_path = embl_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
   def gff_path = gff_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
   """
+  # species.json lists genesets that were never published, some with no EMBL file.
+  if [ ! -e '${embl_path}' ] || [ ! -e '${gff_path}' ]; then
+    echo "Skipping ${species}: no genes.embl.gz or genes.gff3.gz at ${embl_path}" >&2
+    exit 0
+  fi
+
   cp '${embl_path}' genes.embl.gz
   cp '${gff_path}' genes.gff3.gz
 
