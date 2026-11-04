@@ -29,3 +29,9 @@ def test_fetch_species_data_retries_network_failures():
 def test_fetch_species_data_still_retries_server_errors():
     retried = re.search(r"exitStatus\s+in\s+\[([^\]]*)\]", fetch_error_strategy())
     assert retried and "8" in [s.strip() for s in retried.group(1).split(",")]
+
+
+# A FULL release retires whatever is absent, so a species that never downloads must stop the run.
+def test_fetch_species_data_never_drops_a_species_after_its_retries():
+    assert "'ignore'" not in fetch_error_strategy()
+    assert "'terminate'" in fetch_error_strategy()
