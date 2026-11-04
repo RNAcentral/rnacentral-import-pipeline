@@ -36,10 +36,10 @@ process find_urls {
 
 process fetch_species_data {
   tag { species }
-  // wget: 4 is a network failure, 8 a server error; both are transient on this FTP.
-  errorStrategy { task.exitStatus in [4, 8] && task.attempt <= 10 ? 'retry' : 'terminate' }
-  maxRetries 10
-  maxForks 10
+  // /nfs is only visible from a datamover node; the FTP it mirrors refuses most parallel downloads.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+  maxForks 30
 
   input:
   tuple val(species), val(taxid), val(embl_url), val(gff_url), val(assembly_id)
@@ -48,9 +48,11 @@ process fetch_species_data {
   tuple val(species), val(assembly_id), path("${species}.dat"), path("${species}.gff")
 
   script:
+  def embl_path = embl_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
+  def gff_path = gff_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
   """
-  wget -O genes.embl.gz '${embl_url}'
-  wget -O genes.gff3.gz '${gff_url}'
+  cp '${embl_path}' genes.embl.gz
+  cp '${gff_path}' genes.gff3.gz
 
   gzip -dc genes.embl.gz > ${species}.dat
 
