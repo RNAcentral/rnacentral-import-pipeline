@@ -95,6 +95,24 @@ def test_links_to_the_genome_the_transcript_is_from():
     ]
 
 
+def test_keeps_transcripts_whose_id_has_a_dot_that_is_not_a_version():
+    """
+    Plasmodium (PF3D7_1425100.1) and Arabidopsis (AT1G01010.1) ids carry a dot
+    the GFF keeps; cutting it lost every one of their ncRNAs.
+    """
+    with open("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl", "r") as raw:
+        entries = list(
+            parse(
+                raw,
+                Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3"),
+                family_file=Path("data/rfam/families.tsv"),
+            )
+        )
+    assert [(e.primary_id, e.rna_type) for e in entries] == [
+        ("PF3D7_1425100.1", "SO:0000275")
+    ]
+
+
 @pytest.mark.slow
 def test_it_sets_primary_id_to_versionless_transcript_id(human_12):
     assert entry_for(human_12, "ENST00000516089.1").primary_id == "ENST00000516089"

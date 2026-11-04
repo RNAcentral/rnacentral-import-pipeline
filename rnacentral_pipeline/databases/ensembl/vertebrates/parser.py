@@ -57,6 +57,9 @@ def as_entry(
         return None
 
     pid = helpers.primary_id(feature)
+    # Some ids (Plasmodium's PF3D7_1425100.1) have a dot that is not a version
+    if pid not in context.gff and helpers.accession(feature) in context.gff:
+        pid = helpers.accession(feature)
     if pid in context.gff:
         info = context.gff[pid]
     else:

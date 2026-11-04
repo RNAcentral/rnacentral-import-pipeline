@@ -1,0 +1,7 @@
+##gff-version 3
+#!genome-build GeneDB GCA_000002765
+#!genome-version GCA_000002765
+#!genome-build-accession GCA_000002765.3
+LN999946.1	VectorBase	ncRNA_gene	101	227	.	+	.	ID=gene:PF3D7_1425100;biotype=snoRNA;gene_id=PF3D7_1425100
+LN999946.1	VectorBase	snoRNA	101	227	.	+	.	ID=transcript:PF3D7_1425100.1;Parent=gene:PF3D7_1425100;biotype=snoRNA;tag=Ensembl_canonical;transcript_id=PF3D7_1425100.1
+LN999946.1	VectorBase	exon	101	227	.	+	.	Parent=transcript:PF3D7_1425100.1;constitutive=1;exon_id=PF3D7_1425100.1-E1;rank=1
