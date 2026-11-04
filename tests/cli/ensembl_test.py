@@ -45,15 +45,16 @@ def test_can_fetch_assemblies():
             assert len(raw.readlines()) >= 5000
 
 
-def parse_plasmodium_with(gff_text):
+def parse_plasmodium_with(gff_text, extra=()):
     runner = CliRunner()
     base = Path(os.curdir).absolute()
     with runner.isolated_filesystem():
         Path("genes.gff3").write_text(gff_text)
-        return runner.invoke(
+        result = runner.invoke(
             ensembl.cli,
             [
                 "parse",
+                *extra,
                 "--family-file",
                 str(base / "data" / "rfam" / "families.tsv"),
                 str(base / "data" / "ensembl" / "Plasmodium_falciparum_3D7.ncrna.embl"),
@@ -61,6 +62,9 @@ def parse_plasmodium_with(gff_text):
                 ".",
             ],
         )
+        manifest = Path("accessions.manifest")
+        result.accessions = manifest.read_text() if manifest.exists() else None
+        return result
 
 
 # Plasmodium once parsed to nothing and the run carried on; a FULL release would retire it.
@@ -91,3 +95,23 @@ def test_parse_fails_loudly_on_any_other_error(monkeypatch):
     )
     assert result.exit_code != 0
     assert "1:6734..6802" in str(result.exception)
+
+
+@pytest.mark.cli
+def test_parse_lists_the_accessions_it_produced_under_their_own_database():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    result = parse_plasmodium_with(
+        gff, ["--source", "http://x/genes.embl.gz", "--signature", "s1"]
+    )
+    assert result.exit_code == 0
+    rows = [line.split(",") for line in result.accessions.splitlines()]
+    assert rows
+    assert {(r[0], r[2], r[3]) for r in rows} == {
+        ("ENSEMBL", "s1", "http://x/genes.embl.gz")
+    }
+
+
+@pytest.mark.cli
+def test_parse_writes_no_accession_list_without_a_source():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    assert parse_plasmodium_with(gff).accessions is None
