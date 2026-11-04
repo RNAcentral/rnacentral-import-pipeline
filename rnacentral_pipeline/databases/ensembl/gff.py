@@ -95,12 +95,31 @@ def load_coordinates(path: Path, assembly_id: ty.Optional[str] = None) -> Sqlite
     with tempfile.NamedTemporaryFile(dir=".") as tmp:
         db = gffutils.create_db(str(path), tmp.name)
         for ncrna_gene in db.features_of_type("ncRNA_gene"):
-            for transcript in db.children(ncrna_gene):
-                if transcript.featuretype == "exon":
-                    continue
-                if transcript.featuretype in IGNORED_TRANSCRIPTS:
-                    continue
-
+            transcripts = [
+                t
+                for t in db.children(ncrna_gene)
+                if t.featuretype != "exon" and t.featuretype not in IGNORED_TRANSCRIPTS
+            ]
+            # Some genesets list an ncRNA as a gene alone, with no transcript or exon.
+            if not transcripts:
+                pid = ncrna_gene["ID"][0].split(":", 1)[1]
+                biotype = ncrna_gene.attributes.get("biotype", ["ncRNA"])[0]
+                mapping[pid] = TranscriptInfo(
+                    so_rna_type=SO_MAPPING.get(biotype, SO_MAPPING["ncRNA"]),
+                    regions=[
+                        data.SequenceRegion(
+                            assembly_id=assembly_id,
+                            chromosome=ncrna_gene.chrom,
+                            strand=ncrna_gene.strand,
+                            exons=[
+                                data.Exon(start=ncrna_gene.start, stop=ncrna_gene.stop)
+                            ],
+                            coordinate_system=data.CoordinateSystem.one_based(),
+                        )
+                    ],
+                    from_gencode=False,
+                )
+            for transcript in transcripts:
                 exons: ty.List[data.Exon] = []
                 for exon in db.children(
                     transcript, featuretype="exon", order_by="start"

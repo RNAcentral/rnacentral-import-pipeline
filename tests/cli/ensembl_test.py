@@ -45,11 +45,15 @@ def test_can_fetch_assemblies():
             assert len(raw.readlines()) >= 5000
 
 
-def parse_plasmodium_with(gff_text, extra=()):
+def parse_plasmodium_with(gff_text, extra=(), embl_text=None):
     runner = CliRunner()
     base = Path(os.curdir).absolute()
     with runner.isolated_filesystem():
         Path("genes.gff3").write_text(gff_text)
+        embl = base / "data" / "ensembl" / "Plasmodium_falciparum_3D7.ncrna.embl"
+        if embl_text is not None:
+            embl = Path("genes.embl")
+            embl.write_text(embl_text)
         result = runner.invoke(
             ensembl.cli,
             [
@@ -57,7 +61,7 @@ def parse_plasmodium_with(gff_text, extra=()):
                 *extra,
                 "--family-file",
                 str(base / "data" / "rfam" / "families.tsv"),
-                str(base / "data" / "ensembl" / "Plasmodium_falciparum_3D7.ncrna.embl"),
+                str(embl),
                 "genes.gff3",
                 ".",
             ],
@@ -115,3 +119,30 @@ def test_parse_lists_the_accessions_it_produced_under_their_own_database():
 def test_parse_writes_no_accession_list_without_a_source():
     gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
     assert parse_plasmodium_with(gff).accessions is None
+
+
+# Some genesets (Thermococcus kodakarensis) list ncRNAs as genes only, with no transcript or exon lines.
+@pytest.mark.cli
+def test_parse_uses_the_gene_when_the_gff_has_no_transcript_for_an_ncrna():
+    lines = (
+        Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3")
+        .read_text()
+        .splitlines()
+    )
+    gff = "\n".join(l for l in lines if "\tsnoRNA\t" not in l and "\texon\t" not in l)
+    result = parse_plasmodium_with(gff)
+    assert result.exit_code == 0, result.output
+
+
+# Bradyrhizobium's only ncRNA is an Rfam ROSE element, which is suppressed on purpose.
+@pytest.mark.cli
+def test_parse_allows_an_empty_result_when_every_ncrna_is_suppressed():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    embl = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl").read_text()
+    embl = embl.replace(
+        'FT                   /note="snoRNA"',
+        'FT                   /db_xref="RFAM_trans_name:RF00435"\n'
+        'FT                   /note="snoRNA"',
+    )
+    result = parse_plasmodium_with(gff, embl_text=embl)
+    assert result.exit_code == 0, result.output
