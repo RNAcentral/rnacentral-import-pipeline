@@ -8,6 +8,7 @@ include { sequence_search } from './workflows/export/sequence-search'
 include { sankey } from './workflows/export/sankey'
 include { huggingface } from './workflows/export/huggingface'
 include { active_sequences } from './workflows/export/active-sequences'
+include { database_sequences } from './workflows/export/database-sequences'
 
 include { qc_export } from './workflows/utils/qc'
 
@@ -23,16 +24,22 @@ workflow export {
       active_json = active_sequences()
     }
 
+    // The per-database dumps likewise serve both the FTP and sequence-search exports.
+    database_dumps = channel.empty()
+    if (params.export.ftp.run || params.export.sequence_search.run) {
+      database_dumps = database_sequences()
+    }
+
     if (params.export.search.run) {
       text_search(ready)
       done = done.mix(text_search.out)
     }
     if (params.export.ftp.run) {
-      ftp(ready, active_json)
+      ftp(ready, active_json, database_dumps)
       done = done.mix(ftp.out)
     }
     if (params.export.sequence_search.run) {
-      sequence_search(ready)
+      sequence_search(ready, database_dumps)
       done = done.mix(sequence_search.out)
     }
     if (params.export.huggingface.run) {

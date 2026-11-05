@@ -80,3 +80,15 @@ def test_export_gates_each_section_on_its_run_flag():
 def test_ftp_config_has_no_run_flags_that_nothing_reads():
     # Only the section-level flag is read (by export.nf); sub-section ones were dead.
     assert len(re.findall(r"\brun\s*=", block(CONFIG, "ftp"))) == 1
+
+
+def test_each_shared_query_is_run_from_one_place():
+    # The per-database dump served both the FTP and sequence-search exports, once each.
+    users = [p.name for p in EXPORT_NFS if "database-specific.sql" in p.read_text()]
+    assert users == ["database-sequences.nf"], users
+
+
+def test_igv_gff3_is_derived_from_the_gff3_not_rebuilt():
+    body = (ROOT / "workflows/export/ftp/coordinates.nf").read_text()
+    igv = body.split("process generate_gff3_for_igv {", 1)[1].split("\nprocess ", 1)[0]
+    assert "as-gff3" not in igv
