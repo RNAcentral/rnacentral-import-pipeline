@@ -140,3 +140,9 @@ def test_species_fasta_is_grouped_by_taxid_in_sql_not_sorted_afterwards():
         0
     ]
     assert "sort" not in split
+
+
+def test_ensembl_chunks_are_balanced_by_xref_count():
+    ensembl = (ROOT / "workflows/export/ftp/ensembl.nf").read_text()
+    assert "ensembl-ranges" in ensembl and "upi-ranges" not in ensembl
+    assert "max_xrefs" in block(block(CONFIG, "ftp"), "ensembl")
