@@ -45,7 +45,7 @@ def test_can_fetch_assemblies():
             assert len(raw.readlines()) >= 5000
 
 
-def parse_plasmodium_with(gff_text, embl_text=None):
+def parse_plasmodium_with(gff_text, extra=(), embl_text=None):
     runner = CliRunner()
     base = Path(os.curdir).absolute()
     with runner.isolated_filesystem():
@@ -54,10 +54,11 @@ def parse_plasmodium_with(gff_text, embl_text=None):
         if embl_text is not None:
             embl = Path("genes.embl")
             embl.write_text(embl_text)
-        return runner.invoke(
+        result = runner.invoke(
             ensembl.cli,
             [
                 "parse",
+                *extra,
                 "--family-file",
                 str(base / "data" / "rfam" / "families.tsv"),
                 str(embl),
@@ -65,6 +66,9 @@ def parse_plasmodium_with(gff_text, embl_text=None):
                 ".",
             ],
         )
+        manifest = Path("accessions.manifest")
+        result.accessions = manifest.read_text() if manifest.exists() else None
+        return result
 
 
 # Plasmodium once parsed to nothing and the run carried on; a FULL release would retire it.
@@ -97,6 +101,26 @@ def test_parse_fails_loudly_on_any_other_error(monkeypatch):
     assert "1:6734..6802" in str(result.exception)
 
 
+@pytest.mark.cli
+def test_parse_lists_the_accessions_it_produced_under_their_own_database():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    result = parse_plasmodium_with(
+        gff, ["--source", "http://x/genes.embl.gz", "--signature", "s1"]
+    )
+    assert result.exit_code == 0
+    rows = [line.split(",") for line in result.accessions.splitlines()]
+    assert rows
+    assert {(r[0], r[2], r[3]) for r in rows} == {
+        ("ENSEMBL", "s1", "http://x/genes.embl.gz")
+    }
+
+
+@pytest.mark.cli
+def test_parse_writes_no_accession_list_without_a_source():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    assert parse_plasmodium_with(gff).accessions is None
+
+
 # Some genesets (Thermococcus kodakarensis) list ncRNAs as genes only, with no transcript or exon lines.
 @pytest.mark.cli
 def test_parse_uses_the_gene_when_the_gff_has_no_transcript_for_an_ncrna():
@@ -120,7 +144,7 @@ def test_parse_allows_an_empty_result_when_every_ncrna_is_suppressed():
         'FT                   /db_xref="RFAM_trans_name:RF00435"\n'
         'FT                   /note="snoRNA"',
     )
-    result = parse_plasmodium_with(gff, embl)
+    result = parse_plasmodium_with(gff, embl_text=embl)
     assert result.exit_code == 0, result.output
 
 

@@ -1,0 +1,299 @@
+ID   primary_assembly:GCA_000002765:LN999944.1:1:1687656:1; ; ; DNA; ; UNC; 4968 BP.
+XX
+AC   primary_assembly:GCA_000002765:LN999944.1:1:1687656:1;
+XX
+DE   Plasmodium falciparum 3D7 primary_assembly LN999944.1 GCA_000002765 full
+DE   sequence 1..1687656 annotated by Ensembl
+XX
+KW
+XX
+OS   Plasmodium falciparum 3D7
+OC   Eukaryota; Sar; Alveolata; Apicomplexa; Aconoidasida; Haemosporida;
+OC   Plasmodiidae; Plasmodium falciparum.
+XX
+CC   This sequence was annotated by VEuPathDB PlasmoDB
+CC   (https://veupathdb.org/veupathdb). Please visit the Ensembl or
+CC   EnsemblGenomes web site, http://www.ensembl.org/ or
+CC   http://www.ensemblgenomes.org/ for more information.
+CC   All feature locations are relative to the first (5') base of the sequence
+CC   in this file.  The sequence presented is always the forward strand of the
+CC   assembly. Features that lie outside of the sequence contained in this file
+CC   have clonal location coordinates in the format: <clone
+CC   accession>.<version>:<start>..<end>
+CC   The /gene indicates a unique id for a gene, /note="transcript_id=..." a
+CC   unique id for a transcript, /protein_id a unique id for a peptide and
+CC   note="exon_id=..." a unique id for an exon. These ids are maintained
+CC   wherever possible between versions.
+CC   All the exons and transcripts in Ensembl are confirmed by similarity to
+CC   either protein or cDNA sequences.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..4968
+FT                   /organism="Plasmodium falciparum 3D7"
+FT                   /db_xref="taxon:36329"
+FT   gene            100..4868
+FT                   /gene="PF3D7_1002400"
+FT                   /locus_tag="TRA2B"
+FT                   /note="RRM domain-containing protein
+FT                   [Source:UniProtKB/TrEMBL;Acc:Q8IK12]"
+FT   mRNA            join(100..933,1190..1307,1420..1508,2018..2095,2270..2351,
+FT                   2464..2757,3031..4868)
+FT                   /gene="PF3D7_1002400"
+FT                   /standard_name="PF3D7_1002400.2"
+FT   CDS             join(879..933,1190..1307,1420..1508,2018..2095,2270..2351,
+FT                   2464..2757,3031..3055)
+FT                   /gene="PF3D7_1002400"
+FT                   /protein_id="PF3D7_1002400.2-p1"
+FT                   /note="transcript_id=PF3D7_1002400.2"
+FT                   /db_xref="Uniprot/SPTREMBL:A0A143ZX28"
+FT                   /db_xref="UniProtKB_all:A0A143ZX28"
+FT                   /db_xref="GO:0003676"
+FT                   /db_xref="GO:0003723"
+FT                   /db_xref="GO:0003723"
+FT                   /db_xref="GO:0003723"
+FT                   /db_xref="protein_id:CZT98272.1"
+FT                   /db_xref="STRING:36329.A0A143ZX28"
+FT                   /db_xref="UniParc:UPI00021FCBBB"
+FT                   /translation="MSSKEAHSESEEPVHKNDGSTLYVSNLSSKITTAKLQDIFEKYGN
+FT                   IEKCYVISNPITKESRNFGFVTFNNSEDAENAMNKANKMEIEGREINVEIAKRNEPHEP
+FT                   TPGEYKGVQIKRNGLRHDYYGRKYDRPYDRRRYDSRRVNPYGRDRMRNFGYRNNGYRHD
+FT                   RYDRRPRNDYRNYDRRSIDNKYYRRNDYYKRNARSSDNERGPSRDDSKRKKRYDRVRKS
+FT                   TSVSNSERRRYRNSPDRSPRYRRK"
+FT   mRNA            join(100..933,1190..1307,1420..1508,2018..2095,2264..2351,
+FT                   2464..2757,3031..4868)
+FT                   /gene="PF3D7_1002400"
+FT                   /standard_name="PF3D7_1002400.1"
+FT   CDS             join(879..933,1190..1307,1420..1508,2018..2095,2264..2351,
+FT                   2464..2757,3031..3055)
+FT                   /gene="PF3D7_1002400"
+FT                   /protein_id="PF3D7_1002400.1-p1"
+FT                   /note="transcript_id=PF3D7_1002400.1"
+FT                   /db_xref="RefSeq_peptide:XP_001347313.1"
+FT                   /db_xref="RefSeq_dna:XM_001347277.1"
+FT                   /db_xref="Uniprot/SPTREMBL:Q8IK12"
+FT                   /db_xref="UniProtKB_all:Q8IK12"
+FT                   /db_xref="GO:0003676"
+FT                   /db_xref="GO:0003723"
+FT                   /db_xref="GO:0003723"
+FT                   /db_xref="GO:0003723"
+FT                   /db_xref="protein_id:CZT98273.1"
+FT                   /db_xref="STRING:36329.Q8IK12"
+FT                   /db_xref="UniParc:UPI0000084CB9"
+FT                   /translation="MSSKEAHSESEEPVHKNDGSTLYVSNLSSKITTAKLQDIFEKYGN
+FT                   IEKCYVISNPITKESRNFGFVTFNNSEDAENAMNKANKMEIEGREINVEIAKRNEPHEP
+FT                   TPGEYKGVQNIVKRNGLRHDYYGRKYDRPYDRRRYDSRRVNPYGRDRMRNFGYRNNGYR
+FT                   HDRYDRRPRNDYRNYDRRSIDNKYYRRNDYYKRNARSSDNERGPSRDDSKRKKRYDRVR
+FT                   KSTSVSNSERRRYRNSPDRSPRYRRK"
+XX
+SQ   Sequence 4968 BP; 2210 A; 417 C; 422 G; 1919 T; 0 other;
+     atatatatat aagaataaat aataatacat atatatataa taatataaat aatatatata        60
+     ttatattata tatatattta attaagtttt tattttaatt ttttttcctt tttaaaaaat       120
+     aataatatta aaaataataa aaaacataaa tatattttat ttatataaaa ggaactaatt       180
+     tatattattt atatatattt tatatatgaa aaaaaaaaaa aaaaaaaaaa aaaaggaaag       240
+     gaaaatgtta ttttaaagaa aaaaattgaa atatataata attaaaacat tattaacata       300
+     aaaaaaaaaa aaaaaaaatc agttttcttg ttttttttct tgtttttctt aattttctcc       360
+     tttctatttt ttattttatt ttttaaagca ttttattatt tatatatttt catttctatt       420
+     ttatatatga aatgagaaat aaataataaa aagagaaaaa aacagaaata agaaaaatat       480
+     attgttaaaa taattgcatt ttaaagaaaa cattgtatat ttatattatt acaattcaga       540
+     atttatatag gacaacaaat aaaaatatat atttgaaata ttaatatata tatatatata       600
+     atatatattt tattatttta aacatattta aggatttgat attattgaaa ataaaataat       660
+     ttaaattaat gttattttat tattatttta ttgcaatatt atatatgaat aaataatttg       720
+     ttcattatta ataccaccac ttatatatat atatatatat atatatatat ataatattaa       780
+     gatacctatt tatcaaacat ataattatac ttaattaata taggatattt atatatatat       840
+     atatataata ttttttatta taaaaaagaa aataaaaaat gagttcaaaa gaagcacata       900
+     gtgaatcaga agaacctgtt cacaagaacg atggtaaagg aggaaacgac aaaaacttaa       960
+     gaaaaacttt tacatacata taaatataaa taaataaata tatatataat acagttatat      1020
+     aatatattat atttcttgtt gtaatatatg ataaatacat atcagtattt ctccctataa      1080
+     aagaaaacaa aagaatatat tatattcatt tatatatttt atttatcacc aaaattaatg      1140
+     caataatttt tcatatatgt acatatattt ttttttttgt ctaactcagg ttcaacatta      1200
+     tatgtatcaa atttaagctc aaaaataaca acagcgaaac ttcaagatat ttttgaaaaa      1260
+     tatggaaaca ttgaaaaatg ttatgttata agtaacccca taaccaagta ataataaaat      1320
+     aaaatacaat aaaataaaaa acaattaatc aaaaatatat gtatttatat agtagtcatt      1380
+     taacatataa taattatatt atatctttat taccaacaga gaatctagaa actttggatt      1440
+     tgtcactttt aataattctg aagatgcaga aaatgcaatg aataaagcca ataaaatgga      1500
+     aatagaaggt tattaatttt aatatatcga acttatataa tttacatgta cataaaaata      1560
+     tatattcata atatttacat aaaatataca caaatgcaaa catataaata tttaaatgtt      1620
+     atattataat cagcatataa aatatatata aatgtatatt taatcaaatg attttaaaaa      1680
+     caaaattata attttcatgt attccttatt tctaatgata tcttatatga aatgaataat      1740
+     tatatcagaa tattgcacaa aatgaatgaa ttgaataatg aaataataaa tattgtacct      1800
+     acttatatat atatatatat atatttaaac caaaattatg attttttttt gtgcttgatt      1860
+     caataatata tcacatgtat cttcataata taaataataa atacaaattt ctggatttgc      1920
+     ttttataata tttatttatt ttacattcat tatttattga gagaaatatc aaaatgaaaa      1980
+     attaaaaata tatattatcc ccttttttta ataataggaa gagaaatcaa cgtagaaatt      2040
+     gctaagcgaa atgagccaca tgaaccaacc ccaggagaat ataaaggagt acaaagtagg      2100
+     aattatatat atataaaata taatatatgt attcaaagct aatcggatat atatatatat      2160
+     aaatatatat atatatatat atatatatat atgtcttaac atataaacat attcatttat      2220
+     tattattatt attattatta ttattattta tgtattgttc cagatatagt aaagaggaat      2280
+     ggattaagac acgattatta cggaagaaaa tatgacagac cttatgatag gagaagatat      2340
+     gattcacgaa ggtaaaataa tataaaatta caaaaataaa atataaataa ttatatatat      2400
+     atatatatat gtgtttgtat atatgtatat attctcatga ttatattact tcttttattt      2460
+     tagagttaac ccttatggaa gagatcgtat gagaaatttt ggttatcgta ataatggtta      2520
+     tagacatgat agatatgata ggcgtccacg taatgattat aggaattatg atagaagatc      2580
+     gattgataat aaatattata gaagaaatga ttattataaa agaaacgcaa gaagtagtga      2640
+     taatgaaagg ggaccatcaa gagatgacag taaaaggaaa aagagatatg atagagtaag      2700
+     aaaatcaaca agtgtatcaa atagtgagag aagacgttat agaaattcac ctgacaggta      2760
+     acataataaa taattttata catactcaca agaaaaaaaa aaataataaa ataaaatata      2820
+     taaatacata catatacata tttattttat gtttacattt atatttattg tacccgcagc      2880
+     gatataatat gcctataata tatatatata tatatatata tatatatata tatatatata      2940
+     tatttatata tatatatata tattcttatt aatttattca tttatttgct tttttttttt      3000
+     ttttttcatt tattattctt tccttatcag aagtccacgt tatagaagaa aataaaataa      3060
+     aaattaaaaa aatagaaacg aattgaatgc atatattatt atatatatat taatcatgtt      3120
+     accatttatt ttattatttt ttttttttca aaagttaaaa aaaaattaat atttgattgt      3180
+     tcataagaat acaaaatttt aaaattttta aattgaatac gaaaaatata attgaataaa      3240
+     taaataaaat gtattattat tattttttaa ttctaatgaa aactaacaaa attattaaaa      3300
+     aaaataaatg ccaaaaagaa aaataaaaag aaagaaaaaa tgagaaaaaa aaaaaaaaca      3360
+     atataaaata aaataattta aaagaagcaa ataaatataa tatatatata tatatatata      3420
+     tatatatata tatatatata tatatatatg tatttattta attatttgct tatataattt      3480
+     tttattatga aagaatcaat taaaaaatta agaggttatt cacatatacc aaattaaata      3540
+     taatcatcat catatctcca tctttttaat aactttccat aactaaaaat aaaaatgata      3600
+     aaagtaaagg aatgatataa tgtcaaatta aatgaaatat taacacgtag aaatatatat      3660
+     atatatatat ataatataaa acattttttc atacaaaaat aaaaatataa taatatttat      3720
+     ggcaaaagta gcaaagatag ttatagtaat attggtaaat atatatagaa aaaaataatg      3780
+     aacatagtat atttatttta attcttttat atatttattt aatttactta aaaactttta      3840
+     caggtaagtc tgcttttttc ctacaataat tttcacacat ttgtaaccac atcattaact      3900
+     cttctctcgt ccccgcccta ggaaataaca tacatatttt caaccaaaaa aaaaaaaaaa      3960
+     aaatatatat atatatatat atatatatat aatcatttaa gaaaatcaaa aaaaacagaa      4020
+     aagacattta aaaaatatat acatatataa ccgataaata ataagaacag atattatgca      4080
+     acatatatat atatatatat gtatatgtat attcaaacaa catatccacg tataataatt      4140
+     caaagtgtta tataaaataa aataatatat aataaccgaa caacaacatg tataaaatat      4200
+     atatatatat ttttttttta cctaattgga tatattttta agaaatctga aaaacagttt      4260
+     ttaccttttc ctcttatgca ttgttcagga aagttggaat aaaaggcatg aacattttcc      4320
+     ttctcagtgt ctgaaaactt ttcatttaaa tatgatgcaa aaacccagaa caaaaaccac      4380
+     tgagcatgac aaggatgttt catattattt gagtctaaac tatcatcaaa taaataaaag      4440
+     ttttcatttt ttattttttc taattcatgt tttatattat tttcattttg ctccatacta      4500
+     ctattatttt taatcgaatt atgctgtttc attgtgctaa ctacatcttt gggattatca      4560
+     atatttagat atttttcatc attaattaaa tcttttgttt ttgtatcctt ttcttcaaaa      4620
+     gttttaaagg gtattatgtt acccatgatg ggtattataa tcgggaatta ttaaaaataa      4680
+     atgtatatac atatatttta ttcttccaca cgtgaataat atatttatat gtacaattta      4740
+     tattatatgt ttttcattat ttgtaaaaat ataaaatctt atagggtgta tatgaatata      4800
+     taaatgaata aatacataaa taaatattat atatatatgt gaccccttaa ctttttgtat      4860
+     ttttatttga ttgttttttt tttttttttt ttcatttttt tagaaataaa tttatacata      4920
+     tttaataaat tatatataca tttacatttt tttttttttt tgtttttt                   4968
+//
+ID   primary_assembly:GCA_000002765:LN999943.1:1:947102:1; ; ; DNA; ; UNC; 1966 BP.
+XX
+AC   primary_assembly:GCA_000002765:LN999943.1:1:947102:1;
+XX
+DE   Plasmodium falciparum 3D7 primary_assembly LN999943.1 GCA_000002765 full
+DE   sequence 1..947102 annotated by Ensembl
+XX
+KW
+XX
+OS   Plasmodium falciparum 3D7
+OC   Eukaryota; Sar; Alveolata; Apicomplexa; Aconoidasida; Haemosporida;
+OC   Plasmodiidae; Plasmodium falciparum.
+XX
+CC   This sequence was annotated by VEuPathDB PlasmoDB
+CC   (https://veupathdb.org/veupathdb). Please visit the Ensembl or
+CC   EnsemblGenomes web site, http://www.ensembl.org/ or
+CC   http://www.ensemblgenomes.org/ for more information.
+CC   All feature locations are relative to the first (5') base of the sequence
+CC   in this file.  The sequence presented is always the forward strand of the
+CC   assembly. Features that lie outside of the sequence contained in this file
+CC   have clonal location coordinates in the format: <clone
+CC   accession>.<version>:<start>..<end>
+CC   The /gene indicates a unique id for a gene, /note="transcript_id=..." a
+CC   unique id for a transcript, /protein_id a unique id for a peptide and
+CC   note="exon_id=..." a unique id for an exon. These ids are maintained
+CC   wherever possible between versions.
+CC   All the exons and transcripts in Ensembl are confirmed by similarity to
+CC   either protein or cDNA sequences.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1966
+FT                   /organism="Plasmodium falciparum 3D7"
+FT                   /db_xref="taxon:36329"
+FT   gene            complement(100..1866)
+FT                   /gene="PF3D7_0206900"
+FT                   /locus_tag="MSP5"
+FT                   /note="EGF-like domain-containing protein
+FT                   [Source:UniProtKB/TrEMBL;Acc:Q7KWJ3]"
+FT   mRNA            complement(join(100..998,1135..1866))
+FT                   /gene="PF3D7_0206900"
+FT                   /standard_name="PF3D7_0206900.1"
+FT   CDS             complement(join(694..998,1135..1648))
+FT                   /gene="PF3D7_0206900"
+FT                   /protein_id="PF3D7_0206900.1-p1"
+FT                   /note="transcript_id=PF3D7_0206900.1"
+FT                   /db_xref="RefSeq_peptide:XP_001349579.1"
+FT                   /db_xref="RefSeq_dna:XM_001349543.1"
+FT                   /db_xref="Uniprot/SPTREMBL:J7GNK9"
+FT                   /db_xref="Uniprot/SPTREMBL:O76245"
+FT                   /db_xref="Uniprot/SPTREMBL:Q58SP9"
+FT                   /db_xref="Uniprot/SPTREMBL:Q7KWJ3"
+FT                   /db_xref="Uniprot/SPTREMBL:Q8I0H3"
+FT                   /db_xref="Uniprot/SPTREMBL:Q8ITM0"
+FT                   /db_xref="Uniprot/SPTREMBL:Q9U8B4"
+FT                   /db_xref="UniProtKB_all:O76245"
+FT                   /db_xref="UniProtKB_all:Q7KWJ3"
+FT                   /db_xref="GO:0016020"
+FT                   /db_xref="GO:0016020"
+FT                   /db_xref="protein_id:CZT98081.1"
+FT                   /db_xref="STRING:36329.Q7KWJ3"
+FT                   /db_xref="UniParc:UPI0000083DFF"
+FT                   /translation="MNILCILSYIYFFVIFYSLNLNNKNENFLVVRRLMNDEKGEGGFT
+FT                   SKNKENGNNNRNNENELKEEGSLPTKMNEKNSNSSDKQPNDISHDESKSNSNNSQNIQK
+FT                   EPEEKENSNPNLDSSENSSESATRSVDISEHNSNNPETKEENGEEPLDLEINENAEIGQ
+FT                   EPPNRLHFDNVDDEVPHYSALRYNKVEKNVTDEMLLYNMMSDQNRKSCAINNGGCSDDQ
+FT                   ICININNIGVKCICKDGYLLGTKCIILNSYSCHPFFSILIYITLFLLLFV"
+FT   mRNA            complement(join(100..998,1135..1595,1712..1866))
+FT                   /gene="PF3D7_0206900"
+FT                   /standard_name="PF3D7_0206900.2"
+FT   CDS             complement(join(694..998,1135..1595,1712..1731))
+FT                   /gene="PF3D7_0206900"
+FT                   /protein_id="PF3D7_0206900.2-p1"
+FT                   /note="transcript_id=PF3D7_0206900.2"
+FT                   /db_xref="RefSeq_peptide:XP_002585389.1"
+FT                   /db_xref="RefSeq_dna:XM_002585343.1"
+FT                   /db_xref="Uniprot/SPTREMBL:C6S3B2"
+FT                   /db_xref="Uniprot/SPTREMBL:Q1WG89"
+FT                   /db_xref="Uniprot/SPTREMBL:Q1WG90"
+FT                   /db_xref="Uniprot/SPTREMBL:Q1WG91"
+FT                   /db_xref="UniProtKB_all:C6S3B2"
+FT                   /db_xref="GO:0016020"
+FT                   /db_xref="GO:0016020"
+FT                   /db_xref="protein_id:CZT98082.1"
+FT                   /db_xref="UniParc:UPI0001B05161"
+FT                   /translation="MNGHTHILNLNNKNENFLVVRRLMNDEKGEGGFTSKNKENGNNNR
+FT                   NNENELKEEGSLPTKMNEKNSNSSDKQPNDISHDESKSNSNNSQNIQKEPEEKENSNPN
+FT                   LDSSENSSESATRSVDISEHNSNNPETKEENGEEPLDLEINENAEIGQEPPNRLHFDNV
+FT                   DDEVPHYSALRYNKVEKNVTDEMLLYNMMSDQNRKSCAINNGGCSDDQICININNIGVK
+FT                   CICKDGYLLGTKCIILNSYSCHPFFSILIYITLFLLLFV"
+XX
+SQ   Sequence 1966 BP; 743 A; 186 C; 174 G; 863 T; 0 other;
+     gatttactta tatataattc atatgtttat tagaaaaaaa aaacaaaaaa aagaaaaaag        60
+     aaaaaacatt ttttatgttt tttttttttt tttgtgtgtg tgcatttgat ttattatatg       120
+     aaaagatact aggttttata tcgtaattga ttaaaataaa tattaatgca ccttaaaatg       180
+     aaaatgaaat taaaaaaaaa aaaaagagtc ttactgcaca tatatttatt atatatttat       240
+     aatatattta ttatatattt attatatatt tattatatat ttataatatg tttattatat       300
+     atgtattata tttgtattat atttatatta tatttatatt atatttatat tacatttata       360
+     ttatatttat attatattta tattatattt atctattatt tttttgataa tatggtgaaa       420
+     aattatccga gggataataa gtgtgcaata ataatagtat tgaataaata aaataatatt       480
+     aaatttggta agatttttaa ttatatttgt tatattacaa atatttattc tattaaatat       540
+     agattagtta tatataataa aaacttgtca atgaattata tatatatgta tatgtttata       600
+     tgttaatttt tatttttatt tatttatttt ttttattttt tttatttttt ttatttttta       660
+     tttttttttg ttttttattt agaaaaaaat atattaaacg aataataaca aaaacaatgt       720
+     aatataaata agaatagaaa aaaatggatg gcaagaataa gaattcaata ttatacattt       780
+     cgtaccaagt aaatatccat ccttacatat acatttaact cctatattat ttatatttat       840
+     acatatttga tcatcagaac atccaccatt atttatggca catgattttc tattttgatc       900
+     actcatcata ttatataata acatttcatc ggttacattt ttttctactt tattatatct       960
+     tagggcgcta taatgtggca cctcatcatc tacattgtct aaaaataaaa agatatataa      1020
+     atataatatt atacatatat atatatatat atatatatat ttatttattt atttattgtt      1080
+     ttattttttt cgtgtgtgta ctatatttta tatattaata tacaaatata ttaccaaaat      1140
+     gtaatctatt tggaggttct tgacctattt ctgcattctc attaatttca agatctaaag      1200
+     gttcttctcc attctcttct ttcgtctctg gattattaga attatgttct gatatatcaa      1260
+     cagaacgtgt tgcgctttca ctcgaatttt cactactatc taaattaggg ttactgttct      1320
+     ctttttcttc aggttctttt tggatatttt gtgaattatt agaattgctc tttgattcat      1380
+     catgtgaaat atcatttggc tgtttatctg atgaattgga atttttttca ttcatcttag      1440
+     taggtaaaga accttcttct tttagttcat tttcattatt tctattatta tttccattct      1500
+     ctttattttt acttgtaaaa ccaccttctc ctttttcgtc attcattaat cttctgacaa      1560
+     ccaaaaaatt ttcattttta ttatttaaat tcaaactata aaaaataacg aaaaaataaa      1620
+     tatatgatag aatacataat atattcattt tactaaaata ttgacaaaaa aaaaattaaa      1680
+     atgttaaatg tttaaatata tatatatata catgtgtgtg tgaccattca taagtcaaaa      1740
+     cttttttttc taaatttcca taattaacaa aaggtaatat atatatatat atatattttc      1800
+     taaatagtta ttaaaggctg aagaagagga aatataaata aaatttcatt ttaaaaataa      1860
+     aaaaaaaaaa aaaaaaaaaa gagaaaaaaa aaaggaacaa ttaatcgaag aaactagcca      1920
+     agatttttta aatttttcca atcagatgca tgttactata tttggt                     1966
+//

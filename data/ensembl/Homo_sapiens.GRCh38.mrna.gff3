@@ -1,0 +1,33 @@
+##gff-version 3
+#!genebuild-last-updated 2026-04
+#!genome-build-accession GCA_000001405.29
+#!genome-build Genome Reference Consortium GRCh38.p14
+#!genome-date 2023-04
+#!genome-version GRCh38
+KI270734.1	ensembl	five_prime_UTR	72411	72837	.	+	.	Parent=transcript:ENST00000617983
+KI270734.1	ensembl	mRNA	72411	74814	.	+	.	ID=transcript:ENST00000617983;Parent=gene:ENSG00000276017;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000617983;transcript_support_level=NA;version=1
+KI270734.1	ensembl	three_prime_UTR	74125	74814	.	+	.	Parent=transcript:ENST00000617983
+KI270734.1	ensembl	five_prime_UTR	131494	131645	.	+	.	Parent=transcript:ENST00000613204
+KI270734.1	ensembl	mRNA	131494	137392	.	+	.	ID=transcript:ENST00000613204;Parent=gene:ENSG00000278817;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000613204;transcript_support_level=1;version=1
+KI270734.1	ensembl	three_prime_UTR	136995	137392	.	+	.	Parent=transcript:ENST00000613204
+KI270734.1	ensembl	three_prime_UTR	138082	138479	.	-	.	Parent=transcript:ENST00000615165
+KI270734.1	ensembl	three_prime_UTR	138082	138479	.	-	.	Parent=transcript:ENST00000621424
+KI270734.1	ensembl	mRNA	138082	161750	.	-	.	ID=transcript:ENST00000615165;Parent=gene:ENSG00000277196;biotype=protein_coding;tag=gencode_basic;transcript_id=ENST00000615165;transcript_support_level=1;version=1
+KI270734.1	ensembl	mRNA	138082	161852	.	-	.	ID=transcript:ENST00000621424;Parent=gene:ENSG00000277196;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000621424;transcript_support_level=1;version=4
+KI270734.1	ensembl	five_prime_UTR	156447	156497	.	-	.	Parent=transcript:ENST00000615165
+KI270734.1	ensembl	five_prime_UTR	161587	161626	.	-	.	Parent=transcript:ENST00000621424
+KI270734.1	ensembl	five_prime_UTR	161689	161750	.	-	.	Parent=transcript:ENST00000615165
+KI270734.1	ensembl	five_prime_UTR	161689	161852	.	-	.	Parent=transcript:ENST00000621424
+MT	insdc	mRNA	3307	4262	.	+	.	ID=transcript:ENST00000361390;Parent=gene:ENSG00000198888;Name=MT-ND1-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361390;transcript_support_level=NA;version=2
+MT	insdc	mRNA	4470	5511	.	+	.	ID=transcript:ENST00000361453;Parent=gene:ENSG00000198763;Name=MT-ND2-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361453;transcript_support_level=NA;version=3
+MT	insdc	mRNA	5904	7445	.	+	.	ID=transcript:ENST00000361624;Parent=gene:ENSG00000198804;Name=MT-CO1-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361624;transcript_support_level=NA;version=2
+MT	insdc	mRNA	7586	8269	.	+	.	ID=transcript:ENST00000361739;Parent=gene:ENSG00000198712;Name=MT-CO2-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361739;transcript_support_level=NA;version=1
+MT	insdc	mRNA	8366	8572	.	+	.	ID=transcript:ENST00000361851;Parent=gene:ENSG00000228253;Name=MT-ATP8-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361851;transcript_support_level=NA;version=1
+MT	insdc	mRNA	8527	9207	.	+	.	ID=transcript:ENST00000361899;Parent=gene:ENSG00000198899;Name=MT-ATP6-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361899;transcript_support_level=NA;version=2
+MT	insdc	mRNA	9207	9990	.	+	.	ID=transcript:ENST00000362079;Parent=gene:ENSG00000198938;Name=MT-CO3-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000362079;transcript_support_level=NA;version=2
+MT	insdc	mRNA	10059	10404	.	+	.	ID=transcript:ENST00000361227;Parent=gene:ENSG00000198840;Name=MT-ND3-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361227;transcript_support_level=NA;version=2
+MT	insdc	mRNA	10470	10766	.	+	.	ID=transcript:ENST00000361335;Parent=gene:ENSG00000212907;Name=MT-ND4L-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361335;transcript_support_level=NA;version=1
+MT	insdc	mRNA	10760	12137	.	+	.	ID=transcript:ENST00000361381;Parent=gene:ENSG00000198886;Name=MT-ND4-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361381;transcript_support_level=NA;version=2
+MT	insdc	mRNA	12337	14148	.	+	.	ID=transcript:ENST00000361567;Parent=gene:ENSG00000198786;Name=MT-ND5-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361567;transcript_support_level=NA;version=2
+MT	insdc	mRNA	14149	14673	.	-	.	ID=transcript:ENST00000361681;Parent=gene:ENSG00000198695;Name=MT-ND6-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361681;transcript_support_level=NA;version=2
+MT	insdc	mRNA	14747	15887	.	+	.	ID=transcript:ENST00000361789;Parent=gene:ENSG00000198727;Name=MT-CYB-201;biotype=protein_coding;tag=gencode_basic,gencode_primary,Ensembl_canonical;transcript_id=ENST00000361789;transcript_support_level=NA;version=2

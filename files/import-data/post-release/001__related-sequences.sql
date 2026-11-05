@@ -161,7 +161,7 @@ BEGIN
       from load_rnc_related_sequences load
       join xref target on target.ac = load.target_accession
       where
-        load.relationship_type IN ('target_rna', 'isoform')
+        load.relationship_type IN ('target_rna', 'isoform', 'five_prime_utr', 'three_prime_utr', 'mrna')
         and target.deleted = 'N'
         and target.dbid = ANY(%L::int[])
         and abs(hashtext(load.source_accession)) %% %s = %s
@@ -181,7 +181,7 @@ BEGIN
     USING xref
     WHERE
       xref.ac = load.target_accession
-      and load.relationship_type IN ('target_rna', 'isoform')
+      and load.relationship_type IN ('target_rna', 'isoform', 'five_prime_utr', 'three_prime_utr', 'mrna')
       and xref.deleted = 'N'
       and xref.dbid = ANY(%L::int[])
   $q$, pg_temp.related_dbids());
