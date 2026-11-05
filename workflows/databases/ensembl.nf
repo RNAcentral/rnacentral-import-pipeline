@@ -107,6 +107,13 @@ process fetch_species_data {
 
   gzip -dc genes.embl.gz > ${species}.dat
 
+  # Some genesets are cut off on the Ensembl side; skip them rather than fail the whole run.
+  if ! embl-is-complete ${species}.dat; then
+    echo "Skipping ${species}: the EMBL file at ${embl_path} is truncated" >&2
+    rm -f ${species}.dat
+    exit 0
+  fi
+
   zgrep '^#' genes.gff3.gz | grep -v '^###\$' > ${species}.gff
   zcat genes.gff3.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${species}.gff
   """
