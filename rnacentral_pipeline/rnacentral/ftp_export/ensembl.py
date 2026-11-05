@@ -13,14 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import json
 import operator as op
 import re
 
 import fastjsonschema
+import psycopg2
 from jsonschema import validate
 
 from rnacentral_pipeline import psql
+from rnacentral_pipeline.rnacentral.precompute.ranges import balanced_ranges
 
 MOD_URL = "http://modomics.genesilico.pl/sequences/list/{id}"
 
@@ -32,7 +35,7 @@ TRUSTED_DB = set(
         "mirbase",
         "modomics",
         "pdbe",
-        "snopy" "srpdb",
+        "snopysrpdb",
         "tmrna website",
     ]
 )
@@ -108,3 +111,19 @@ def generate_file(raw, output, schema_file=None):
             validate_func(results)
 
     json.dump(results, output)
+
+
+def xref_counts(db_url):
+    # Named cursor so the per-rna counts stream rather than load into memory.
+    with psycopg2.connect(db_url) as conn:
+        with conn.cursor(name="ensembl_xref_counts") as cur:
+            cur.execute(
+                "SELECT rna.id, count(*) FROM rna JOIN xref ON xref.urs = rna.urs "
+                "WHERE xref.deleted = 'N' GROUP BY rna.id ORDER BY rna.id"
+            )
+            yield from cur
+
+
+def write_ranges(output, max_rna, max_xrefs, db_url=None):
+    ranges = balanced_ranges(xref_counts(db_url), max_rna, max_xrefs)
+    csv.writer(output).writerows(("rna", a, b) for a, b in ranges)

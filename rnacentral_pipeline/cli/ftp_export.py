@@ -118,6 +118,19 @@ def export_ensembl(raw, output, schema=None):
     ensembl_json.generate_file(raw, output, schema_file=schema)
 
 
+@cli.command("ensembl-ranges")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("max_rna", type=int)
+@click.argument("max_xrefs", type=int)
+@click.argument("output", default="-", type=click.File("w"))
+def ensembl_ranges(max_rna, max_xrefs, output, db_url=None):
+    """
+    Cut rna ids into ranges of at most MAX_RNA sequences and, where a single
+    sequence allows, MAX_XREFS xrefs, so each Ensembl chunk does similar work.
+    """
+    ensembl_json.write_ranges(output, max_rna, max_xrefs, db_url=db_url)
+
+
 @cli.command("rfam-go-annotations")
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))

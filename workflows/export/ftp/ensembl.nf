@@ -6,7 +6,7 @@ process find_chunks {
 
   script:
   """
-  rnac upi-ranges ${params.export.ftp.ensembl.chunk_size} > chunks
+  rnac ftp-export ensembl-ranges ${params.export.ftp.ensembl.chunk_size} ${params.export.ftp.ensembl.max_xrefs} chunks
   """
 }
 
