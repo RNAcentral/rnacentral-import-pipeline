@@ -4,6 +4,8 @@ process dump {
   input:
     path query
 
+  output:
+    path('rediportal-mapping.csv')
 
   script:
   """
@@ -14,9 +16,11 @@ process dump {
 
 
 workflow rediportal {
+  main:
 
   channel.fromPath('files/ftp-export/rediportal/editing-locations.sql') | set { query }
 
   query | dump
 
+  emit: dump.out
 }

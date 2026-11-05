@@ -4,23 +4,48 @@ nextflow.enable.dsl=2
 
 include { text_search } from './workflows/export/text-search.nf'
 include { ftp } from './workflows/export/ftp.nf'
-include { active_sequences } from './workflows/export/active-sequences'
 include { sequence_search } from './workflows/export/sequence-search'
 include { sankey } from './workflows/export/sankey'
+include { huggingface } from './workflows/export/huggingface'
+include { active_sequences } from './workflows/export/active-sequences'
 
 include { qc_export } from './workflows/utils/qc'
 
 workflow export {
   take: ready
   main:
-    text_search(ready)
-    ftp(ready, active_sequences())
-    sequence_search(ready)
-    sankey(ready)
-    text_search.out | mix(sequence_search.out, sankey.out) | collect | set { done }
+    done = channel.empty()
+
+    // One dump of the active sequences feeds both the FTP FASTA and HuggingFace;
+    // skip the (very slow) query when neither runs.
+    active_json = channel.empty()
+    if (params.export.ftp.run || params.export.huggingface.run) {
+      active_json = active_sequences()
+    }
+
+    if (params.export.search.run) {
+      text_search(ready)
+      done = done.mix(text_search.out)
+    }
+    if (params.export.ftp.run) {
+      ftp(ready, active_json)
+      done = done.mix(ftp.out)
+    }
+    if (params.export.sequence_search.run) {
+      sequence_search(ready)
+      done = done.mix(sequence_search.out)
+    }
+    if (params.export.huggingface.run) {
+      huggingface(ready, active_json)
+      done = done.mix(huggingface.out)
+    }
+    if (params.export.sankey.run) {
+      sankey(ready)
+      done = done.mix(sankey.out)
+    }
 
     // Final QC: validate published FTP files + search index comparison.
-    done | qc_export
+    done | collect | qc_export
   emit: done
 }
 

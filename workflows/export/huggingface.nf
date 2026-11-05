@@ -55,6 +55,9 @@ process upload_active_sequences {
     val release_num
     val ready_signal
 
+  output:
+    val true
+
   script:
   """
   # container home is read-only; xet writes its cache and logs under HF_HOME
@@ -68,6 +71,9 @@ process upload_readme {
     val release_num
     path update_specs
     val ready_signal
+
+  output:
+    val true
 
   script:
   """
@@ -83,31 +89,29 @@ workflow huggingface {
     _flag
     active_json
   main:
-    if (params.export.huggingface.run) {
-
-      // The README embeds the hand-written per-database version breakdown; without it
-      // the dataset card is missing the release context, so fail rather than publish.
-      if (!params.export.huggingface.update_specs) {
-        error "export.huggingface.update_specs must point to the release notes file"
-      }
-      update_specs = Channel.fromPath(params.export.huggingface.update_specs, checkIfExists: true)
-      release = Channel.value(params.release)
-
-      create_collection(release)
-      collection_ready = create_collection.out.collection_ready
-
-      create_active_sequences(active_json)
-      parquet_ch = create_active_sequences.out.parquet
-
-      // Dataset repo must exist before either upload; gate both uploads on it so
-      // the README upload can't race ahead of dataset creation.
-      create_dataset(release, collection_ready)
-      dataset_ready = create_dataset.out.dataset_ready.first()
-
-      upload_active_sequences(parquet_ch, release, dataset_ready)
-      upload_readme(release, update_specs, dataset_ready)
-
+    // The README embeds the hand-written per-database version breakdown; without it
+    // the dataset card is missing the release context, so fail rather than publish.
+    if (!params.export.huggingface.update_specs) {
+      error "export.huggingface.update_specs must point to the release notes file"
     }
+    update_specs = Channel.fromPath(params.export.huggingface.update_specs, checkIfExists: true)
+    release = Channel.value(params.release)
+
+    create_collection(release)
+    collection_ready = create_collection.out.collection_ready
+
+    create_active_sequences(active_json)
+    parquet_ch = create_active_sequences.out.parquet
+
+    // Dataset repo must exist before either upload; gate both uploads on it so
+    // the README upload can't race ahead of dataset creation.
+    create_dataset(release, collection_ready)
+    dataset_ready = create_dataset.out.dataset_ready.first()
+
+    upload_active_sequences(parquet_ch, release, dataset_ready)
+    upload_readme(release, update_specs, dataset_ready)
+  emit:
+    upload_active_sequences.out.mix(upload_readme.out)
 }
 
 
