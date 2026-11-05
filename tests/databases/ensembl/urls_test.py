@@ -79,6 +79,7 @@ def test_builds_absolute_urls_from_relative_paths():
         "9606",
         "B/p/genes.embl.gz",
         "B/p/genes.gff3.gz",
+        "GCA1v1",
     )
 
 
@@ -279,14 +280,26 @@ def test_mrna_rows_carry_the_homology_file_when_there_is_one():
         "Homo_sapiens": species(
             **{"GCA_1.1": assembly("chromosome", {"ensembl": with_homology})}
         ),
-        "Pan_paniscus": species(
-            **{"GCA_2.1": assembly("chromosome", {"ensembl": build("2026_04", "q")})}
-        ),
+        # Its own taxid: species sharing one are collapsed to a single geneset.
+        "Pan_paniscus": {
+            **species(
+                **{
+                    "GCA_2.1": assembly(
+                        "chromosome", {"ensembl": build("2026_04", "q")}
+                    )
+                }
+            ),
+            "taxid": 43,
+        },
     }
     got = select(data)
     assert got["Homo_sapiens"].writeable(kind="mrna")[-1] == "B/p/homology.tsv.gz"
     assert got["Pan_paniscus"].writeable(kind="mrna")[-1] == ""
-    assert len(got["Homo_sapiens"].writeable()) == 4
+    assert len(got["Homo_sapiens"].writeable()) == 5
+    # assembly_id stays fifth for every kind; ensembl_mrna.nf unpacks it by position.
+    mrna_row = got["Homo_sapiens"].writeable(kind="mrna")
+    assert len(mrna_row) == 6
+    assert mrna_row[:5] == got["Homo_sapiens"].writeable()
 
 
 # Genome mapping downloads this file, so it must come from the selected assembly.
@@ -332,3 +345,109 @@ def test_keeps_the_exact_version_rnacentral_uses():
         legacy={"GCA_000002765", "GCA_000002765.3"},
     )
     assert got["Plasmodium_falciparum_3D7"].embl_url == "B/with_utrs.embl.gz"
+
+
+def test_one_geneset_per_taxid_when_species_json_lists_a_species_twice():
+    """
+    species.json lists Aspergillus_nidulans_FGSC_A4 (refseq) and
+    Aspergillus_nidulans_fgsc_a4 (community) separately, both taxid 227321.
+    """
+    data = {
+        "Aspergillus_nidulans_FGSC_A4": species(
+            GCA_1=assembly("chromosome", {"refseq": build("2015_02", "refseq")})
+        ),
+        "Aspergillus_nidulans_fgsc_a4": species(
+            GCA_2=assembly("chromosome", {"community": build("2015_03", "community")})
+        ),
+    }
+    got = select(data)
+    assert list(got) == ["Aspergillus_nidulans_fgsc_a4"]
+    assert got["Aspergillus_nidulans_fgsc_a4"].embl_url == "B/community.embl.gz"
+
+
+def test_one_geneset_per_name_when_species_json_lists_a_strain_under_two_taxids():
+    """
+    Fusarium_graminearum_PH_1 (taxid 5518) and Fusarium_graminearum_ph_1 (229533)
+    are one strain; their names would clash as the assembly's ensembl_url.
+    """
+    used = {
+        "taxid": 5518,
+        "assemblies": {
+            "GCA_1.1": assembly("chromosome", {"community": build("2025_08", "used")})
+        },
+    }
+    other = {
+        "taxid": 229533,
+        "assemblies": {
+            "GCA_2.3": assembly("chromosome", {"community": build("2013_11", "other")})
+        },
+    }
+    got = select(
+        {"Fusarium_graminearum_ph_1": other, "Fusarium_graminearum_PH_1": used},
+        legacy={"GCA_1.1"},
+    )
+    assert list(got) == ["Fusarium_graminearum_PH_1"]
+
+
+def named(taxid, accession, name):
+    entry = assembly("chromosome", {"ensembl": build("2026_04", accession)})
+    entry["name"] = name
+    return {"taxid": taxid, "assemblies": {accession: entry}}
+
+
+def ids(data, known=()):
+    selected = urls.geneset_urls({"species": data}, base_url="B", known=known)
+    return {s.species: s.assembly_id for s in selected}
+
+
+def test_keeps_the_assembly_id_rnacentral_holds_for_that_gca():
+    data = {
+        "Plasmodium_falciparum_3D7": named(36329, "GCA_000002765.3", "GCA_000002765")
+    }
+    got = ids(data, known=[("GCA_000002765.3", "GCA000002765v3")])
+    assert got == {"Plasmodium_falciparum_3D7": "GCA000002765v3"}
+
+
+def test_a_refseq_copy_keeps_the_name_rnacentral_holds_for_its_genbank_twin():
+    """
+    RefSeq versions count from 1, so GCF_030179895.1 is the copy of GCA_030179895.2.
+    """
+    data = {
+        "Apis_mellifera": named(7460, "GCF_003254395.2", "Amel_HAv3.1"),
+        "Drosophila_kikkawai": named(30033, "GCF_030179895.1", "DkikHiC1v2"),
+    }
+    known = [("GCA_003254395.2", "Amel_HAv3.1"), ("GCA_030179895.2", "DkikHiC1v2")]
+    assert ids(data, known) == {
+        "Apis_mellifera": "Amel_HAv3.1",
+        "Drosophila_kikkawai": "DkikHiC1v2",
+    }
+
+
+def test_a_name_another_genome_holds_gets_a_gca_based_id():
+    data = {"Acropora_florida": named(70782, "GCA_014634605.1", "Aflo_1.0")}
+    got = ids(data, known=[("GCA_000184785.2", "Aflo_1.0")])
+    assert got == {"Acropora_florida": "GCA014634605v1"}
+
+
+def test_new_genomes_sharing_a_name_get_gca_based_ids():
+    data = {
+        "Amphimedon_queenslandica": named(400682, "GCA_000090795.1", "v1.0"),
+        "Trichoplax_adhaerens": named(10228, "GCA_000150275.1", "v1.0"),
+        "Escherichia_coli": named(511145, "GCA_000005845.2", "ASM584v2"),
+    }
+    assert ids(data) == {
+        "Amphimedon_queenslandica": "GCA000090795v1",
+        "Trichoplax_adhaerens": "GCA000150275v1",
+        "Escherichia_coli": "ASM584v2",
+    }
+
+
+def test_a_new_genome_drops_the_patch_from_its_name():
+    data = {"Homo_sapiens": named(9606, "GCA_000001405.29", "GRCh38.p14")}
+    assert ids(data) == {"Homo_sapiens": "GRCh38"}
+
+
+def test_the_assembly_id_list_covers_the_genomes_rnacentral_selects():
+    known = dict(urls.known_assemblies())
+    assert known["GCA_000001405.29"] == "GRCh38"
+    assert known["GCA_000002765.3"] == "GCA000002765v3"

@@ -74,13 +74,13 @@ workflow ensembl_mrna {
     | set { selected }
 
     selected \
-    | map { species, taxid, embl_url, gff_url, _homology_url -> [species, taxid, embl_url, gff_url] } \
+    | map { species, taxid, embl_url, gff_url, _assembly_id, _homology_url -> [species, taxid, embl_url, gff_url] } \
     | fetch_species_data \
     | set { fetched }
 
     selected \
     | filter { row -> row[4] } \
-    | map { species, _taxid, _embl_url, _gff_url, homology_url -> [species, homology_url] } \
+    | map { species, _taxid, _embl_url, _gff_url, _assembly_id, homology_url -> [species, homology_url] } \
     | fetch_homology \
     | set { homologies }
 

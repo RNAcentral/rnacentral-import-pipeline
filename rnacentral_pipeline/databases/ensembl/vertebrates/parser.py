@@ -57,8 +57,13 @@ def as_entry(
         return None
 
     pid = helpers.primary_id(feature)
+    # Some ids (Plasmodium's PF3D7_1425100.1) have a dot that is not a version
+    if pid not in context.gff and helpers.accession(feature) in context.gff:
+        pid = helpers.accession(feature)
     if pid in context.gff:
         info = context.gff[pid]
+    elif gene and embl.gene(gene) in context.gff:
+        info = context.gff[embl.gene(gene)]
     else:
         if is_nonchromosomal:
             info = TranscriptInfo.from_feature(record, feature)
@@ -100,6 +105,8 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
     """
 
     is_nonchromosomal = "nonchromosomal" in raw.name
+    lost = 0
+    yielded = 0
     for record in SeqIO.parse(raw, "embl"):
         current_gene = None
         for feature in record.features:
@@ -128,6 +135,7 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
             )
             if not entry:
                 LOGGER.warn("Could not parse %s" % feature)
+                lost += 1
                 continue
 
             if context.is_supressed(entry):
@@ -138,18 +146,29 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
                 LOGGER.debug("Skipping excluded entry %s", feature)
                 continue
 
+            yielded += 1
             yield entry
+
+    # A FULL release retires whatever the load lacks, so losing every ncRNA must not pass
+    # for an empty result. Suppressed or excluded ones are not lost.
+    if lost and not yielded and len(context.gff):
+        raise ValueError(
+            f"None of {lost} ncRNAs in {raw.name} could be placed in the GFF"
+        )
 
 
 def parse(
-    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None
+    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None, assembly_id=None
 ) -> ty.Iterable[data.Entry]:
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
     context = Context.build(
-        gff_file, family_file=family_file, excluded_file=excluded_file
+        gff_file,
+        family_file=family_file,
+        excluded_file=excluded_file,
+        assembly_id=assembly_id,
     )
     loaded = ncrnas(raw, context)
     grouped = it.groupby(loaded, op.attrgetter("gene"))

@@ -12,10 +12,20 @@ Plants, Metazoa, Fungi and Protists divisions.
    twice: once under its old division and once under `ENSEMBL`. Retire
    `ENSEMBL_PLANTS`, `ENSEMBL_METAZOA`, `ENSEMBL_FUNGI` and `ENSEMBL_PROTISTS`
    in the same release. Count the rows first and commit only if the count
-   looks right.
+   looks right. Then set `alive = 'N'` on those four `rnc_database` rows (ids
+   31, 34, 35, 36). A retirement by hand never refreshes their
+   `num_sequences`, so they would stay in the FTP export's database list and
+   each would get an empty FASTA file.
 2. **Run `files/precompute/deactivate-stale.sql` after precompute.** Release-mode
    precompute doesn't reselect a sequence whose only xrefs were the retired
    division ones, so its precompute row would stay active.
+
+## Delta loading
+
+The first release that loads ENSEMBL has no stored manifest, so every geneset is parsed and the
+load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL_GENCODE and TAIR, and
+`pipeline_tracking_import_files` for the genesets. Later releases fetch only genesets whose
+`md5sum.txt` entries moved. `--force_full_import` reparses everything.
 
 ## Database clean-up
 
@@ -120,15 +130,17 @@ The import now keeps each species on the exact assembly RNAcentral selects today
 rows of the release-28 public database). The `ensembl_assembly` table needs a
 proper review and clean-up. Checked against species.json on 2026-10-30:
 
-- **Regenerate `current-assemblies.txt` from production** before the run. The
-  public copy may lag behind it.
-- **Renamed assemblies.** 34 genomes keep the same GCA but Ensembl's
-  files now give a different assembly name. Examples: Plasmodium falciparum
-  (`GCA000002765v3` → `GCA_000002765`), P. vivax, vervet (`ChlSab1.1` →
-  `Chlorocebus_sabeus_1.1`), several Aspergillus and Candida, and names with a
-  new `gb` suffix. Folsomia candida could not be checked: its GTF is missing
-  from the FTP. Unless the new names are mapped to RNAcentral's existing ones,
-  the import creates a second row and duplicate coordinates for each.
+- **Regenerate `current-assemblies.txt` and `assembly-ids.tsv` from production**
+  before the run. The public copy may lag behind it. `assembly-ids.tsv` is
+  `gca_accession<TAB>assembly_id` for every `ensembl_assembly` row, selected rows
+  first: `copy (select gca_accession, assembly_id from ensembl_assembly where
+  gca_accession <> '' order by 1, selected_genome desc, 2) to stdout`.
+- **Renamed assemblies: handled.** 103 genomes keep their GCA but Ensembl now
+  names them differently (Plasmodium `GCA000002765v3` → `GCA_000002765`, Aedes
+  `AaegL5` → `AaegL5.0`), and 14 short names (`v1.0`, `EF1`) belong to different
+  genomes. The import takes each genome's id from `assembly-ids.tsv` by exact GCA,
+  keeps it for a RefSeq copy of a held GenBank assembly, and gives a clashing name
+  a GCA-based id (`GCA014634605v1`).
 - **Versions Ensembl no longer offers.** 10 genomes only have a different
   version in species.json now (e.g. Amphiprion percula `.1` → `.2`), so they
   move assembly and their old coordinates stay behind.

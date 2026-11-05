@@ -79,7 +79,7 @@
     "start": 6180018,
     "end": 6180422
   },
-  "anopheles_gambiae": {
+  "anopheles_gambiae_str_pest": {
     "chromosome": "2R",
     "start": 34644956,
     "end": 34645131
@@ -89,7 +89,7 @@
     "start": 7874546,
     "end": 7876498
   },
-  "plasmodium_falciparum": {
+  "plasmodium_falciparum_3d7": {
     "chromosome": 13,
     "start": 2796339,
     "end": 2798488

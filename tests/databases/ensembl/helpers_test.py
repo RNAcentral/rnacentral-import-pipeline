@@ -69,3 +69,20 @@ def test_it_can_get_grouped_notes(human_12, transcript_id, note_data):
 def test_can_detect_if_is_noncoding(human_12, transcript_id, status):
     feature = first_feature_for(human_12, transcript_id)
     assert helpers.is_ncrna(feature) == status
+
+
+# RefSeq names Apis's mitochondrial tRNAs by location; reading "1:6734..6802" as a version crashed the parse.
+@pytest.mark.parametrize(
+    "standard_name,version",
+    [
+        ("ENST00000516089.1", "1"),
+        ("AT1G01448.2", "2"),
+        ("NC_001566.1:6734..6802", "1"),
+        ("PF3D7_1425100", "1"),
+    ],
+)
+def test_seq_version_is_a_trailing_number_or_one(standard_name, version):
+    from Bio.SeqFeature import SeqFeature
+
+    feature = SeqFeature(type="misc_RNA", qualifiers={"standard_name": [standard_name]})
+    assert helpers.seq_version(feature) == version
