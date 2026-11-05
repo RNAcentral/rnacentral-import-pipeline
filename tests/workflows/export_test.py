@@ -130,3 +130,13 @@ def test_partition_names_are_built_in_sql_not_split_on_commas():
 def test_text_search_does_not_include_what_it_never_uses():
     sequences = (ROOT / "workflows/export/text-search/sequences.nf").read_text()
     assert "locus_query" not in sequences
+
+
+def test_species_fasta_is_grouped_by_taxid_in_sql_not_sorted_afterwards():
+    sql = (ROOT / "files/ftp-export/sequences/species-specific.sql").read_text()
+    assert re.search(r"ORDER BY\s+pre\.taxid", sql)
+    sequences = (ROOT / "workflows/export/ftp/sequences.nf").read_text()
+    split = sequences.split("process split_by_species {", 1)[1].split("\nworkflow ", 1)[
+        0
+    ]
+    assert "sort" not in split
