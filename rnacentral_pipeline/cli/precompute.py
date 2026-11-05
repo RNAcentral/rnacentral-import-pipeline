@@ -138,6 +138,19 @@ def precompute_select_outdated(xref, known, output):
     pre_select.write(Path(xref), Path(known), Path(output))
 
 
+@cli.command("ranges")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("max_urs", type=int)
+@click.argument("max_accessions", type=int)
+@click.argument("output", type=click.File("w"))
+def precompute_ranges(max_urs, max_accessions, output, db_url=None):
+    """
+    Cut precompute_urs ids into ranges of at most MAX_URS URS and, where a
+    single URS allows, MAX_ACCESSIONS accessions, so each range does similar work.
+    """
+    pre_ranges.write_balanced(output, max_urs, max_accessions, db_url=db_url)
+
+
 @cli.command("upi-taxid-ranges")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.option("--tablename", default="precompute_urs_taxid")

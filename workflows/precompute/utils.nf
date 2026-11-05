@@ -1,5 +1,9 @@
 process query {
   tag { "${query.baseName}" }
+  // The cluster's 1 GB default OOM-kills the larger queries.
+  memory { 16.GB * task.attempt }
+  errorStrategy 'retry'
+  maxRetries 2
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
