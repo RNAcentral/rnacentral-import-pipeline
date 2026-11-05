@@ -15,7 +15,6 @@ include { query as r2dt_query } from './utils'
 include { query as ref_query } from './utils'
 include { query as rfam_query } from './utils'
 include { query as orf_query } from './utils'
-include { query as locus_query } from './utils'
 include { fetch_schema } from './utils'
 include { build_search_accessions } from './build-accession-table'
 
