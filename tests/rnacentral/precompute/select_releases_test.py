@@ -28,14 +28,13 @@ def test_select_new_matches_the_rust_binarys_own_test_case():
     assert sorted(selected) == ["URS1_9606", "URS3_9606", "URS6_9606"]
 
 
-def test_select_new_raises_when_a_known_release_is_newer_than_xref():
-    # Direct port of releases.rs's test_select_new_known_newer - a genuine
-    # data-integrity check, not a style choice.
+def test_select_new_selects_a_known_release_newer_than_xref():
+    # An in-place taxid change leaves the old pair with only older deleted xrefs;
+    # it must be recomputed (and flipped inactive), not abort the run.
     xref_lf = pl.LazyFrame({"urs_taxid": ["URS1_9606"], "xref_release": [600]})
     known_lf = pl.LazyFrame({"urs_taxid": ["URS1_9606"], "known_release": [700]})
 
-    with pytest.raises(ValueError, match="URS1_9606"):
-        select_releases.select_new(xref_lf, known_lf)
+    assert select_releases.select_new(xref_lf, known_lf) == ["URS1_9606"]
 
 
 def test_select_new_selects_an_id_never_seen_in_known_at_all():

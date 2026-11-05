@@ -42,24 +42,15 @@ import polars as pl
 def select_new(xref_lf: pl.LazyFrame, known_lf: pl.LazyFrame) -> list[str]:
     joined = xref_lf.join(known_lf, on="urs_taxid", how="full", coalesce=True)
 
-    too_new = joined.filter(
-        pl.col("known_release").is_not_null()
-        & pl.col("xref_release").is_not_null()
-        & (pl.col("known_release") > pl.col("xref_release"))
-    ).collect(engine="streaming")
-    if too_new.height > 0:
-        raise ValueError(
-            f"{too_new.height} urs_taxid have a known/precompute release "
-            "newer than xref (should never happen): "
-            f"{too_new['urs_taxid'].to_list()[:10]}"
-        )
+    # known > xref is legitimate: an in-place taxid change moves the active xref
+    # away, so the old pair is reselected and flipped inactive.
 
     selected = (
         joined.filter(
             pl.col("xref_release").is_not_null()
             & (
                 pl.col("known_release").is_null()
-                | (pl.col("xref_release") > pl.col("known_release"))
+                | (pl.col("xref_release") != pl.col("known_release"))
             )
         )
         .select("urs_taxid")
