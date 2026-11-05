@@ -92,3 +92,41 @@ def test_igv_gff3_is_derived_from_the_gff3_not_rebuilt():
     body = (ROOT / "workflows/export/ftp/coordinates.nf").read_text()
     igv = body.split("process generate_gff3_for_igv {", 1)[1].split("\nprocess ", 1)[0]
     assert "as-gff3" not in igv
+
+
+def psql_statements():
+    """Every psql command in the export workflows, with line continuations joined."""
+    for path in EXPORT_NFS:
+        text = path.read_text().replace("\\\n", " ")
+        for n, line in enumerate(text.splitlines(), 1):
+            if re.search(r"\bpsql\b", line) and not line.lstrip().startswith(
+                ("//", "#")
+            ):
+                yield f"{path.relative_to(ROOT)}:{n}", line
+
+
+def test_every_psql_stops_on_error():
+    # Without it a failed query leaves a truncated file that is published as if it worked.
+    offenders = [
+        where for where, line in psql_statements() if "ON_ERROR_STOP" not in line
+    ]
+    assert not offenders, offenders
+
+
+def test_genes_split_does_not_test_a_glob_inside_double_brackets():
+    # [[ -e a/*.json ]] never expands the glob, so the branch was always taken.
+    genes = (ROOT / "workflows/export/text-search/genes.nf").read_text()
+    assert "[[ ! -e by-assembly/*.json ]]" not in genes
+
+
+def test_partition_names_are_built_in_sql_not_split_on_commas():
+    # awk -F, broke on any database description containing a comma.
+    accession = (
+        ROOT / "workflows/export/text-search/build-accession-table.nf"
+    ).read_text()
+    assert "awk" not in accession
+
+
+def test_text_search_does_not_include_what_it_never_uses():
+    sequences = (ROOT / "workflows/export/text-search/sequences.nf").read_text()
+    assert "locus_query" not in sequences

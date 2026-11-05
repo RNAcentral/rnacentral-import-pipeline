@@ -9,7 +9,7 @@ process dump {
 
   script:
   """
-  psql -f $query "\$PGDATABASE" > rediportal-mapping.csv
+  psql -v ON_ERROR_STOP=1 -f $query "\$PGDATABASE" > rediportal-mapping.csv
   """
 
 }

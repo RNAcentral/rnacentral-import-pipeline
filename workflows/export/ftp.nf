@@ -83,7 +83,7 @@ process rfam_go_matches {
 
   script:
   """
-  psql -f "$query" "\$PGDATABASE" > raw_go.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw_go.json
   rnac ftp-export rfam-go-annotations raw_go.json rnacentral_rfam_annotations.tsv
   gzip rnacentral_rfam_annotations.tsv
   """
