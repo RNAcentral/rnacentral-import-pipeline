@@ -89,26 +89,12 @@ process compress_species_fasta {
 }
 
 
-process find_dbs {
-  input:
-  path(query)
-
-  output:
-  path('dbs.txt')
-
-  script:
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > dbs.txt
-  """
-}
-
 process database_specific {
   tag { db }
-  maxForks params.export.ftp.sequences.by_database.max_forks
   publishDir "${params.export.ftp.publish}/sequences/by-database", mode: 'copy'
 
   input:
-  tuple val(db), val(full_descr), path(query)
+  tuple val(db), path('raw.json')
 
   output:
   file('*.fasta.gz')
@@ -116,7 +102,6 @@ process database_specific {
   script:
   """
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${full_descr}%' "\$PGDATABASE" > raw.json
   json2fasta.py raw.json ${db.toLowerCase().replaceAll(' ', '_').replace('/', '_')}.fasta
   gzip ${db.toLowerCase().replaceAll(' ', '_').replace('/', '_')}.fasta
   """
@@ -259,6 +244,7 @@ PYEOF
 workflow fasta_export {
   take:
     active_json
+    database_dumps
   main:
   channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
   active(active_json, readme)
@@ -268,11 +254,7 @@ workflow fasta_export {
   | species_specific \
   | (compress_species_fasta & create_ssi)
 
-  channel.fromPath('files/ftp-export/sequences/databases.sql') \
-  | find_dbs \
-  | splitCsv \
-  | combine(channel.fromPath('files/ftp-export/sequences/database-specific.sql')) \
-  | database_specific
+  database_dumps | database_specific
 
   channel.fromPath('files/ftp-export/sequences/species.sql') \
   | find_species \

@@ -88,7 +88,7 @@ process generate_gff3 {
   tuple val(assembly), val(species), path(raw_data)
 
   output:
-  path("${species}.${assembly}.gff3.gz")
+  tuple val(assembly), val(species), path("${species}.${assembly}.gff3.gz")
 
   script:
   """
@@ -109,7 +109,7 @@ process generate_gff3_for_igv {
   maxRetries 3
 
   input:
-  tuple val(assembly), val(species), path(raw_data)
+  tuple val(assembly), val(species), path(gff3)
 
   output:
   path("${species}.${assembly}.rnacentral.gff3.gz")
@@ -118,10 +118,7 @@ process generate_gff3_for_igv {
   """
   set -euo pipefail
 
-  rnac ftp-export coordinates as-gff3 $raw_data - |\
-  sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n |\
-  sed s/noncoding_exon/exon/g |\
-  bgzip > "${species}.${assembly}.rnacentral.gff3.gz"
+  zcat $gff3 | sed s/noncoding_exon/exon/g | bgzip > "${species}.${assembly}.rnacentral.gff3.gz"
   """
 }
 
@@ -209,7 +206,7 @@ workflow export_coordinates {
   | generate_mrna_gff3_for_igv \
   | set { mrna_gff3 }
 
-  coordinates | generate_gff3_for_igv | mix(mrna_gff3) | index_gff3
+  generate_gff3.out | generate_gff3_for_igv | mix(mrna_gff3) | index_gff3
 
   emit: generate_bed.out.mix(generate_gff3.out, index_gff3.out)
 }

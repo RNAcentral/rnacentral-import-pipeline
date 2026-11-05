@@ -8,6 +8,7 @@ include { ensembl_export } from './ftp/ensembl'
 include { fasta_export } from './ftp/sequences'
 include { rediportal } from './ftp/rediportal.nf'
 include { active_sequences } from './active-sequences'
+include { database_sequences } from './database-sequences'
 
 include { slack_closure } from '../utils/slack'
 
@@ -134,6 +135,7 @@ workflow ftp {
   take:
     _flag
     active_json
+    database_dumps
   main:
     channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
     channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
@@ -152,7 +154,7 @@ workflow ftp {
     id_mapping()
     export_coordinates()
     ensembl_export()
-    fasta_export(active_json)
+    fasta_export(active_json, database_dumps)
     rediportal()
   emit:
     done = md5.out[0]
@@ -173,7 +175,7 @@ workflow ftp {
 
 workflow {
   main:
-  ftp(channel.of('ready'), active_sequences())
+  ftp(channel.of('ready'), active_sequences(), database_sequences())
 
   // See analyze.nf: an onError section crashes on Nextflow 26.04.
   onComplete:

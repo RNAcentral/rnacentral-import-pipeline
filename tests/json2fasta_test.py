@@ -45,17 +45,47 @@ def test_parse_reads_one_entry_per_line():
 
 
 @pytest.mark.utils
-def test_sequences_emits_fasta_records():
+def test_sequences_emits_entries():
     raw = io.StringIO(
         '{"id": "URS0001", "description": "sample description", "sequence": "ACGUN"}\n'
     )
 
-    records = list(json2fasta.sequences(raw))
+    entries = list(json2fasta.sequences(raw))
 
-    assert len(records) == 1
-    assert records[0].id == "URS0001"
-    assert str(records[0].seq) == "ACGUN"
-    assert records[0].description == "sample description"
+    assert entries == [
+        {"id": "URS0001", "description": "sample description", "sequence": "ACGUN"},
+    ]
+
+
+@pytest.mark.utils
+@pytest.mark.parametrize(
+    "entry",
+    [
+        {"id": "URS1", "description": "plain", "sequence": "ACGU" * 40},
+        {"id": "URS2", "sequence": "A" * 60},
+        {"id": "URS3", "description": "", "sequence": "A" * 61},
+        {"id": "URS4", "description": "URS4 already prefixed", "sequence": "ACGU"},
+        {"id": "URS5", "description": "two\nlines\rhere", "sequence": "ACGU"},
+        {"id": "URS6", "description": None, "sequence": ""},
+    ],
+)
+def test_write_fasta_matches_biopython(entry):
+    from Bio import SeqIO
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+
+    record = SeqRecord(
+        Seq(entry["sequence"]),
+        id=entry["id"],
+        description=entry.get("description", "") or "",
+    )
+    expected = io.StringIO()
+    SeqIO.write([record], expected, "fasta")
+
+    actual = io.StringIO()
+    json2fasta.write_fasta([entry], actual)
+
+    assert actual.getvalue() == expected.getvalue()
 
 
 @pytest.mark.utils
