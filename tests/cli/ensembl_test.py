@@ -122,3 +122,29 @@ def test_parse_allows_an_empty_result_when_every_ncrna_is_suppressed():
     )
     result = parse_plasmodium_with(gff, embl)
     assert result.exit_code == 0, result.output
+
+
+# Brassica nigra's EMBL has a CDS that Biopython cannot read; the ncRNA parser never uses CDS.
+@pytest.mark.cli
+def test_parse_ignores_a_cds_feature_that_biopython_cannot_read():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    embl = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl").read_text()
+    bad_cds = (
+        "FT   CDS             join(complement(5..,not-a-location)\n"
+        'FT                   /note="transcript_id=X.1"\n'
+    )
+    embl = embl.replace("XX\nSQ", bad_cds + "XX\nSQ", 1)
+    assert bad_cds in embl
+    result = parse_plasmodium_with(gff, embl_text=embl)
+    assert result.exit_code == 0, result.output
+
+
+# Avena byzantina's scaffolds are named like ScDaJbz_878;HRSCAF=2598, which Biopython rejects in an ID line.
+@pytest.mark.cli
+def test_parse_accepts_a_semicolon_in_the_scaffold_name():
+    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3").read_text()
+    embl = Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl").read_text()
+    old_id = embl.splitlines()[0]
+    new_id = "ID   ScDaJbz_878;HRSCAF=2598    standard; DNA; HTG; 327 BP."
+    result = parse_plasmodium_with(gff, embl_text=embl.replace(old_id, new_id, 1))
+    assert result.exit_code == 0, result.output
