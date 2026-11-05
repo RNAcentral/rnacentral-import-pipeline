@@ -24,6 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PRECOMPUTE = (ROOT / "precompute.nf").read_text()
+QUERY = (ROOT / "workflows/precompute/utils.nf").read_text()
 CONFIGS = sorted(ROOT.glob("**/*.config"))
 
 RANGE_MEMORY = re.compile(r"^\s*range\.memory\s*=\s*(.+?)\s*$", re.MULTILINE)
@@ -33,6 +34,25 @@ RANGE_TIME = re.compile(r"^\s*range\.time\s*=\s*(.+?)\s*$", re.MULTILINE)
 def process_range_directives() -> str:
     body = PRECOMPUTE.split("process process_range {", 1)[1]
     return body.split("input:", 1)[0]
+
+
+def directives_of(source: str, process: str) -> list[str]:
+    body = source.split("process %s {" % process, 1)[1]
+    head = body.split("input:", 1)[0]
+    return [line.strip() for line in head.splitlines()]
+
+
+def test_query_steps_grow_memory_and_retry():
+    # The 1 GB cluster default OOM-killed prev_query with no retry.
+    for source, process in [(QUERY, "query"), (PRECOMPUTE, "query_accession_range")]:
+        directives = directives_of(source, process)
+        memory = [d for d in directives if d.startswith("memory")]
+
+        assert memory and "task.attempt" in memory[0], (
+            f"{process} memory does not grow with the attempt: {memory!r}"
+        )
+        assert "errorStrategy 'retry'" in directives, f"{process} does not retry"
+        assert "maxRetries 2" in directives, f"{process} has no maxRetries"
 
 
 def test_process_range_retries_without_an_exit_status():
