@@ -16,12 +16,8 @@ limitations under the License.
 import typing as ty
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.ensembl.data import FtpInfo, Pseudogene
-from rnacentral_pipeline.databases.ensembl.vertebrates import parser, urls
-
-
-def urls_for(base: str) -> ty.Iterable[FtpInfo]:
-    return urls.urls_for(base)
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene
+from rnacentral_pipeline.databases.ensembl.vertebrates import parser
 
 
 def parse(

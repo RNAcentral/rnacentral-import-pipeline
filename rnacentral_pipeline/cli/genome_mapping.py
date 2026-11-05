@@ -13,20 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import click
 
+from rnacentral_pipeline.databases.ensembl import urls as ensembl_urls
 from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
 from rnacentral_pipeline.rnacentral.genome_mapping import (
     blat,
     igv,
-    update_assemblies,
+    remote_files,
     urls,
 )
-
-# Exit status meaning "Ensembl has no such file", as opposed to a real failure.
-NO_REMOTE_FILE = 3
 
 
 @click.group("genome-mapping")
@@ -105,29 +102,16 @@ def shard_plan(fai, output, max_bases):
     blat.write_shard_plan(fai, output, max_bases=max_bases)
 
 
-@cli.command("url-for")
-@click.option("--kind", default="fa", type=click.Choice(["fa", "gff3"]))
-@click.option("--host", default="ensembl")
-@click.argument("species")
-@click.argument("assembly_id")
+@cli.command("remote-files")
+@click.option("--location", default=ensembl_urls.DEFAULT_JSON_URL)
+@click.argument("assemblies", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
-def find_remote_url(species, assembly_id, output, host=None, kind=None):
+def find_remote_files(assemblies, output, location=None):
     """
-    Determine the remote URL to fetch the genome or coordinates for a given species/assembly.
-    The url is written to the output file and may include '*'.
-
-    Exits with status 3 if Ensembl does not serve the file. Many assemblies in
-    ensembl_assembly are no longer on the current FTP, so callers treat that as
-    a species to skip rather than as a failure.
+    Add the genome and GFF3 URLs from species.json to a csv of
+    species,assembly_id,taxid,gca_accession, dropping assemblies it lacks.
     """
-    try:
-        url = urls.url_for(species, assembly_id, kind=kind, host=host)
-    except urls.NoTopLevelFiles:
-        click.echo(
-            "No %s for %s/%s on %s" % (kind, species, assembly_id, host), err=True
-        )
-        raise SystemExit(NO_REMOTE_FILE)
-    output.write(url)
+    remote_files.write(location, assemblies, output)
 
 
 @cli.command("urls-for")
@@ -148,15 +132,6 @@ def find_remote_urls(filename, output):
 @click.argument("output", type=click.Path())
 def parse_attempted_sequences(filename, assembly_id, output):
     attempted.genome_mapping(filename, assembly_id, output)
-
-
-@cli.command("update-assemblies")
-@click.option("--db-url", envvar="PGDATABASE")
-def sync_assemblies(db_url):
-    """
-    Check ensembl_assembly entries against Ensembl FTP and update outdated URLs/assembly IDs.
-    """
-    update_assemblies.update(db_url)
 
 
 @cli.command("igv")

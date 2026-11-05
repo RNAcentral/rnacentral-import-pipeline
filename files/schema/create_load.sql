@@ -166,15 +166,6 @@ CREATE UNLOGGED TABLE load_compara (
   ensembl_transcript text not null
 );
 
-DROP TABLE IF EXISTS load_coordinate_info;
-CREATE UNLOGGED TABLE load_coordinate_info (
-  chromosome text NOT NULL,
-  coordinate_system text NOT NULL,
-  assembly_id text,
-  is_reference bool,
-  karyotype_rank int
-);
-
 DROP TABLE IF EXISTS load_ensembl_analysis_status;
 CREATE UNLOGGED TABLE load_ensembl_analysis_status (
     database_name text,

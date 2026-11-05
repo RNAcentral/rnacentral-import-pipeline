@@ -1,0 +1,52 @@
+ID   primary_assembly:GCA_000002765:LN999946.1:1:3291936:1; ; ; DNA; ; UNC; 327 BP.
+XX
+AC   primary_assembly:GCA_000002765:LN999946.1:1:3291936:1;
+XX
+DE   Plasmodium falciparum 3D7 primary_assembly LN999946.1 GCA_000002765 full
+DE   sequence 1..3291936 annotated by Ensembl
+XX
+KW
+XX
+OS   Plasmodium falciparum 3D7
+OC   Eukaryota; Sar; Alveolata; Apicomplexa; Aconoidasida; Haemosporida;
+OC   Plasmodiidae; Plasmodium falciparum.
+XX
+CC   This sequence was annotated by VEuPathDB PlasmoDB
+CC   (https://veupathdb.org/veupathdb). Please visit the Ensembl or
+CC   EnsemblGenomes web site, http://www.ensembl.org/ or
+CC   http://www.ensemblgenomes.org/ for more information.
+CC   All feature locations are relative to the first (5') base of the sequence
+CC   in this file.  The sequence presented is always the forward strand of the
+CC   assembly. Features that lie outside of the sequence contained in this file
+CC   have clonal location coordinates in the format: <clone
+CC   accession>.<version>:<start>..<end>
+CC   The /gene indicates a unique id for a gene, /note="transcript_id=..." a
+CC   unique id for a transcript, /protein_id a unique id for a peptide and
+CC   note="exon_id=..." a unique id for an exon. These ids are maintained
+CC   wherever possible between versions.
+CC   All the exons and transcripts in Ensembl are confirmed by similarity to
+CC   either protein or cDNA sequences.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..327
+FT                   /organism="Plasmodium falciparum 3D7"
+FT                   /db_xref="taxon:36329"
+FT   gene            101..227
+FT                   /gene="PF3D7_1425100"
+FT   misc_RNA        101..227
+FT                   /gene="PF3D7_1425100"
+FT                   /db_xref="RNAcentral:URS0000A16722"
+FT                   /note="snoRNA"
+FT                   /standard_name="PF3D7_1425100.1"
+FT   exon            101..227
+FT                   /note="exon_id=PF3D7_1425100.1-E1"
+XX
+SQ   Sequence 327 BP; 152 A; 18 C; 33 G; 124 T; 0 other;
+     gttgtgtata cacattttaa aaatcagtat taaaaaaaaa aaataaataa caaaaattag        60
+     aaatattaaa aaaaaacagt tatatattaa tttattgtgt aatccctagc gggcaagatt       120
+     ttttcaaaga atgaaaaaga tcgtaatcgt ctaggtaata aaaatttaaa aaaaaaaaaa       180
+     tgttgtaagt ttttagtttt gcaatatatt ttttttttaa tacaatatgt atgtatatat       240
+     atatatatat atatatatat atatatatat gtgtatatta aatgtattgt atatccttaa       300
+     aaaaaataat gaataatata ttgtaat                                           327
+//

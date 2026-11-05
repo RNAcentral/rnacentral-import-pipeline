@@ -16,43 +16,64 @@ limitations under the License.
 """
 
 import json
-import os
-from collections import Counter
+import re
+from pathlib import Path
 
 import attr
-import pytest
 
 from rnacentral_pipeline.databases.ensembl.metadata import assemblies as assem
 
+LOAD_SQL = Path("files/import-data/pre-release/000__assemblies.sql")
 
-@pytest.fixture(scope="module")
-def assemblies():
-    with open("config/databases.json", "r") as conn, open(
-        "files/import-data/ensembl/assemblies.sql", "r"
-    ) as query, open(
-        "files/import-data/ensembl/example-locations.json", "r"
-    ) as exs, open(
-        "files/import-data/ensembl/known-assemblies.sql", "r"
-    ) as kn:
-        examples = json.load(exs)
-        known = assem.load_known(os.environ["PGDATABASE"], kn)
-        return list(assem.fetch(conn, query, examples, known))
+UCSC = {
+    "ucscGenomes": {
+        "hg19": {"description": "Feb. 2009 (GRCh37/hg19)"},
+        "hg38": {"description": "Dec. 2013 (GRCh38/hg38)"},
+    }
+}
 
-
-def assembly_for(assemblies, taxid):
-    found = [a for a in assemblies if a.taxid == taxid]
-    assert len(found) == 1
-    return found[0]
+LINEAGES = {
+    9606: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Chordata; Vertebrata; Mammalia",
+    511145: "cellular organisms; Bacteria; Pseudomonadota; Gammaproteobacteria",
+    400682: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Porifera",
+    9785: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Chordata; Vertebrata; Mammalia",
+    10228: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Placozoa",
+}
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-def test_it_can_load_known():
-    with open("files/import-data/ensembl/known-assemblies.sql", "r") as kn:
-        known = assem.load_known(os.environ["PGDATABASE"], kn)
-    assert len(known) >= 440
-    assert len(known[9606]) == 1
-    assert attr.asdict(known[9606][0]) == attr.asdict(
+def genome(taxid, accession, name, common_name=None):
+    files = {"genes.embl.gz": "e.gz", "genes.gff3.gz": "g.gz"}
+    build = {
+        "release": "2026_04",
+        "paths": {"genebuild": {"files": {"annotations": files}}},
+    }
+    return {
+        "taxid": taxid,
+        "common_name": common_name,
+        "assemblies": {
+            accession: {
+                "name": name,
+                "level": "chromosome",
+                "genebuild_providers": {"ensembl": {"2026_04": build}},
+            }
+        },
+    }
+
+
+def rows(examples=None, known=(), **species):
+    data = {"species": species}
+    return list(
+        assem.from_species_json(
+            data, frozenset(), known, examples or {}, UCSC, LINEAGES
+        )
+    )
+
+
+def test_builds_a_complete_row_for_a_reference_genome():
+    human = genome(9606, "GCA_000001405.29", "GRCh38.p14", common_name="human")
+    examples = {"homo_sapiens": {"chromosome": "X", "start": 73819307, "end": 73856333}}
+    [row] = rows(examples=examples, Homo_sapiens=human)
+    assert attr.asdict(row) == attr.asdict(
         assem.AssemblyInfo(
             assembly_id="GRCh38",
             assembly_full_name="GRCh38.p14",
@@ -66,87 +87,129 @@ def test_it_can_load_known():
             example=assem.AssemblyExample(chromosome="X", start=73819307, end=73856333),
         )
     )
+    assert row.subdomain == "ensembl.org"
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-def test_it_builds_a_valid_assembly(assemblies):
-    val = assembly_for(assemblies, 9606)
-    assert attr.asdict(val) == attr.asdict(
-        assem.AssemblyInfo(
-            assembly_id="GRCh38",
-            assembly_full_name="GRCh38.p14",
-            gca_accession="GCA_000001405.29",
-            assembly_ucsc="hg38",
-            common_name="human",
-            taxid=9606,
-            ensembl_url="homo_sapiens",
-            division="EnsemblVertebrates",
-            blat_mapping=True,
-            example=assem.AssemblyExample(chromosome="X", start=73819307, end=73856333),
-        )
+def test_bacteria_get_a_row_now_they_are_imported():
+    ecoli = genome(511145, "GCA_000005845.2", "ASM584v2")
+    [row] = rows(Escherichia_coli_str_K_12_substr_MG1655=ecoli)
+    assert (row.assembly_id, row.division, row.assembly_ucsc) == (
+        "ASM584v2",
+        "EnsemblBacteria",
+        None,
     )
-    assert val.subdomain == "ensembl.org"
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-def test_it_has_no_bacterial_assemblies(assemblies):
-    divisions = set(a.division for a in assemblies)
-    assert "EnsemblBacteria" not in divisions
+def test_genomes_sharing_an_assembly_name_each_get_a_row():
+    """
+    Amphimedon and Trichoplax both call their assembly v1.0; assembly_id is the
+    table's key, so each gets an id built from its GCA.
+    """
+    got = rows(
+        Amphimedon_queenslandica=genome(400682, "GCA_000090795.1", "v1.0"),
+        Trichoplax_adhaerens=genome(10228, "GCA_000150275.1", "v1.0"),
+    )
+    assert [r.assembly_id for r in got] == ["GCA000090795v1", "GCA000150275v1"]
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-@pytest.mark.parametrize(
-    "taxid,count",
-    [
-        (4932, 0),
-        (5127, 0),
-        (546991, 1),
-        (559292, 1),
-        (6239, 1),
-        (6669, 1),
-        (7227, 1),
-        (8090, 1),
-    ],
-)
-def test_it_has_one_assembly_per_taxid(assemblies, taxid, count):
-    val = [a for a in assemblies if a.taxid == taxid]
-    assert len(val) == count, "Issue with counts for %i" % taxid
+def test_names_a_species_by_its_binomial_unless_another_species_shares_it():
+    """
+    Ensembl called these leishmania_major and escherichia_coli_<strain>; genome
+    mapping joins on the name, so two selected genomes must never share one.
+    """
+    got = rows(
+        Leishmania_major_strain_Friedlin=genome(347515, "GCA_000002725.2", "ASM272v2"),
+        Escherichia_coli_str_K_12_substr_MG1655=genome(
+            511145, "GCA_000005845.2", "ASM584v2"
+        ),
+        Escherichia_coli_o157_h7=genome(83334, "GCA_004100305.1", "ASM410030v1"),
+    )
+    assert [r.ensembl_url for r in got] == [
+        "leishmania_major",
+        "escherichia_coli_str_k_12_substr_mg1655",
+        "escherichia_coli_o157_h7",
+    ]
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-@pytest.mark.parametrize("key", ["taxid", "assembly_id"])
-def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
-    counts = Counter(getattr(a, key) for a in assemblies)
-    max_item = counts.most_common(n=1)[0]
-    assert max_item[1] == 1, "Too many counts for: %s, %i" % max_item
+def test_plasmodium_falciparum_keeps_blat_mapping_and_its_example():
+    """
+    Other P. falciparum strains keep 3D7 on its full name, which the BLAT list and
+    example locations must use or the existing row loses both.
+    """
+    examples = json.loads(
+        Path("files/import-data/ensembl/example-locations.json").read_text()
+    )
+    got = rows(
+        examples=examples,
+        Plasmodium_falciparum_3D7=genome(36329, "GCA_000002765.3", "GCA_000002765"),
+        Plasmodium_falciparum_hb3=genome(137071, "GCA_000149665.2", "ASM14966v2"),
+    )
+    assert (got[0].ensembl_url, got[0].blat_mapping) == (
+        "plasmodium_falciparum_3d7",
+        True,
+    )
+    assert got[0].example is not None
 
 
-@pytest.mark.ensembl
-@pytest.mark.db
-@pytest.mark.parametrize(
-    "taxid,division,assembly_id",
-    [
-        (546991, "EnsemblFungi", "EF2"),
-        (559292, "EnsemblFungi", "R64-1-1"),
-        # 6239 and 7227 used to have a stale, EnsemblVertebrates-labeled
-        # duplicate on the main "ensembl" host that is_ignored_assembly()
-        # deliberately preferred - Ensembl has since consolidated both
-        # species onto EnsemblMetazoa on every host, including Drosophila's
-        # main-host copy, which also picked up a real assembly bump
-        # (BDGP6.28 -> BDGP6.54) in the process.
-        (6239, "EnsemblMetazoa", "WBcel235"),
-        (6669, "EnsemblMetazoa", "ASM2113471v1"),
-        (7227, "EnsemblMetazoa", "BDGP6.54"),
-        (8090, "EnsemblVertebrates", "ASM223467v1"),
-    ],
-)
-def test_it_uses_correct_sources_for_duplicates(
-    assemblies, taxid, division, assembly_id
-):
-    val = assembly_for(assemblies, taxid)
-    assert val.division == division
-    assert val.assembly_id == assembly_id
+def test_anopheles_pest_keeps_blat_mapping_and_its_example():
+    """
+    species.json also lists a 2022 Anopheles_gambiae build, which takes the plain
+    name, so PEST (AgamP4, the assembly RNAcentral uses) keeps its full one.
+    """
+    examples = json.loads(
+        Path("files/import-data/ensembl/example-locations.json").read_text()
+    )
+    got = rows(
+        examples=examples,
+        Anopheles_gambiae_str_PEST=genome(180454, "GCA_000005575.1", "AgamP4"),
+        Anopheles_gambiae=genome(7165, "GCA_943734735.1", "idAnoGambNW_F1_1"),
+    )
+    pest = [r for r in got if r.assembly_id == "AgamP4"][0]
+    assert (pest.ensembl_url, pest.blat_mapping) == ("anopheles_gambiae_str_pest", True)
+    assert pest.example is not None
+
+
+def test_keeps_the_assembly_id_rnacentral_holds_for_the_genome():
+    """
+    species.json names the elephant assembly Loxafr3.0; RNAcentral holds it, and
+    every coordinate on it, as loxAfr3.
+    """
+    elephant = genome(9785, "GCA_000001905.1", "Loxafr3.0")
+    [row] = rows(known=[("GCA_000001905.1", "loxAfr3")], Loxodonta_africana=elephant)
+    assert (row.assembly_id, row.assembly_full_name) == ("loxAfr3", "Loxafr3.0")
+
+
+def test_loading_never_blanks_an_existing_ucsc_alias():
+    """
+    Other databases' hg38/mm10 coordinates are translated through assembly_ucsc,
+    so overwriting it with an alias we could not derive would delete them.
+    """
+    sql = LOAD_SQL.read_text()
+    assert re.search(
+        r"assembly_ucsc\s*=\s*COALESCE\(\s*EXCLUDED\.assembly_ucsc\s*,\s*ensembl_assembly\.assembly_ucsc\s*\)",
+        sql,
+        re.IGNORECASE,
+    )
+
+
+def test_loading_keeps_an_existing_ensembl_url():
+    """
+    species.json keys renamed 206 assemblies RNAcentral already holds, e.g.
+    leishmania_major became leishmania_major_strain_friedlin.
+    """
+    sql = LOAD_SQL.read_text()
+    assert not re.search(r"ensembl_url\s*=\s*EXCLUDED\.ensembl_url", sql, re.IGNORECASE)
+
+
+def test_loading_keeps_an_existing_taxid():
+    """
+    species.json gives Anopheles PEST taxid 180454; its files, and RNAcentral's
+    AgamP4 row and sequences, say 7165.
+    """
+    sql = LOAD_SQL.read_text()
+    assert not re.search(r"\btaxid\s*=\s*EXCLUDED\.taxid", sql, re.IGNORECASE)
+
+
+# A missing comma once fused these two into one string, so neither got blat_mapping.
+def test_rat_and_yeast_are_blat_genomes():
+    assert {"rattus_norvegicus", "saccharomyces_cerevisiae"} <= assem.BLAT_GENOMES

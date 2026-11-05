@@ -13,10 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
 import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
+from rnacentral_pipeline.databases.ensembl.parser import parse
 
 from .helpers import entries_for, entry_for, has_entry_for, parse_with_family
 
@@ -72,6 +75,58 @@ def cow_8():
     return parse_with_family(
         "test-data/ensembl/Bos_taurus.ARS-UCD2.0.primary_assembly.8.dat"
     )
+
+
+def test_links_to_the_genome_the_transcript_is_from():
+    """
+    The old Homo_sapiens/Transcript/Summary link now redirects to the human
+    genome, so every other species' transcript 404s there.
+    """
+    with open("data/ensembl/ecoli-sokC.embl", "r") as raw:
+        entries = list(
+            parse(
+                raw,
+                Path("data/ensembl/ecoli-sokC.gff3"),
+                family_file=Path("data/rfam/families.tsv"),
+            )
+        )
+    assert [e.url for e in entries] == [
+        "https://www.ensembl.org/feature-explorer/GCA_000005845.2/transcript:EBT00049907842"
+    ]
+
+
+def test_keeps_transcripts_whose_id_has_a_dot_that_is_not_a_version():
+    """
+    Plasmodium (PF3D7_1425100.1) and Arabidopsis (AT1G01010.1) ids carry a dot
+    the GFF keeps; cutting it lost every one of their ncRNAs.
+    """
+    with open("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl", "r") as raw:
+        entries = list(
+            parse(
+                raw,
+                Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3"),
+                family_file=Path("data/rfam/families.tsv"),
+            )
+        )
+    assert [(e.primary_id, e.rna_type) for e in entries] == [
+        ("PF3D7_1425100.1", "SO:0000275")
+    ]
+
+
+def test_coordinates_take_the_assembly_id_the_selection_gives():
+    """
+    The GFF header says GCA_000002765; RNAcentral holds this genome as GCA000002765v3.
+    """
+    with open("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl", "r") as raw:
+        entries = list(
+            parse(
+                raw,
+                Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3"),
+                family_file=Path("data/rfam/families.tsv"),
+                assembly_id="GCA000002765v3",
+            )
+        )
+    assert [r.assembly_id for e in entries for r in e.regions] == ["GCA000002765v3"]
 
 
 @pytest.mark.slow

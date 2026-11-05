@@ -23,7 +23,6 @@ CTL_DIR = Path(__file__).resolve().parents[1] / "files" / "import-data" / "load"
 # the entry writers; the entry-writer schemas are covered by ENTRY_WRITER_*.
 CASES = [
     ("ASSEMBLIES", "assemblies"),
-    ("COORDINATE_SYSTEMS", "coordinate-systems"),
     ("PROTEINS", "proteins"),
     ("ENSEMBL_PSEUDOGENES", "ensembl-pseudogenes"),
     ("RFAM_FAMILIES", "rfam-families"),
@@ -115,9 +114,9 @@ def test_array_columns_are_list_typed(name, table):
     for column in array_columns(table):
         if column not in schema.names:
             continue  # not every staging column is written by the parser
-        assert pa.types.is_list(
-            schema.field(column).type
-        ), f"{name}.{column} targets {table}.{column} (array) but is not a list"
+        assert pa.types.is_list(schema.field(column).type), (
+            f"{name}.{column} targets {table}.{column} (array) but is not a list"
+        )
 
 
 @pytest.mark.parametrize("schema_name,ctl_stem", CASES, ids=[c[1] for c in CASES])

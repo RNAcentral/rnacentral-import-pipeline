@@ -580,19 +580,6 @@ ASSEMBLIES = pa.schema(
 )
 
 
-# rnac ensembl coordinate-systems -> coordinate_systems.parquet
-# Source: files/import-data/load/coordinate-systems.ctl
-COORDINATE_SYSTEMS = pa.schema(
-    [
-        pa.field("chromosome", pa.string(), nullable=False),
-        pa.field("coordinate_system", pa.string(), nullable=False),
-        pa.field("assembly_id", pa.string()),
-        pa.field("is_reference", pa.bool_()),
-        pa.field("karyotype_rank", pa.int32()),
-    ]
-)
-
-
 # rnac ensembl proteins -> proteins.parquet
 # Source: files/import-data/load/proteins.ctl
 #
@@ -702,7 +689,6 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "taxonomy": "load_taxonomy",
     "rfam_ontology_mappings": "load_rfam_go_terms",
     "assemblies": "load_assemblies",
-    "coordinate_systems": "load_coordinate_info",
     "proteins": "load_protein_info",
     "ensembl-pseudogenes": "load_ensembl_pseudogenes",
     "rfam-families": "load_rfam_models",
