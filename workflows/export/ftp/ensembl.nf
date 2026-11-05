@@ -41,6 +41,7 @@ process process_chunk {
 }
 
 workflow ensembl_export {
+  main:
   channel.fromPath('files/ftp-export/ensembl/schema.json') | set { schema }
   channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql') | set { query }
 
@@ -51,4 +52,6 @@ workflow ensembl_export {
   | filter { _min, _max, xrefs -> !xrefs.isEmpty() } \
   | combine(schema) \
   | process_chunk
+
+  emit: process_chunk.out
 }

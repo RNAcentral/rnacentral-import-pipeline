@@ -260,7 +260,6 @@ workflow fasta_export {
   take:
     active_json
   main:
-  Channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
   channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
   active(active_json, readme)
 
@@ -281,4 +280,14 @@ workflow fasta_export {
   | split_by_species
 
   channel.fromPath('files/ftp-export/sequences/by-species-readme.txt') | by_species_readme
+
+  emit:
+    active.out.active.mix(
+      inactive.out,
+      compress_species_fasta.out,
+      create_ssi.out,
+      database_specific.out,
+      split_by_species.out,
+      by_species_readme.out
+    )
 }

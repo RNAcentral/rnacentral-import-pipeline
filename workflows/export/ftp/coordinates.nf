@@ -185,6 +185,7 @@ process index_gff3 {
 }
 
 workflow export_coordinates {
+  main:
   channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql') | set { known }
   channel.fromPath('files/ftp-export/genome_coordinates/query.sql') | set { query }
   channel.fromPath('files/ftp-export/genome_coordinates/mrna.sql') | set { mrna_query }
@@ -209,4 +210,6 @@ workflow export_coordinates {
   | set { mrna_gff3 }
 
   coordinates | generate_gff3_for_igv | mix(mrna_gff3) | index_gff3
+
+  emit: generate_bed.out.mix(generate_gff3.out, index_gff3.out)
 }

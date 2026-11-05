@@ -179,8 +179,9 @@ process editing_events {
 
 process as_xml {
   tag { "$min-$max" }
+  // SLURM kills carry no exit status, so retry on the attempt count and grow memory.
   memory { params.export.search.memory * task.attempt }
-  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
+  errorStrategy { task.attempt <= 3 ? 'retry' : 'finish' }
   maxRetries 3
 
   input:
