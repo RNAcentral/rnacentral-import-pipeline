@@ -2,6 +2,7 @@
 
 import io
 import json
+import sqlite3
 
 import pytest
 
@@ -50,6 +51,13 @@ def test_the_cache_returns_what_was_merged(tmp_path):
         }
         assert cache.lookup("URS9_1", missing=None)["go"] == {}
         assert cache.lookup_so("SO:1") == [["SO:1", "x"]]
+
+
+def test_the_cache_connection_is_closed_when_the_block_exits(tmp_path):
+    with metadata.open(str(tmp_path / "cache.db")) as cache:
+        pass
+    with pytest.raises(sqlite3.ProgrammingError):
+        cache.conn.execute("select 1")
 
 
 def test_a_missing_so_term_falls_back_to_ncrna_and_an_unknown_one_fails(tmp_path):
