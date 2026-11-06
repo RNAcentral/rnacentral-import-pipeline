@@ -386,3 +386,137 @@ impl<'de> Iterator for FileJoiner<'de> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    const SO_TREE: &str = r#"{"so_rna_type":"SO:0000655","so_term_tree":[["SO:0000655","ncRNA"]]}"#;
+
+    fn base(id: usize) -> String {
+        format!(
+            r#"{{"Required":{{"id":{id},"data":{{"id":{id},"length":10,"md5":"abc","urs_taxid":"URS0000000001_9606"}}}}}}"#
+        )
+    }
+
+    fn precompute(id: usize, so: &str) -> String {
+        format!(
+            r#"{{"Required":{{"id":{id},"data":{{"id":{id},"description":"d","rna_type":"ncRNA","has_coordinates":false,"so_rna_type":"{so}","databases":"ENA"}}}}}}"#
+        )
+    }
+
+    fn multiple(id: usize) -> String {
+        format!(r#"{{"Multiple":{{"id":{id},"data":[]}}}}"#)
+    }
+
+    fn optional(id: usize) -> String {
+        format!(r#"{{"Optional":{{"id":{id},"data":null}}}}"#)
+    }
+
+    fn line_for(file: &FileTypes, base_id: usize, pre_id: usize, so: &str) -> String {
+        match file {
+            FileTypes::Base => base(base_id),
+            FileTypes::Precompute => precompute(pre_id, so),
+            FileTypes::QaStatus | FileTypes::R2dt | FileTypes::PublicationCount => optional(1),
+            FileTypes::SoTermTree => SO_TREE.to_string(),
+            _ => multiple(1),
+        }
+    }
+
+    // Writes one file per type, named the way the workflow names them.
+    fn write_files(dir: &Path, base_id: usize, pre_id: usize, so: &str) -> Vec<PathBuf> {
+        FileTypes::iter()
+            .map(|file| {
+                let path = dir.join(format!("{}.json", file));
+                fs::write(&path, line_for(&file, base_id, pre_id, so) + "\n").unwrap();
+                path
+            })
+            .collect()
+    }
+
+    fn first(paths: Vec<PathBuf>) -> Result<Raw, Error> {
+        FileJoinerBuilder::from_files(paths).unwrap().build().unwrap().next().unwrap()
+    }
+
+    #[test]
+    fn file_names_map_to_their_type() {
+        let cases = [
+            ("base.json", FileTypes::Base),
+            ("qa-status.json", FileTypes::QaStatus),
+            ("rfam-hits.json", FileTypes::RfamHits),
+            ("so-term-tree.json", FileTypes::SoTermTree),
+            ("go-flow-llm-annotations.json", FileTypes::GoFlowLLMAnnotations),
+        ];
+        for (name, expected) in cases {
+            assert_eq!(FileTypes::try_from(Path::new(name)).unwrap(), expected, "{}", name);
+        }
+    }
+
+    #[test]
+    fn an_unknown_file_name_is_rejected() {
+        let err = FileTypes::try_from(Path::new("mystery.json")).unwrap_err();
+        assert!(matches!(err, Error::UnknownFileType(_)));
+    }
+
+    #[test]
+    fn every_file_type_must_be_given() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut paths = write_files(dir.path(), 1, 1, "SO:0000655");
+        paths.retain(|p| p.file_name().unwrap() != "orfs.json");
+        let err = FileJoinerBuilder::from_files(paths).err().unwrap();
+        assert!(matches!(err, Error::MustDefineMissingFile(FileTypes::Orfs)));
+    }
+
+    #[test]
+    fn matching_ids_are_joined_into_one_raw_entry() {
+        let dir = tempfile::tempdir().unwrap();
+        let raw = first(write_files(dir.path(), 1, 1, "SO:0000655")).unwrap();
+        assert_eq!(raw.id(), 1);
+        assert_eq!(raw.urs_taxid(), "URS0000000001_9606");
+        assert!(raw.crs().is_empty());
+        assert!(raw.qa_status().is_none());
+        assert_eq!(raw.so_tree().term_name().unwrap().to_string(), "ncRNA");
+    }
+
+    #[test]
+    fn a_retired_so_term_is_looked_up_under_its_replacement() {
+        let dir = tempfile::tempdir().unwrap();
+        let raw = first(write_files(dir.path(), 1, 1, "SO:0001263")).unwrap();
+        assert_eq!(raw.so_tree().term_name().unwrap().to_string(), "ncRNA");
+    }
+
+    #[test]
+    fn files_that_disagree_on_the_id_are_reported_as_out_of_sync() {
+        let dir = tempfile::tempdir().unwrap();
+        let err = first(write_files(dir.path(), 1, 2, "SO:0000655")).unwrap_err();
+        assert!(matches!(err, Error::OutofSyncData(ids) if ids[0] == 1 && ids[7] == 2));
+    }
+
+    #[test]
+    fn a_missing_so_tree_is_reported_with_the_term() {
+        let dir = tempfile::tempdir().unwrap();
+        let err = first(write_files(dir.path(), 1, 1, "SO:0000374")).unwrap_err();
+        assert!(matches!(err, Error::MissingSoTrem(term) if term == "SO:0000374"));
+    }
+
+    #[test]
+    fn the_iterator_ends_when_every_file_ends() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = write_files(dir.path(), 1, 1, "SO:0000655");
+        let mut joiner = FileJoinerBuilder::from_files(paths).unwrap().build().unwrap();
+        assert!(joiner.next().unwrap().is_ok());
+        assert!(matches!(joiner.next(), None));
+    }
+
+    #[test]
+    fn a_file_with_extra_rows_is_an_invalid_format() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = write_files(dir.path(), 1, 1, "SO:0000655");
+        let base_path = dir.path().join("base.json");
+        fs::write(&base_path, base(1) + "\n" + &base(2) + "\n").unwrap();
+        let mut joiner = FileJoinerBuilder::from_files(paths).unwrap().build().unwrap();
+        assert!(joiner.next().unwrap().is_ok());
+        assert!(matches!(joiner.next().unwrap(), Err(Error::InvalidDataFormat)));
+    }
+}
