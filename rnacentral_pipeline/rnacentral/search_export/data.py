@@ -709,6 +709,11 @@ def has_publications(counts):
     return str(bool(counts))
 
 
+def clustering_flag(flag):
+    # None means the sequence is outside the clustering: emit nothing rather than False.
+    return [] if flag is None else [str(flag)]
+
+
 def has_litsumm(litsumm):
     return str(bool(litsumm))
 
@@ -892,6 +897,10 @@ builder = entry(
                     "has_go_flow_llm_annotation",
                     has_go_flow_llm_annotation,
                     keys="go_flow_llm_annotations",
+                ),
+                fields("is_fragment", clustering_flag, keys="is_fragment"),
+                fields(
+                    "in_deduplicated_set", clustering_flag, keys="in_deduplicated_set"
                 ),
                 ## Add new fields above this line! Otherwise editing the produced xml is hard.
                 tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),

@@ -22,6 +22,8 @@ pub struct Precompute {
     rna_type: String,
     has_coordinates: bool,
     so_rna_type: SoId,
+    is_fragment: Option<bool>,
+    in_deduplicated_set: Option<bool>,
 
     #[serde(with = "serde_with::rust::StringWithSeparator::<CommaSeparator>")]
     databases: Vec<String>,
@@ -33,6 +35,8 @@ pub struct PrecomputeSummary {
     rna_type: String,
     has_coordinates: bool,
     databases: Vec<String>,
+    is_fragment: Option<bool>,
+    in_deduplicated_set: Option<bool>,
 }
 
 static SO_MAPPING: phf::Map<&'static str, &'static str> = phf_map! {
@@ -77,6 +81,8 @@ impl From<&Precompute> for PrecomputeSummary {
             rna_type: pre.rna_type.replace("_", " "),
             has_coordinates: pre.has_coordinates,
             databases: pre.databases.to_owned(),
+            is_fragment: pre.is_fragment,
+            in_deduplicated_set: pre.in_deduplicated_set,
         }
     }
 }
