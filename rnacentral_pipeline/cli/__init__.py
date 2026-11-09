@@ -21,6 +21,7 @@ import click
 from rnacentral_pipeline.cli import (
     circatlas,
     circpedia,
+    clustering,
     context,
     cpat,
     crw,
@@ -112,6 +113,7 @@ def cli(log_level):
 cli.add_command(circatlas.cli)
 cli.add_command(circpedia.cli)
 cli.add_command(context.cli)
+cli.add_command(clustering.cli)
 cli.add_command(cpat.cli)
 cli.add_command(crw.cli)
 cli.add_command(ena.cli)
