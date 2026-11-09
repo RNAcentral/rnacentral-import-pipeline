@@ -24,6 +24,7 @@ from rnacentral_pipeline.rnacentral.ftp_export import (
     id_mapping,
     parquet,
     release_note,
+    sequences_json,
 )
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed, gff3
 
@@ -85,6 +86,19 @@ def sequences_parquet_from_json(json_file, output):
     file the FASTA export reads) rather than re-querying the database.
     """
     parquet.ndjson_2_parquet(json_file, output)
+
+
+@export_sequences.command("filter-dump")
+@click.argument("json_file", type=click.File("r"))
+@click.argument("ids_file", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
+def sequences_filter_dump(json_file, ids_file, output):
+    """
+    Keep only the entries of the active-sequences dump whose id is listed (one
+    per line) in IDS_FILE.
+    """
+    ids = {line.strip() for line in ids_file if line.strip()}
+    sequences_json.filter_dump(json_file, ids, output)
 
 
 @export_sequences.command("valid-nhmmer")

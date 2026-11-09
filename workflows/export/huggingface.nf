@@ -3,6 +3,7 @@
 nextflow.enable.dsl=2
 
 include { active_sequences } from './active-sequences'
+include { deduplicated_sequences } from './deduplicated'
 
 process create_collection {
 
@@ -19,17 +20,18 @@ process create_collection {
 }
 
 
-process create_active_sequences {
+process create_parquet {
+  tag { name }
 
   input:
-    path(active_json)
+    tuple val(name), path(json)
 
   output:
-    path "active_sequences.parquet", emit: parquet
+    path "${name}.parquet", emit: parquet
 
   script:
   """
-  rnac ftp-export sequences parquet-from-json $active_json active_sequences.parquet
+  rnac ftp-export sequences parquet-from-json $json ${name}.parquet
   """
 }
 
@@ -72,7 +74,7 @@ process upload_readme {
   script:
   """
   export HF_HOME=\$PWD/.hf
-  rnac huggingface create-readme $release_num $update_specs
+  rnac huggingface create-readme $release_num $update_specs ${params.clustering.export ? '--with-deduplicated' : ''}
   rnac huggingface upload-data $release_num README.md
   """
 }
@@ -82,6 +84,7 @@ workflow huggingface {
   take:
     _flag
     active_json
+    deduplicated_json
   main:
     if (params.export.huggingface.run) {
 
@@ -96,8 +99,11 @@ workflow huggingface {
       create_collection(release)
       collection_ready = create_collection.out.collection_ready
 
-      create_active_sequences(active_json)
-      parquet_ch = create_active_sequences.out.parquet
+      // The deduplicated set is a second split of the same dataset (see create-readme).
+      dumps = channel.of('active_sequences').combine(active_json)
+        .mix(channel.of('deduplicated').combine(deduplicated_json))
+      create_parquet(dumps)
+      parquet_ch = create_parquet.out.parquet
 
       // Dataset repo must exist before either upload; gate both uploads on it so
       // the README upload can't race ahead of dataset creation.
@@ -114,5 +120,7 @@ workflow huggingface {
 // Escape hatch for re-running HuggingFace on its own. The normal path is export/ftp.nf,
 // which shares its dump; running this directly repeats the slow active-sequences query.
 workflow {
-  huggingface(Channel.of('ready'), active_sequences())
+  active_json = active_sequences()
+  deduplicated_sequences(active_json)
+  huggingface(Channel.of('ready'), active_json, deduplicated_sequences.out.dedup_json)
 }

@@ -28,6 +28,12 @@ from rnacentral_pipeline.rnacentral.huggingface_export.upload import (
     upload_dataset,
 )
 
+DEDUPLICATED_NOTE = """- A `deduplicated` split: active sequences of at most 50 kb, reduced to one sequence per
+  group of near-identical sequences (clustered at 90% identity, with fragments and close
+  variants of a longer sequence folded into it). The sequence kept is chosen for dataset
+  hygiene, not as the correct or canonical form of an RNA.
+"""
+
 
 @click.group("huggingface")
 def cli():
@@ -79,7 +85,12 @@ def create_hf_dataset(release: str):
 @click.argument("release")
 @click.argument("update_specs")
 @click.option("--db-url", envvar="PGDATABASE")
-def create_hf_readme(release, update_specs, db_url):
+@click.option(
+    "--with-deduplicated",
+    is_flag=True,
+    help="Declare deduplicated.parquet as a second split of the dataset",
+)
+def create_hf_readme(release, update_specs, db_url, with_deduplicated):
     """
     Create a template README with some metadata from the database
     """
@@ -87,6 +98,16 @@ def create_hf_readme(release, update_specs, db_url):
         seq_count = get_active_sequence_count(cur)
 
     dataset_size = "10M<n<100M" if seq_count < 100_000_000 else "100M<n<1B"
+    # Two parquet files in the repo root would otherwise be read as one concatenated
+    # train split. active_sequences stays "train" so existing load_dataset callers keep working.
+    configs = """configs:
+    - config_name: default
+      data_files:
+        - split: train
+          path: active_sequences.parquet
+        - split: deduplicated
+          path: deduplicated.parquet
+"""
     template = """---
 language: rna
 license: cc0-1.0
@@ -102,14 +123,14 @@ task_ids:
     - language-modeling
     - masked-language-modeling
 pretty_name: RNAcentral
----
+{configs}---
 
 # RNAcentral Release {release_no}
 This is an official HuggingFace version of the RNAcentral Release {release_no} available at https://rnacentral.org/
 
 Included in this dataset are:
 - ncRNA sequences for {seq_count:,} sequences from our member databases
-
+{deduplicated_note}
 # Using the data
 All RNAcentral data is provided with a CC-0 license, so you are free to do as you with with it.
 
@@ -128,6 +149,8 @@ database versions for all those that have been updated this time around.
         release_no=release,
         seq_count=seq_count,
         database_update_specs=database_specs,
+        configs=configs if with_deduplicated else "",
+        deduplicated_note=DEDUPLICATED_NOTE if with_deduplicated else "",
     )
 
     readme_fh = Path("README.md")

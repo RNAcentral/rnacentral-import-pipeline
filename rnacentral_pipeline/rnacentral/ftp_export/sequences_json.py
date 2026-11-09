@@ -20,6 +20,7 @@ limitations under the License.
 
 import json
 import logging
+import re
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,13 +54,34 @@ def parse(handle):
             raise
 
 
+ID_PATTERN = re.compile(r'^\{"id"\s*:\s*"([^"]+)"')
+
+
+def filter_dump(handle, ids, output):
+    """
+    Copy the lines of the dump whose id is in `ids` to `output`, unchanged, so the
+    result feeds the same FASTA and parquet writers as the full dump. The id is
+    pulled off the front of the line (json_build_object puts it first) rather than
+    decoding every multi-kilobase line; a line that doesn't match is decoded.
+    """
+    for line in handle:
+        if not line.strip():
+            continue
+        match = ID_PATTERN.match(line)
+        urs = match.group(1) if match else decode_entry(line)["id"]
+        if urs in ids:
+            output.write(line)
+
+
 if __name__ == "__main__":
     import io
 
     # ponytail: covers the strict line and the COPY backslash-doubling fallback.
     entries = list(parse(io.StringIO('{"id": "a", "sequence": "ACGT"}\n')))
     assert entries == [{"id": "a", "sequence": "ACGT"}], entries
-    doubled = list(parse(io.StringIO('{"id": "b", "description": "x\\\\ny", "sequence": "AC"}\n')))
+    doubled = list(
+        parse(io.StringIO('{"id": "b", "description": "x\\\\ny", "sequence": "AC"}\n'))
+    )
     assert doubled[0]["description"] == "x\\ny", doubled
 
     # per-line streaming: each valid line yields immediately, no cross-line buffering
@@ -72,4 +94,9 @@ if __name__ == "__main__":
         raise AssertionError("expected JSONDecodeError on the bad line")
     except json.JSONDecodeError:
         pass
+    # filtering keeps whole lines, matching on id only
+    dump = '{"id" : "A", "sequence": "AC"}\n{"id" : "B", "sequence": "GG"}\n'
+    kept = io.StringIO()
+    filter_dump(io.StringIO(dump), {"B"}, kept)
+    assert kept.getvalue() == '{"id" : "B", "sequence": "GG"}\n', kept.getvalue()
     print("ok")
