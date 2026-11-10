@@ -21,7 +21,7 @@ process create_json {
   errorStrategy 'ignore'
 
   input:
-  tuple val(species), val(assembly), val(taxid), val(division)
+  tuple val(species), val(assembly), val(taxid), val(_gca)
 
   output:
   path("${species}.${assembly}.json")

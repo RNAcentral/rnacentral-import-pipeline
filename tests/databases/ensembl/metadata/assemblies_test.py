@@ -21,23 +21,17 @@ from pathlib import Path
 
 import attr
 
+from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.ensembl.metadata import assemblies as assem
 
 LOAD_SQL = Path("files/import-data/pre-release/000__assemblies.sql")
+REPEATS_SQL = Path("files/repeats/find-assemblies.sql")
 
 UCSC = {
     "ucscGenomes": {
         "hg19": {"description": "Feb. 2009 (GRCh37/hg19)"},
         "hg38": {"description": "Dec. 2013 (GRCh38/hg38)"},
     }
-}
-
-LINEAGES = {
-    9606: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Chordata; Vertebrata; Mammalia",
-    511145: "cellular organisms; Bacteria; Pseudomonadota; Gammaproteobacteria",
-    400682: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Porifera",
-    9785: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Chordata; Vertebrata; Mammalia",
-    10228: "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Placozoa",
 }
 
 
@@ -62,11 +56,7 @@ def genome(taxid, accession, name, common_name=None):
 
 def rows(examples=None, known=(), **species):
     data = {"species": species}
-    return list(
-        assem.from_species_json(
-            data, frozenset(), known, examples or {}, UCSC, LINEAGES
-        )
-    )
+    return list(assem.from_species_json(data, frozenset(), known, examples or {}, UCSC))
 
 
 def test_builds_a_complete_row_for_a_reference_genome():
@@ -82,22 +72,16 @@ def test_builds_a_complete_row_for_a_reference_genome():
             common_name="human",
             taxid=9606,
             ensembl_url="homo_sapiens",
-            division="EnsemblVertebrates",
             blat_mapping=True,
             example=assem.AssemblyExample(chromosome="X", start=73819307, end=73856333),
         )
     )
-    assert row.subdomain == "ensembl.org"
 
 
 def test_bacteria_get_a_row_now_they_are_imported():
     ecoli = genome(511145, "GCA_000005845.2", "ASM584v2")
     [row] = rows(Escherichia_coli_str_K_12_substr_MG1655=ecoli)
-    assert (row.assembly_id, row.division, row.assembly_ucsc) == (
-        "ASM584v2",
-        "EnsemblBacteria",
-        None,
-    )
+    assert (row.assembly_id, row.assembly_ucsc) == ("ASM584v2", None)
 
 
 def test_genomes_sharing_an_assembly_name_each_get_a_row():
@@ -213,3 +197,20 @@ def test_loading_keeps_an_existing_taxid():
 # A missing comma once fused these two into one string, so neither got blat_mapping.
 def test_rat_and_yeast_are_blat_genomes():
     assert {"rattus_norvegicus", "saccharomyces_cerevisiae"} <= assem.BLAT_GENOMES
+
+
+# Ensembl dropped its divisions and subdomains; nothing may load or key off them again.
+def test_assembly_rows_carry_no_division_or_subdomain():
+    [row] = rows(Homo_sapiens=genome(9606, "GCA_000001405.29", "GRCh38.p14"))
+    assert len(row.writeable()) == len(schemas.ASSEMBLIES)
+    assert not hasattr(row, "division") and not hasattr(row, "subdomain")
+    assert {"division", "subdomain"}.isdisjoint(schemas.ASSEMBLIES.names)
+    sql = LOAD_SQL.read_text()
+    assert "division" not in sql
+    # Only the comment and the ALTER that frees the old column may name it.
+    assert sql.count("subdomain") == 2
+
+
+def test_repeats_skip_fungi_by_taxonomy_lineage():
+    sql = REPEATS_SQL.read_text()
+    assert "division" not in sql and "rnc_taxonomy" in sql and "Fungi" in sql

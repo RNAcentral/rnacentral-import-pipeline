@@ -46,6 +46,13 @@ Plants, Metazoa, Fungi and Protists divisions.
 7. **Set the Ensembl `version`** in `portal/config/expert_databases.py`. It still
    says `116`, and species.json has no release number. One option is the
    species.json `last_updated` date.
+8. **Check the web code no longer reads `ensembl_assembly.subdomain`.** The
+   import stopped writing `division` and `subdomain`, since Ensembl dropped its
+   divisions and subdomains. `division` was already nullable. The first run
+   makes `subdomain` nullable as well (`000__assemblies.sql`). Existing rows
+   keep their old values, and new rows leave both columns blank. Neither is
+   used for xrefs, so the division retirement in step 1 is a separate job. Once
+   nothing reads them, drop both columns.
 
 ## Assemblies: review before the first production run
 

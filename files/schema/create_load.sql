@@ -152,12 +152,10 @@ CREATE UNLOGGED TABLE load_assemblies (
   common_name varchar(255),
   taxid int4 NOT NULL,
   ensembl_url varchar(100) NULL,
-  division varchar(20) NULL,
   blat_mapping int4 NULL,
   example_chromosome varchar(20) NULL,
   example_end int4 NULL,
-  example_start int4 NULL,
-  subdomain varchar(100) NOT NULL
+  example_start int4 NULL
 );
 
 DROP TABLE IF EXISTS load_compara;

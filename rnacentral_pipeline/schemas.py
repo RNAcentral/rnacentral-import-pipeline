@@ -570,8 +570,6 @@ ASSEMBLIES = pa.schema(
         pa.field("common_name", pa.string()),
         pa.field("taxid", pa.int32(), nullable=False),
         pa.field("ensembl_url", pa.string()),
-        pa.field("division", pa.string()),
-        pa.field("subdomain", pa.string(), nullable=False),
         pa.field("example_chromosome", pa.string()),
         pa.field("example_start", pa.int32()),
         pa.field("example_end", pa.int32()),

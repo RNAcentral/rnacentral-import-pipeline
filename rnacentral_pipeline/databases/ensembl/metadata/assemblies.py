@@ -21,7 +21,6 @@ import typing as ty
 from pathlib import Path
 
 import attr
-import psycopg2 as pg
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
@@ -44,17 +43,6 @@ BLAT_GENOMES = {
     "schizosaccharomyces_pombe",
 }
 
-# First match wins, so Vertebrata must come before Metazoa. Anything else is a
-# protist, as in the FTP export's kingdom split.
-DIVISIONS = [
-    ("Vertebrata", "EnsemblVertebrates"),
-    ("Viridiplantae", "EnsemblPlants"),
-    ("Fungi", "EnsemblFungi"),
-    ("Metazoa", "EnsemblMetazoa"),
-    ("Bacteria", "EnsemblBacteria"),
-    ("Archaea", "EnsemblBacteria"),
-]
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -69,14 +57,6 @@ def reconcile_taxids(taxid):
     if taxid == "284812":  # Ensembl assembly for Schizosaccharomyces pombe
         return 4896  # Pombase and ENA xrefs for Schizosaccharomyces pombe
     return int(taxid)
-
-
-class InvalidDomain(Exception):
-    """
-    Raised when we cannot compute a URL for a domain.
-    """
-
-    pass
 
 
 @attr.s()
@@ -95,29 +75,8 @@ class AssemblyInfo(object):
     common_name = attr.ib(validator=optional(is_a(str)))
     taxid = attr.ib(validator=is_a(int))
     ensembl_url = attr.ib(validator=is_a(str))
-    division = attr.ib(validator=is_a(str))
     blat_mapping = attr.ib(validator=is_a(bool), converter=bool)
     example = attr.ib(validator=optional(is_a(AssemblyExample)))
-
-    @property
-    def subdomain(self):
-        """Given E! division, returns E!/E! Genomes url."""
-
-        if self.division == "Ensembl":
-            return "ensembl.org"
-        if self.division == "EnsemblPlants":
-            return "plants.ensembl.org"
-        if self.division == "EnsemblMetazoa":
-            return "metazoa.ensembl.org"
-        if self.division == "EnsemblBacteria":
-            return "bacteria.ensembl.org"
-        if self.division == "EnsemblFungi":
-            return "fungi.ensembl.org"
-        if self.division == "EnsemblProtists":
-            return "protists.ensembl.org"
-        if self.division == "EnsemblVertebrates":
-            return "ensembl.org"
-        raise InvalidDomain(self.division)
 
     def writeable(self):
         chromosome = None
@@ -136,20 +95,11 @@ class AssemblyInfo(object):
             self.common_name,
             self.taxid,
             self.ensembl_url,
-            self.division,
-            self.subdomain,
             chromosome,
             start,
             end,
             int(self.blat_mapping),
         ]
-
-
-def division(lineage: str) -> str:
-    for marker, name in DIVISIONS:
-        if marker in lineage:
-            return name
-    return "EnsemblProtists"
 
 
 def ucsc_aliases(ucsc: dict) -> ty.Dict[str, str]:
@@ -180,7 +130,6 @@ def from_species_json(
     known: ty.Iterable[ty.Tuple[str, str]],
     examples: dict,
     ucsc: dict,
-    lineages: ty.Dict[int, str],
 ) -> ty.Iterable[AssemblyInfo]:
     """
     One row per geneset the import selects, keyed by the assembly id the selection
@@ -211,7 +160,6 @@ def from_species_json(
             common_name=info.get("common_name"),
             taxid=reconcile_taxids(info["taxid"]),
             ensembl_url=url,
-            division=division(lineages.get(info["taxid"], "")),
             blat_mapping=url in BLAT_GENOMES,
             example=AssemblyExample(
                 chromosome=str(example["chromosome"]),
@@ -223,28 +171,18 @@ def from_species_json(
         )
 
 
-def load_lineages(db_url: str, taxids: ty.List[int]) -> ty.Dict[int, str]:
-    with pg.connect(db_url) as conn, conn.cursor() as cur:
-        cur.execute(
-            "select id, lineage from rnc_taxonomy where id = any(%s)", (taxids,)
-        )
-        return dict(cur.fetchall())
-
-
-def write(location, example_file, ucsc_file, output, db_url):
+def write(location, example_file, ucsc_file, output):
     """
     Write the ensembl_assembly rows for the genesets selected from species.json.
     """
 
     data = urls._load(location)
-    taxids = [info["taxid"] for info in data["species"].values()]
     rows = from_species_json(
         data,
         urls.legacy_assemblies(),
         urls.known_assemblies(),
         json.load(example_file),
         json.load(ucsc_file),
-        load_lineages(db_url, taxids),
     )
     with row_writer(Path(output), schemas.ASSEMBLIES) as writer:
         writer.writerows(row.writeable() for row in rows)

@@ -32,10 +32,6 @@ from psycopg2.extras import RealDictCursor
 from tqdm import tqdm
 
 from rnacentral_pipeline.databases.data import Database
-from rnacentral_pipeline.databases.ensembl.metadata.assemblies import (
-    division,
-    load_lineages,
-)
 from rnacentral_pipeline.rnacentral.genes.random_forest.preprocessing import (
     exon_overlap,
 )
@@ -96,12 +92,6 @@ description_scores = {
     Database.ensembl_metazoa.value.descr: 10,  ## Just species + gene name, not very informative
     Database.ensembl_protists.value.descr: 20,  ## Slicghtly more informative than metazoa
     Database.ensembl_fungi.value.descr: 40,  ## Needs to be lower than SGD andPomBase, but is still quite informative
-    ## Ensembl is one database now; these keep the per-division weights above, vertebrates use ENSEMBL's.
-    f"{Database.ensembl.value.descr}/EnsemblPlants": 15,
-    f"{Database.ensembl.value.descr}/EnsemblMetazoa": 10,
-    f"{Database.ensembl.value.descr}/EnsemblProtists": 20,
-    f"{Database.ensembl.value.descr}/EnsemblFungi": 40,
-    f"{Database.ensembl.value.descr}/EnsemblBacteria": 10,  ## New; low so it doesn't displace existing sources
     Database.genecards.value.descr: 40,  ## All human, all homo sapiens + gene ID, so not that informative
     Database.malacards.value.descr: 40,  ## As with genecards
     Database.intact.value.descr: 40,  ## Not as good as mir-specifics, and not quite as good as tRNA specifics, but still pretty good
@@ -1024,16 +1014,9 @@ def calculate_type_specificity(so_type):
         return -1000
 
 
-@lru_cache
-def ensembl_division(taxid, db_str):
-    return division(load_lineages(db_str, [taxid]).get(taxid) or "")
-
-
 def calculate_description_score(args):
     database = args["database"]
-    db_score = description_scores.get(
-        f"{database}/{args.get('division')}", description_scores.get(database, 0)
-    )
+    db_score = description_scores.get(database, 0)
     entropy_score = utils.entropy(args["description"])
     return db_score + entropy_score
 
@@ -1073,14 +1056,9 @@ def process_group(group_data, db_str, progress_queue=None):
             raise RuntimeError(
                 f"no descriptions or CM hits for {gene_name} (members={urs_taxids})"
             )
-        # Genes are built one taxid at a time, so every member shares a kingdom.
-        taxid = int(urs_taxids[0].split("_")[1])
-        descriptions = descriptions.with_columns(
-            division=pl.lit(ensembl_division(taxid, db_str))
-        )
         descriptions_with_scores = descriptions.with_columns(
             desc_score=pl.struct(
-                pl.col("database"), pl.col("description"), pl.col("division")
+                pl.col("database"), pl.col("description")
             ).map_elements(calculate_description_score, return_dtype=pl.Float64)
         )
         descriptions_with_scores = descriptions_with_scores.with_columns(

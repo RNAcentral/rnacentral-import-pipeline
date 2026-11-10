@@ -15,15 +15,15 @@ limitations under the License.
 
 import csv
 import json
-import pickle
 import logging
+import pickle
 import subprocess as sp
 import typing as ty
 from pathlib import Path
 
 import attr
-from attr.validators import instance_of as is_a
 import pymysql
+from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases.ensembl.metadata import databases as db
 
@@ -54,12 +54,12 @@ class Info:
 
     def validate(self):
         assert self.start_column != self.stop_column != self.chromosome_column
-        assert (
-            self.compressed.exists()
-        ), f"Compressed file {self.compressed} does not exist"
-        assert (
-            self.index_file.exists()
-        ), f"Compressed file {self.index_file} does not exist"
+        assert self.compressed.exists(), (
+            f"Compressed file {self.compressed} does not exist"
+        )
+        assert self.index_file.exists(), (
+            f"Compressed file {self.index_file} does not exist"
+        )
 
     def dump(self):
         self.validate()
@@ -132,11 +132,10 @@ def build_bed_directory(
 
 def find_databases(connection_handle, assembly_file):
     assemblies = {}
-    for (ensembl_url, assembly_id, division) in csv.reader(assembly_file):
+    for ensembl_url, assembly_id in csv.reader(assembly_file):
         assemblies[ensembl_url] = {
             "ensembl_url": ensembl_url,
             "assembly_id": assembly_id,
-            "division": division,
         }
     specs = json.load(connection_handle)
     for conn_name, spec in specs.items():
