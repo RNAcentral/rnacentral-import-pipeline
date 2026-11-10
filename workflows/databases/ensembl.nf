@@ -19,9 +19,9 @@ process fetch_metadata {
 
 process find_urls {
   memory '4GB'
-  // species.json is on the EBI FTP, which refuses connections now and then
-  errorStrategy { sleep(task.attempt * 60000 as long); return 'retry' }
-  maxRetries 3
+  // Read species.json from /nfs, which only a datamover node sees, instead of the flaky FTP.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
 
   output:
   path('species.csv')
@@ -30,7 +30,7 @@ process find_urls {
 
   script:
   """
-  rnac ensembl urls-for --location '${params.databases.ensembl.species_json_url}' species.csv
+  rnac ensembl urls-for --location '${params.databases.ensembl.nfs_path}/species.json' species.csv
   """
 }
 

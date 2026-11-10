@@ -17,13 +17,15 @@ def directives(path, process):
     return [l.strip() for l in body.split("output:", 1)[0].splitlines() if l.strip()]
 
 
-# Both read species.json first; the EBI FTP refusing connections for a minute killed a run.
-def test_reading_species_json_retries_after_a_pause():
-    for path, process in [
-        ("workflows/databases/ensembl.nf", "find_urls"),
-        ("workflows/metadata/ensembl.nf", "assemblies"),
-    ]:
-        lines = directives(path, process)
-        [strategy] = [l for l in lines if l.startswith("errorStrategy")]
-        assert "sleep(" in strategy and "'retry'" in strategy, (process, strategy)
-        assert any(l.startswith("maxRetries") for l in lines), process
+# The EBI FTP refusing connections for a minute killed a run; /nfs has the same tree without that.
+def test_find_urls_reads_species_json_from_nfs_on_a_datamover():
+    lines = directives("workflows/databases/ensembl.nf", "find_urls")
+    assert "queue 'datamover'" in lines
+    assert "--location '${params.databases.ensembl.nfs_path}/species.json'" in ENSEMBL
+
+
+def test_assemblies_still_retries_reading_species_json_after_a_pause():
+    lines = directives("workflows/metadata/ensembl.nf", "assemblies")
+    [strategy] = [l for l in lines if l.startswith("errorStrategy")]
+    assert "sleep(" in strategy and "'retry'" in strategy, strategy
+    assert any(l.startswith("maxRetries") for l in lines)
