@@ -1,7 +1,8 @@
 process assemblies {
-  // species.json is on the EBI FTP, which refuses connections now and then
-  errorStrategy { sleep(task.attempt * 60000 as long); return 'retry' }
-  maxRetries 3
+  // Read species.json from /nfs, which only a datamover node sees, instead of the flaky FTP.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+
   input:
   path(examples)
 
@@ -14,7 +15,7 @@ process assemblies {
   script:
   """
   wget -O ucsc.json https://api.genome.ucsc.edu/list/ucscGenomes
-  rnac ensembl assemblies --location '${params.databases.ensembl.species_json_url}' $examples ucsc.json assemblies.${params.writer_format}
+  rnac ensembl assemblies --location '${params.databases.ensembl.nfs_path}/species.json' $examples ucsc.json assemblies.${params.writer_format}
   """
 }
 

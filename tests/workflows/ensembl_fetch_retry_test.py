@@ -18,14 +18,12 @@ def directives(path, process):
 
 
 # The EBI FTP refusing connections for a minute killed a run; /nfs has the same tree without that.
-def test_find_urls_reads_species_json_from_nfs_on_a_datamover():
-    lines = directives("workflows/databases/ensembl.nf", "find_urls")
-    assert "queue 'datamover'" in lines
-    assert "--location '${params.databases.ensembl.nfs_path}/species.json'" in ENSEMBL
-
-
-def test_assemblies_still_retries_reading_species_json_after_a_pause():
-    lines = directives("workflows/metadata/ensembl.nf", "assemblies")
-    [strategy] = [l for l in lines if l.startswith("errorStrategy")]
-    assert "sleep(" in strategy and "'retry'" in strategy, strategy
-    assert any(l.startswith("maxRetries") for l in lines)
+def test_species_json_is_read_from_nfs_on_a_datamover():
+    for path, process in [
+        ("workflows/databases/ensembl.nf", "find_urls"),
+        ("workflows/metadata/ensembl.nf", "assemblies"),
+    ]:
+        assert "queue 'datamover'" in directives(path, process), process
+        body = (ROOT / path).read_text().split(f"process {process} {{", 1)[1]
+        body = body.split("\n}\n", 1)[0]
+        assert "--location '${params.databases.ensembl.nfs_path}/species.json'" in body
