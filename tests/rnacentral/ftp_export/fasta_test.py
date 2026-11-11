@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pytest
+import io
 
+import pytest
+from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
@@ -55,3 +57,21 @@ from rnacentral_pipeline.rnacentral.ftp_export import fasta
 def test_can_classify_sequences_for_nhmmer(sequence, accepted):
     record = SeqRecord(Seq(sequence))
     assert fasta.is_valid_nhmmer_record(record) is accepted
+
+
+FASTA = ">good\nACGU\n>bad\nACGI\n>also_good\nNNNN\n"
+
+
+def test_valid_nhmmer_keeps_only_the_accepted_records():
+    out = io.StringIO()
+    fasta.valid_nhmmer(io.StringIO(FASTA), out)
+    assert [r.id for r in SeqIO.parse(io.StringIO(out.getvalue()), "fasta")] == [
+        "good",
+        "also_good",
+    ]
+
+
+def test_invalid_nhmmer_keeps_only_the_rejected_records():
+    out = io.StringIO()
+    fasta.invalid_nhmmer(io.StringIO(FASTA), out)
+    assert [r.id for r in SeqIO.parse(io.StringIO(out.getvalue()), "fasta")] == ["bad"]

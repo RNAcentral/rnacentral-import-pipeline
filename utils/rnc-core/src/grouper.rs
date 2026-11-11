@@ -195,3 +195,138 @@ where
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{
+        json,
+        Value,
+    };
+    use std::{
+        fs,
+        io::Write,
+    };
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct Item {
+        id: usize,
+        name: String,
+    }
+
+    impl HasIndex for Item {
+        fn index(&self) -> usize {
+            self.id
+        }
+    }
+
+    fn run(criteria: Criteria, ids: &[usize], min: usize, max: usize) -> Result<Vec<Value>> {
+        let dir = tempfile::tempdir()?;
+        let input = dir.path().join("in.json");
+        let output = dir.path().join("out.json");
+        let mut file = fs::File::create(&input)?;
+        for id in ids {
+            writeln!(file, "{}", json!({"id": id, "name": format!("n{}", id)}))?;
+        }
+        drop(file);
+
+        group::<Item>(criteria, &input, min, max, &output)?;
+        let written = fs::read_to_string(&output)?;
+        Ok(written.lines().map(|l| serde_json::from_str(l).unwrap()).collect())
+    }
+
+    fn item(id: usize) -> Value {
+        json!({"id": id, "name": format!("n{}", id)})
+    }
+
+    #[test]
+    fn any_number_fills_the_gaps_with_empty_groups() {
+        let out = run(Criteria::AnyNumber, &[1, 3], 1, 5).unwrap();
+        assert_eq!(
+            out,
+            vec![
+                json!({"Multiple": {"id": 1, "data": [item(1)]}}),
+                json!({"Multiple": {"id": 2, "data": []}}),
+                json!({"Multiple": {"id": 3, "data": [item(3)]}}),
+                json!({"Multiple": {"id": 4, "data": []}}),
+            ]
+        );
+    }
+
+    #[test]
+    fn rows_with_one_id_are_collected_into_one_group() {
+        let out = run(Criteria::AtleastOne, &[1, 1, 2], 1, 3).unwrap();
+        assert_eq!(out[0], json!({"Multiple": {"id": 1, "data": [item(1), item(1)]}}));
+        assert_eq!(out.len(), 2);
+    }
+
+    #[test]
+    fn zero_or_one_leaves_a_missing_id_as_none() {
+        let out = run(Criteria::ZeroOrOne, &[2], 1, 3).unwrap();
+        assert_eq!(
+            out,
+            vec![
+                json!({"Optional": {"id": 1, "data": null}}),
+                json!({"Optional": {"id": 2, "data": item(2)}}),
+            ]
+        );
+    }
+
+    #[test]
+    fn exactly_one_wraps_the_single_row_as_required() {
+        let out = run(Criteria::ExactlyOne, &[1, 2], 1, 3).unwrap();
+        assert_eq!(out[1], json!({"Required": {"id": 2, "data": item(2)}}));
+    }
+
+    #[test]
+    fn exactly_one_fails_for_a_missing_id() {
+        let err = run(Criteria::ExactlyOne, &[1, 3], 1, 4).unwrap_err();
+        assert!(err.to_string().contains("Missing data for id: 2"), "{}", err);
+    }
+
+    #[test]
+    fn exactly_one_fails_for_a_repeated_id() {
+        let err = run(Criteria::ExactlyOne, &[1, 1], 1, 2).unwrap_err();
+        assert!(err.to_string().contains("Too many items"), "{}", err);
+    }
+
+    #[test]
+    fn zero_or_one_fails_for_a_repeated_id() {
+        let err = run(Criteria::ZeroOrOne, &[1, 1], 1, 2).unwrap_err();
+        assert!(err.to_string().contains("expected 0 or 1"), "{}", err);
+    }
+
+    #[test]
+    fn fails_when_the_data_runs_past_the_upper_bound() {
+        let err = run(Criteria::AnyNumber, &[1, 2, 3], 1, 2).unwrap_err();
+        assert!(err.to_string().contains("more items"), "{}", err);
+    }
+
+    #[test]
+    fn fails_when_an_id_is_below_the_lower_bound() {
+        let err = run(Criteria::AnyNumber, &[1], 2, 3).unwrap_err();
+        assert!(err.to_string().contains("too small index"), "{}", err);
+    }
+
+    #[test]
+    fn emptiness_follows_the_variant() {
+        assert!(Grouped::<Item>::Multiple {
+            id: 1,
+            data: vec![]
+        }
+        .is_empty());
+        assert!(Grouped::<Item>::Optional {
+            id: 1,
+            data: None
+        }
+        .is_empty());
+        let required = Grouped::Required {
+            id: 1,
+            data: Item {
+                id: 1,
+                name: "a".into(),
+            },
+        };
+        assert!(!required.is_empty());
+    }
+}

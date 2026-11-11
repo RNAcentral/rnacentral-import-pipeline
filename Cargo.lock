@@ -1170,6 +1170,7 @@ dependencies = [
  "rnc-utils",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror",
 ]
 
@@ -1239,6 +1240,7 @@ dependencies = [
  "structopt",
  "strum 0.21.0",
  "strum_macros 0.21.1",
+ "tempfile",
  "thiserror",
  "typed-builder",
 ]

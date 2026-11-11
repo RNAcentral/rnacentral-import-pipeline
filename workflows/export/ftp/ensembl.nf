@@ -6,7 +6,7 @@ process find_chunks {
 
   script:
   """
-  rnac upi-ranges ${params.export.ftp.ensembl.chunk_size} > chunks
+  rnac ftp-export ensembl-ranges ${params.export.ftp.ensembl.chunk_size} ${params.export.ftp.ensembl.max_xrefs} chunks
   """
 }
 
@@ -21,7 +21,7 @@ process query_chunk {
 
   script:
   """
-  psql -f $query --variable min=$min --variable max=$max "\$PGDATABASE" > raw_xrefs.json
+  psql -v ON_ERROR_STOP=1 -f $query --variable min=$min --variable max=$max "\$PGDATABASE" > raw_xrefs.json
   """
 }
 
@@ -41,6 +41,7 @@ process process_chunk {
 }
 
 workflow ensembl_export {
+  main:
   channel.fromPath('files/ftp-export/ensembl/schema.json') | set { schema }
   channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql') | set { query }
 
@@ -51,4 +52,6 @@ workflow ensembl_export {
   | filter { _min, _max, xrefs -> !xrefs.isEmpty() } \
   | combine(schema) \
   | process_chunk
+
+  emit: process_chunk.out
 }

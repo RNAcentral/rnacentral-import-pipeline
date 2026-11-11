@@ -20,6 +20,27 @@ from pypika import Query, Table
 from pypika import functions as fn
 
 
+def balanced_ranges(counts, max_urs, max_accessions):
+    ranges = []
+    start = 1
+    last = None
+    urs = accessions = 0
+    for urs_id, count in counts:
+        if urs and (urs + 1 > max_urs or accessions + count > max_accessions):
+            ranges.append((start, last))
+            start = last + 1
+            urs = accessions = 0
+        urs += 1
+        accessions += count
+        last = urs_id
+
+    if last is None:
+        raise ValueError("No accessions to build ranges from")
+
+    ranges.append((start, last))
+    return ranges
+
+
 def upi_taxid_ranges(ranges, tablename, db_url):
     table = Table(tablename)
     with psycopg2.connect(db_url) as conn:

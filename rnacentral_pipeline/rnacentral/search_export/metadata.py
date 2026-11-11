@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
 import json
+import logging
 import sqlite3
 from contextlib import contextmanager
 
@@ -66,7 +66,7 @@ class Cache:
     def index(self, generator, size=INSERT_SIZE):
         for index, chunk in enumerate(chunked(generator, size)):
             storable = []
-            for (mtype, urs_taxid, raw) in chunk:
+            for mtype, urs_taxid, raw in chunk:
                 storable.append((mtype, urs_taxid, json.dumps(raw)))
             self.conn.executemany(INSERT_TEXT, storable)
             if index % 100 == 0:
@@ -117,7 +117,11 @@ class Cache:
 
 @contextmanager
 def open(filename):
-    yield Cache(filename)
+    cache = Cache(filename)
+    try:
+        yield cache
+    finally:
+        cache.conn.close()
 
 
 def merge(handle):

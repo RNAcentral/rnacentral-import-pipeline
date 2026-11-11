@@ -11,12 +11,9 @@ process find_partitions {
 
   script:
   """
-  psql \
-    -c 'COPY (SELECT id, descr from rnc_database) TO STDOUT (FORMAT CSV)' \
-  "\$PGDATABASE" | \
-  awk -F, '{
-    print "xref_p"\$1"_not_deleted,"\$2
-  }' > partitions.csv
+  psql -v ON_ERROR_STOP=1 \
+    -c "COPY (SELECT 'xref_p' || id || '_not_deleted', descr FROM rnc_database) TO STDOUT (FORMAT CSV)" \
+  "\$PGDATABASE" > partitions.csv
   """
 }
 
