@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import csv
+import tracemalloc
 
 from click.testing import CliRunner
 
@@ -191,3 +192,15 @@ def test_force_full_fetches_every_geneset_and_retires_none(tmp_path, monkeypatch
     )
     assert len(to_fetch.splitlines()) == 2
     assert "u/x/genes.embl.gz" not in scanned
+
+
+# The first production run held every parsed accession in memory and was killed at 8 GB.
+def test_deletions_stream_the_manifest_instead_of_holding_it(tmp_path, monkeypatch):
+    monkeypatch.setattr(manifest, "dump_signatures", stored_dump({}))
+    rows = (("ENSEMBL", f"ENST{i:011d}", "s" * 64, "u/a") for i in range(200_000))
+    write_manifest(tmp_path / "m.csv", rows)
+    tracemalloc.start()
+    delta.deletions(None, tmp_path / "m.csv", ["u/a"], tmp_path)
+    peak = tracemalloc.get_traced_memory()[1]
+    tracemalloc.stop()
+    assert peak < 10_000_000

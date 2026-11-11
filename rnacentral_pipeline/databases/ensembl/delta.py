@@ -6,6 +6,7 @@ is neither fetched nor parsed, and its xrefs are left alone. See
 docs/incremental-parsing.md; the source machinery is the one ENA uses.
 """
 
+import contextlib
 import csv
 import hashlib
 import logging
@@ -100,18 +101,21 @@ def deletions(
     The (database, accession) rows stored for a geneset that was read this run but
     are not in what it now yields.
     """
-    new: ty.Dict[str, ty.List[Row]] = {db: [] for db in DATABASES}
-    with manifest_csv.open(newline="") as handle:
+    with contextlib.ExitStack() as stack, manifest_csv.open(newline="") as handle:
+        writers = {
+            db: csv.writer(
+                stack.enter_context((workdir / f"new-{db}.csv").open("w", newline=""))
+            )
+            for db in DATABASES
+        }
         for database, accession, signature, source in csv.reader(handle):
-            new[database].append((source, accession, signature))
+            writers[database].writerow((source, accession, signature))
 
     found = []
-    for database, rows in new.items():
+    for database in DATABASES:
         stored = workdir / f"stored-{database}.csv"
         manifest.dump_signatures(conn, database, stored)
         current = workdir / f"new-{database}.csv"
-        with current.open("w", newline="") as handle:
-            csv.writer(handle).writerows(rows)
         result = manifest.diff_manifests(stored, current, scanned)
         found.extend((database, accession) for accession in result.deletions)
     return found
