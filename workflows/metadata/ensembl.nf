@@ -26,7 +26,7 @@ process fetch_compara {
   output:
   path('*.nt.fasta.gz')
 
-  when: params.databases.ensembl?.metadata?.run
+  when: params.databases.ensembl?.metadata?.run || params.databases.ensembl?.compara?.run
 
   script:
   """

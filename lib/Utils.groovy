@@ -28,7 +28,9 @@ static def will_run(db) {
 }
 
 static def should_release(databases) {
-  return databases.any { _key, db -> will_run(db) && db.get('release', true) };
+  // A compara-only run has ensembl.run = false but still has to load its table.
+  def compara = databases.get('ensembl')?.get('compara')
+  return databases.any { _key, db -> will_run(db) && db.get('release', true) } || will_run(compara);
 }
 
 static def needs_publications(databases, skip) {

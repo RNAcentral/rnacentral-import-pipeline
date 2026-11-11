@@ -9,7 +9,7 @@ workflow parse_metadata {
     channel.empty() \
     | mix(
       rfam(),
-      (params.databases.ensembl?.run || params.databases.tarbase?.run || params.databases.lncbase?.run) ? ensembl() : channel.empty(),
+      (params.databases.ensembl?.run || params.databases.ensembl?.compara?.run || params.databases.tarbase?.run || params.databases.lncbase?.run) ? ensembl() : channel.empty(),
       taxonomy(),
     ) \
     | flatten \
