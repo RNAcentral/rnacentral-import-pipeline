@@ -13,7 +13,6 @@ import time
 import typing as ty
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from urllib.request import urlopen
 
 from rnacentral_pipeline.databases import manifest
 
@@ -26,20 +25,13 @@ DATABASES = ("ENSEMBL", "ENSEMBL_GENCODE", "TAIR")
 Row = ty.Tuple[str, ...]
 
 
-def _get(url: str) -> str:
-    for attempt in range(3):
-        try:
-            with urlopen(url, timeout=60) as response:
-                return response.read().decode()
-        except OSError:
-            if attempt == 2:
-                raise
-            time.sleep(5 * (attempt + 1))
-    raise AssertionError("unreachable")
+def mirror(ftp_url: str, nfs_path: str) -> ty.Callable[[str], str]:
+    """Reads an FTP url from its copy on /nfs; the FTP takes ~19 s per file from a compute node."""
+    return lambda url: Path(url.replace(ftp_url, nfs_path, 1)).read_text()
 
 
 def source_signature(
-    embl_url: str, gff_url: str, fetch: ty.Callable[[str], str] = _get
+    embl_url: str, gff_url: str, fetch: ty.Callable[[str], str]
 ) -> str:
     """
     A hash of the two files we read, from the md5sum.txt in their directory. If that
@@ -60,11 +52,13 @@ def source_signature(
     return hashlib.sha256("\n".join(parts).encode()).hexdigest()
 
 
-def signatures(rows: ty.Iterable[Row]) -> ty.Dict[str, str]:
+def signatures(
+    rows: ty.Iterable[Row], read: ty.Callable[[str], str]
+) -> ty.Dict[str, str]:
     """Source signature for each geneset row, keyed by its EMBL url."""
     rows = list(rows)
     with ThreadPoolExecutor(max_workers=16) as pool:
-        sigs = pool.map(lambda r: source_signature(r[2], r[3]), rows)
+        sigs = pool.map(lambda r: source_signature(r[2], r[3], read), rows)
         return {row[2]: sig for row, sig in zip(rows, sigs)}
 
 

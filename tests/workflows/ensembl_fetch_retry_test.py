@@ -27,3 +27,12 @@ def test_species_json_is_read_from_nfs_on_a_datamover():
         body = (ROOT / path).read_text().split(f"process {process} {{", 1)[1]
         body = body.split("\n}\n", 1)[0]
         assert "--location '${params.databases.ensembl.nfs_path}/species.json'" in body
+
+
+# Over HTTPS each md5sum.txt took ~19 s from a compute node, so 11.6k of them took hours.
+def test_checksums_are_read_from_nfs_on_a_datamover():
+    assert "queue 'datamover'" in directives(
+        "workflows/databases/ensembl.nf", "ensembl_source_diff"
+    )
+    body = ENSEMBL.split("process ensembl_source_diff {", 1)[1].split("\n}\n", 1)[0]
+    assert "--nfs-path '${params.databases.ensembl.nfs_path}'" in body

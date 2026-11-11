@@ -37,6 +37,10 @@ process find_urls {
 // Only the genesets whose checksums moved since the last release are fetched and parsed.
 // See docs/incremental-parsing.md.
 process ensembl_source_diff {
+  // Reads 11k md5sum.txt files; /nfs is only visible from a datamover node.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+
   input:
   path(species)
 
@@ -51,7 +55,7 @@ process ensembl_source_diff {
   def force = params.force_full_import ? '--force-full' : ''
   def only = params.databases.ensembl.species.collect { s -> "--species '${s}'" }.join(' ')
   """
-  rnac ensembl source-diff $force $only $species to_fetch.csv scanned.txt sources.csv
+  rnac ensembl source-diff --ftp-url '${params.databases.ensembl.ftp_url}' --nfs-path '${params.databases.ensembl.nfs_path}' $force $only $species to_fetch.csv scanned.txt sources.csv
   """
 }
 

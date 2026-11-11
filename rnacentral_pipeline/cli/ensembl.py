@@ -57,6 +57,10 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
 
 @cli.command("source-diff")
 @click.option("--db-url", envvar="PGDATABASE")
+@click.option(
+    "--ftp-url", required=True, help="The FTP url the species urls start with."
+)
+@click.option("--nfs-path", required=True, help="Where that FTP is mirrored on /nfs.")
 @click.option("--force-full", is_flag=True, help="Fetch every geneset.")
 @click.option(
     "--species", multiple=True, help="Only look at these (lower-case) species."
@@ -70,6 +74,8 @@ def source_diff(
     to_fetch,
     scanned,
     sources_csv,
+    ftp_url,
+    nfs_path,
     species=(),
     force_full=False,
     db_url=None,
@@ -92,7 +98,7 @@ def source_diff(
     with open(species_csv, newline="") as handle:
         rows = [tuple(row) for row in csv.reader(handle)]
     picked = delta.select(rows, species)
-    current = delta.signatures(picked)
+    current = delta.signatures(picked, delta.mirror(ftp_url, nfs_path))
     stored = {} if force_full else manifest.load_file_signatures_for(db_url, "ENSEMBL")
     fetch, gone, sources = delta.plan(rows, picked, stored, current)
 
