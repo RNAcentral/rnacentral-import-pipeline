@@ -15,22 +15,23 @@ limitations under the License.
 
 import csv
 import itertools as it
+import logging
 import operator as op
 from pathlib import Path
 
 import click
+import psycopg2
 
 from rnacentral_pipeline import schemas
-from rnacentral_pipeline.databases.ensembl import parser, pseudogenes, urls
-from rnacentral_pipeline.databases.ensembl.metadata import (
-    assemblies,
-    compara,
-    proteins,
-)
+from rnacentral_pipeline.databases import manifest
+from rnacentral_pipeline.databases.ensembl import delta, parser, pseudogenes, urls
+from rnacentral_pipeline.databases.ensembl.metadata import assemblies, compara, proteins
 from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.parquet_writers import row_writer
 from rnacentral_pipeline.rnacentral.notify import slack
 from rnacentral_pipeline.writers import entry_writer
+
+LOGGER = logging.getLogger(__name__)
 
 
 @click.group("ensembl")
@@ -54,8 +55,87 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
     writer.writerows(row.writeable(kind=kind) for row in rows)
 
 
+@cli.command("source-diff")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.option("--force-full", is_flag=True, help="Fetch every geneset.")
+@click.option(
+    "--species", multiple=True, help="Only look at these (lower-case) species."
+)
+@click.argument("species_csv", type=click.Path(exists=True))
+@click.argument("to_fetch", type=click.File("w"))
+@click.argument("scanned", type=click.File("w"))
+@click.argument("sources_csv", type=click.File("w"))
+def source_diff(
+    species_csv,
+    to_fetch,
+    scanned,
+    sources_csv,
+    species=(),
+    force_full=False,
+    db_url=None,
+):
+    """
+    Decide which genesets are worth fetching and parsing.
+
+    SPECIES_CSV is the `urls-for` output. A geneset whose files have the checksums it
+    had at the last release is skipped, and so are its xrefs. Writes:
+
+      * to_fetch -- the species rows that are new or changed, with their signature;
+      * scanned  -- those genesets plus any that have left the list, the only ones
+                    whose xrefs may be retired;
+      * sources  -- database,path,signature for every current geneset, stored once
+                    the release has committed.
+
+    --force-full fetches every geneset, since a forced full release retires whatever
+    the load does not contain.
+    """
+    with open(species_csv, newline="") as handle:
+        rows = [tuple(row) for row in csv.reader(handle)]
+    picked = delta.select(rows, species)
+    current = delta.signatures(picked)
+    stored = {} if force_full else manifest.load_file_signatures_for(db_url, "ENSEMBL")
+    fetch, gone, sources = delta.plan(rows, picked, stored, current)
+
+    LOGGER.info(
+        "Ensembl: %d to fetch, %d gone, %d unchanged",
+        len(fetch),
+        len(gone),
+        len(picked) - len(fetch),
+    )
+    csv.writer(to_fetch, lineterminator="\n").writerows(fetch)
+    for path in [row[2] for row in fetch] + gone:
+        scanned.write(path + "\n")
+    csv.writer(sources_csv, lineterminator="\n").writerows(
+        ("ENSEMBL", path, sig) for path, sig in sorted(sources.items())
+    )
+
+
+@cli.command("delta-diff")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("manifest_csv", type=click.Path(exists=True))
+@click.argument("scanned_txt", type=click.Path(exists=True))
+@click.argument("deletions_csv", type=click.File("w"))
+def delta_diff(manifest_csv, scanned_txt, deletions_csv, db_url=None):
+    """
+    Write the accessions a re-parsed geneset no longer yields.
+
+    MANIFEST_CSV is every parsed accession as database,accession,signature,source,
+    and SCANNED_TXT the genesets that were read this run. Only those can lose
+    xrefs; a geneset that was skipped is not in either file.
+    """
+    scanned = [line.strip() for line in open(scanned_txt) if line.strip()]
+    conn = psycopg2.connect(db_url)
+    try:
+        found = delta.deletions(conn, Path(manifest_csv), scanned, Path("."))
+    finally:
+        conn.close()
+    csv.writer(deletions_csv, lineterminator="\n").writerows(found)
+
+
 @cli.command("parse")
 @click.option("--assembly-id", default=None, help="Use instead of the GFF's own")
+@click.option("--source", default=None, help="The geneset url, to list its accessions")
+@click.option("--signature", default="", help="The geneset's source signature")
 @click.option(
     "--family-file",
     default=None,
@@ -73,7 +153,15 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
     ),
 )
 @format_option
-def parse_data(embl_file, gff_file, output, family_file=None, assembly_id=None):
+def parse_data(
+    embl_file,
+    gff_file,
+    output,
+    family_file=None,
+    assembly_id=None,
+    source=None,
+    signature="",
+):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
@@ -83,6 +171,15 @@ def parse_data(embl_file, gff_file, output, family_file=None, assembly_id=None):
     entries = parser.parse(
         embl_file, gff_file, family_file=family_file, assembly_id=assembly_id
     )
+    rows = []
+
+    def track(entries):
+        for entry in entries:
+            rows.append([entry.database, entry.accession, signature, source])
+            yield entry
+
+    if source:
+        entries = track(entries)
     ## Send warning to slack with details about empty parse
     try:
         with entry_writer(Path(output)) as writer:
@@ -102,6 +199,11 @@ def parse_data(embl_file, gff_file, output, family_file=None, assembly_id=None):
         message += f"family_file: {family_file.name}\n"
 
         # slack.send_notification("Ensembl parser error", message)
+
+    # Not *.csv: the load stream would take it for a table.
+    if source:
+        with (Path(output) / "accessions.manifest").open("w", newline="") as handle:
+            csv.writer(handle, lineterminator="\n").writerows(rows)
 
 
 @cli.command("assemblies")

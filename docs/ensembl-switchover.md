@@ -20,6 +20,13 @@ Plants, Metazoa, Fungi and Protists divisions.
    precompute doesn't reselect a sequence whose only xrefs were the retired
    division ones, so its precompute row would stay active.
 
+## Delta loading
+
+The first release that loads ENSEMBL has no stored manifest, so every geneset is parsed and the
+load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL_GENCODE and TAIR, and
+`pipeline_tracking_import_files` for the genesets. Later releases fetch only genesets whose
+`md5sum.txt` entries moved. `--force_full_import` reparses everything.
+
 ## Database clean-up
 
 3. **Drop `ensembl_coordinate_systems`.** Nothing loads it any more and the web
