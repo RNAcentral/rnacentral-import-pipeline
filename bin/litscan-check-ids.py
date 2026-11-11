@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import re
 
 import click
@@ -79,7 +80,7 @@ def main(database, filename, output):
     """
     Check ids and create file that will be used by RNAcentral-references.
     """
-    remove_dot = ["ensembl", "ensembl_gencode", "ensembl_metazoa"]
+    remove_dot = ["ensembl", "ensembl_gencode"]
     split_on_comma = ["flybase", "hgnc", "lncipedia", "pombase", "refseq", "lncbook"]
     rfam_ignore = [
         "30_255",

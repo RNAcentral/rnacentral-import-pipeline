@@ -7,7 +7,6 @@ nextflow.enable.dsl = 2
 // a module captures params as they are when it is included, so load_data would
 // not see these and `release` would never be scheduled.
 params.connections = new groovy.json.JsonSlurper().parse(new File(params.connection_file))
-params.databases.ensembl._any.run = Utils.ensembl_runs(params.databases)
 params.needs_publications = Utils.needs_publications(params.databases, params.skip_publications)
 params.should_release = !params.skip_release && Utils.should_release(params.databases)
 params.needs_taxonomy = Utils.needs_taxonomy(params.databases)

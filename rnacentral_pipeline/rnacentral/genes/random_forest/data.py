@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import hashlib
 import io
 import multiprocessing as mp
@@ -884,7 +885,6 @@ def get_cm_hits(urs_taxids, db_str):
     def get_rfam():
         conn = pg.connect(db_str)
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-
             cur.execute(
                 """
                     WITH g(urs_taxid, urs) AS (
@@ -1015,7 +1015,8 @@ def calculate_type_specificity(so_type):
 
 
 def calculate_description_score(args):
-    db_score = description_scores.get(args["database"], 0)
+    database = args["database"]
+    db_score = description_scores.get(database, 0)
     entropy_score = utils.entropy(args["description"])
     return db_score + entropy_score
 

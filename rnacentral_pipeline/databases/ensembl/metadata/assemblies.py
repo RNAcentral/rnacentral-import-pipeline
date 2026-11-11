@@ -13,32 +13,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import collections as coll
-import csv
-import itertools as it
+import collections
 import json
 import logging
-import operator as op
+import re
+import typing as ty
 from pathlib import Path
 
 import attr
-import psycopg2 as pg
 from attr.validators import instance_of as is_a
 from attr.validators import optional
-from psycopg2.extras import DictCursor
 
 from rnacentral_pipeline import schemas
+from rnacentral_pipeline.databases.ensembl import urls
 from rnacentral_pipeline.parquet_writers import row_writer
 
-from . import databases as db
-
-REJECTED_TAXIDS = {
-    4932,
-    5127,
-}
-
 BLAT_GENOMES = {
-    "anopheles_gambiae",
+    "anopheles_gambiae_str_pest",
     "arabidopsis_thaliana",
     "bombyx_mori",
     "caenorhabditis_elegans",
@@ -46,8 +37,9 @@ BLAT_GENOMES = {
     "drosophila_melanogaster",
     "homo_sapiens",
     "mus_musculus",
-    "plasmodium_falciparum",
-    "rattus_norvegicus" "saccharomyces_cerevisiae",
+    "plasmodium_falciparum_3d7",
+    "rattus_norvegicus",
+    "saccharomyces_cerevisiae",
     "schizosaccharomyces_pombe",
 }
 
@@ -67,54 +59,11 @@ def reconcile_taxids(taxid):
     return int(taxid)
 
 
-def is_ignored_assembly(info):
-    if info.taxid in REJECTED_TAXIDS:
-        return True
-    if info.taxid == 5762 and info.assembly_id == "V1.0":
-        return True
-    if info.taxid == 8090 and info.ensembl_url != "oryzias_latipes":
-        return True
-    if info.taxid == 10029 and info.assembly_id != "CriGri_1.0":
-        return True
-    if info.taxid == 30522 and info.assembly_id != "UOA_Brahman_1":
-        return True
-    if info.taxid == 9823 and not info.gca_accession.startswith("GCA_000003025"):
-        return True
-    if info.taxid == 7994 and info.assembly_id != "Astyanax_mexicanus-2.0":
-        return True
-    return False
-
-
-class InvalidDomain(Exception):
-    """
-    Raised when we cannot compute a URL for a domain.
-    """
-
-    pass
-
-
 @attr.s()
 class AssemblyExample(object):
     chromosome = attr.ib(validator=is_a(str))
     start = attr.ib(validator=is_a(int))
     end = attr.ib(validator=is_a(int))
-
-    @classmethod
-    def build(cls, raw, example_locations):
-        key = raw["species.url"].lower()
-        if key not in example_locations:
-            return None
-
-        example = example_locations[key]
-        return cls(
-            chromosome=str(example["chromosome"]),
-            start=example["start"],
-            end=example["end"],
-        )
-
-    @classmethod
-    def from_existing(cls, raw):
-        return cls(**raw)
 
 
 @attr.s()
@@ -126,66 +75,8 @@ class AssemblyInfo(object):
     common_name = attr.ib(validator=optional(is_a(str)))
     taxid = attr.ib(validator=is_a(int))
     ensembl_url = attr.ib(validator=is_a(str))
-    division = attr.ib(validator=is_a(str))
     blat_mapping = attr.ib(validator=is_a(bool), converter=bool)
     example = attr.ib(validator=optional(is_a(AssemblyExample)))
-
-    @classmethod
-    def build(cls, raw, example_locations):
-        url = raw["species.url"].lower()
-        is_mapped = url in BLAT_GENOMES
-
-        return cls(
-            assembly_id=raw["assembly.default"],
-            assembly_full_name=raw["assembly.name"],
-            gca_accession=raw.get("assembly.accession", None),
-            assembly_ucsc=raw.get("assembly.ucsc_alias", None),
-            common_name=raw.get("species.common_name", None),
-            taxid=reconcile_taxids(raw["species.taxonomy_id"]),
-            ensembl_url=url,
-            division=raw["species.division"],
-            blat_mapping=is_mapped,
-            example=AssemblyExample.build(raw, example_locations),
-        )
-
-    @classmethod
-    def from_existing(cls, raw):
-        to_use = dict(raw)
-        chromosome = to_use.pop("example_chromosome")
-        start = to_use.pop("example_start")
-        end = to_use.pop("example_end")
-        if chromosome:
-            to_use["example"] = AssemblyExample.from_existing(
-                {
-                    "chromosome": chromosome,
-                    "start": start,
-                    "end": end,
-                }
-            )
-        else:
-            to_use["example"] = None
-
-        return cls(**to_use)
-
-    @property
-    def subdomain(self):
-        """Given E! division, returns E!/E! Genomes url."""
-
-        if self.division == "Ensembl":
-            return "ensembl.org"
-        if self.division == "EnsemblPlants":
-            return "plants.ensembl.org"
-        if self.division == "EnsemblMetazoa":
-            return "metazoa.ensembl.org"
-        if self.division == "EnsemblBacteria":
-            return "bacteria.ensembl.org"
-        if self.division == "EnsemblFungi":
-            return "fungi.ensembl.org"
-        if self.division == "EnsemblProtists":
-            return "protists.ensembl.org"
-        if self.division == "EnsemblVertebrates":
-            return "ensembl.org"
-        raise InvalidDomain(self.division)
 
     def writeable(self):
         chromosome = None
@@ -204,8 +95,6 @@ class AssemblyInfo(object):
             self.common_name,
             self.taxid,
             self.ensembl_url,
-            self.division,
-            self.subdomain,
             chromosome,
             start,
             end,
@@ -213,49 +102,87 @@ class AssemblyInfo(object):
         ]
 
 
-def load_known(db_url, query_handle):
-    data = coll.defaultdict(list)
-    conn = pg.connect(db_url)
-    cur = conn.cursor(cursor_factory=DictCursor)
-    cur.execute(query_handle.read())
-    for record in cur:
-        entry = AssemblyInfo.from_existing(dict(record))
-        data[entry.taxid].append(entry)
-    cur.close()
-    conn.close()
-    return data
+def ucsc_aliases(ucsc: dict) -> ty.Dict[str, str]:
+    """
+    Map assembly name to UCSC database, read from descriptions like
+    "Dec. 2013 (GRCh38/hg38)". UCSC's GCA accessions are the unpatched
+    versions and are shared by GRCh37 and GRCh38, so they cannot be used.
+    """
+    aliases = {}
+    for db, info in ucsc["ucscGenomes"].items():
+        found = re.search(r"\(([^()/]+)/" + re.escape(db) + r"\)", info["description"])
+        if found:
+            aliases.setdefault(found[1], db)
+    return aliases
 
 
-def fetch(connections, query_handle, example_locations, known):
+def ensembl_urls(species: ty.Iterable[str]) -> ty.Dict[str, str]:
+    # Like Ensembl's old names: the binomial, unless strains of it need the full name.
+    names = [s.lower() for s in species]
+    binomial = {n: "_".join(n.split("_")[:2]) for n in names}
+    counts = collections.Counter(binomial.values())
+    return {n: binomial[n] if counts[binomial[n]] == 1 else n for n in names}
+
+
+def from_species_json(
+    data: dict,
+    legacy: ty.AbstractSet[str],
+    known: ty.Iterable[ty.Tuple[str, str]],
+    examples: dict,
+    ucsc: dict,
+) -> ty.Iterable[AssemblyInfo]:
+    """
+    One row per geneset the import selects, keyed by the assembly id the selection
+    gives it, which the parser also puts on every coordinate.
+    """
+    aliases = ucsc_aliases(ucsc)
+    selections = list(urls.geneset_urls(data, legacy=legacy, known=known))
+    names = ensembl_urls(s.species for s in selections)
     seen = set()
-    results = db.run_queries_across_databases(connections, query_handle)
-    for (_, rows) in results:
-        raw = {r["meta_key"]: str(r["meta_value"]) for r in rows}
-        if raw["species.division"] == "EnsemblBacteria":
+    for selected in selections:
+        info = data["species"][selected.species]
+        name = info["assemblies"][selected.accession]["name"]
+        assembly_id = selected.assembly_id
+        if assembly_id in seen:
+            LOGGER.warning(
+                "Assembly %s already used, skipping %s", assembly_id, selected.species
+            )
             continue
-        info = AssemblyInfo.build(raw, example_locations)
-        if info.assembly_id in known:
-            yield known[info.assembly_id]
-        else:
-            if is_ignored_assembly(info):
-                continue
-            if info.taxid in seen:
-                LOGGER.warn(
-                    "Duplicate genome %s found for %i", info.assembly_id, info.taxid
-                )
-                continue
-            yield info
-            seen.add(info.taxid)
+        seen.add(assembly_id)
+
+        url = names[selected.species.lower()]
+        example = examples.get(url)
+        yield AssemblyInfo(
+            assembly_id=assembly_id,
+            assembly_full_name=name,
+            gca_accession=selected.accession,
+            assembly_ucsc=aliases.get(assembly_id),
+            common_name=info.get("common_name"),
+            taxid=reconcile_taxids(info["taxid"]),
+            ensembl_url=url,
+            blat_mapping=url in BLAT_GENOMES,
+            example=AssemblyExample(
+                chromosome=str(example["chromosome"]),
+                start=example["start"],
+                end=example["end"],
+            )
+            if example
+            else None,
+        )
 
 
-def write(connections, query, example_file, known_handle, output, db_url=None):
+def write(location, example_file, ucsc_file, output):
     """
-    Parse the given input handle and write the readable data to the CSV.
+    Write the ensembl_assembly rows for the genesets selected from species.json.
     """
 
-    examples = json.load(example_file)
-    known = load_known(db_url, known_handle)
-    data = fetch(connections, query, examples, known)
-    data = map(op.methodcaller("writeable"), data)
+    data = urls._load(location)
+    rows = from_species_json(
+        data,
+        urls.legacy_assemblies(),
+        urls.known_assemblies(),
+        json.load(example_file),
+        json.load(ucsc_file),
+    )
     with row_writer(Path(output), schemas.ASSEMBLIES) as writer:
-        writer.writerows(data)
+        writer.writerows(row.writeable() for row in rows)

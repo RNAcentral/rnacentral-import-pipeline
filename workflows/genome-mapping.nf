@@ -3,6 +3,10 @@
 nextflow.enable.dsl = 2
 
 process setup {
+  // Read species.json from /nfs, which only a datamover node sees, instead of the flaky FTP.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+
   input:
   val(_flag)
   path(query)
@@ -14,8 +18,8 @@ process setup {
 
   script:
   """
-  rnac genome-mapping update-assemblies
-  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > species.csv
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > assemblies.csv
+  rnac genome-mapping remote-files --location '${params.databases.ensembl.nfs_path}/species.json' assemblies.csv species.csv
   """
 }
 
@@ -25,7 +29,7 @@ process fetch_unmapped_sequences {
   memory '10GB'
 
   input:
-  tuple val(species), val(assembly_id), val(taxid), val(division), path(possible_query), path(mapped_query), path(query)
+  tuple val(species), val(assembly_id), val(taxid), val(_genome_url), val(_gff_url), path(possible_query), path(mapped_query), path(query)
 
   output:
   tuple val(species), path('parts/*.fasta')
@@ -70,28 +74,23 @@ process get_browser_coordinates {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
   publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
+  // /nfs mirrors the Ensembl FTP and only a datamover node sees it.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
   errorStrategy 'ignore'
 
   input:
-  tuple val(species), val(assembly), val(taxid), val(division)
+  tuple val(species), val(assembly), val(taxid), val(_genome_url), val(gff_url)
 
   output:
   path("${species}.${assembly}.ensembl.gff3.gz"), optional: true
 
   script:
+  def gff_path = gff_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
   """
   set -o pipefail
 
-  status=0
-  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly url.txt || status=\$?
-  if [[ "\$status" -eq 3 ]]; then
-    exit 0
-  elif [[ "\$status" -ne 0 ]]; then
-    exit "\$status"
-  fi
-
-  wget -O ${species}.${assembly}.gff3.gz "\$(cat url.txt)"
-  gzip -d "${species}.${assembly}.gff3.gz"
+  gzip -dc '${gff_path}' > "${species}.${assembly}.gff3"
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
     sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n) |\
@@ -118,31 +117,37 @@ process index_gff3 {
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
+  // /nfs mirrors the Ensembl FTP and only a datamover node sees it.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
   errorStrategy 'ignore'
 
   input:
-  tuple val(species), val(assembly), val(taxid), val(division)
+  tuple val(species), val(assembly), val(taxid), val(genome_url), val(gff_url)
 
   output:
   tuple val(species), val(assembly), path("${species}.${assembly}.fa"), optional: true
 
   script:
+  def genome_path = genome_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
+  def gff_path = gff_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
   """
   set -o pipefail
 
   psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" \$PGDATABASE
 
-  status=0
-  rnac genome-mapping url-for --host=$division $species $assembly url.txt || status=\$?
-  if [[ "\$status" -eq 3 ]]; then
-    exit 0
-  elif [[ "\$status" -ne 0 ]]; then
-    exit "\$status"
+  # The genome is BGZF, which gzip reads as ordinary multi-member gzip.
+  gzip -dc '${genome_path}' > genome.fa
+
+  # The genome holds alt haplotypes and patches; the geneset's sequence-regions are the primary assembly.
+  zgrep '^##sequence-region' '${gff_path}' | awk '{ print \$2 }' > primary.names || true
+  if [[ -s primary.names ]]; then
+    samtools faidx genome.fa
+    samtools faidx -r primary.names genome.fa > ${species}.${assembly}.fa
+    rm genome.fa genome.fa.fai
+  else
+    mv genome.fa ${species}.${assembly}.fa
   fi
-
-  wget -O ${species}.${assembly}.fa.gz "\$(cat url.txt)"
-
-  gzip -d ${species}.${assembly}.fa.gz
   """
 }
 
@@ -317,7 +322,7 @@ workflow genome_mapping {
     if (params.genome_mapping.run) {
       setup(ready, find_species) \
       | splitCsv \
-      | filter { s, _a, _t, _d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+      | filter { s, _a, _t, _g, _f -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
       | set { genome_info }
 
       genome_info \

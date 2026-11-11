@@ -15,7 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import enum
 import logging
 import typing as ty
 
@@ -28,31 +27,6 @@ from rnacentral_pipeline.databases.ensembl import helpers
 from rnacentral_pipeline.databases.helpers import embl
 
 LOGGER = logging.getLogger(__name__)
-
-
-@enum.unique
-class Division(enum.Enum):
-    fungi = enum.auto()
-    plants = enum.auto()
-    protists = enum.auto()
-    metazoa = enum.auto()
-    vertebrates = enum.auto()
-
-    @classmethod
-    def from_name(cls, name: str) -> Division:
-        for value in cls:
-            if value.name.lower() == name.lower():
-                return value
-        raise ValueError("Unknown Division %s" % name)
-
-    @classmethod
-    def names(cls) -> ty.List[str]:
-        return [x.name for x in cls]
-
-    @property
-    def division_name(self) -> str:
-        name = self.name[0].upper() + self.name[1:]
-        return f"Ensembl{name}"
 
 
 @attr.s()
@@ -72,17 +46,6 @@ class TranscriptInfo:
             regions=helpers.regions(record, feature),
             from_gencode=False,
         )
-
-
-@attr.s()
-class FtpInfo:
-    division: Division = attr.ib(validator=is_a(Division))
-    species: str = attr.ib(validator=is_a(str))
-    data_files: str = attr.ib(validator=is_a(str))
-    gff_file: str = attr.ib(validator=is_a(str))
-
-    def writeable(self, kind=None) -> ty.Tuple[str, str, str, str]:
-        return (self.division.name, self.species, self.data_files, self.gff_file)
 
 
 @attr.s()

@@ -1,5 +1,3 @@
-include { any_ensembl_division_runs; ensembl_divisions } from '../utils/ensembl-divisions'
-
 process fetch_metadata {
   input:
   path(query)
@@ -7,7 +5,7 @@ process fetch_metadata {
   output:
   path('families.tsv')
 
-  when: any_ensembl_division_runs()
+  when: params.databases.ensembl?.run
 
   script:
   """
@@ -20,51 +18,59 @@ process fetch_metadata {
 }
 
 process find_urls {
-  memory '20GB'
-
-  input:
-  val(division)
-
-  output:
-  path('species.txt')
-
-  when: params.databases.ensembl[division]?.run
-
-  script:
-    """
-    rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species.txt
-    """
-}
-
-process fetch_species_data {
-  tag { "$species" }
-  errorStrategy { task.exitStatus == 8 && task.attempt <= 10 ? 'retry' : 'ignore' }
-  maxRetries 10
-  maxForks 10
-
-  input:
-  tuple val(division), val(species), val(dat_path), val(gff_path)
+  memory '4GB'
+  // Read species.json from /nfs, which only a datamover node sees, instead of the flaky FTP.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
 
   output:
-  tuple val(division), path("*.dat"), path("${species}.gff")
+  path('species.csv')
+
+  when: params.databases.ensembl?.run
 
   script:
   """
-  lowercase_assembly_url() {
-    PYTHONPATH="${workflow.launchDir}" python -c "from rnacentral_pipeline.databases.ensembl.url_helpers import lowercase_assembly_in_url; print(lowercase_assembly_in_url('\$1'))"
-  }
+  rnac ensembl urls-for --location '${params.databases.ensembl.nfs_path}/species.json' species.csv
+  """
+}
 
-  resolve_ftp_urls() {
-    PYTHONPATH="${workflow.launchDir}" python -c "import sys; from rnacentral_pipeline.databases.ensembl.url_helpers import resolve_ftp_urls; sys.stdout.write('\\n'.join(resolve_ftp_urls(sys.argv[1])))" "\$1"
-  }
+process fetch_species_data {
+  tag { species }
+  // /nfs is only visible from a datamover node; the FTP it mirrors refuses most parallel downloads.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+  maxForks 30
 
-  resolve_ftp_urls '$dat_path' > dat_urls.txt
-  test -s dat_urls.txt
-  xargs -n 1 wget < dat_urls.txt
-  wget '$gff_path' || wget "\$(lowercase_assembly_url '$gff_path')"
-  zgrep '^#' *.gff3.gz | grep -v '^###\$' > ${species}.gff
-  zcat *.gff3.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${species}.gff
-  gzip -d *.gz
+  input:
+  tuple val(species), val(taxid), val(embl_url), val(gff_url), val(assembly_id)
+
+  output:
+  tuple val(species), val(assembly_id), path("${species}.dat"), path("${species}.gff"), optional: true
+
+  script:
+  def embl_path = embl_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
+  def gff_path = gff_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
+  """
+  # species.json lists genesets that were never published, some with no EMBL file.
+  if [ ! -e '${embl_path}' ] || [ ! -e '${gff_path}' ]; then
+    echo "Skipping ${species}: no genes.embl.gz or genes.gff3.gz at ${embl_path}" >&2
+    exit 0
+  fi
+
+  cp '${embl_path}' genes.embl.gz
+  cp '${gff_path}' genes.gff3.gz
+
+  gzip -dc genes.embl.gz > ${species}.dat
+
+  # Some genesets are cut off on the Ensembl side; skip them rather than fail the whole run.
+  if ! embl-is-complete ${species}.dat; then
+    echo "Skipping ${species}: the EMBL file at ${embl_path} is truncated" >&2
+    rm -f ${species}.dat
+    exit 0
+  fi
+
+  zgrep '^#' genes.gff3.gz | grep -v '^###\$' > ${species}.gff
+  zcat genes.gff3.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${species}.gff
   """
 }
 
@@ -75,34 +81,31 @@ process parse_data {
   maxRetries 3
 
   input:
-  tuple val(division), path(embl), path(gff), path(rfam)
+  tuple val(species), val(assembly_id), path(embl), path(gff), path(rfam)
 
   output:
   path('*.{csv,parquet}')
 
   script:
   """
-  rnac ensembl parse $division --family-file $rfam $embl $gff .
-#  rnac ensembl pseudogenes $division $embl ensembl-pseudogenes.csv
+  rnac ensembl parse --assembly-id '${assembly_id}' --family-file $rfam $embl $gff .
   """
 }
 
 workflow ensembl {
   main:
-    channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
+    channel.fromPath('files/import-data/rfam/families.sql') | fetch_metadata | set { families }
 
-    channel.fromList(ensembl_divisions()) \
-    | filter { division -> params.databases.ensembl[division]?.run } \
-    | find_urls \
+    find_urls() \
     | splitCsv \
-    | filter { division, species, _dat_url, _gff_url ->
-      !params.databases.ensembl[division].exclude.any { p -> species.toLowerCase() =~ p }
+    | filter { species, taxid, embl_url, gff_url, assembly_id ->
+      !params.databases.ensembl.exclude.any { p -> species.toLowerCase() =~ p }
+    } \
+    | filter { species, taxid, embl_url, gff_url, assembly_id ->
+      !params.databases.ensembl.species || species.toLowerCase() in params.databases.ensembl.species
     } \
     | fetch_species_data \
-    | flatMap { division, dat_files, gff_file ->
-      (dat_files instanceof ArrayList) ? dat_files.collect { f -> [division, f, gff_file] } : [[division, dat_files, gff_file]]
-    } \
-    | combine(fetch_metadata(rfam)) \
+    | combine(families) \
     | parse_data \
     | set { data }
 

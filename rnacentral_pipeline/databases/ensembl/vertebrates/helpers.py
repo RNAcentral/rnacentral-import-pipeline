@@ -112,10 +112,9 @@ def seq_version(feature):
     Compute the sequence version, if any, of the given id.
     """
 
-    acc = accession(feature)
-    if "." in acc:
-        return acc.split(".", 1)[1]
-    return "1"
+    # Only a trailing number: RefSeq ids can be locations (NC_001566.1:6734..6802)
+    found = re.match(r"^[^.:]+\.(\d+)$", accession(feature))
+    return found.group(1) if found else "1"
 
 
 def transcript(feature):
