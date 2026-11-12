@@ -61,7 +61,6 @@ def make_accession(
         gene=None,
         optional_id=None,
         database=database,
-        database_name=database.value.descr,
         species=None,
         common_name=None,
         description="An RNA",

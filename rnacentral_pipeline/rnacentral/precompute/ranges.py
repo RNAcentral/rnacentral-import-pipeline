@@ -20,6 +20,43 @@ from pypika import Query, Table
 from pypika import functions as fn
 
 
+def balanced_ranges(counts, max_urs, max_accessions):
+    ranges = []
+    start = 1
+    last = None
+    urs = accessions = 0
+    for urs_id, count in counts:
+        if urs and (urs + 1 > max_urs or accessions + count > max_accessions):
+            ranges.append((start, last))
+            start = last + 1
+            urs = accessions = 0
+        urs += 1
+        accessions += count
+        last = urs_id
+
+    if last is None:
+        raise ValueError("No accessions to build ranges from")
+
+    ranges.append((start, last))
+    return ranges
+
+
+def accession_counts(db_url):
+    # Named cursor so the per-URS counts stream rather than load into memory.
+    with psycopg2.connect(db_url) as conn:
+        with conn.cursor(name="accession_counts") as cur:
+            cur.execute(
+                "SELECT precompute_urs_id, count(*) FROM precompute_urs_accession "
+                "GROUP BY precompute_urs_id ORDER BY precompute_urs_id"
+            )
+            yield from cur
+
+
+def write_balanced(output, max_urs, max_accessions, db_url=None):
+    ranges = balanced_ranges(accession_counts(db_url), max_urs, max_accessions)
+    csv.writer(output).writerows(("precompute_urs", a, b) for a, b in ranges)
+
+
 def upi_taxid_ranges(ranges, tablename, db_url):
     table = Table(tablename)
     with psycopg2.connect(db_url) as conn:

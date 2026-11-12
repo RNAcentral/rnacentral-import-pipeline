@@ -75,7 +75,7 @@ process build_ranges {
   script:
   def chunk_size = params.precompute.max_entries
   """
-  rnac upi-ranges --table-name precompute_urs $chunk_size ranges.csv
+  rnac precompute ranges $chunk_size ${params.precompute.max_accessions} ranges.csv
   """
 }
 
@@ -97,7 +97,9 @@ process find_upi_taxid_ranges {
 process query_accession_range {
   tag { "$min-$max" }
   maxForks params.precompute.maxForks
-  memory '4GB'
+  memory { 12.GB * task.attempt }
+  errorStrategy 'retry'
+  maxRetries 2
 
   input:
   tuple val(min), val(max), path(query)
@@ -261,7 +263,7 @@ workflow precompute {
     ) \
     | set { taxonomy_ready }
 
-    urs_counts \
+    accessions_ready \
     | build_ranges \
     | set { ranges }
 
