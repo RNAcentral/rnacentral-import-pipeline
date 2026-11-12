@@ -1,5 +1,8 @@
 BEGIN;
 
+-- Ensembl dropped its subdomains, so new rows leave this blank.
+ALTER TABLE ensembl_assembly ALTER COLUMN subdomain DROP NOT NULL;
+
 INSERT INTO ensembl_assembly (
   assembly_id,
   assembly_full_name,
@@ -8,12 +11,10 @@ INSERT INTO ensembl_assembly (
   common_name,
   taxid,
   ensembl_url,
-  division,
   blat_mapping,
   example_chromosome,
   example_end,
-  example_start,
-  subdomain
+  example_start
 ) (
 SELECT DISTINCT ON (assembly_id)
   assembly_id,
@@ -23,12 +24,10 @@ SELECT DISTINCT ON (assembly_id)
   common_name,
   taxid,
   ensembl_url,
-  division,
   blat_mapping,
   example_chromosome,
   example_end,
-  example_start,
-  subdomain
+  example_start
 FROM load_assemblies
 ) ON CONFLICT (assembly_id) DO UPDATE
 -- ensembl_url is never updated: species.json renamed species we already hold.
@@ -38,12 +37,10 @@ SET
   gca_accession = EXCLUDED.gca_accession,
   assembly_ucsc = COALESCE(EXCLUDED.assembly_ucsc, ensembl_assembly.assembly_ucsc),
   common_name = EXCLUDED.common_name,
-  division = EXCLUDED.division,
   blat_mapping = EXCLUDED.blat_mapping,
   example_chromosome = EXCLUDED.example_chromosome,
   example_end = EXCLUDED.example_end,
-  example_start = EXCLUDED.example_start,
-  subdomain = EXCLUDED.subdomain
+  example_start = EXCLUDED.example_start
 ;
 
 DROP TABLE load_assemblies;

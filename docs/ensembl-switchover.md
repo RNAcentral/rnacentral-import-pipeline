@@ -53,6 +53,20 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
 7. **Set the Ensembl `version`** in `portal/config/expert_databases.py`. It still
    says `116`, and species.json has no release number. One option is the
    species.json `last_updated` date.
+8. **Check the web code no longer reads `ensembl_assembly.subdomain`.** The
+   import stopped writing `division` and `subdomain`, since Ensembl dropped its
+   divisions and subdomains. `division` was already nullable. The first run
+   makes `subdomain` nullable as well (`000__assemblies.sql`). Existing rows
+   keep their old values, and new rows leave both columns blank. Neither is
+   used for xrefs, so the division retirement in step 1 is a separate job. Once
+   nothing reads them, drop both columns.
+
+9. **Load compara separately when its files are published.** The main run leaves
+   `ensembl.compara.run` false, so it skips compara. Once the files exist, run
+   with `ensembl.run = false` and `ensembl.compara.run = true`, with the release
+   on. It fetches and parses only compara, then loads it in the release. It
+   has to come after the first Ensembl load, since it maps transcripts to
+   `ENSEMBL` xrefs (`dbid = 25`).
 
 ## Ensembl coding (`ENSEMBL_CODING`, branch `update/Ensembl-mrna`)
 

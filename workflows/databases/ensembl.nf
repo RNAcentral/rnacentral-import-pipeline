@@ -19,9 +19,9 @@ process fetch_metadata {
 
 process find_urls {
   memory '4GB'
-  // species.json is on the EBI FTP, which refuses connections now and then
-  errorStrategy { sleep(task.attempt * 60000 as long); return 'retry' }
-  maxRetries 3
+  // Read species.json from /nfs, which only a datamover node sees, instead of the flaky FTP.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
 
   output:
   path('species.csv')
@@ -30,13 +30,17 @@ process find_urls {
 
   script:
   """
-  rnac ensembl urls-for --location '${params.databases.ensembl.species_json_url}' species.csv
+  rnac ensembl urls-for --location '${params.databases.ensembl.nfs_path}/species.json' species.csv
   """
 }
 
 // Only the genesets whose checksums moved since the last release are fetched and parsed.
 // See docs/incremental-parsing.md.
 process ensembl_source_diff {
+  // Reads 11k md5sum.txt files; /nfs is only visible from a datamover node.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+
   input:
   path(species)
 
@@ -51,7 +55,7 @@ process ensembl_source_diff {
   def force = params.force_full_import ? '--force-full' : ''
   def only = params.databases.ensembl.species.collect { s -> "--species '${s}'" }.join(' ')
   """
-  rnac ensembl source-diff $force $only $species to_fetch.csv scanned.txt sources.csv
+  rnac ensembl source-diff --ftp-url '${params.databases.ensembl.ftp_url}' --nfs-path '${params.databases.ensembl.nfs_path}' $force $only $species to_fetch.csv scanned.txt sources.csv
   """
 }
 

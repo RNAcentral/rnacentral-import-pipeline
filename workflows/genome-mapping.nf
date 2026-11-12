@@ -3,6 +3,10 @@
 nextflow.enable.dsl = 2
 
 process setup {
+  // Read species.json from /nfs, which only a datamover node sees, instead of the flaky FTP.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+
   input:
   val(_flag)
   path(query)
@@ -15,7 +19,7 @@ process setup {
   script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > assemblies.csv
-  rnac genome-mapping remote-files --location '${params.databases.ensembl.species_json_url}' assemblies.csv species.csv
+  rnac genome-mapping remote-files --location '${params.databases.ensembl.nfs_path}/species.json' assemblies.csv species.csv
   """
 }
 
@@ -70,9 +74,10 @@ process get_browser_coordinates {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
   publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
-  // wget: 4 is a network failure, 8 a server error; both are transient on the Ensembl FTP.
-  errorStrategy { task.exitStatus in [4, 8] && task.attempt <= 5 ? 'retry' : 'ignore' }
-  maxRetries 5
+  // /nfs mirrors the Ensembl FTP and only a datamover node sees it.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+  errorStrategy 'ignore'
 
   input:
   tuple val(species), val(assembly), val(taxid), val(_genome_url), val(gff_url)
@@ -81,11 +86,11 @@ process get_browser_coordinates {
   path("${species}.${assembly}.ensembl.gff3.gz"), optional: true
 
   script:
+  def gff_path = gff_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
   """
   set -o pipefail
 
-  wget -O ${species}.${assembly}.gff3.gz '${gff_url}'
-  gzip -d "${species}.${assembly}.gff3.gz"
+  gzip -dc '${gff_path}' > "${species}.${assembly}.gff3"
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
     sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n) |\
@@ -112,9 +117,10 @@ process index_gff3 {
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
-  // wget: 4 is a network failure, 8 a server error; both are transient on the Ensembl FTP.
-  errorStrategy { task.exitStatus in [4, 8] && task.attempt <= 5 ? 'retry' : 'ignore' }
-  maxRetries 5
+  // /nfs mirrors the Ensembl FTP and only a datamover node sees it.
+  queue 'datamover'
+  containerOptions "${params.common_container} --bind /nfs:/nfs"
+  errorStrategy 'ignore'
 
   input:
   tuple val(species), val(assembly), val(taxid), val(genome_url), val(gff_url)
@@ -123,18 +129,18 @@ process download_genome {
   tuple val(species), val(assembly), path("${species}.${assembly}.fa"), optional: true
 
   script:
+  def genome_path = genome_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
+  def gff_path = gff_url.replace(params.databases.ensembl.ftp_url, params.databases.ensembl.nfs_path)
   """
   set -o pipefail
 
   psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" \$PGDATABASE
 
   # The genome is BGZF, which gzip reads as ordinary multi-member gzip.
-  wget -O genome.fa.gz '${genome_url}'
-  gzip -d genome.fa.gz
+  gzip -dc '${genome_path}' > genome.fa
 
   # The genome holds alt haplotypes and patches; the geneset's sequence-regions are the primary assembly.
-  wget -O genes.gff3.gz '${gff_url}'
-  zgrep '^##sequence-region' genes.gff3.gz | awk '{ print \$2 }' > primary.names || true
+  zgrep '^##sequence-region' '${gff_path}' | awk '{ print \$2 }' > primary.names || true
   if [[ -s primary.names ]]; then
     samtools faidx genome.fa
     samtools faidx -r primary.names genome.fa > ${species}.${assembly}.fa
@@ -142,7 +148,6 @@ process download_genome {
   else
     mv genome.fa ${species}.${assembly}.fa
   fi
-  rm genes.gff3.gz
   """
 }
 

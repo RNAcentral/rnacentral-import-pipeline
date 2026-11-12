@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import csv
+import tracemalloc
 
 from click.testing import CliRunner
 
@@ -52,6 +53,16 @@ def test_signature_never_matches_when_a_file_is_missing_from_the_listing():
     assert delta.source_signature(
         EMBL, GFF, lambda url: "aaa  ./genes.embl.gz\n"
     ).startswith("unverified")
+
+
+def test_signatures_read_the_listing_from_the_nfs_copy(tmp_path):
+    geneset = tmp_path / "Homo_sapiens/ensembl/geneset/2026_04"
+    geneset.mkdir(parents=True)
+    (geneset / "md5sum.txt").write_text(MD5S)
+    read = delta.mirror("http://ftp", str(tmp_path))
+    assert delta.signatures([("h", "9606", EMBL, GFF, "GCA_1")], read) == {
+        EMBL: delta.source_signature(EMBL, GFF, lambda url: MD5S)
+    }
 
 
 def test_only_new_and_changed_genesets_are_fetched():
@@ -144,7 +155,7 @@ def run_source_diff(tmp_path, monkeypatch, stored, *options):
         listing, [row("a", "u/a/genes.embl.gz"), row("b", "u/b/genes.embl.gz")]
     )
     monkeypatch.setattr(
-        ensembl_cli.delta, "signatures", lambda rows: {r[2]: "new" for r in rows}
+        ensembl_cli.delta, "signatures", lambda rows, read: {r[2]: "new" for r in rows}
     )
     monkeypatch.setattr(
         ensembl_cli.manifest, "load_file_signatures_for", lambda url, db: dict(stored)
@@ -152,7 +163,8 @@ def run_source_diff(tmp_path, monkeypatch, stored, *options):
     names = ("to_fetch.csv", "scanned.txt", "sources.csv")
     result = CliRunner().invoke(
         ensembl_cli.cli,
-        ["source-diff", *options, str(listing)] + [str(tmp_path / n) for n in names],
+        ["source-diff", "--ftp-url", "u", "--nfs-path", "n", *options, str(listing)]
+        + [str(tmp_path / n) for n in names],
     )
     assert result.exit_code == 0, result.output
     return [(tmp_path / n).read_text() for n in names]
@@ -180,3 +192,15 @@ def test_force_full_fetches_every_geneset_and_retires_none(tmp_path, monkeypatch
     )
     assert len(to_fetch.splitlines()) == 2
     assert "u/x/genes.embl.gz" not in scanned
+
+
+# The first production run held every parsed accession in memory and was killed at 8 GB.
+def test_deletions_stream_the_manifest_instead_of_holding_it(tmp_path, monkeypatch):
+    monkeypatch.setattr(manifest, "dump_signatures", stored_dump({}))
+    rows = (("ENSEMBL", f"ENST{i:011d}", "s" * 64, "u/a") for i in range(200_000))
+    write_manifest(tmp_path / "m.csv", rows)
+    tracemalloc.start()
+    delta.deletions(None, tmp_path / "m.csv", ["u/a"], tmp_path)
+    peak = tracemalloc.get_traced_memory()[1]
+    tracemalloc.stop()
+    assert peak < 10_000_000

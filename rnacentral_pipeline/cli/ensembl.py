@@ -68,6 +68,10 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
 
 @cli.command("source-diff")
 @click.option("--db-url", envvar="PGDATABASE")
+@click.option(
+    "--ftp-url", required=True, help="The FTP url the species urls start with."
+)
+@click.option("--nfs-path", required=True, help="Where that FTP is mirrored on /nfs.")
 @click.option("--force-full", is_flag=True, help="Fetch every geneset.")
 @click.option(
     "--species", multiple=True, help="Only look at these (lower-case) species."
@@ -81,6 +85,8 @@ def source_diff(
     to_fetch,
     scanned,
     sources_csv,
+    ftp_url,
+    nfs_path,
     species=(),
     force_full=False,
     db_url=None,
@@ -103,7 +109,7 @@ def source_diff(
     with open(species_csv, newline="") as handle:
         rows = [tuple(row) for row in csv.reader(handle)]
     picked = delta.select(rows, species)
-    current = delta.signatures(picked)
+    current = delta.signatures(picked, delta.mirror(ftp_url, nfs_path))
     stored = {} if force_full else manifest.load_file_signatures_for(db_url, "ENSEMBL")
     fetch, gone, sources = delta.plan(rows, picked, stored, current)
 
@@ -250,17 +256,16 @@ def mrna_homology(homology_files, gff_files, output):
 
 
 @cli.command("assemblies")
-@click.option("--db-url", envvar="PGDATABASE")
 @click.option("--location", default=urls.DEFAULT_JSON_URL)
 @click.argument("example_file", default="example-locations.json", type=click.File("r"))
 @click.argument("ucsc_file", default="ucsc.json", type=click.File("r"))
 @click.argument("output", default="assemblies.csv", type=click.Path())
 @format_option
-def ensembl_write_assemblies(example_file, ucsc_file, output, location, db_url=None):
+def ensembl_write_assemblies(example_file, ucsc_file, output, location):
     """
     Write the ensembl_assembly rows for the genesets selected from species.json.
     """
-    assemblies.write(location, example_file, ucsc_file, Path(output), db_url)
+    assemblies.write(location, example_file, ucsc_file, Path(output))
 
 
 @cli.command("proteins")
