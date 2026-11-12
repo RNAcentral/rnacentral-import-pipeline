@@ -131,8 +131,7 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
 14. **IGV relies on run order.** For human and mouse, the coordinate export
     replaces genome mapping's `<species>.<assembly>.ensembl.gff3.gz` with mRNA gene
     models. That only works because the export runs after genome mapping.
-15. **Move the mRNA test fixture into the `test-data` submodule.** The branch
-    predates the submodule.
+15. **Done:** the mRNA test fixtures are in the `test-data` submodule.
 16. **Decided:** mRNAs and UTRs go into text search, sequence search, LitScan
     (by ENST/ENSG id only) and the FTP and Hugging Face exports. Whole mRNAs are
     typed `mRNA`; UTRs stay `ncRNA`, like the UTR elements already in RNAcentral

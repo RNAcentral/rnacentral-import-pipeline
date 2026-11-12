@@ -20,12 +20,12 @@ import pytest
 from rnacentral_pipeline.databases.data.regions import Strand
 from rnacentral_pipeline.databases.ensembl import mrna
 
-GFF = Path("data/ensembl/Homo_sapiens.GRCh38.mrna.gff3")
+GFF = Path("test-data/ensembl/Homo_sapiens.GRCh38.mrna.gff3")
 
 
 @pytest.fixture(scope="module")
 def entries():
-    with open("data/ensembl/Homo_sapiens.GRCh38.mrna.embl", "r") as raw:
+    with open("test-data/ensembl/Homo_sapiens.GRCh38.mrna.embl", "r") as raw:
         return {e.accession: e for e in mrna.parse(raw, GFF)}
 
 
@@ -144,7 +144,7 @@ def test_a_gff3_with_only_genes_still_yields_the_mrnas(entries, tmp_path):
             for g in sorted(genes)
         )
     )
-    with open("data/ensembl/Homo_sapiens.GRCh38.mrna.embl", "r") as raw:
+    with open("test-data/ensembl/Homo_sapiens.GRCh38.mrna.embl", "r") as raw:
         found = {e.accession for e in mrna.parse(raw, gff)}
     assert found == set(entries)
 
@@ -176,7 +176,7 @@ def test_utrs_carry_no_protein_xrefs(entries):
 def test_a_cds_starting_mid_codon_records_its_phase(tmp_path):
     # Ensembl marks an incomplete start with /codon_start; its first CDS base
     # is then the second or third base of a codon.
-    text = open("data/ensembl/Homo_sapiens.GRCh38.mrna.embl").read()
+    text = open("test-data/ensembl/Homo_sapiens.GRCh38.mrna.embl").read()
     cds = 'FT                   /protein_id="ENSP00000482514'
     assert text.count(cds) == 1
     embl = tmp_path / "genes.embl"
@@ -191,8 +191,8 @@ def test_a_cds_starting_mid_codon_records_its_phase(tmp_path):
 
 
 def test_keeps_isoforms_whose_ids_contain_a_dot():
-    gff = Path("data/ensembl/Plasmodium_falciparum_3D7.mrna.gff3")
-    with open("data/ensembl/Plasmodium_falciparum_3D7.mrna.embl", "r") as raw:
+    gff = Path("test-data/ensembl/Plasmodium_falciparum_3D7.mrna.gff3")
+    with open("test-data/ensembl/Plasmodium_falciparum_3D7.mrna.embl", "r") as raw:
         found = list(mrna.parse(raw, gff))
     mrnas = {e.accession: e for e in found if e.rna_type == "SO:0000234"}
     assert set(mrnas) == {

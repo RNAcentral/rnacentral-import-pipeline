@@ -258,8 +258,8 @@ def test_parse_mrna_lists_what_each_geneset_yields(tmp_path):
     result = CliRunner().invoke(
         ensembl_cli.cli,
         ["parse-mrna", "--source", "u/a/genes.embl.gz", "--signature", "sig"]
-        + ["data/ensembl/Plasmodium_falciparum_3D7.mrna.embl"]
-        + ["data/ensembl/Plasmodium_falciparum_3D7.mrna.gff3", str(tmp_path)],
+        + ["test-data/ensembl/Plasmodium_falciparum_3D7.mrna.embl"]
+        + ["test-data/ensembl/Plasmodium_falciparum_3D7.mrna.gff3", str(tmp_path)],
     )
     assert result.exit_code == 0, result.output
     rows = list(csv.reader((tmp_path / "accessions.manifest").open()))
