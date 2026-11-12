@@ -60,6 +60,8 @@ join rnc_sequence_exons ex on ex.region_id = sr.id
 join rnc_rna_precomputed pc on pc.urs_taxid = sr.urs_taxid
 
 where pc.taxid = %s
+-- Ensembl coding mRNAs and UTRs would merge into, and reshape, the ncRNA genes
+and coalesce(pc.so_rna_type, '') not in ('SO:0000234', 'SO:0000204', 'SO:0000205')
 """
 
 

@@ -68,6 +68,86 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
    has to come after the first Ensembl load, since it maps transcripts to
    `ENSEMBL` xrefs (`dbid = 25`).
 
+## Ensembl coding (`ENSEMBL_CODING`, branch `update/Ensembl-mrna`)
+
+### Before the test run
+
+9. **Check that dbid 60 is free in the target database.** The public copy tops
+   out at 59, but production may be ahead of it.
+10. **Create the database row and its xref partitions.** `xref` is partitioned
+    by `dbid`, then by `deleted`. The legacy `xref_insert_trigger` isn't used.
+    This copies the layout of dbid 59:
+
+    ```sql
+    BEGIN;
+    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr, description, url, reference)
+    VALUES (60, now(), 'RNACEN', 'ENSEMBL_CODING', 'Y', 'Ensembl coding', 'Ensembl coding',
+      ': protein-coding mRNAs and their 5'' and 3'' UTRs from Ensembl',
+      'https://www.ensembl.org',
+      '[{"title":"Ensembl 2025","authors":"Dyer SC, Austine-Orimoloye O, Azov AG, et al.","journal":"Nucleic Acids Research, 2025","pubmed_id":"39656687"}]'::jsonb);
+
+    CREATE TABLE rnacen.xref_p60 PARTITION OF rnacen.xref FOR VALUES IN (60) PARTITION BY LIST (deleted);
+    CREATE TABLE rnacen.xref_p60_deleted PARTITION OF rnacen.xref_p60 FOR VALUES IN ('Y');
+    CREATE TABLE rnacen.xref_p60_not_deleted PARTITION OF rnacen.xref_p60 FOR VALUES IN ('N');
+
+    DO $$
+    DECLARE t text; flag text;
+    BEGIN
+      FOR t, flag IN VALUES ('xref_p60_deleted', 'Y'), ('xref_p60_not_deleted', 'N') LOOP
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I CHECK (dbid = 60 AND deleted = %L)', t, t || '_check', flag);
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (created) REFERENCES rnacen.rnc_release(id)', t, t || '_fk1');
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (dbid) REFERENCES rnacen.rnc_database(id)', t, t || '_fk2');
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (last) REFERENCES rnacen.rnc_release(id)', t, t || '_fk3');
+        EXECUTE format('ALTER TABLE rnacen.%I ADD CONSTRAINT %I FOREIGN KEY (urs) REFERENCES rnacen.rna(urs)', t, t || '_fk4');
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (ac)', t || '$ac', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (created)', t || '$created', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (dbid)', t || '$dbid', t);
+        EXECUTE format('CREATE UNIQUE INDEX %I ON rnacen.%I (id)', t || '$id', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (last)', t || '$last', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (taxid)', t || '$taxid', t);
+        EXECUTE format('CREATE INDEX %I ON rnacen.%I (urs)', t || '$upi', t);
+      END LOOP;
+    END $$;
+    COMMIT;
+    ```
+
+11. **Add the three relationship types the UTR links use.** Run these outside a
+    transaction:
+
+    ```sql
+    ALTER TYPE rnacen.related_sequence_relationship ADD VALUE IF NOT EXISTS 'five_prime_utr';
+    ALTER TYPE rnacen.related_sequence_relationship ADD VALUE IF NOT EXISTS 'three_prime_utr';
+    ALTER TYPE rnacen.related_sequence_relationship ADD VALUE IF NOT EXISTS 'mrna';
+    ```
+
+12. **Run the import with only `databases.ensembl_coding.run = true`.** It already
+    limits itself to the species in `databases.ensembl_coding.species`.
+
+### After the test run
+
+13. **Check the counts:** one mRNA per Ensembl `protein_coding` transcript on the
+    primary assembly, each with up to two UTRs, and links both ways in
+    `rnc_related_sequences`. UTRs under 10 nt are dropped.
+14. **IGV relies on run order.** For human and mouse, the coordinate export
+    replaces genome mapping's `<species>.<assembly>.ensembl.gff3.gz` with mRNA gene
+    models. That only works because the export runs after genome mapping.
+15. **Done:** the mRNA test fixtures are in the `test-data` submodule.
+16. **Decided:** mRNAs and UTRs go into text search, sequence search, LitScan
+    (by ENST/ENSG id only) and the FTP and Hugging Face exports. Whole mRNAs are
+    typed `mRNA`; UTRs stay `ncRNA`, like the UTR elements already in RNAcentral
+    (ZWD, ENA, Ensembl), with the SO type telling them apart. Entries only in
+    Ensembl coding rank below every ncRNA in search. They stay out of gene
+    building. Still open: how the website shows UTR links and tags (web team).
+17. **Ask EBI Search to accept the new values** in the RNAcentral index, so they
+    can be searched and faceted: the `rna_type` value `mRNA`, the `expert_db`
+    value "Ensembl coding", and the `ENSEMBL_CODING` cross-reference name that
+    carries the ENST/ENSG ids. Do this before the first text-search export that
+    contains them.
+18. **Tell Ensembl the xref export now contains mRNAs and UTRs.** The file sends
+    every active sequence, so Ensembl's own protein-coding transcripts come back
+    to them, mRNAs typed `mRNA` and UTRs typed `ncRNA`. Their import may assume
+    everything in it is a non-coding RNA.
+
 ## Assemblies: review before the first production run
 
 The import now keeps each species on the exact assembly RNAcentral selects today
