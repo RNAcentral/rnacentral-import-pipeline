@@ -229,7 +229,7 @@ def test_databases_column_uses_descr_not_pretty_names():
         ("SO:0000204", "5'UTR"),
         ("SO:0000205", "3'UTR"),
         ("SO:0000275", "snoRNA"),
-        ("SO:9999999", "ncRNA"),
+        pytest.param("SO:9999999", "ncRNA", id="unknown-term-falls-back-to-ncRNA"),
     ],
 )
 def test_insdc_type_names_coding_sequences(so_id, expected):
