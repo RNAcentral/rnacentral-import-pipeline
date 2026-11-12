@@ -221,13 +221,13 @@ def test_databases_column_uses_descr_not_pretty_names():
     assert update(sequence=sequence).databases == "ENSEMBL_PLANTS,LNCRNADB,TMRNA_WEB"
 
 
-# Exports and search read this type; mRNAs and UTRs must not be called ncRNA.
+# Whole mRNAs are new and get their own type; UTRs keep RNAcentral's ncRNA convention.
 @pytest.mark.parametrize(
     "so_id,expected",
     [
         ("SO:0000234", "mRNA"),
-        ("SO:0000204", "5'UTR"),
-        ("SO:0000205", "3'UTR"),
+        ("SO:0000204", "ncRNA"),
+        ("SO:0000205", "ncRNA"),
         ("SO:0000275", "snoRNA"),
         pytest.param("SO:9999999", "ncRNA", id="unknown-term-falls-back-to-ncRNA"),
     ],
