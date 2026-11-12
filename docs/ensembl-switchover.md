@@ -137,9 +137,11 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
     (by ENST/ENSG id only) and the FTP and Hugging Face exports, typed `mRNA`,
     `5'UTR` and `3'UTR` rather than `ncRNA`. They stay out of gene building.
     Still open: how the website shows UTR links and tags (web team).
-17. **Ask EBI Search to accept the new `rna_type` values** `mRNA`, `5'UTR` and
-    `3'UTR` in the RNAcentral index, so they can be searched and faceted. Do this
-    before the first text-search export that contains them.
+17. **Ask EBI Search to accept the new values** in the RNAcentral index, so they
+    can be searched and faceted: the `rna_type` values `mRNA`, `5'UTR` and `3'UTR`
+    (check the apostrophes are fine), the `expert_db` value "Ensembl coding", and
+    the `ENSEMBL_CODING` cross-reference name that carries the ENST/ENSG ids. Do
+    this before the first text-search export that contains them.
 18. **Tell Ensembl the xref export now contains mRNAs and UTRs.** The file sends
     every active sequence, so Ensembl's own protein-coding transcripts come back
     to them typed `mRNA`, `5'UTR` and `3'UTR`. Their import may assume everything
