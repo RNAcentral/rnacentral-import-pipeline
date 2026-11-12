@@ -80,7 +80,7 @@ def main(database, filename, output):
     """
     Check ids and create file that will be used by RNAcentral-references.
     """
-    remove_dot = ["ensembl", "ensembl_gencode"]
+    remove_dot = ["ensembl", "ensembl_gencode", "ensembl_coding"]
     split_on_comma = ["flybase", "hgnc", "lncipedia", "pombase", "refseq", "lncbook"]
     rfam_ignore = [
         "30_255",
