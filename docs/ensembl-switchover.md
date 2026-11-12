@@ -133,9 +133,17 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
     models. That only works because the export runs after genome mapping.
 15. **Move the mRNA test fixture into the `test-data` submodule.** The branch
     predates the submodule.
-16. **Still to decide:** whether mRNAs go into text search, sequence search and
-    the FTP FASTA and ID-mapping exports, and how the website shows UTR links and
-    tags (web team).
+16. **Decided:** mRNAs and UTRs go into text search, sequence search, LitScan
+    (by ENST/ENSG id only) and the FTP and Hugging Face exports, typed `mRNA`,
+    `5'UTR` and `3'UTR` rather than `ncRNA`. They stay out of gene building.
+    Still open: how the website shows UTR links and tags (web team).
+17. **Ask EBI Search to accept the new `rna_type` values** `mRNA`, `5'UTR` and
+    `3'UTR` in the RNAcentral index, so they can be searched and faceted. Do this
+    before the first text-search export that contains them.
+18. **Tell Ensembl the xref export now contains mRNAs and UTRs.** The file sends
+    every active sequence, so Ensembl's own protein-coding transcripts come back
+    to them typed `mRNA`, `5'UTR` and `3'UTR`. Their import may assume everything
+    in it is ncRNA.
 
 ## Assemblies: review before the first production run
 
