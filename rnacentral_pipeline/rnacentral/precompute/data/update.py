@@ -21,6 +21,7 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 
 from rnacentral_pipeline.databases.data import RnaType
+from rnacentral_pipeline.databases.data.entry import CODING_FEATURE_NAMES
 from rnacentral_pipeline.databases.data.utils import INSDC_SO_MAPPING, SO_INSDC_MAPPING
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
@@ -46,6 +47,11 @@ def previous_rna_type(previous: ty.Dict[str, ty.Any]) -> str:
     return rna_type
 
 
+def insdc_type(so_id: str) -> str:
+    # Exports and search read this; mRNAs and UTRs would otherwise be called ncRNA
+    return CODING_FEATURE_NAMES.get(so_id) or SO_INSDC_MAPPING.get(so_id, "ncRNA")
+
+
 @attr.s(frozen=True)
 class SequenceUpdate:
     """
@@ -62,7 +68,7 @@ class SequenceUpdate:
     @classmethod
     def active(cls, context: Context, sequence: Sequence) -> "SequenceUpdate":
         so_rna_type = rna_type_of(context, sequence)
-        insdc_rna_type = SO_INSDC_MAPPING.get(so_rna_type.so_term.so_id, "ncRNA")
+        insdc_rna_type = insdc_type(so_rna_type.so_term.so_id)
         description = description_of(insdc_rna_type, sequence)
         short_description = short_description_for(description, sequence)
 

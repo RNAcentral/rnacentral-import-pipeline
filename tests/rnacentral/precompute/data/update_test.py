@@ -17,6 +17,7 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases.data import RnaType, SoTermInfo
+from rnacentral_pipeline.rnacentral.precompute.data import update as update_module
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.data.update import SequenceUpdate
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult, QaStatus
@@ -218,3 +219,18 @@ def test_databases_column_uses_descr_not_pretty_names():
         ]
     )
     assert update(sequence=sequence).databases == "ENSEMBL_PLANTS,LNCRNADB,TMRNA_WEB"
+
+
+# Exports and search read this type; mRNAs and UTRs must not be called ncRNA.
+@pytest.mark.parametrize(
+    "so_id,expected",
+    [
+        ("SO:0000234", "mRNA"),
+        ("SO:0000204", "5'UTR"),
+        ("SO:0000205", "3'UTR"),
+        ("SO:0000275", "snoRNA"),
+        ("SO:9999999", "ncRNA"),
+    ],
+)
+def test_insdc_type_names_coding_sequences(so_id, expected):
+    assert update_module.insdc_type(so_id) == expected
