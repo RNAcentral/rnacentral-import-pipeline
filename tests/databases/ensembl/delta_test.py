@@ -204,3 +204,67 @@ def test_deletions_stream_the_manifest_instead_of_holding_it(tmp_path, monkeypat
     peak = tracemalloc.get_traced_memory()[1]
     tracemalloc.stop()
     assert peak < 10_000_000
+
+
+def test_source_diff_keeps_each_database_to_its_own_signatures(tmp_path, monkeypatch):
+    asked = []
+    monkeypatch.setattr(
+        ensembl_cli.delta, "signatures", lambda rows, read: {r[2]: "new" for r in rows}
+    )
+    monkeypatch.setattr(
+        ensembl_cli.manifest,
+        "load_file_signatures_for",
+        lambda url, db: asked.append(db) or {},
+    )
+    listing = tmp_path / "species.csv"
+    write_manifest(listing, [row("a", "u/a/genes.embl.gz")])
+    names = ("to_fetch.csv", "scanned.txt", "sources.csv")
+    result = CliRunner().invoke(
+        ensembl_cli.cli,
+        ["source-diff", "--ftp-url", "u", "--nfs-path", "n"]
+        + ["--database", "ENSEMBL_CODING", str(listing)]
+        + [str(tmp_path / n) for n in names],
+    )
+    assert result.exit_code == 0, result.output
+    assert asked == ["ENSEMBL_CODING"]
+    assert (
+        tmp_path / "sources.csv"
+    ).read_text() == "ENSEMBL_CODING,u/a/genes.embl.gz,new\n"
+
+
+def test_delta_diff_retires_coding_accessions(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        manifest,
+        "dump_signatures",
+        stored_dump({"ENSEMBL_CODING": [("T1", "s", "u/a"), ("T2", "s", "u/a")]}),
+    )
+    write_manifest(tmp_path / "m.csv", [("ENSEMBL_CODING", "T1", "s2", "u/a")])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        ensembl_cli.psycopg2,
+        "connect",
+        lambda url: type("C", (), {"close": lambda self: None})(),
+    )
+    (tmp_path / "scanned.txt").write_text("u/a\n")
+    result = CliRunner().invoke(
+        ensembl_cli.cli,
+        ["delta-diff", "--database", "ENSEMBL_CODING", "m.csv", "scanned.txt", "d.csv"],
+    )
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "d.csv").read_text() == "ENSEMBL_CODING,T2\n"
+
+
+def test_parse_mrna_lists_what_each_geneset_yields(tmp_path):
+    result = CliRunner().invoke(
+        ensembl_cli.cli,
+        ["parse-mrna", "--source", "u/a/genes.embl.gz", "--signature", "sig"]
+        + ["data/ensembl/Plasmodium_falciparum_3D7.mrna.embl"]
+        + ["data/ensembl/Plasmodium_falciparum_3D7.mrna.gff3", str(tmp_path)],
+    )
+    assert result.exit_code == 0, result.output
+    rows = list(csv.reader((tmp_path / "accessions.manifest").open()))
+    assert rows
+    assert {(r[0], r[2], r[3]) for r in rows} == {
+        ("ENSEMBL_CODING", "sig", "u/a/genes.embl.gz")
+    }
+    assert any(r[1].endswith(":five_prime_UTR") for r in rows)

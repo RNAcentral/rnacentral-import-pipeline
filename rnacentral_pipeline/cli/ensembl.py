@@ -76,6 +76,7 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
 @click.option(
     "--species", multiple=True, help="Only look at these (lower-case) species."
 )
+@click.option("--database", default="ENSEMBL", help="Whose stored signatures to use.")
 @click.argument("species_csv", type=click.Path(exists=True))
 @click.argument("to_fetch", type=click.File("w"))
 @click.argument("scanned", type=click.File("w"))
@@ -90,6 +91,7 @@ def source_diff(
     species=(),
     force_full=False,
     db_url=None,
+    database="ENSEMBL",
 ):
     """
     Decide which genesets are worth fetching and parsing.
@@ -110,7 +112,7 @@ def source_diff(
         rows = [tuple(row) for row in csv.reader(handle)]
     picked = delta.select(rows, species)
     current = delta.signatures(picked, delta.mirror(ftp_url, nfs_path))
-    stored = {} if force_full else manifest.load_file_signatures_for(db_url, "ENSEMBL")
+    stored = {} if force_full else manifest.load_file_signatures_for(db_url, database)
     fetch, gone, sources = delta.plan(rows, picked, stored, current)
 
     LOGGER.info(
@@ -123,16 +125,17 @@ def source_diff(
     for path in [row[2] for row in fetch] + gone:
         scanned.write(path + "\n")
     csv.writer(sources_csv, lineterminator="\n").writerows(
-        ("ENSEMBL", path, sig) for path, sig in sorted(sources.items())
+        (database, path, sig) for path, sig in sorted(sources.items())
     )
 
 
 @cli.command("delta-diff")
 @click.option("--db-url", envvar="PGDATABASE")
+@click.option("--database", "databases", multiple=True, default=delta.DATABASES)
 @click.argument("manifest_csv", type=click.Path(exists=True))
 @click.argument("scanned_txt", type=click.Path(exists=True))
 @click.argument("deletions_csv", type=click.File("w"))
-def delta_diff(manifest_csv, scanned_txt, deletions_csv, db_url=None):
+def delta_diff(manifest_csv, scanned_txt, deletions_csv, db_url=None, databases=()):
     """
     Write the accessions a re-parsed geneset no longer yields.
 
@@ -143,7 +146,7 @@ def delta_diff(manifest_csv, scanned_txt, deletions_csv, db_url=None):
     scanned = [line.strip() for line in open(scanned_txt) if line.strip()]
     conn = psycopg2.connect(db_url)
     try:
-        found = delta.deletions(conn, Path(manifest_csv), scanned, Path("."))
+        found = delta.deletions(conn, Path(manifest_csv), scanned, Path("."), databases)
     finally:
         conn.close()
     csv.writer(deletions_csv, lineterminator="\n").writerows(found)
@@ -224,6 +227,8 @@ def parse_data(
 
 
 @cli.command("parse-mrna")
+@click.option("--source", default=None, help="The geneset url, to list its accessions")
+@click.option("--signature", default="", help="The geneset's source signature")
 @click.argument("embl_file", type=click.File("r"))
 @click.argument("gff_file", type=click.Path())
 @click.argument(
@@ -232,13 +237,23 @@ def parse_data(
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
 @format_option
-def parse_mrna(embl_file, gff_file, output):
+def parse_mrna(embl_file, gff_file, output, source=None, signature=""):
     """
     Parse the protein coding mRNAs, and their UTRs, from an Ensembl EMBL file.
     """
-    entries = mrna.parse(embl_file, Path(gff_file))
+    rows = []
+
+    def track(entries):
+        for entry in entries:
+            rows.append((entry.database, entry.accession, signature, source))
+            yield entry
+
     with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+        writer.write(track(mrna.parse(embl_file, Path(gff_file))))
+    # Not *.csv: the load stream would take it for a table.
+    if source:
+        with (Path(output) / "accessions.manifest").open("w", newline="") as handle:
+            csv.writer(handle, lineterminator="\n").writerows(rows)
 
 
 @cli.command("mrna-homology")

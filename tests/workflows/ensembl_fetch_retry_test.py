@@ -22,6 +22,7 @@ def test_species_json_is_read_from_nfs_on_a_datamover():
     for path, process in [
         ("workflows/databases/ensembl.nf", "find_urls"),
         ("workflows/metadata/ensembl.nf", "assemblies"),
+        ("workflows/databases/ensembl_mrna.nf", "find_mrna_urls"),
     ]:
         assert "queue 'datamover'" in directives(path, process), process
         body = (ROOT / path).read_text().split(f"process {process} {{", 1)[1]

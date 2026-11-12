@@ -95,7 +95,11 @@ def plan(
 
 
 def deletions(
-    conn, manifest_csv: Path, scanned: ty.Collection[str], workdir: Path
+    conn,
+    manifest_csv: Path,
+    scanned: ty.Collection[str],
+    workdir: Path,
+    databases: ty.Sequence[str] = DATABASES,
 ) -> ty.List[Row]:
     """
     The (database, accession) rows stored for a geneset that was read this run but
@@ -106,13 +110,13 @@ def deletions(
             db: csv.writer(
                 stack.enter_context((workdir / f"new-{db}.csv").open("w", newline=""))
             )
-            for db in DATABASES
+            for db in databases
         }
         for database, accession, signature, source in csv.reader(handle):
             writers[database].writerow((source, accession, signature))
 
     found = []
-    for database in DATABASES:
+    for database in databases:
         stored = workdir / f"stored-{database}.csv"
         manifest.dump_signatures(conn, database, stored)
         current = workdir / f"new-{database}.csv"
