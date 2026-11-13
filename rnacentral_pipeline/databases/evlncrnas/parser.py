@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import io
 import operator as op
 import re
@@ -32,6 +33,7 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases.ols import search
 from rnacentral_pipeline.rnacentral import lookup
 
 from . import helpers
@@ -266,19 +268,78 @@ def get_db_matches(match_frame_in: pd.DataFrame, db_dump: Path) -> pd.DataFrame:
     return matches
 
 
+def condense_diseases(rows: pd.DataFrame) -> list[tuple[str, list[int]]]:
+    """
+    The distinct diseases in these rows as (disease_text, [pmids]), each with
+    only the PMIDs from its own rows. Spellings that differ only in case or
+    whitespace are one disease and the first spelling seen is kept.
+
+    A cell is one disease: in the 2023-10 download no cell uses ';' or '|', and
+    ',', '/' and ' and ' are part of the name ('hand, foot, and mouth disease',
+    'ischemia/reperfusion injury'), so nothing is split. Empty cells are blank
+    (NaN); there are no 'NA' or '-' placeholders.
+    """
+    diseases = {}
+    for text, pmid in zip(rows["Disease"], rows["PMID"]):
+        if pd.isna(text) or not str(text).strip():
+            continue
+        text = str(text).strip()
+        _, pmids = diseases.setdefault(search.normalise(text), (text, []))
+        try:
+            pmid = int(pmid)
+        except (TypeError, ValueError):
+            continue
+        if pmid not in pmids:
+            pmids.append(pmid)
+    return list(diseases.values())
+
+
 def load_function_data(function_info: Path) -> pd.DataFrame:
     function_df = load_table(function_info)
-    return (
-        function_df.groupby("ID", sort=False)["PMID"]
-        .apply(condense_publications)
-        .reset_index(name="publications")
+    grouped = function_df.groupby("ID", sort=False)
+    condensed = (
+        grouped["PMID"].apply(condense_publications).reset_index(name="publications")
     )
+    diseases = {id_: condense_diseases(rows) for id_, rows in grouped}
+    condensed["diseases"] = condensed["ID"].map(diseases)
+    return condensed
 
 
-def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
+def disease_terms(db_dir: Path) -> list[str]:
+    """
+    The unique non-empty disease strings, the input to `rnac ols map-text`.
+    """
+    function_df = load_table(resolve_sheet(db_dir, "function_information"))
+    texts = function_df["Disease"].dropna().astype(str).str.strip()
+    return list(dict.fromkeys(text for text in texts if text))
+
+
+def load_disease_mapping(path: Path) -> dict[str, tuple[str | None, str]]:
+    """
+    Read the `rnac ols map-text` output into normalised text -> (term id,
+    match type). The file holds one spelling per normalised form, so lookups
+    must normalise too.
+    """
+    with open(path, newline="") as handle:
+        return {
+            search.normalise(row["text"]): (
+                row["ontology_term_id"] or None,
+                row["match_type"],
+            )
+            for row in csv.DictReader(handle, delimiter="\t")
+        }
+
+
+def parse(
+    db_dir: Path, db_dumps: tuple[Path], db_url: str, disease_mapping: Path = None
+) -> None:
     """
     Parse and join the two EVLncRNAs3 workbooks and build RNAcentral entries.
+    Disease annotations are attached only when a mapping file is given.
     """
+    if disease_mapping is not None:
+        disease_mapping = load_disease_mapping(disease_mapping)
+
     lncRNA = resolve_sheet(db_dir, "lncRNA_information")
     function_info = resolve_sheet(db_dir, "function_information")
 
@@ -344,6 +405,9 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     full_frame["publications"] = full_frame["publications"].apply(
         lambda refs: refs if isinstance(refs, list) else []
     )
+    full_frame["diseases"] = full_frame["diseases"].apply(
+        lambda diseases: diseases if isinstance(diseases, list) else []
+    )
 
     ## Tidy up and apply some normalisations
     full_frame["Chain"] = full_frame["Chain"].apply(
@@ -357,4 +421,4 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
 
     ## yield entry objects for each row in the frame, these get written directly.
     for _, row in full_frame.iterrows():
-        yield helpers.as_entry(row)
+        yield helpers.as_entry(row, disease_mapping)
