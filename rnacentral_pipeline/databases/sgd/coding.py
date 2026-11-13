@@ -90,7 +90,7 @@ def as_entry(genome, mrna, gene, parts, accession, rna_type, label) -> data.Entr
         chromosome=chromosome(chrom),
         gene=gene.get("gene"),
         locus_tag=gene["ID"],
-        optional_id=gene.get("gene"),
+        optional_id=gene["ID"],
         references=[pubs.reference(pmid) for pmid in REFERENCES],
         mol_type="genomic DNA",
         description=f"Saccharomyces cerevisiae S288C {name} {label}",
@@ -108,6 +108,8 @@ def transcript_entries(genome, mrna, gene, children) -> ty.Iterable[data.Entry]:
     parts = exons(mrna["start"], mrna["stop"], introns)
     accession = mrna["ID"]
     entry = as_entry(genome, mrna, gene, parts, accession, MRNA, "mRNA")
+    # The IGV export draws the CDS from this 1-based genomic span, as for Ensembl
+    entry = attr.evolve(entry, note_data={"cds": [cds_start, cds_stop]})
     if not entry.is_valid():
         return
 
