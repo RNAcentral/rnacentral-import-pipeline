@@ -153,6 +153,16 @@ def accession(feature):
     return acc
 
 
+# Ensembl stable ids (and MGP mouse-strain ids) are unique across species; local ids like '1-RA' are not
+STABLE_ID = re.compile(r"^(ENS[A-Z]*T\d|MGP_)")
+
+
+def unique_accession(acc, gca):
+    if gca and not STABLE_ID.match(acc):
+        return "%s:%s" % (gca, acc)
+    return acc
+
+
 def url(feature):
     """
     Get the URL for the given Enesmbl feature.

@@ -86,6 +86,7 @@ def parse(
                 family_file=family_file,
                 excluded_file=excluded_file,
                 assembly_id=assembly_id,
+                gca=accession,
             )
             for entry in entries:
                 entry = correct_protist_rna_type(entry)

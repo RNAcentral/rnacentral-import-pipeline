@@ -147,7 +147,7 @@ def as_entry(record, gene, feature, accession, rna_type, label, gca) -> data.Ent
 
 
 def transcript_entries(record, gene, mrna, cds, tags, gca) -> ty.Iterable[data.Entry]:
-    accession = helpers.accession(mrna)
+    accession = helpers.unique_accession(helpers.accession(mrna), gca)
     entry = as_entry(record, gene, mrna, accession, MRNA, "mRNA", gca)
     # 1-based inclusive genomic span, so the export can draw the CDS exactly
     # even where a UTR was too short to import

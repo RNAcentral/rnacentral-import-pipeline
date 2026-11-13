@@ -20,6 +20,7 @@ import pytest
 
 from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.ensembl.parser import parse
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as vert
 
 from .helpers import entries_for, entry_for, has_entry_for, parse_with_family
 
@@ -111,6 +112,33 @@ def test_keeps_transcripts_whose_id_has_a_dot_that_is_not_a_version():
     assert [(e.primary_id, e.rna_type) for e in entries] == [
         ("PF3D7_1425100.1", "SO:0000275")
     ]
+
+
+def test_ids_that_are_not_ensembl_stable_ids_get_the_assembly():
+    # Release 29: ids like '1-RA' were live in several species under one accession
+    with open("data/ensembl/Plasmodium_falciparum_3D7.ncrna.embl", "r") as raw:
+        entries = list(
+            parse(
+                raw,
+                Path("data/ensembl/Plasmodium_falciparum_3D7.ncrna.gff3"),
+                family_file=Path("data/rfam/families.tsv"),
+            )
+        )
+    assert [e.accession for e in entries] == ["GCA_000002765.3:PF3D7_1425100.1"]
+
+
+@pytest.mark.parametrize(
+    "acc,gca,expected",
+    [
+        ("1-RA", "GCA_000001.1", "GCA_000001.1:1-RA"),
+        ("1-RA", "GCA_000002.1", "GCA_000002.1:1-RA"),
+        ("ENST00000540868.1", "GCA_000001405.29", "ENST00000540868.1"),
+        ("ENSMUST00000193812.2", "GCA_000001635.9", "ENSMUST00000193812.2"),
+        ("MGP_CAROLIEiJ_T0000191.1", "GCA_900094665.2", "MGP_CAROLIEiJ_T0000191.1"),
+    ],
+)
+def test_only_ids_that_can_clash_get_the_assembly(acc, gca, expected):
+    assert vert.unique_accession(acc, gca) == expected
 
 
 def test_coordinates_take_the_assembly_id_the_selection_gives():

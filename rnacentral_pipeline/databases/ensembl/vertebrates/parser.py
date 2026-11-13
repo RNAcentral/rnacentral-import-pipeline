@@ -73,7 +73,7 @@ def as_entry(
 
     entry = data.Entry(
         primary_id=pid,
-        accession=helpers.accession(feature),
+        accession=helpers.unique_accession(helpers.accession(feature), context.gca),
         ncbi_tax_id=embl.taxid(record),
         database="ENSEMBL",
         sequence=sequence,
@@ -158,7 +158,12 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
 
 
 def parse(
-    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None, assembly_id=None
+    raw: ty.IO,
+    gff_file: Path,
+    family_file=None,
+    excluded_file=None,
+    assembly_id=None,
+    gca=None,
 ) -> ty.Iterable[data.Entry]:
     """
     This will parse an EMBL file for all Ensembl Entries to import.
@@ -169,6 +174,7 @@ def parse(
         family_file=family_file,
         excluded_file=excluded_file,
         assembly_id=assembly_id,
+        gca=gca,
     )
     loaded = ncrnas(raw, context)
     grouped = it.groupby(loaded, op.attrgetter("gene"))

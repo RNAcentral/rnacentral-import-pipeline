@@ -38,10 +38,16 @@ class Context:
     rfam_names: ty.Dict[str, str] = attr.ib(validator=is_a(dict))
     excluded = attr.ib(validator=is_a(set))
     gff = attr.ib(validator=is_a(SqliteDict))
+    gca = attr.ib(default=None)
 
     @classmethod
     def build(
-        cls, gff_file: Path, family_file=None, excluded_file=None, assembly_id=None
+        cls,
+        gff_file: Path,
+        family_file=None,
+        excluded_file=None,
+        assembly_id=None,
+        gca=None,
     ):
         """
         Create a Context, by parsing the family file (families from Rfam), and
@@ -77,6 +83,7 @@ class Context:
             rfam_names=rfam_names,
             excluded=excluded,
             gff=load_coordinates(gff_file, assembly_id),
+            gca=gca,
         )
 
     def rfam_name(self, locus_tag: str, default=None):

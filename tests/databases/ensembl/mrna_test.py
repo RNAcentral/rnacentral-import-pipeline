@@ -196,10 +196,10 @@ def test_keeps_isoforms_whose_ids_contain_a_dot():
         found = list(mrna.parse(raw, gff))
     mrnas = {e.accession: e for e in found if e.rna_type == "SO:0000234"}
     assert set(mrnas) == {
-        "PF3D7_0206900.1",
-        "PF3D7_0206900.2",
-        "PF3D7_1002400.1",
-        "PF3D7_1002400.2",
+        "GCA_000002765.3:PF3D7_0206900.1",
+        "GCA_000002765.3:PF3D7_0206900.2",
+        "GCA_000002765.3:PF3D7_1002400.1",
+        "GCA_000002765.3:PF3D7_1002400.2",
     }
     for entry in mrnas.values():
         links = {r.relationship for r in entry.related_sequences}
