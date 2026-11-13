@@ -14,7 +14,9 @@ limitations under the License.
 """
 
 import json
+from pathlib import Path
 
+from rnacentral_pipeline.databases.data import CODING_DATABASES
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import mrna
 
 # ENST00000615165 on KI270734.1 (minus strand), as the export query returns it,
@@ -113,3 +115,13 @@ def test_utr_parts_are_named_by_their_own_urs_when_imported():
     assert {tuple(f.attributes["Name"]) for f in five} == {("URS0000000002_9606",)}
     # A UTR too short to import has no URS to link to
     assert all("Name" not in f.attributes for f in three)
+
+
+# Every coding database's mRNAs and UTRs feed the IGV gene models
+def test_the_query_reads_every_coding_database():
+    sql = Path("files/ftp-export/genome_coordinates/mrna.sql").read_text()
+    ids = ", ".join(
+        str(d.index()) for d in sorted(CODING_DATABASES, key=lambda d: d.index())
+    )
+    assert sql.count(f"dbid IN ({ids})") == 3
+    assert "dbid = 60" not in sql

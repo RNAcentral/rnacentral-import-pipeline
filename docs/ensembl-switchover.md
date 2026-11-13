@@ -148,6 +148,29 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
     to them, mRNAs typed `mRNA` and UTRs typed `ncRNA`. Their import may assume
     everything in it is a non-coding RNA.
 
+## SGD coding (`SGD_CODING`, branch `update/SGD-coding`)
+
+19. **Create the database row and xref partitions for dbid 61.** Use this row, then
+    item 10's partition SQL with `61` in place of `60`. Item 11's link types are
+    shared.
+
+    ```sql
+    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr, description, url, reference)
+    VALUES (61, now(), 'RNACEN', 'SGD_CODING', 'Y', 'SGD coding', 'SGD coding',
+      ': budding yeast mRNAs and their 5'' and 3'' UTRs from the Saccharomyces Genome Database',
+      'https://www.yeastgenome.org',
+      '[{"title":"Saccharomyces Genome Database: the genomics resource of budding yeast","authors":"Cherry JM, Hong EL, Amundsen C, et al.","journal":"Nucleic Acids Research, 2012","pubmed_id":"22110037"},{"title":"Extensive transcriptional heterogeneity revealed by isoform profiling","authors":"Pelechano V, Wei W, Steinmetz LM","journal":"Nature, 2013","pubmed_id":"23615609"}]'::jsonb);
+    ```
+20. **Run the import with `databases.sgd_coding.run = true`.** It reads SGD's GFF,
+    which carries the Pelechano 2013 transcript ends and the genome sequence.
+    Dubious ORFs are left out.
+21. **Ask EBI Search to accept the `expert_db` value "SGD coding"** and the
+    `SGD_CODING` cross-reference name, with item 17's values. As with Ensembl
+    coding, entries only in SGD coding rank below every ncRNA in search and stay
+    out of gene building. SGD mRNAs feed the yeast IGV gene-model track (item 14),
+    and LitScan searches them by systematic ORF name (e.g. YAL001C), so expect
+    protein papers.
+
 ## Assemblies: review before the first production run
 
 The import now keeps each species on the exact assembly RNAcentral selects today

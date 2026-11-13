@@ -1,0 +1,26 @@
+##gff-version 3
+chrI	SGD	gene	11	80	.	+	.	ID=YAA001W;Name=YAA001W;gene=AAA1;dbxref=SGD:S000000001;orf_classification=Verified
+chrI	SGD	CDS	21	60	.	+	0	Parent=YAA001W_id001;Name=YAA001W_CDS;orf_classification=Verified
+chrI	SGD	mRNA	11	80	.	+	.	ID=YAA001W_id001;Name=YAA001W_id001;Parent=YAA001W;transcript_id=SGD:S000300001;conditions=YPD
+chrI	SGD	gene	101	170	.	-	.	ID=YAA002C;Name=YAA002C;dbxref=SGD:S000000002;orf_classification=Uncharacterized
+chrI	SGD	CDS	126	150	.	-	0	Parent=YAA002C_id001;Name=YAA002C_CDS
+chrI	SGD	intron	121	125	.	-	.	Parent=YAA002C_id001;Name=YAA002C_intron
+chrI	SGD	CDS	111	120	.	-	0	Parent=YAA002C_id001;Name=YAA002C_CDS
+chrI	SGD	five_prime_UTR_intron	156	160	.	-	.	Parent=YAA002C_id001;Name=YAA002C_five_prime_UTR_intron
+chrI	SGD	mRNA	101	170	.	-	.	ID=YAA002C_id001;Name=YAA002C_id001;Parent=YAA002C;transcript_id=SGD:S000300002;conditions=GAL
+chrI	SGD	gene	181	195	.	+	.	ID=YAA003W;Name=YAA003W;dbxref=SGD:S000000003;orf_classification=Dubious
+chrI	SGD	CDS	183	193	.	+	0	Parent=YAA003W_mRNA;Name=YAA003W_CDS;orf_classification=Dubious
+chrI	SGD	mRNA	181	195	.	+	.	ID=YAA003W_mRNA;Name=YAA003W_mRNA;Parent=YAA003W
+chrmt	SGD	gene	3	40	.	+	.	ID=Q0001;Name=Q0001;gene=MTA1;dbxref=SGD:S000000004;orf_classification=Verified
+chrmt	SGD	CDS	5	40	.	+	0	Parent=Q0001_mRNA;Name=Q0001_CDS;orf_classification=Verified
+chrmt	SGD	mRNA	3	40	.	+	.	ID=Q0001_mRNA;Name=Q0001_mRNA;Parent=Q0001;transcript_id=RefSeq:NP_000001.1
+chrmt	SGD	gene	45	60	.	-	.	ID=YAA005C;Name=YAA005C;dbxref=SGD:S000000005;orf_classification=Verified
+chrmt	SGD	five_prime_UTR_intron	56	60	.	-	.	Parent=YAA005C_mRNA;Name=YAA005C_five_prime_UTR_intron
+chrmt	SGD	CDS	45	52	.	-	0	Parent=YAA005C_mRNA;Name=YAA005C_CDS
+chrmt	SGD	mRNA	45	60	.	-	.	ID=YAA005C_mRNA;Name=YAA005C_mRNA;Parent=YAA005C
+###
+##FASTA
+>chrI
+GCTAAAGACAATTACATAACATACACGTCAGCACGAAACTTGTTGGCCCAGTGTGAATCGCTTAAGGGTTAAGTAAGTGTGATGCATACGCCTTTACTTGCTGTGTCCACCCCATCGGACTGGCATTTTTATTACACTCAGAAACAGAACTCGGGTAATTTTGACAGGTCACGCAGAGGCGCGCCCTCCTGAAGTGCGTG
+>chrmt
+GACACTCGCTATGAATCTCTGATTTACCCACTCTGCCAAACTCCAGCGCGGTCAGTTCCA

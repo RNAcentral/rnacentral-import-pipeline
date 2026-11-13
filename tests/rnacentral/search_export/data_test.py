@@ -175,18 +175,31 @@ def test_kingdoms_are_deduplicated():
     assert data.kingdoms(["Bacteria; A", "Bacteria; B"]) == ["bacteria"]
 
 
-# RNAcentral is an ncRNA database: entries only in Ensembl coding rank below every ncRNA.
+# RNAcentral is an ncRNA database: entries only in coding databases rank below every ncRNA.
+# Precompute has stored both display names and descr, so either must demote.
 @pytest.mark.parametrize("rna_type", ["mRNA", "ncRNA"])
-def test_coding_only_entries_rank_below_any_active_ncrna(rna_type):
+@pytest.mark.parametrize(
+    "dbs",
+    [
+        ["Ensembl coding"],
+        ["ENSEMBL_CODING"],
+        ["SGD coding"],
+        ["SGD_CODING"],
+        ["Ensembl coding", "SGD coding"],
+    ],
+)
+def test_coding_only_entries_rank_below_any_active_ncrna(rna_type, dbs):
     clean = {"has_issue": False}
     flagged = {"has_issue": True}
-    human_mrna = data.boost(9606, ["N"], [rna_type], ["Ensembl coding"], clean)
+    human_mrna = data.boost(9606, ["N"], [rna_type], dbs, clean)
     worst_ncrna = data.boost(1, ["N"], ["misc_RNA"], ["ENA"], flagged)
     assert float(human_mrna) < float(worst_ncrna)
 
 
 # ZWD and Ensembl already provide UTR elements; those, and shared sequences, keep their rank.
-@pytest.mark.parametrize("dbs", [["ZWD"], ["Ensembl coding", "ZWD"]])
+@pytest.mark.parametrize(
+    "dbs", [["ZWD"], ["Ensembl coding", "ZWD"], ["SGD_CODING", "SGD"]]
+)
 def test_utr_elements_from_other_databases_keep_their_rank(dbs):
     clean = {"has_issue": False}
     assert data.boost(9606, ["N"], ["ncRNA"], dbs, clean) == "3"
