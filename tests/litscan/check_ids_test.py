@@ -41,3 +41,20 @@ def test_the_coding_query_searches_mrnas_by_their_ids_only():
     assert "'ENSEMBL_CODING'" in query
     assert "feature_name = 'mRNA'" in query
     assert "locus_tag" not in query
+
+
+def test_the_sgd_coding_query_searches_mrnas_by_systematic_name():
+    query = (ROOT / "workflows" / "litscan" / "queries" / "sgd_coding.sql").read_text()
+    assert "'SGD_CODING'" in query
+    assert "feature_name = 'mRNA'" in query
+    assert "locus_tag" in query
+
+
+def test_systematic_names_are_searched_as_they_are(monkeypatch, tmp_path):
+    checker = load_checker(monkeypatch)
+    raw = tmp_path / "results"
+    raw.write_text("URS0000ABCD|559292|YAL001C\n")
+    out = tmp_path / "output"
+    result = CliRunner().invoke(checker.main, ["sgd_coding", str(raw), str(out)])
+    assert result.exit_code == 0, result.output
+    assert out.read_text() == "YAL001C|URS0000ABCD_559292\n"

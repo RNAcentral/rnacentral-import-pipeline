@@ -103,3 +103,14 @@ def test_handles_an_intron_at_the_end_of_the_mrna():
     mrna = found["YAA005C_mRNA"]
     assert mrna.sequence == piece("chrmt", (45, 55), minus=True)
     assert [(e.start, e.stop) for e in mrna.regions[0].exons] == [(45, 55)]
+
+
+# IGV draws gene models from the CDS span and keys genes by systematic name, as for Ensembl
+def test_mrnas_carry_what_the_igv_gene_models_need():
+    found = entries()
+    assert found["YAA001W_id001"].note_data == {"cds": [21, 60]}
+    assert found["YAA002C_id001"].note_data == {"cds": [111, 150]}
+    assert found["YAA001W_id001"].optional_id == "YAA001W"
+    assert found["YAA002C_id001"].optional_id == "YAA002C"
+    assert found["YAA001W_id001"].gene == "AAA1"
+    assert found["YAA001W_id001:five_prime_UTR"].note_data == {}
