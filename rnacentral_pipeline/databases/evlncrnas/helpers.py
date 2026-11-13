@@ -1,4 +1,5 @@
-from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.data import DiseaseAnnotation, Entry
+from rnacentral_pipeline.databases.ols import search
 
 
 def primary_id(record):
@@ -53,7 +54,36 @@ def common_name(record):
     return record["Species"]
 
 
-def as_entry(record):
+def disease_annotations(record, disease_mapping):
+    """
+    `disease_mapping` is normalised text -> (term id, match type), or None to
+    attach nothing. A disease the mapping does not cover is an error: the
+    mapping was built from another download, and skipping would lose data.
+    """
+    if disease_mapping is None:
+        return []
+    annotations = []
+    for text, pmids in record["diseases"]:
+        key = search.normalise(text)
+        if key not in disease_mapping:
+            raise ValueError(
+                f"Disease {text!r} for {record['ID']} is not in the disease mapping"
+            )
+        term_id, match_type = disease_mapping[key]
+        annotations.append(
+            DiseaseAnnotation(
+                disease_text=text,
+                ontology_term_id=term_id,
+                match_type=match_type,
+                pubmed_ids=pmids,
+                # Entry.database_name, i.e. rnc_database.descr
+                assigned_by="EVLNCRNAS",
+            )
+        )
+    return annotations
+
+
+def as_entry(record, disease_mapping=None):
     return Entry(
         primary_id=primary_id(record),
         accession=accession(record),
@@ -67,4 +97,5 @@ def as_entry(record):
         description=description(record),
         references=record["publications"],
         gene_synonyms=aliases(record),
+        disease_annotations=disease_annotations(record, disease_mapping),
     )

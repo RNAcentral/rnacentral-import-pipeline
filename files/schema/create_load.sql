@@ -207,6 +207,16 @@ CREATE UNLOGGED TABLE load_go_term_publication_map (
     pubmed_id text
 );
 
+DROP TABLE IF EXISTS load_rnc_disease_annotations;
+CREATE UNLOGGED TABLE load_rnc_disease_annotations (
+    accession varchar(200) NOT NULL,
+    assigned_by varchar(50) NOT NULL,
+    disease_text text NOT NULL,
+    ontology_term_id varchar(15),
+    match_type text NOT NULL,
+    pubmed_id text
+);
+
 DROP TABLE IF EXISTS load_ref_pubmed;
 CREATE UNLOGGED TABLE load_ref_pubmed (
     ref_pubmed_id int,

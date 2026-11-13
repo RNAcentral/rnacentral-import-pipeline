@@ -52,6 +52,10 @@ DESTINATION_TABLES = {
     "rfam_go_terms",
     "rfam_models",
     "rnc_accession_sequence_region",
+    # Created by files/schema/disease-annotations.sql, which must be applied to
+    # a database before the first load of disease annotations into it.
+    "rnc_disease_annotation_publications",
+    "rnc_disease_annotations",
     "rnc_gene_members",
     "rnc_genes",
     "rnc_interactions",

@@ -1,6 +1,7 @@
 pub mod accession;
 pub mod basic;
 pub mod crs;
+pub mod disease_annotations;
 pub mod editing_events;
 pub mod feedback;
 pub mod file_joiner;
