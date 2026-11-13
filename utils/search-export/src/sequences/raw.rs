@@ -13,6 +13,7 @@ use rnc_core::{
 use crate::sequences::{
     basic::Basic,
     crs::Crs,
+    disease_annotations::DiseaseAnnotation,
     editing_events::EditingEvent,
     feedback::Feedback,
     go_annotation::GoAnnotation,
@@ -48,6 +49,7 @@ pub struct Raw {
     litsumm_summaries: Vec<LitsummSummaries>,
     editing_events: Vec<EditingEvent>,
     go_flow_llm_annotations: Vec<GoFlowLLMAnnotation>,
+    disease_annotations: Vec<DiseaseAnnotation>,
     so_tree: so_tree::SoTree,
 }
 
@@ -153,6 +155,11 @@ impl Raw {
     /// Get a reference to the raw's GoFlowlLM annotations
     pub fn go_flow_llm_annotations(&self) -> &[GoFlowLLMAnnotation] {
         &self.go_flow_llm_annotations
+    }
+
+    /// Get a reference to the raw's disease annotations.
+    pub fn disease_annotations(&self) -> &[DiseaseAnnotation] {
+        &self.disease_annotations
     }
 
     /// Get this raw's publication count.

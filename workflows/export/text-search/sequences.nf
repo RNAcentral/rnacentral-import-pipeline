@@ -65,6 +65,7 @@ process build_metadata {
   path(litsumm)
   path(editing_events)
   path(go_flow_annotations)
+  path(disease_annotations)
   path(so_tree)
 
   output:
@@ -72,7 +73,7 @@ process build_metadata {
 
   script:
   """
-  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm $editing_events $go_flow_annotations merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm $editing_events $go_flow_annotations $disease_annotations merged.json
   """
 }
 
@@ -177,6 +178,21 @@ process editing_events {
   """
 }
 
+process disease_annotations {
+  input:
+  val(max_count)
+  path (query)
+
+  output:
+  path("disease-annotations.json")
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw.json
+  search-export group disease-annotations raw.json ${max_count} disease-annotations.json
+  """
+}
+
 process as_xml {
   tag { "$min-$max" }
   memory { params.export.search.memory * task.attempt }
@@ -220,6 +236,7 @@ workflow sequences {
     channel.fromPath('files/search-export/parts/litsumm.sql') | set { litsumm_sql }
     channel.fromPath('files/search-export/parts/editing-events.sql') | set { editing_events_sql }
     channel.fromPath('files/search-export/parts/goflow.sql') | set { goflow_sql }
+    channel.fromPath('files/search-export/parts/disease-annotations.sql') | set { disease_sql }
     channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
     channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
@@ -252,6 +269,7 @@ workflow sequences {
       litsumm_summaries(search_count, litsumm_sql),
       editing_events(search_count, editing_events_sql),
       go_flow_annotations(search_count, goflow_sql),
+      disease_annotations(search_count, disease_sql),
       so_tree,
     )\
     | set { metadata }

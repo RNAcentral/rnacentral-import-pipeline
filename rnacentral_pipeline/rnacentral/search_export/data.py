@@ -751,6 +751,24 @@ def has_editing_event(editing_events):
     return str(bool(editing_events))
 
 
+def has_disease_annotation(disease_annotations):
+    """
+    True for any disease a source reported, including ones whose text could not
+    be mapped to an ontology term.
+    """
+    return str(bool(disease_annotations))
+
+
+def disease_terms(disease_annotations):
+    """MONDO/HPO term ids, e.g. MONDO:0005411."""
+    return sorted({a["disease_term"] for a in disease_annotations if a["disease_term"]})
+
+
+def disease_names(disease_annotations):
+    """The ontology's name for each mapped term, for faceting."""
+    return sorted({a["disease_name"] for a in disease_annotations if a["disease_name"]})
+
+
 def edit_chromosome(editing_events):
     ## They should all be on the same chromosome
     if len(editing_events) == 0:
@@ -924,6 +942,13 @@ builder = entry(
                     has_go_flow_llm_annotation,
                     keys="go_flow_llm_annotations",
                 ),
+                field(
+                    "has_disease_annotation",
+                    has_disease_annotation,
+                    keys="disease_annotations",
+                ),
+                fields("disease_term", disease_terms, keys="disease_annotations"),
+                fields("disease_name", disease_names, keys="disease_annotations"),
                 ## Add new fields above this line! Otherwise editing the produced xml is hard.
                 tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
             ],

@@ -195,3 +195,30 @@ def test_utr_elements_from_other_databases_keep_their_rank(dbs):
 def test_ncrna_boost_is_unchanged():
     clean = {"has_issue": False}
     assert data.boost(9606, ["N"], ["lncRNA"], ["Ensembl"], clean) == "3"
+
+
+DISEASE_ANNOTATIONS = [
+    {"disease_term": "MONDO:0005411", "disease_name": "gallbladder cancer"},
+    {"disease_term": "HP:0100806", "disease_name": "Sepsis"},
+    {"disease_term": "MONDO:0005411", "disease_name": "gallbladder cancer"},
+    # The source's text could not be mapped to a term.
+    {"disease_term": None, "disease_name": None},
+]
+
+
+def test_disease_fields_list_each_mapped_term_once():
+    assert data.has_disease_annotation(DISEASE_ANNOTATIONS) == "True"
+    assert data.disease_terms(DISEASE_ANNOTATIONS) == ["HP:0100806", "MONDO:0005411"]
+    assert data.disease_names(DISEASE_ANNOTATIONS) == ["Sepsis", "gallbladder cancer"]
+
+
+def test_an_unmapped_disease_still_counts_as_an_annotation():
+    unmapped = [{"disease_term": None, "disease_name": None}]
+    assert data.has_disease_annotation(unmapped) == "True"
+    assert data.disease_terms(unmapped) == []
+    assert data.disease_names(unmapped) == []
+
+
+def test_no_disease_annotations_is_false():
+    assert data.has_disease_annotation([]) == "False"
+    assert data.disease_terms([]) == []
