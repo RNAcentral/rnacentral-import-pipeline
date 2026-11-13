@@ -25,7 +25,7 @@ import networkx as nx
 import obonet
 from lxml import etree
 
-from rnacentral_pipeline.databases.data import Database
+from rnacentral_pipeline.databases.data import CODING_DATABASES, Database
 
 GENERIC_TYPES = set(["misc_RNA", "misc RNA", "other"])
 
@@ -476,8 +476,8 @@ def boost(taxid, deleted, rna_type, expert_dbs, status):
     if normalize_rna_type(rna_type) in GENERIC_TYPES:
         value = value - 0.5
 
-    # An ncRNA database first: entries only in Ensembl coding drop below every ncRNA
-    if expert_dbs == {Database.ensembl_coding.pretty()}:
+    # An ncRNA database first: entries only in coding databases drop below every ncRNA
+    if expert_dbs and all(Database.lookup(d) in CODING_DATABASES for d in expert_dbs):
         value = value - 5
 
     if bool(status["has_issue"]):

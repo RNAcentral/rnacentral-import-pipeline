@@ -139,3 +139,7 @@ class Database(enum.Enum):
 
     def pretty(self) -> str:
         return self.value.pretty
+
+
+# mRNAs and UTRs, kept below the ncRNAs in QA and search
+CODING_DATABASES = frozenset({Database.ensembl_coding, Database.sgd_coding})
