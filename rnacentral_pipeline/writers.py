@@ -96,7 +96,7 @@ class EntryWriter:
 
 
 @attr.s()
-class OntologyAnnnotationWriter:
+class OntologyAnnotationWriter:
     go_annotations = attr.ib()
     go_publication_mappings = attr.ib()
     terms = attr.ib()
