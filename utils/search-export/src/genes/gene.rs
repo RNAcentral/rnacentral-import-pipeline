@@ -195,7 +195,7 @@ impl SearchEntry<GeneEntry> for Gene {
             GeneFields::HasEditingEvent => false.into(),
             GeneFields::InsdcRNAType => "Gene".into(),
             GeneFields::SoRnaTypeName => self.so_names().into(),
-            GeneFields::PubliGeneName => self.region.gene_name().into(),
+            GeneFields::PublicGeneName => self.region.gene_name().into(),
             GeneFields::TaxString => self.tax_strings().into(),
             GeneFields::Kingdom => self.kingdoms().into(),
         }

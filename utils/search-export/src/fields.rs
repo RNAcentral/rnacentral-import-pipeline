@@ -96,7 +96,7 @@ pub enum GeneFields {
     Length,
     ExpertDb,
     Gene,
-    PubliGeneName,
+    PublicGeneName,
     GeneSynonym,
     #[strum(serialize = "rna_type")]
     InsdcRNAType,
