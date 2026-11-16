@@ -207,6 +207,12 @@ CREATE UNLOGGED TABLE load_go_term_publication_map (
     pubmed_id text
 );
 
+DROP TABLE IF EXISTS load_go_cam_membership;
+CREATE UNLOGGED TABLE load_go_cam_membership (
+  urs_taxid text,
+  go_cam_id text
+);
+
 DROP TABLE IF EXISTS load_ref_pubmed;
 CREATE UNLOGGED TABLE load_ref_pubmed (
     ref_pubmed_id int,

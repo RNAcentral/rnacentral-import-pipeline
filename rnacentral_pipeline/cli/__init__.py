@@ -34,6 +34,7 @@ from rnacentral_pipeline.cli import (
     genecards_suite,
     genes,
     genome_mapping,
+    gocams,
     gtrnadb,
     hgnc,
     huggingface,
@@ -125,6 +126,7 @@ cli.add_command(ftp_export.cli)
 cli.add_command(genecards_suite.cli)
 cli.add_command(genes.cli)
 cli.add_command(genome_mapping.cli)
+cli.add_command(gocams.cli)
 cli.add_command(gtrnadb.cli)
 cli.add_command(hgnc.cli)
 cli.add_command(huggingface.cli)
