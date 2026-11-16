@@ -53,7 +53,7 @@ def utils_cli():
     "--output_dir",
     required=True,
     type=click.Path(),
-    help="Directory for transcripts__<assembly>.pq, one parquet per assembly",
+    help="Directory for transcripts__<taxid>__<assembly>.pq, one parquet per assembly",
 )
 @click.option(
     "--min_chromosome_transcripts",
@@ -79,7 +79,8 @@ def fetch(conn_str, taxid, output_dir, min_chromosome_transcripts):
         return
     for (assembly,), frame in transcripts.group_by("assembly_id"):
         safe = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in assembly)
-        frame.write_parquet(out / f"transcripts__{safe}.pq")
+        # the taxid keeps names unique when files of many taxa share one GNN job
+        frame.write_parquet(out / f"transcripts__{taxid}__{safe}.pq")
         click.echo(f"Saved {frame.height} transcripts for {assembly}")
 
 

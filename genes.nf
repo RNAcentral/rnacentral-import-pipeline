@@ -46,7 +46,7 @@ process fetch_transcripts {
 
   output:
     // one parquet per assembly; none at all for a taxon with no transcripts
-    tuple val(taxid), path("transcripts/transcripts__*.pq", optional: true)
+    tuple val(taxid), path("transcripts/transcripts__*.pq", arity: '0..*')
 
   script:
   """
@@ -55,24 +55,45 @@ process fetch_transcripts {
 }
 
 
-// Placeholder for the GNN inference container (infer_genes.py), run once per
-// (taxid, assembly). It must write assignments.pq with columns region_name, gene_id,
-// leaving out regions that are not in a gene (single-member clusters are never genes).
-// Fails loudly until it is wired up.
+// GNN inference (ghcr.io/rnacentral/rnacentral-gene-gnn-inference) on a GPU. Each job
+// takes a batch of transcripts__<taxid>__<assembly>.pq files (many taxa) and writes
+// assignments__<taxid>__<assembly>.pq (region_name, gene_id) for each; regions not in
+// a gene are left out, since single-member clusters are never genes.
+// Mirrors gnn_genes in rnacentral-genes-history/main_replay.nf, which built the history.
 process infer_genes {
-  tag { "${taxid} ${assembly}" }
-  errorStrategy 'terminate'
+  tag { "${transcripts.size()} files" }
+  container params.genes.gnn.image
+  // the image is rooted at /app and /opt, so bind the launch dir only (cf. r2dt_container)
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir --nv"
+  // the accelerator directive gave no --gres on Codon (jobs landed on CPU nodes), so ask SLURM directly
+  clusterOptions "--gres=gpu:${params.genes.gnn.gpu_type}:1"
+  cpus params.genes.gnn.cpus       // window feature building is threaded
+  memory { "${params.genes.gnn.memory_gb * task.attempt} GB" }
+  time { "${params.genes.gnn.hours * task.attempt}h" }  // for the whole batch
+  // ponytail: a retry reruns the whole batch; skip finished files if retries get costly
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 2
 
   input:
-    tuple val(taxid), val(assembly), path(transcripts), path(so_model)
+    path(transcripts)
+    path(so_model)
 
   output:
-    tuple val(taxid), val(assembly), path(transcripts), path("assignments.pq")
+    path("assignments__*.pq")
 
   script:
   """
-  echo "GNN inference is not wired up yet" >&2
-  exit 1
+  set -euo pipefail
+  for f in transcripts__*.pq; do
+    echo "== \$f"
+    GNN_CHECKPOINT=${params.genes.gnn.checkpoint} rnacentral-gene-gnn \
+      --input "\$f" \
+      --rnac-so-embeddings ${so_model} \
+      --device gpu \
+      --dtype ${params.genes.gnn.dtype} \
+      --threshold ${params.genes.gnn.threshold} \
+      --output "assignments__\${f#transcripts__}"
+  done
   """
 }
 
@@ -204,16 +225,46 @@ workflow genes {
   taxids | fetch_transcripts | set { fetched }
   taxids | fetch_state | set { state }
 
-  // Transcripts present: cluster each assembly separately with the GNN.
+  // Transcripts present: one file per (taxid, assembly), keyed by "<taxid>__<assembly>".
   fetched \
   | filter { _taxid, files -> files } \
   | flatMap { taxid, files ->
       [files].flatten().collect { f ->
-        [taxid, f.name.replaceFirst(/^transcripts__/, '').replaceFirst(/\.pq$/, ''), f]
+        def key = f.name.replaceFirst(/^transcripts__/, '').replaceFirst(/\.pq$/, '')
+        [key, taxid, key.substring("${taxid}__".length()), f]
       }
     } \
-  | combine( so_model ) \
-  | infer_genes \
+  | set { transcripts }
+
+  // Pool every taxon's files into a fixed number of GPU jobs, largest file first onto
+  // the least-loaded batch, so one big genome does not leave the other GPUs idle.
+  transcripts \
+  | map { _key, _taxid, _assembly, f -> f } \
+  | collect \
+  | flatMap { files ->
+      def n = params.genes.gnn.gpu_jobs as int
+      def batches = (0..<n).collect { [] }
+      def load = [0L] * n
+      files.sort(false) { f -> -f.size() }.each { f ->
+        def i = load.indexOf(load.min())
+        batches[i] << f
+        load[i] += f.size()
+      }
+      batches.findAll { b -> b }
+    } \
+  | set { batches }
+
+  infer_genes(batches, so_model.first())
+
+  // Back to one (taxid, assembly) per item; a file without assignments is an error.
+  infer_genes.out \
+  | flatten \
+  | map { a -> [a.name.replaceFirst(/^assignments__/, '').replaceFirst(/\.pq$/, ''), a] } \
+  | set { assigned }
+
+  transcripts \
+  | join( assigned, failOnMismatch: true ) \
+  | map { _key, taxid, assembly, f, a -> [taxid, assembly, f, a] } \
   | make_clusters \
   | groupTuple \
   | map { taxid, clusters -> [taxid, clusters, false] } \
