@@ -155,10 +155,12 @@ def accession(feature):
 
 # Ensembl stable ids (and MGP mouse-strain ids) are unique across species; local ids like '1-RA' are not
 STABLE_ID = re.compile(r"^(ENS[A-Z]*T\d|MGP_)")
+# Release 29: Ensembl gave each of these stable-id prefixes to two genomes
+SHARED_PREFIX = re.compile(r"^ENS(HGA|MMW|ZGS|WEM|MTQ|BQF|BDQ|ELI|JBH)T\d")
 
 
 def unique_accession(acc, gca):
-    if gca and not STABLE_ID.match(acc):
+    if gca and (not STABLE_ID.match(acc) or SHARED_PREFIX.match(acc)):
         return "%s:%s" % (gca, acc)
     return acc
 

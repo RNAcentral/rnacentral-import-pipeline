@@ -135,6 +135,18 @@ def test_ids_that_are_not_ensembl_stable_ids_get_the_assembly():
         ("ENST00000540868.1", "GCA_000001405.29", "ENST00000540868.1"),
         ("ENSMUST00000193812.2", "GCA_000001635.9", "ENSMUST00000193812.2"),
         ("MGP_CAROLIEiJ_T0000191.1", "GCA_900094665.2", "MGP_CAROLIEiJ_T0000191.1"),
+        # Release 29: Ensembl gave a moss and a moth the same stable-id prefix
+        (
+            "ENSBDQT00000000162.1",
+            "GCA_963969595.1",
+            "GCA_963969595.1:ENSBDQT00000000162.1",
+        ),
+        (
+            "ENSBDQT00000000162.1",
+            "GCA_977035915.1",
+            "GCA_977035915.1:ENSBDQT00000000162.1",
+        ),
+        ("ENSHGAT00000000001.1", "GCA_000001.1", "GCA_000001.1:ENSHGAT00000000001.1"),
     ],
 )
 def test_only_ids_that_can_clash_get_the_assembly(acc, gca, expected):
