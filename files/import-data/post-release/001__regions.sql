@@ -171,6 +171,9 @@ ON CONFLICT (md5(region_name), assembly_id) do UPDATE
 set
   was_mapped = excluded.was_mapped,
   "identity" = excluded.identity
+-- A full reload re-sends every existing region; rewriting the unchanged ones took 18h.
+where rnc_sequence_regions.was_mapped is distinct from excluded.was_mapped
+   or rnc_sequence_regions."identity" is distinct from excluded."identity"
 ;
 
 -- Populate all exons
@@ -206,17 +209,22 @@ declare no_exons int;
 begin
 	-- ponytail: only check the regions this load touched. The old form grouped
 	-- the whole regions/exons tables every run.
+	-- A join, not a correlated subquery: Postgres pushed that filter below the join, so it
+	-- counted exons for every region in the table (107M), not just the ones loaded.
 	select into no_exons count(*)
 	from (
-		select distinct md5(load.region_name) as name_md5, load.assembly_id
-		from load_rnc_sequence_regions load
-		) l
-	join rnc_sequence_regions regions
-	  on md5(regions.region_name) = l.name_md5
-	 and regions.assembly_id = l.assembly_id
-	where regions.exon_count != (
-		select count(*) from rnc_sequence_exons exons where exons.region_id = regions.id
-		);
+		select regions.id
+		from (
+			select distinct md5(load.region_name) as name_md5, load.assembly_id
+			from load_rnc_sequence_regions load
+			) l
+		join rnc_sequence_regions regions
+		  on md5(regions.region_name) = l.name_md5
+		 and regions.assembly_id = l.assembly_id
+		left join rnc_sequence_exons exons on exons.region_id = regions.id
+		group by regions.id, regions.exon_count
+		having regions.exon_count != count(exons.region_id)
+		) missing;
 	assert no_exons = 0, 'Some regions ' || no_exons || ' are missing exons';
 end $$;
 
