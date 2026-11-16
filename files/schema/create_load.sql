@@ -197,6 +197,14 @@ CREATE UNLOGGED TABLE load_go_term_annotations (
     extensions jsonb
 );
 
+-- Also created by files/gocams/schema.sql: the gocams subworkflow runs in
+-- analyze, where this file is not applied. Keep the two in step.
+DROP TABLE IF EXISTS load_go_cam_memberships;
+CREATE UNLOGGED TABLE load_go_cam_memberships (
+    urs_taxid varchar(50),
+    go_cam_id varchar(50)
+);
+
 DROP TABLE IF EXISTS load_go_term_publication_map;
 CREATE UNLOGGED TABLE load_go_term_publication_map (
     rna_id varchar(50),
