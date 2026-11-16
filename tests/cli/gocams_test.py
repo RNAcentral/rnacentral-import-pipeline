@@ -6,7 +6,7 @@ from click.testing import CliRunner
 from rnacentral_pipeline.cli import gocams as gocams_cli
 
 
-def _fake_find(urs_taxids):
+def _fake_find(urs_taxids, rate_limit=None):
     # Consumes the input lazily, like the real generator, so a file closed too
     # early would surface here.
     for urs_taxid in urs_taxids:
@@ -58,7 +58,7 @@ def test_search_empty_input_writes_empty_csv(tmp_path, monkeypatch):
 
 
 def test_search_api_error_fails(tmp_path, monkeypatch):
-    def boom(urs_taxids):
+    def boom(urs_taxids, rate_limit=None):
         raise RuntimeError("API down")
         yield  # pragma: no cover - makes this a generator
 
@@ -72,4 +72,30 @@ def test_search_api_error_fails(tmp_path, monkeypatch):
         ["search", "--format", "csv", str(infile), str(tmp_path / "out")],
     )
 
+    assert result.exit_code != 0
+
+
+def test_search_passes_rate_limit(tmp_path, monkeypatch):
+    seen = {}
+
+    def spy(urs_taxids, rate_limit=None):
+        seen["rate_limit"] = rate_limit
+        return iter([])
+
+    monkeypatch.setenv("RNAC_OUTPUT_FORMAT", "csv")
+    monkeypatch.setattr(gocams_cli, "find_gocam", spy)
+    infile = tmp_path / "urs.txt"
+    infile.write_text("URS_X_1\n")
+    runner = CliRunner()
+    out = str(tmp_path / "out")
+
+    runner.invoke(gocams_cli.cli, ["search", str(infile), out])
+    assert seen["rate_limit"] == 5.0
+
+    runner.invoke(gocams_cli.cli, ["search", "--rate-limit", "2", str(infile), out])
+    assert seen["rate_limit"] == 2.0
+
+    result = runner.invoke(
+        gocams_cli.cli, ["search", "--rate-limit", "0", str(infile), out]
+    )
     assert result.exit_code != 0

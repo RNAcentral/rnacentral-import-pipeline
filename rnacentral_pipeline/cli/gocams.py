@@ -5,7 +5,7 @@ import click
 
 from rnacentral_pipeline import schemas, writers
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.gocams.search import find_gocam
+from rnacentral_pipeline.databases.gocams.search import DEFAULT_RATE_LIMIT, find_gocam
 from rnacentral_pipeline.output_format import format_option, is_parquet
 from rnacentral_pipeline.writers import GoCamMembershipWriter
 
@@ -32,8 +32,15 @@ def cli():
         file_okay=False,
     ),
 )
+@click.option(
+    "--rate-limit",
+    default=DEFAULT_RATE_LIMIT,
+    show_default=True,
+    type=click.FloatRange(min=0, min_open=True),
+    help="Maximum GO-CAM API requests per second.",
+)
 @format_option
-def search_gocams(filename, output):
+def search_gocams(filename, output, rate_limit):
     """
     Take a list of URS_taxids with known GO annotations and
     search them for Go-Cam membership. Write a parquet file containing flags and
@@ -45,7 +52,7 @@ def search_gocams(filename, output):
         go_cams = (
             data.GoCamMembership(urs_taxid=u, go_cam_id=g)
             for u, g in find_gocam(
-                urs_taxid_gen
+                urs_taxid_gen, rate_limit=rate_limit
             )  ## List of go_cam_ids matching this URS_taxid
         )
 
