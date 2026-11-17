@@ -6,9 +6,9 @@ HAVING FIELDS (
   accession,
   assigned_by,
   disease_text,
-  ontology_term_id,
+  ontology_term_id [null if blanks],
   match_type,
-  pubmed_id
+  pubmed_id [null if blanks]
 )
 INTO {{PGDATABASE}}?load_rnc_disease_annotations
 TARGET COLUMNS (

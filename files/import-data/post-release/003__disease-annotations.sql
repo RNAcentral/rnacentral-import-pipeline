@@ -24,9 +24,9 @@ BEGIN
       load.accession,
       load.assigned_by,
       load.disease_text,
-      nullif(load.ontology_term_id, '') AS ontology_term_id,
+      load.ontology_term_id,
       load.match_type,
-      nullif(load.pubmed_id, '') AS pubmed_id
+      load.pubmed_id
     FROM load_rnc_disease_annotations load
     JOIN xref ON xref.ac = load.accession
     WHERE
