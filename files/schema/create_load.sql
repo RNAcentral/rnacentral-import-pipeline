@@ -197,8 +197,10 @@ CREATE UNLOGGED TABLE load_go_term_annotations (
     extensions jsonb
 );
 
--- Also created by files/gocams/schema.sql: the gocams subworkflow runs in
--- analyze, where this file is not applied. Keep the two in step.
+-- Duplicates files/gocams/schema.sql, which is what actually creates it at load
+-- time (gocams runs in analyze, where this file is not applied). Kept here
+-- because tests/load_parquet_targets_test.py treats this file as the registry
+-- of every load-parquet target. Keep the two in step.
 DROP TABLE IF EXISTS load_go_cam_memberships;
 CREATE UNLOGGED TABLE load_go_cam_memberships (
     urs_taxid varchar(50),
@@ -213,12 +215,6 @@ CREATE UNLOGGED TABLE load_go_term_publication_map (
     ontology_term_id varchar(15),
     evidence_code varchar(15),
     pubmed_id text
-);
-
-DROP TABLE IF EXISTS load_go_cam_membership;
-CREATE UNLOGGED TABLE load_go_cam_membership (
-  urs_taxid text,
-  go_cam_id text
 );
 
 DROP TABLE IF EXISTS load_ref_pubmed;

@@ -7,7 +7,13 @@ CREATE TABLE IF NOT EXISTS go_cam_memberships (
     PRIMARY KEY (urs_taxid, go_cam_id)
 );
 
--- GO-CAM has no release cycle, so this is how the QC report sees the load ran.
+-- The primary key serves lookups by urs_taxid. This serves "which RNAs are in
+-- this model" lookups.
+CREATE INDEX IF NOT EXISTS go_cam_memberships_go_cam_id_idx
+    ON go_cam_memberships (go_cam_id);
+
+-- GO-CAM has no release cycle, so files/qc/analyze.sql reads this to see the
+-- load ran.
 CREATE TABLE IF NOT EXISTS pipeline_tracking_go_cam_memberships (
     source text PRIMARY KEY,
     last_run timestamptz NOT NULL,
