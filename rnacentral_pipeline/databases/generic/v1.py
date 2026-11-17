@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import collections as coll
-import hashlib
 import itertools as it
 import logging
 
@@ -200,10 +199,6 @@ def features(record):
             )
             return
 
-        sequence = record.get("sequence", "")
-        if not sequence:
-            raise ValueError("Missing sequence: cannot compute modification accession")
-        accession = f"{hashlib.md5(sequence.encode('utf-8')).hexdigest()}_modomics"
         for raw in modifications:
             if not isinstance(raw, dict):
                 LOGGER.warning(
@@ -233,7 +228,6 @@ def features(record):
                     sequence=str(modification),
                     provider=provider,
                     metadata={
-                        "accession": accession,
                         "modification": str(modification),
                         "index": position,
                         "RNAmodsCode": raw.get("RNAmodsCode"),

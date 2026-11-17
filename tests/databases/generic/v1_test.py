@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import hashlib
 import json
 
 import attr
@@ -107,12 +106,19 @@ def test_can_parse_modomics_modifications_to_sequence_features():
     assert result[1].provider == "MODOMICS"
     assert result[4].provider == "MODOMICS"
 
-    accession = (
-        hashlib.md5(record["sequence"].encode("utf-8")).hexdigest() + "_modomics"
-    )
-    assert result[0].metadata["accession"] == accession
-    assert result[1].metadata["accession"] == accession
-    assert result[4].metadata["accession"] == accession
+
+def test_modification_metadata_does_not_name_modomics_for_other_providers():
+    record = {
+        "primaryId": "SNODB:1",
+        "sequence": "ACGTACGT",
+        "sequenceFeatures": {
+            "modifications": [{"index": 2, "shortName": "Am", "fullName": "x"}]
+        },
+    }
+
+    result = v1.features(record)
+
+    assert "modomics" not in json.dumps(result[0].metadata).lower()
 
 
 def test_features_requires_provider_metadata():
@@ -133,16 +139,6 @@ def test_features_rejects_malformed_primary_id_for_provider():
     }
 
     with pytest.raises(ValueError, match="Invalid primaryId format"):
-        v1.features(record)
-
-
-def test_features_requires_sequence_for_modifications():
-    record = {
-        "primaryId": "MODOMICS:1",
-        "sequenceFeatures": {"modifications": [{"index": 16, "shortName": "D"}]},
-    }
-
-    with pytest.raises(ValueError, match="Missing sequence"):
         v1.features(record)
 
 
