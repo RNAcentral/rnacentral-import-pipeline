@@ -55,9 +55,9 @@ def parse_quickgo(raw_data, output):
     terms = parser.parse(raw_data)
     if is_parquet():
         with writers.build_parquet(
-            writers.OntologyAnnnotationWriter, Path(output), _PARQUET_SCHEMAS
+            writers.OntologyAnnotationWriter, Path(output), _PARQUET_SCHEMAS
         ) as writer:
             writer.write(terms)
         return
-    with writers.build(writers.OntologyAnnnotationWriter, Path(output)) as writer:
+    with writers.build(writers.OntologyAnnotationWriter, Path(output)) as writer:
         writer.write(terms)

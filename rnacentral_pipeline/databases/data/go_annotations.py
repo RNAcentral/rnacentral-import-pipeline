@@ -20,6 +20,7 @@ import attr
 from attr.validators import instance_of as is_a
 
 ANN_URL = "http://www.ebi.ac.uk/QuickGO/annotations?geneProductId={upi}"
+CAM_URL = "http://model.geneontology.org/{cam_id}"
 
 
 @attr.s()
@@ -80,3 +81,19 @@ class GoTermAnnotation:
                 self.evidence_code,
                 publication.external_id,
             ]
+
+
+@attr.s()
+class GoCamMembership:
+    """
+    Simplest possible addition to contain GO CAM mapping in RNAcentral
+    """
+
+    urs_taxid: str = attr.ib(validator=is_a(str), converter=str)
+    go_cam_id: str = attr.ib(validator=is_a(str), converter=str)
+
+    def writeable(self):
+        yield [
+            self.urs_taxid,
+            self.go_cam_id,
+        ]

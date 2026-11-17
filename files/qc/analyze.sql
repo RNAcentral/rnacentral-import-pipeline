@@ -62,4 +62,23 @@ FROM (
 ) x
 ORDER BY ord;
 
+-- GO-CAM memberships are a snapshot, not per-sequence, so they're reported
+-- separately. The parquet loader skips post-load on an empty search, leaving
+-- last_run stale, which shows up here as NOT LOADED.
+SELECT (to_regclass('pipeline_tracking_go_cam_memberships') IS NOT NULL) AS has_go_cams \gset
+
+\if :has_go_cams
+\echo
+\echo 'GO-CAM memberships (snapshot load):'
+SELECT source,
+       last_run::date AS last_run,
+       rows_loaded,
+       CASE
+         WHEN last_run < NULLIF(:'run_start', '')::timestamptz THEN 'NOT LOADED'
+         ELSE 'ok'
+       END AS status
+FROM pipeline_tracking_go_cam_memberships
+ORDER BY source;
+\endif
+
 \endif

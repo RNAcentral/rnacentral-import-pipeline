@@ -4,6 +4,7 @@ nextflow.enable.dsl=2
 
 include { cpat } from './workflows/cpat'
 include { genome_mapping } from './workflows/genome-mapping'
+include { gocams } from './workflows/gocams'
 include { r2dt } from './workflows/r2dt.nf'
 include { rfam_scan } from './workflows/rfam-scan'
 include { stopfree } from './workflows/stopfree'
@@ -22,12 +23,13 @@ workflow analyze {
     // Value channel so start triggers both the analyses and the QC before-snapshot.
     ready | first | set { start }
 
-    start | (genome_mapping & rfam_scan & r2dt & cpat & tcode & stopfree )
+    start | (genome_mapping & gocams & rfam_scan & r2dt & cpat & tcode & stopfree )
 
     // QC: snapshot counts at start, report per-analysis once all finish.
     channel.empty() \
     | mix(
       genome_mapping.out,
+      gocams.out,
       rfam_scan.out,
       r2dt.out,
       cpat.out,

@@ -95,8 +95,21 @@ class EntryWriter:
                 raise ValueError("No valid entries to write")
 
 
+@attr.s
+class GoCamMembershipWriter:
+    go_cam_memberships = attr.ib()
+
+    def write(
+        self, entries: ty.Iterable[data.GoCamMembership], allow_empty: bool = True
+    ):
+        total = 0
+        for entry in entries:
+            total += 1
+            self.go_cam_memberships.writerows(entry.writeable())
+
+
 @attr.s()
-class OntologyAnnnotationWriter:
+class OntologyAnnotationWriter:
     go_annotations = attr.ib()
     go_publication_mappings = attr.ib()
     terms = attr.ib()
