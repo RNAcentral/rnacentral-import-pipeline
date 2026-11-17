@@ -28,9 +28,24 @@ CREATE = re.compile(
 # by the ENTRY_WRITER_LOAD_TABLES check below.
 INVOCATION = re.compile(r"load-parquet\s+(\w+)\s")
 
-STAGING_TABLES = {
-    m.group(1).lower().split(".")[-1] for m in CREATE.finditer(CREATE_LOAD.read_text())
-}
+
+def created_tables(sql):
+    return {m.group(1).lower().split(".")[-1] for m in CREATE.finditer(sql)}
+
+
+STAGING_TABLES = created_tables(CREATE_LOAD.read_text())
+
+# create_load.sql is only applied by import-data, so analyze-stage workflows
+# create their own staging table from a schema file they run before loading
+# (e.g. files/gocams/schema.sql, files/r2dt/attempted-schema.sql).
+SCHEMA_FILE = re.compile(r"""['"](files/[\w./-]*schema[\w.-]*\.sql)['"]""")
+
+
+def workflow_schema_tables(workflow):
+    tables = set()
+    for path in SCHEMA_FILE.findall((ROOT / workflow).read_text()):
+        tables |= created_tables((ROOT / path).read_text())
+    return tables
 
 
 # Prose mentioning load-parquet otherwise scans as an invocation. Only whole-line
@@ -53,9 +68,10 @@ def workflow_targets():
     ids=lambda v: str(v) if isinstance(v, Path) else v,
 )
 def test_load_parquet_targets_exist(table, workflow):
-    assert (
-        table.lower() in STAGING_TABLES
-    ), f"{workflow} loads into {table}, which create_load.sql does not create"
+    assert table.lower() in STAGING_TABLES | workflow_schema_tables(workflow), (
+        f"{workflow} loads into {table}, which neither create_load.sql nor a "
+        "schema file it runs creates"
+    )
 
 
 @pytest.mark.parametrize(
@@ -64,6 +80,5 @@ def test_load_parquet_targets_exist(table, workflow):
 )
 def test_entry_writer_load_tables_exist(name, table):
     assert table.lower() in STAGING_TABLES, (
-        f"the '{name}' parser loads into {table}, which create_load.sql does "
-        "not create"
+        f"the '{name}' parser loads into {table}, which create_load.sql does not create"
     )
