@@ -38,7 +38,7 @@ def alignments(fasta):
             buff.seek(0)
             yield AlignIO.read(buff, "fasta")
             buff = StringIO()
-        else:
+        elif line.strip():
             buff.write(line)
 
 
