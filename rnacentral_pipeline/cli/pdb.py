@@ -76,6 +76,7 @@ def process_pdb(output, skip_references=False, override_chains=None, limit=None)
     except Exception:
         LOGGER.info("Failed to get extra references")
 
-    entries = parser.parse(chain_info, references, overrides)
+    modifications = fetch.modified_residues({c.pdb_id for c in chain_info})
+    entries = parser.parse(chain_info, references, overrides, modifications)
     with writers.entry_writer(Path(output)) as writer:
         writer.write(entries)

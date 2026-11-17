@@ -22,8 +22,9 @@ from rnacentral_pipeline.databases.pdb import fetch
 
 
 class FakeResponse:
-    def __init__(self, payload):
+    def __init__(self, payload, status_code=200):
         self._payload = payload
+        self.status_code = status_code
 
     def raise_for_status(self):
         pass
@@ -61,6 +62,41 @@ def test_fetch_range_skips_docs_missing_chain_id(monkeypatch):
 
     assert len(result) == 1
     assert result[0].pdb_id == "1s72"
+
+
+def test_modified_residues_are_keyed_by_chain(monkeypatch):
+    residue = {"chain_id": "A", "entity_id": 1, "residue_number": 10}
+    payload = {"1evv": [residue]}
+    monkeypatch.setattr(
+        fetch.requests, "post", lambda url, **kwargs: FakeResponse(payload)
+    )
+
+    result = fetch.modified_residues(["1EVV"])
+
+    assert result == {("1evv", "A", 1): [residue]}
+
+
+def test_modified_residues_treats_not_found_as_no_modifications(monkeypatch):
+    monkeypatch.setattr(
+        fetch.requests, "post", lambda url, **kwargs: FakeResponse({}, status_code=404)
+    )
+
+    assert fetch.modified_residues(["1cq5"]) == {}
+
+
+def test_modified_residues_sends_ids_as_form_data(monkeypatch):
+    # PDBe parses an untyped POST body as JSON and rejects a plain id list
+    sent = {}
+
+    def post(url, **kwargs):
+        sent.update(kwargs)
+        return FakeResponse({})
+
+    monkeypatch.setattr(fetch.requests, "post", post)
+
+    fetch.modified_residues(["1evv"])
+
+    assert sent["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
 
 
 def test_chains_warns_instead_of_raising_on_missing_ids(monkeypatch, caplog):

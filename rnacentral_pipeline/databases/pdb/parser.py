@@ -19,12 +19,20 @@ import typing as ty
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.pdb import helpers
-from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
+from rnacentral_pipeline.databases.pdb.data import (
+    ChainInfo,
+    ModificationMapping,
+    ReferenceMapping,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 
-def as_entry(info: ChainInfo, reference_mapping: ReferenceMapping):
+def as_entry(
+    info: ChainInfo,
+    reference_mapping: ReferenceMapping,
+    modification_mapping: ty.Optional[ModificationMapping] = None,
+):
     return data.Entry(
         primary_id=info.pdb_id.upper(),
         accession=info.accession(),
@@ -41,6 +49,7 @@ def as_entry(info: ChainInfo, reference_mapping: ReferenceMapping):
         description=helpers.description(info),
         parent_accession=info.pdb_id.upper(),
         references=helpers.references_for(info, reference_mapping),
+        features=helpers.modifications(info, modification_mapping or {}),
     )
 
 
@@ -48,6 +57,7 @@ def parse(
     rna_chains: ty.List[ChainInfo],
     reference_mapping: ReferenceMapping,
     override_list: ty.Set[ty.Tuple[str, str]],
+    modification_mapping: ty.Optional[ModificationMapping] = None,
 ) -> ty.Iterator[data.Entry]:
     disqualified = {"mRNA": 0, "other": 0}
     seen: ty.Set[ty.Tuple[str, str]] = set()
@@ -68,7 +78,7 @@ def parse(
                 continue
 
         try:
-            yield as_entry(chain, reference_mapping)
+            yield as_entry(chain, reference_mapping, modification_mapping)
         except helpers.InvalidSequence:
             LOGGER.warn(f"Invalid sequence for {chain}")
         except helpers.MissingTypeInfo:

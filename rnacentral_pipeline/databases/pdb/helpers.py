@@ -18,10 +18,14 @@ import logging
 import re
 import typing as ty
 
-from rnacentral_pipeline.databases.data import AnyReference, Reference
+from rnacentral_pipeline.databases.data import AnyReference, Reference, SequenceFeature
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
-from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
+from rnacentral_pipeline.databases.pdb.data import (
+    ChainInfo,
+    ModificationMapping,
+    ReferenceMapping,
+)
 
 RIBOSOMES = set(
     [
@@ -257,3 +261,29 @@ def load_overrides(handle) -> ty.Set[ty.Tuple[str, str]]:
     for row in csv.reader(handle, delimiter="\t"):
         overrides.add((row[0].lower(), row[1]))
     return overrides
+
+
+def modifications(
+    info: ChainInfo, mapping: ModificationMapping
+) -> ty.List[SequenceFeature]:
+    features = []
+    for residue in mapping.get(
+        (info.pdb_id.lower(), info.chain_id, info.entity_id), []
+    ):
+        # PDBe numbers residues from 1 within the chain's sequence
+        index = residue["residue_number"] - 1
+        features.append(
+            SequenceFeature(
+                name="modification",
+                feature_type="modification",
+                location=[index, index + 1],
+                sequence=residue["chem_comp_id"],
+                provider="PDBE",
+                metadata={
+                    "modification": residue["chem_comp_id"],
+                    "fullName": residue["chem_comp_name"],
+                    "index": index,
+                },
+            )
+        )
+    return features
