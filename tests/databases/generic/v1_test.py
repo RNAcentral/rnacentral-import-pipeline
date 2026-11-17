@@ -121,6 +121,44 @@ def test_modification_metadata_does_not_name_modomics_for_other_providers():
     assert "modomics" not in json.dumps(result[0].metadata).lower()
 
 
+def test_guided_modifications_become_features_on_their_target():
+    record = {
+        "primaryId": "SNODB:1108",
+        "sequence": "ACGTACGT",
+        "relatedSequences": [
+            {
+                "sequenceId": "RNACENTRAL:URS00002ACB8C_9606",
+                "relationship": "target_rna",
+                "modifications": [{"index": 1309, "shortName": "Am", "fullName": "x"}],
+            }
+        ],
+    }
+
+    result = v1.features(record)
+
+    assert len(result) == 1
+    assert result[0].feature_type == "modification"
+    assert result[0].location == [1309, 1310]
+    assert result[0].metadata["modification"] == "Am"
+    assert result[0].metadata["target"] == "URS00002ACB8C_9606"
+
+
+def test_guided_modifications_need_an_rnacentral_target():
+    record = {
+        "primaryId": "SNODB:1108",
+        "sequence": "ACGTACGT",
+        "relatedSequences": [
+            {
+                "sequenceId": "REFSEQ:NR_003287",
+                "relationship": "target_rna",
+                "modifications": [{"index": 1, "shortName": "Am", "fullName": "x"}],
+            }
+        ],
+    }
+
+    assert v1.features(record) == []
+
+
 def test_features_requires_provider_metadata():
     record = {
         "sequence": "ACGTACGT",
