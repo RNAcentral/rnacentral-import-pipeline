@@ -202,7 +202,11 @@ async def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ReferenceMapping
     mapping = coll.defaultdict(list)
     for subset in chunked(pdb_ids, 200):
         post_data = ",".join(subset)
-        response = requests.post(url, data=post_data)
+        response = requests.post(
+            url,
+            data=post_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
         response.raise_for_status()
         for pdb_id, refs in response.json().items():
             for ref in refs:

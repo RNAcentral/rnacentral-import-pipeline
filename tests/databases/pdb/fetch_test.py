@@ -99,6 +99,21 @@ def test_modified_residues_sends_ids_as_form_data(monkeypatch):
     assert sent["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
 
 
+def test_publications_sends_ids_as_form_data(monkeypatch):
+    # Without this PDBe answers 422 and the CLI silently drops all references
+    sent = {}
+
+    def post(url, **kwargs):
+        sent.update(kwargs)
+        return FakeResponse({})
+
+    monkeypatch.setattr(fetch.requests, "post", post)
+
+    asyncio.run(fetch.fetch_pdbe_publications(["1evv"]))
+
+    assert sent["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
+
+
 def test_chains_warns_instead_of_raising_on_missing_ids(monkeypatch, caplog):
     """
     Rfam's .preview feed can name a PDB entry before PDBe's search index has
