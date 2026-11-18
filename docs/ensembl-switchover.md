@@ -37,19 +37,11 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
    `selected_genome = true` that aren't listed there. Decide whether to set
    those rows to `false`.
 
-## Search
-
-5. **Ask EBI Search to add `kingdom` as a facet** on the RNAcentral index. The
-   export writes the field (bacteria, archaea, viruses, plants, fungi,
-   vertebrates, metazoa, environmental or protists, the same split as the FTP
-   folders), but facets and their labels are set in EBI Search's configuration.
-   Until they add it, the field can be searched but won't appear as a facet.
-
 ## Website (`rnacentral-webcode`, branch `feature/ensembl-unified-database`)
 
 6. **Deploy the webcode branch in the same release.** It archives the four
-   division entries, redirects their pages to the Ensembl page, describes Ensembl
-   as covering every kingdom, and adds the kingdom facet.
+   division entries, redirects their pages to the Ensembl page, and describes
+   Ensembl as covering every kingdom.
 7. **Set the Ensembl `version`** in `portal/config/expert_databases.py`. It still
    says `116`, and species.json has no release number. One option is the
    species.json `last_updated` date.

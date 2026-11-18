@@ -111,7 +111,6 @@ pub enum GeneFields {
     HasLitsumm,
     HasEditingEvent,
     TaxString,
-    Kingdom,
     SoRnaTypeName,
 }
 
@@ -129,10 +128,5 @@ mod tests {
     #[test]
     fn genes_export_tax_string() {
         assert!(GeneFields::iter().any(|f| f.to_string() == "tax_string"));
-    }
-
-    #[test]
-    fn genes_export_kingdom() {
-        assert!(GeneFields::iter().any(|f| f.to_string() == "kingdom"));
     }
 }

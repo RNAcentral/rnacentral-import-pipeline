@@ -149,32 +149,6 @@ def notes_can_parse_weird_notes():
     assert refs
 
 
-# Same split as the FTP export's per-kingdom folders, so the facet and the downloads agree.
-@pytest.mark.parametrize(
-    "tax_string,expected",
-    [
-        ("Eukaryota; Metazoa; Chordata; Vertebrata; Homo sapiens", "vertebrates"),
-        ("Eukaryota; Metazoa; Arthropoda; Insecta; Drosophila melanogaster", "metazoa"),
-        ("Eukaryota; Viridiplantae; Streptophyta; Arabidopsis thaliana", "plants"),
-        ("Eukaryota; Fungi; Ascomycota; Saccharomyces cerevisiae", "fungi"),
-        ("Bacteria; Pseudomonadota; Escherichia coli", "bacteria"),
-        ("Archaea; Euryarchaeota; Methanococcus", "archaea"),
-        ("Viruses; Riboviria; Influenza A virus", "viruses"),
-        (
-            "unclassified entries; environmental samples; marine metagenome",
-            "environmental",
-        ),
-        ("Eukaryota; Apicomplexa; Plasmodium falciparum", "protists"),
-    ],
-)
-def test_kingdom_follows_the_lineage(tax_string, expected):
-    assert data.kingdoms([tax_string]) == [expected]
-
-
-def test_kingdoms_are_deduplicated():
-    assert data.kingdoms(["Bacteria; A", "Bacteria; B"]) == ["bacteria"]
-
-
 # RNAcentral is an ncRNA database: entries only in Ensembl coding rank below every ncRNA.
 @pytest.mark.parametrize("rna_type", ["mRNA", "ncRNA"])
 def test_coding_only_entries_rank_below_any_active_ncrna(rna_type):
