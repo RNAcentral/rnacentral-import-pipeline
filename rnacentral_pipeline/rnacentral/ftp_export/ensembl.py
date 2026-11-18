@@ -35,7 +35,8 @@ TRUSTED_DB = set(
         "mirbase",
         "modomics",
         "pdbe",
-        "snopysrpdb",
+        "snopy",
+        "srpdb",
         "tmrna website",
     ]
 )

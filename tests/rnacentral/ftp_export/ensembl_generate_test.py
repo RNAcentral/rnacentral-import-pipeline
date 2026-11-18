@@ -36,6 +36,13 @@ def test_modomics_ids_become_urls():
     )
 
 
+@pytest.mark.parametrize("database", ["snOPY", "SRPDB"])
+def test_snopy_and_srpdb_xrefs_are_exported(database):
+    xref = {"database": database, "external_id": "X1", "optional_id": None}
+    result = ensembl.builder(record(xrefs=[xref]))
+    assert result["xrefs"] == [{"database": database, "id": "X1"}]
+
+
 def test_disallowed_rna_types_are_not_sent():
     assert ensembl.builder(record(rna_type="circRNA")) == {}
 
