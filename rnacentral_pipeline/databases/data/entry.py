@@ -26,6 +26,7 @@ from attr.validators import instance_of as is_a
 from rnacentral_pipeline.databases.helpers.hashes import crc64, md5
 
 from . import utils
+from .disease_annotations import DiseaseAnnotation
 from .features import SequenceFeature
 from .go_annotations import GoTermAnnotation
 from .psi_mi import Interaction
@@ -85,7 +86,6 @@ class Entry:
     xref_data: ty.Dict[str, str] = utils.possibly_empty(dict)
 
     related_sequences: ty.List[str] = utils.possibly_empty(list)
-    related_diseases: ty.List[str] = utils.possibly_empty(list)
 
     chromosome: str = utils.optionally(str)
     gene: str = utils.optionally(str)
@@ -113,6 +113,7 @@ class Entry:
     features: ty.List[SequenceFeature] = utils.possibly_empty(list)
     interactions: ty.List[Interaction] = utils.possibly_empty(list)
     go_annotations: ty.List[GoTermAnnotation] = utils.possibly_empty(list)
+    disease_annotations: ty.List[DiseaseAnnotation] = utils.possibly_empty(list)
 
     ## Track and cache validity for speed when writing. eq/repr excluded so this
     ## mutable cache stays out of the frozen value object's identity.
@@ -349,6 +350,9 @@ class Entry:
     def write_interactions(self):
         for interaction in self.interactions:
             yield interaction.writeable()
+
+    def write_disease_annotations(self):
+        return self.__write_part__(self.disease_annotations)
 
     def write_ontology_terms(self) -> ty.Iterable[ty.List[str]]:
         yield [self.rna_type]

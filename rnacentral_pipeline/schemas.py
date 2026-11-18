@@ -275,6 +275,23 @@ GO_PUBLICATION_MAPPINGS = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# DiseaseAnnotation.writeable() -> disease_annotations.parquet
+# Source: files/import-data/load/disease-annotations.ctl
+# One row per (accession, disease text, PMID). ontology_term_id is NULL for
+# an unmapped mention; pubmed_id is NULL when the source gave no publication.
+DISEASE_ANNOTATIONS = pa.schema(
+    [
+        pa.field("accession", pa.string(), nullable=False),
+        pa.field("assigned_by", pa.string(), nullable=False),
+        pa.field("disease_text", pa.string(), nullable=False),
+        pa.field("ontology_term_id", pa.string()),
+        pa.field("match_type", pa.string(), nullable=False),
+        pa.field("pubmed_id", pa.string()),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
 # rfam.infernal_results.as_csv() -> hits.parquet (rfam-scan workflow)
 # Source: files/rfam-scan/load.ctl + files/schema/create_load.sql.
 # Column names match the destination ``load_rfam_model_hits`` table directly
@@ -683,6 +700,7 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "terms": None,
     "go_annotations": "load_go_term_annotations",
     "go_publication_mappings": "load_go_term_publication_map",
+    "disease_annotations": "load_rnc_disease_annotations",
     "compara": "load_compara",
     "taxonomy": "load_taxonomy",
     "rfam_ontology_mappings": "load_rfam_go_terms",
@@ -712,4 +730,5 @@ ENTRY_WRITER_SCHEMAS = {
     "terms": TERMS,
     "go_annotations": GO_ANNOTATIONS,
     "go_publication_mappings": GO_PUBLICATION_MAPPINGS,
+    "disease_annotations": DISEASE_ANNOTATIONS,
 }

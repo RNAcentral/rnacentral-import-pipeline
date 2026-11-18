@@ -17,7 +17,7 @@ from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.databases.evlncrnas.parser import parse
+from rnacentral_pipeline.databases.evlncrnas.parser import disease_terms, parse
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -32,16 +32,32 @@ def cli():
 @click.argument("db_dir", type=click.Path(exists=True, dir_okay=True, readable=True))
 @click.argument("db_dump", type=click.File(mode="r"), nargs=-1)
 @click.option("--db-url", envvar="PGDATABASE")
+@click.option(
+    "--disease-mapping",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Output of `rnac ols map-text`; without it no disease annotations are written",
+)
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
     nargs=1,
 )
-def process_xlsx_files(db_dir, db_dump, output, db_url):
+def process_xlsx_files(db_dir, db_dump, output, db_url, disease_mapping):
     """
     This parses the decompressed contents of the download into our csv files for import
     """
-    entries = parse(Path(db_dir), db_dump, db_url)
+    entries = parse(Path(db_dir), db_dump, db_url, disease_mapping)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
+
+
+@cli.command("disease-terms")
+@click.argument("db_dir", type=click.Path(exists=True, dir_okay=True, readable=True))
+@click.argument("output", type=click.File("w"))
+def write_disease_terms(db_dir, output):
+    """
+    Write the unique disease strings, one per line, as input for `rnac ols map-text`
+    """
+    for text in disease_terms(Path(db_dir)):
+        output.write(text + "\n")

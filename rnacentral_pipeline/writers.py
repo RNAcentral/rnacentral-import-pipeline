@@ -56,6 +56,7 @@ class EntryWriter:
     terms = attr.ib()
     go_annotations = attr.ib()
     go_publication_mappings = attr.ib()
+    disease_annotations = attr.ib()
 
     def write(self, entries: ty.Iterable[data.Entry], allow_empty: bool = False):
         total = 0
@@ -84,6 +85,10 @@ class EntryWriter:
                     annotations.writeable_publication_mappings()
                 )
                 self.terms.writerows(annotations.writeable_ontology_terms())
+
+            self.disease_annotations.writerows(entry.write_disease_annotations())
+            for annotation in entry.disease_annotations:
+                self.terms.writerows(annotation.writeable_ontology_terms())
 
         if not total and not allow_empty:
             raise ValueError("Found no entries to write")
@@ -215,6 +220,7 @@ class ParquetEntryWriter:
     terms = attr.ib()
     go_annotations = attr.ib()
     go_publication_mappings = attr.ib()
+    disease_annotations = attr.ib()
 
     def write(self, entries: ty.Iterable[data.Entry], allow_empty: bool = False):
         total = 0
@@ -243,6 +249,10 @@ class ParquetEntryWriter:
                     annotations.writeable_publication_mappings()
                 )
                 self.terms.writerows(annotations.writeable_ontology_terms())
+
+            self.disease_annotations.writerows(entry.write_disease_annotations())
+            for annotation in entry.disease_annotations:
+                self.terms.writerows(annotation.writeable_ontology_terms())
 
         if not total and not allow_empty:
             raise ValueError("Found no entries to write")

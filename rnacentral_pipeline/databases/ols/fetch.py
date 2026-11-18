@@ -31,7 +31,9 @@ MAX_RETRIES = 5
 
 
 def is_transient_error(err: requests.RequestException) -> bool:
-    status_code: Optional[int] = getattr(getattr(err, "response", None), "status_code", None)
+    status_code: Optional[int] = getattr(
+        getattr(err, "response", None), "status_code", None
+    )
     request_url = getattr(getattr(err, "response", None), "url", "") or ""
     if status_code == 404 and "/terms/" in request_url:
         return True
@@ -63,6 +65,8 @@ def ontology_url(ontology):
     manual_lookup = {
         "ECO": "http://purl.obolibrary.org/obo/ECO_",
         "GO": "http://purl.obolibrary.org/obo/GO_",
+        "MONDO": "http://purl.obolibrary.org/obo/MONDO_",
+        "HP": "http://purl.obolibrary.org/obo/HP_",
         "SO": "http://purl.obolibrary.org/obo/SO_",
     }
     if ontology.upper() in manual_lookup.keys():

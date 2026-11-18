@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases.ols import helpers as ols
+from rnacentral_pipeline.databases.ols import search
 from rnacentral_pipeline.output_format import format_option
 
 
@@ -35,3 +36,27 @@ def cli():
 @format_option
 def ontologies_lookup_terms(terms, output):
     ols.process_term_file(terms, Path(output))
+
+
+@cli.command("map-text")
+@click.argument("input", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
+@click.option(
+    "--ontology",
+    default=search.DEFAULT_ONTOLOGIES,
+    show_default=True,
+    help="Comma separated, tried in order.",
+)
+@click.option("--overrides", type=click.Path(exists=True, dir_okay=False))
+@click.option(
+    "--synonyms/--no-synonyms",
+    default=False,
+    show_default=True,
+    help="Also accept exact synonym matches.",
+)
+def ontologies_map_text(input, output, ontology, overrides, synonyms):
+    """
+    Map each line of INPUT to an ontology term with the OLS search API and
+    write a TSV (text, ontology_term_id, label, match_type) to OUTPUT.
+    """
+    search.map_file(input, output, ontology, overrides, synonyms)

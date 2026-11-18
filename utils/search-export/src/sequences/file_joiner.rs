@@ -34,6 +34,7 @@ use rnc_core::grouper::Grouped::{
 use super::{
     basic::Basic,
     crs::Crs,
+    disease_annotations::DiseaseAnnotation,
     editing_events::EditingEvent,
     feedback::Feedback,
     go_annotation::GoAnnotation,
@@ -100,6 +101,7 @@ pub enum FileTypes {
     LitsummSummaries,
     EditingEvents,
     GoFlowLLMAnnotations,
+    DiseaseAnnotations,
     SoTermTree,
 }
 
@@ -121,6 +123,8 @@ pub struct FileJoiner<'de> {
     go_flow_llm_annotations:
         StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<GoFlowLLMAnnotation>>,
     editing_events: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<EditingEvent>>,
+    disease_annotations:
+        StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<DiseaseAnnotation>>,
     so_info: SoMapping,
 }
 
@@ -208,6 +212,7 @@ impl FileJoinerBuilder {
         let lit_summ = self.iterator_for(FileTypes::LitsummSummaries)?;
         let editing_events = self.iterator_for(FileTypes::EditingEvents)?;
         let go_flow_llm_annotations = self.iterator_for(FileTypes::GoFlowLLMAnnotations)?;
+        let disease_annotations = self.iterator_for(FileTypes::DiseaseAnnotations)?;
         let so_info = so_tree::load(self.path_for(FileTypes::SoTermTree)?)?;
 
         Ok(FileJoiner {
@@ -226,6 +231,7 @@ impl FileJoinerBuilder {
             lit_summ,
             editing_events,
             go_flow_llm_annotations,
+            disease_annotations,
             so_info,
         })
     }
@@ -251,10 +257,12 @@ impl<'de> Iterator for FileJoiner<'de> {
             self.lit_summ.next(),
             self.editing_events.next(),
             self.go_flow_llm_annotations.next(),
+            self.disease_annotations.next(),
         );
 
         match current {
             (
+                None,
                 None,
                 None,
                 None,
@@ -332,6 +340,10 @@ impl<'de> Iterator for FileJoiner<'de> {
                     id: id15,
                     data: goflow_llm_annotations,
                 })),
+                Some(Ok(Multiple {
+                    id: id16,
+                    data: disease_annotations,
+                })),
             ) => {
                 if id1 != id2
                     || id1 != id3
@@ -347,10 +359,11 @@ impl<'de> Iterator for FileJoiner<'de> {
                     || id1 != id13
                     || id1 != id14
                     || id1 != id15
+                    || id1 != id16
                 {
                     return Some(Err(Error::OutofSyncData(vec![
                         id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12, id13, id14,
-                        id15,
+                        id15, id16,
                     ])));
                 }
 
@@ -377,6 +390,7 @@ impl<'de> Iterator for FileJoiner<'de> {
                     .litsumm_summaries(lit_summ)
                     .editing_events(editing_events)
                     .go_flow_llm_annotations(goflow_llm_annotations)
+                    .disease_annotations(disease_annotations)
                     .so_tree(so_tree)
                     .build();
 

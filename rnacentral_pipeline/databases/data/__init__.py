@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 from .databases import *
+from .disease_annotations import *
 from .entry import *
 from .features import *
 from .go_annotations import *

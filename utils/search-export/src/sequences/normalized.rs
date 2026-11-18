@@ -35,6 +35,7 @@ use crate::{
         },
         basic::Basic,
         crs::CrsVec,
+        disease_annotations::DiseaseAnnotation,
         editing_events::EditingEvent,
         feedback::FeedbackVec,
         go_annotation::GoAnnotation,
@@ -82,6 +83,7 @@ pub struct Normalized {
     litsumm: Vec<LitsummSummaries>,
     editing_events: Vec<EditingEvent>,
     go_flow_llm_annotations: Vec<GoFlowLLMAnnotation>,
+    disease_annotations: Vec<DiseaseAnnotation>,
     so_rna_type_tree: so_tree::SoTree,
 
     #[serde(flatten)]
@@ -144,6 +146,7 @@ impl Normalized {
             litsumm: raw.litsumm_summaries().to_vec(),
             go_flow_llm_annotations: raw.go_flow_llm_annotations().to_vec(),
             editing_events: raw.editing_events().to_vec(),
+            disease_annotations: raw.disease_annotations().to_vec(),
         })
     }
 
