@@ -235,7 +235,10 @@ $ nextflow run -profile prod export.nf
 
 This runs all parts and publishes each into a folder named after it
 (`text-search`, `sequence-search`, `sankey`, `ftp`) in the directory you launch
-from. HuggingFace is a section too and needs `export.huggingface.update_specs` set. To run only some parts, turn the others off in your config:
+from. HuggingFace is a section too and needs `export.huggingface.update_specs` set.
+The `update_public` section dumps the production database, restores it into the
+public database and publishes the dump to `ftp/database_files/database_files.tar`.
+It replaces running `update-public.nf` separately. To run only some parts, turn the others off in your config:
 
 ```groovy
 params {

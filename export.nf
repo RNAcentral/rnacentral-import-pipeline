@@ -9,6 +9,7 @@ include { sankey } from './workflows/export/sankey'
 include { huggingface } from './workflows/export/huggingface'
 include { active_sequences } from './workflows/export/active-sequences'
 include { database_sequences } from './workflows/export/database-sequences'
+include { update_public } from './update-public'
 
 include { qc_export } from './workflows/utils/qc'
 
@@ -49,6 +50,10 @@ workflow export {
     if (params.export.sankey.run) {
       sankey(ready)
       done = done.mix(sankey.out)
+    }
+    if (params.export.update_public.run) {
+      update_public(ready)
+      done = done.mix(update_public.out)
     }
 
     // Final QC: validate published FTP files + search index comparison.

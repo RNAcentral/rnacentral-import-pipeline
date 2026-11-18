@@ -28,22 +28,8 @@ process dump_data {
     --exclude-table=django_migrations \
     --exclude-table=django_session \
     --exclude-table=django_site \
-    --exclude-table=load_ensembl_analysis_status \
-    --exclude-table=load_flybase \
-    --exclude-table=load_genome_mapping \
-    --exclude-table=load_max_versions \
-    --exclude-table=load_md5_collisions \
-    --exclude-table=load_md5_new_sequences \
-    --exclude-table=load_md5_stats \
-    --exclude-table=load_ontology_terms \
-    --exclude-table=load_overlaps \
-    --exclude-table=load_retro_tmp \
-    --exclude-table=load_rnacentral \
-    --exclude-table=load_rnacentral_all \
-    --exclude-table=load_rnc_accessions \
-    --exclude-table=load_rnc_references \
-    --exclude-table=load_rnc_related_sequences \
-    --exclude-table=load_upi_max_versions \
+    --exclude-table='load_*' \
+    --exclude-table='pipeline_tracking_*' \
     --exclude-table=xref_pk_not_unique
   """
 }
@@ -72,10 +58,31 @@ process populate_public {
   """
 }
 
+process publish_dump {
+  publishDir "${params.export.ftp.publish}/database_files/", mode: 'copy'
+  time '1d'
+
+  input:
+  path(dump)
+
+  output:
+  path('database_files.tar')
+
+  script:
+  """
+  tar -cf database_files.tar -C $dump .
+  """
+}
+
 workflow update_public {
-  dump_data | populate_public
+  take: _ready
+  main:
+    dump_data | set { dump }
+    dump | populate_public
+    dump | publish_dump
+  emit: publish_dump.out
 }
 
 workflow {
-  update_public()
+  update_public(channel.of('ready'))
 }
