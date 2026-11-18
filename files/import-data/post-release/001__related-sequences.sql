@@ -161,7 +161,7 @@ BEGIN
       from load_rnc_related_sequences load
       join xref target on target.ac = load.target_accession
       where
-        load.relationship_type IN ('target_rna', 'isoform', 'five_prime_utr', 'three_prime_utr', 'mrna')
+        load.relationship_type IN ('target_rna', 'isoform', 'five_prime_utr', 'three_prime_utr', 'mrna', 'paralogue')
         and target.deleted = 'N'
         and target.dbid = ANY(%L::int[])
         and abs(hashtext(load.source_accession)) %% %s = %s
@@ -181,11 +181,44 @@ BEGIN
     USING xref
     WHERE
       xref.ac = load.target_accession
-      and load.relationship_type IN ('target_rna', 'isoform', 'five_prime_utr', 'three_prime_utr', 'mrna')
+      and load.relationship_type IN ('target_rna', 'isoform', 'five_prime_utr', 'three_prime_utr', 'mrna', 'paralogue')
       and xref.deleted = 'N'
       and xref.dbid = ANY(%L::int[])
   $q$, pg_temp.related_dbids());
 END $$;
+
+-- Targets given as RNAcentral ids (e.g. snoDB guided modifications) already
+-- name the sequence; link them only if it exists, as the foreign key requires.
+INSERT INTO rnc_related_sequences (
+  source_urs_taxid,
+  source_accession,
+  target_urs_taxid,
+  target_accession,
+  relationship_type,
+  methods
+) (
+select distinct on (load.source_accession, load.target_accession, load.relationship_type)
+  load.source_urs_taxid,
+  load.source_accession,
+  pre.urs_taxid,
+  load.target_accession,
+  load.relationship_type::related_sequence_relationship,
+  load.methods
+from load_rnc_related_sequences load
+join rnc_rna_precomputed pre on pre.urs_taxid = substr(load.target_accession, 12)
+where load.target_accession like 'RNACENTRAL:%'
+)
+ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
+SET
+  methods = EXCLUDED.methods || rnc_related_sequences.methods
+;
+
+DELETE FROM load_rnc_related_sequences load
+USING rnc_rna_precomputed pre
+WHERE
+  load.target_accession like 'RNACENTRAL:%'
+  and pre.urs_taxid = substr(load.target_accession, 12)
+;
 
 -- Build a table representing the related Ensembl genes
 create temp table gene_upi_mapping as
