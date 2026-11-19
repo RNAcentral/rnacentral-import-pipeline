@@ -111,9 +111,6 @@ def test_an_ena_404_falls_back_to_uniprot(phy, monkeypatch):
     assert data["lineage"].startswith("cellular organisms; Eukaryota; Amoebozoa")
 
 
-@pytest.mark.xfail(
-    reason="phylogeny() never breaks out of its loop after a 404 fallback"
-)
 def test_an_ena_404_asks_each_service_once(phy, monkeypatch):
     session = serve(
         phy,
@@ -124,7 +121,7 @@ def test_an_ena_404_asks_each_service_once(phy, monkeypatch):
         },
     )
     phy.phylogeny(5755)
-    assert session.calls == [ENA_5755, UNIPROT_5755]  # today: 10 of each
+    assert session.calls == [ENA_5755, UNIPROT_5755]
 
 
 @pytest.mark.xfail(

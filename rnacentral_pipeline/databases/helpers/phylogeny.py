@@ -151,6 +151,7 @@ def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
             elif response.status_code == 404:
                 ## ENA taxonomy doesn't know this, so fallback to uniprot
                 data = uniprot_taxonomy_fallback(taxon_id)
+                break
             else:
                 LOGGER.exception(err)
                 raise FailedTaxonId(f"Could not get taxon id for {taxon_id}")
