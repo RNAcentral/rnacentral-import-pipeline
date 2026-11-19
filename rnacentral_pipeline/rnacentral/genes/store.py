@@ -39,7 +39,7 @@ LOCK_KEY = 7_351_001  ## first half of the advisory lock; the taxid is the secon
 
 GENE_ROWS = """
 SELECT g.internal_name, g.stable_id, g.version, g.first_release, g.last_release,
-       g.assembly_id, g.chromosome, g.start, g.stop, g.strand,
+       g.ref_release, g.assembly_id, g.chromosome, g.start, g.stop, g.strand,
        s.event_type AS status_event, s.release AS status_release
 FROM rnc_genes g
 LEFT JOIN (
@@ -62,6 +62,23 @@ FROM rnc_gene_member_history h
 JOIN rnc_genes g ON g.id = h.rnc_gene_id
 WHERE g.taxid = %(taxid)s
 ORDER BY h.rnc_gene_id, md5(h.region_name), h.assembly_id, h.release DESC, h.id DESC
+"""
+
+## Membership at each gene's reference release, for the genes whose reference is older
+## than last_release (otherwise it is last_members). Exact, because the member history
+## keeps every added/removed: the latest change at or before ref_release says it all.
+REF_MEMBER_ROWS = """
+SELECT internal_name, region_name FROM (
+    SELECT DISTINCT ON (h.rnc_gene_id, md5(h.region_name), h.assembly_id)
+           g.internal_name, h.region_name, h.change
+    FROM rnc_gene_member_history h
+    JOIN rnc_genes g ON g.id = h.rnc_gene_id
+    WHERE g.taxid = %(taxid)s
+      AND g.ref_release < g.last_release
+      AND h.release <= g.ref_release
+    ORDER BY h.rnc_gene_id, md5(h.region_name), h.assembly_id, h.release DESC, h.id DESC
+) latest
+WHERE change = 'added'
 """
 
 PREFIX = "SELECT stable_id FROM ensembl_stable_prefixes WHERE taxid = %(taxid)s"
@@ -96,18 +113,18 @@ CREATE_TMP_GENES = """
 CREATE TEMP TABLE tmp_genes (
     internal_name text, public_name text, stable_id text, assembly_id text,
     chromosome text, start bigint, stop bigint, strand text, version integer,
-    first_release integer, last_release integer, member_count integer,
-    taxid integer, is_active boolean
+    first_release integer, last_release integer, ref_release integer,
+    member_count integer, taxid integer, is_active boolean
 ) ON COMMIT DROP
 """
 
 UPSERT_GENES = """
 INSERT INTO rnc_genes (internal_name, public_name, stable_id, assembly_id, chromosome,
                        start, stop, strand, version, first_release, last_update,
-                       last_release, member_count, taxid, is_active)
+                       last_release, ref_release, member_count, taxid, is_active)
 SELECT internal_name, public_name, stable_id, assembly_id, chromosome, start, stop,
-       strand, version, first_release, last_release, last_release, member_count,
-       taxid, is_active
+       strand, version, first_release, last_release, last_release, ref_release,
+       member_count, taxid, is_active
 FROM tmp_genes
 ON CONFLICT (internal_name) DO UPDATE SET
     public_name = EXCLUDED.public_name,
@@ -121,6 +138,7 @@ ON CONFLICT (internal_name) DO UPDATE SET
     first_release = EXCLUDED.first_release,
     last_update = EXCLUDED.last_update,
     last_release = EXCLUDED.last_release,
+    ref_release = EXCLUDED.ref_release,
     member_count = EXCLUDED.member_count,
     taxid = EXCLUDED.taxid,
     is_active = EXCLUDED.is_active
@@ -217,13 +235,15 @@ ON CONFLICT (rnc_gene_id) DO UPDATE SET
 """
 
 
-def assemble_state(gene_rows, member_rows):
+def assemble_state(gene_rows, member_rows, ref_rows=None):
     """
     Build a lineage.STATE_SCHEMA frame from the stored genes and their latest member
     changes. Pure, so it can be tested without a database.
 
     gene_rows   - GENE_ROWS result (status_event is null for a gene with no history)
     member_rows - MEMBER_ROWS result: the latest change per (gene, region)
+    ref_rows    - REF_MEMBER_ROWS result: membership at ref_release, only for genes whose
+                  ref_release is older than last_release; the rest use last_members
 
     A gene with no history cannot be placed in the lineage, so that is an error rather
     than a guess: it means the history has not been loaded for this taxon.
@@ -285,9 +305,26 @@ def assemble_state(gene_rows, member_rows):
             .alias("last_members")
         )
     )
-    ## The stored history only keeps each region's latest change, so the peak
-    ## membership of the last releases cannot be rebuilt here; start from last_members.
-    state = lineage.with_ref_defaults(state).select(list(lineage.STATE_SCHEMA))
+    ## A null ref_release (written before the column existed) means no older reference.
+    if "ref_release" not in state.columns:
+        state = state.with_columns(pl.lit(None, dtype=pl.Int64).alias("ref_release"))
+    if ref_rows is not None and ref_rows.height:
+        ref = ref_rows.group_by("internal_name").agg(
+            pl.col("region_name").sort().alias("ref_members")
+        )
+        state = state.join(ref, on="internal_name", how="left")
+    else:
+        state = state.with_columns(
+            pl.lit(None, dtype=pl.List(pl.Utf8)).alias("ref_members")
+        )
+    older = pl.col("ref_release") < pl.col("last_release")
+    state = state.with_columns(
+        pl.when(older)
+        .then(pl.col("ref_members").fill_null(empty))
+        .otherwise(pl.col("last_members"))
+        .alias("ref_members"),
+        pl.coalesce("ref_release", "last_release").alias("ref_release"),
+    ).select(list(lineage.STATE_SCHEMA))
     return state.cast(lineage.STATE_SCHEMA)
 
 
@@ -307,10 +344,11 @@ def fetch_state(taxid, db_str):
         conn.set_session(readonly=True)
         genes = _query(conn, GENE_ROWS, {"taxid": taxid})
         members = _query(conn, MEMBER_ROWS, {"taxid": taxid})
+        ref_members = _query(conn, REF_MEMBER_ROWS, {"taxid": taxid})
         prefix = _query(conn, PREFIX, {"taxid": taxid})
     finally:
         conn.close()
-    state = assemble_state(genes, members)
+    state = assemble_state(genes, members, ref_members)
     meta = {
         "taxid": taxid,
         "prefix": prefix["stable_id"][0] if prefix.height == 1 else None,
@@ -350,6 +388,9 @@ def genes_for_upsert(genes, taxid, include_inactive=False):
     """
     if not include_inactive:
         genes = genes.filter(pl.col("status") != "inactive")
+    genes = lineage.with_ref_defaults(
+        genes
+    )  ## plans written before ref_release existed
     return genes.select(
         "internal_name",
         "public_name",
@@ -362,6 +403,7 @@ def genes_for_upsert(genes, taxid, include_inactive=False):
         "version",
         "first_release",
         "last_release",
+        "ref_release",
         pl.col("members").list.len().alias("member_count"),
         pl.lit(taxid, dtype=pl.Int64).alias("taxid"),
         "is_active",

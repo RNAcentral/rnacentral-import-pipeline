@@ -165,6 +165,7 @@ def test_sql_constants_use_only_named_parameters_consistently():
     for sql in [
         store.GENE_ROWS,
         store.MEMBER_ROWS,
+        store.REF_MEMBER_ROWS,
         store.PREFIX,
         store.DELETE_STALE_MEMBERS,
     ]:
@@ -180,3 +181,74 @@ def test_include_inactive_writes_genes_retired_earlier():
     assert store.genes_for_upsert(p3.genes, 9606).height == 1
     both = store.genes_for_upsert(p3.genes, 9606, include_inactive=True)
     assert both.height == 2 and both["is_active"].to_list().count(False) == 1
+
+
+def stored(plans):
+    """
+    What fetch_state reads back after `plans` were applied in order: emulates GENE_ROWS,
+    MEMBER_ROWS and REF_MEMBER_ROWS over the rows apply_plan would have written.
+    """
+    last = plans[-1]
+    events = pl.concat([p.events for p in plans])
+    status = (
+        events.filter(
+            pl.col("event_type").is_in(["created", "reactivated", "deactivated"])
+        )
+        .sort("release")
+        .group_by("internal_name")
+        .agg(
+            pl.col("event_type").last().alias("status_event"),
+            pl.col("release").last().alias("status_release"),
+        )
+    )
+    genes = store.genes_for_upsert(last.genes, 9606, include_inactive=True)
+    gene_rows_ = genes.join(status, on="internal_name", how="left").drop(
+        "public_name", "member_count", "taxid", "is_active"
+    )
+    history = pl.concat([p.member_deltas for p in plans]).select(
+        "internal_name", "region_name", "change", "release"
+    )
+
+    def latest(h):
+        return h.sort("release").group_by("internal_name", "region_name").last()
+
+    refs = gene_rows_.filter(pl.col("ref_release") < pl.col("last_release"))
+    ref_rows = (
+        latest(
+            history.join(
+                refs.select("internal_name", "ref_release"), on="internal_name"
+            )
+            .filter(pl.col("release") <= pl.col("ref_release"))
+            .drop("ref_release")
+        )
+        .filter(pl.col("change") == "added")
+        .select("internal_name", "region_name")
+    )
+    return store.assemble_state(gene_rows_, latest(history), ref_rows)
+
+
+def test_reference_membership_survives_the_database():
+    """A gene cut down for one release takes its cluster back when read from the database,
+    exactly as it does with the planner's in-memory state (the PR #315 review finding)."""
+    full = list(range(1, 101))
+    p1 = run(L.empty_state(), [full], 1)
+    p2 = run(L.as_state(p1.genes), [[1, 2, 3]], 2)
+    name = p1.genes["internal_name"][0]
+
+    state = stored([p1, p2])
+    row = state.row(0, named=True)
+    assert row["ref_release"] == 1 and len(row["ref_members"]) == 100
+    memory = L.as_state(p2.genes).select(state.columns).sort("internal_name")
+    assert state.sort("internal_name").equals(memory)
+
+    p3 = run(state, [full], 3, max_deactivate_fraction=1.0)
+    assert set(p3.genes.filter(pl.col("is_active"))["internal_name"]) == {name}
+    assert p3.stats["created"] == 0
+
+
+def test_null_ref_release_means_no_older_reference():
+    state = store.assemble_state(
+        gene_rows(g("a", "created")), member_rows(("a", "r1", "added", 1))
+    )
+    row = state.row(0, named=True)
+    assert row["ref_release"] == 3 and row["ref_members"] == ["r1"]
