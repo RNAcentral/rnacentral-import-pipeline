@@ -107,15 +107,18 @@ def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
         raise FailedTaxonId(f"UniProt taxonomy payload for {taxon_id} is incomplete")
 
     ## Parse the data a bit to normalise to ENA taxonomy
+    # ENA writes the lineage without the root and with a trailing "; ", which
+    # lineage() relies on when it appends the species name.
     raw_lineage = data.get("lineage", [])
+    names = []
     if isinstance(raw_lineage, list):
-        lineage = "; ".join(
+        names = [
             level["scientificName"]
             for level in raw_lineage
-            if isinstance(level, dict) and "scientificName" in level
-        )
-    else:
-        lineage = ""
+            if isinstance(level, dict)
+            and level.get("scientificName") not in (None, "cellular organisms")
+        ]
+    lineage = "".join(f"{name}; " for name in names)
 
     ena_data = {
         "taxId": str(taxon_id),
