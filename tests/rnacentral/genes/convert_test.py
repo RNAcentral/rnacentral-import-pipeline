@@ -30,7 +30,7 @@ GFF = """##gff-version 3
 1\tRNAcentral\texon\t100\t150\t.\t+\t.\tID=e1;Parent=URS0000000001_9606.0
 1\tRNAcentral\ttranscript\t500\t600\t.\t-\t.\tID=t2;Name=URS0000000002;type=miRNA
 1\tRNAcentral\ttranscript\t800\t900\t.\t+\t.\tID=t3;Name=URS0000000003;type=circRNA
-1\tRNAcentral\tpredicted_gene\t90\t700\t.\t+\t.\tID=RNACENSG00000000001.1;Name=RNACENSG00000000001
+1\tRNAcentral\tpredicted_ncRNA_gene\t90\t700\t.\t+\t.\tID=RNACENSG00000000001.1;Name=RNACENSG00000000001
 """
 
 
