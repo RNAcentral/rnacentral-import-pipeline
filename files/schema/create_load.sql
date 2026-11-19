@@ -456,17 +456,6 @@ CREATE UNLOGGED TABLE load_genome_mapping (
   providing_database text
 );
 
-DROP TABLE IF EXISTS load_crs_features;
-CREATE UNLOGGED TABLE load_crs_features (
-  upi text,
-  taxid int,
-  accession text,
-  start int,
-  stop int,
-  feature_name text,
-  metadata jsonb
-);
-
 DROP TABLE IF EXISTS load_rediportal_features;
 CREATE UNLOGGED TABLE load_rediportal_features (
   upi text,
