@@ -1,0 +1,20 @@
+[
+ {
+  "taxId": "5661",
+  "scientificName": "Leishmania donovani",
+  "formalName": "true",
+  "rank": "species",
+  "division": "INV",
+  "lineage": "Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; Trypanosomatida; Trypanosomatidae; Leishmaniinae; Leishmania; ",
+  "geneticCode": "1",
+  "mitochondrialGeneticCode": "4",
+  "plastIdGeneticCode": "11",
+  "submittable": "true",
+  "binomial": "true",
+  "otherNames": [
+   "Leishmania donovani Laveran et Mesnil, 1903:authority",
+   "Leishmania (Leishmania) donovani:synonym"
+  ],
+  "metagenome": "false"
+ }
+]

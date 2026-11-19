@@ -1,0 +1,83 @@
+{
+ "scientificName": "Acanthamoeba castellanii",
+ "commonName": "Amoeba",
+ "taxonId": 5755,
+ "mnemonic": "ACACA",
+ "parent": {
+  "scientificName": "Acanthamoeba",
+  "taxonId": 5754
+ },
+ "rank": "species",
+ "hidden": true,
+ "active": true,
+ "otherNames": [
+  "Acanthamoeba castellani",
+  "Acanthamoeba sp. ATCC 30011",
+  "Acanthamoeba castellanii (Douglas 1930)"
+ ],
+ "lineage": [
+  {
+   "scientificName": "cellular organisms",
+   "taxonId": 131567,
+   "rank": "no rank",
+   "hidden": true
+  },
+  {
+   "scientificName": "Eukaryota",
+   "commonName": "eukaryotes",
+   "taxonId": 2759,
+   "rank": "domain",
+   "hidden": false
+  },
+  {
+   "scientificName": "Amoebozoa",
+   "taxonId": 554915,
+   "rank": "clade",
+   "hidden": false
+  },
+  {
+   "scientificName": "Discosea",
+   "taxonId": 555280,
+   "rank": "phylum",
+   "hidden": false
+  },
+  {
+   "scientificName": "Longamoebia",
+   "taxonId": 1485168,
+   "rank": "order",
+   "hidden": false
+  },
+  {
+   "scientificName": "Centramoebida",
+   "taxonId": 555407,
+   "rank": "clade",
+   "hidden": false
+  },
+  {
+   "scientificName": "Acanthamoebidae",
+   "taxonId": 33677,
+   "rank": "family",
+   "hidden": false
+  },
+  {
+   "scientificName": "Acanthamoeba",
+   "taxonId": 5754,
+   "rank": "genus",
+   "hidden": false
+  }
+ ],
+ "strains": [
+  {
+   "name": "ATCC 30010 / Neff",
+   "synonyms": [
+    "Neff"
+   ]
+  }
+ ],
+ "statistics": {
+  "reviewedProteinCount": 50,
+  "unreviewedProteinCount": 15164,
+  "referenceProteomeCount": 0,
+  "proteomeCount": 0
+ }
+}
