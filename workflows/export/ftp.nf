@@ -8,7 +8,7 @@ include { ensembl_export } from './ftp/ensembl'
 include { fasta_export } from './ftp/sequences'
 include { rediportal } from './ftp/rediportal.nf'
 include { active_sequences } from './active-sequences'
-include { huggingface } from './huggingface'
+include { database_sequences } from './database-sequences'
 
 include { slack_closure } from '../utils/slack'
 
@@ -83,7 +83,7 @@ process rfam_go_matches {
 
   script:
   """
-  psql -f "$query" "\$PGDATABASE" > raw_go.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "\$PGDATABASE" > raw_go.json
   rnac ftp-export rfam-go-annotations raw_go.json rnacentral_rfam_annotations.tsv
   gzip rnacentral_rfam_annotations.tsv
   """
@@ -135,35 +135,47 @@ workflow ftp {
   take:
     _flag
     active_json
+    database_dumps
   main:
-    if (params.export.ftp.run) {
-      channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
-      channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
-      md5(md5_query, md5_template)
+    channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
+    channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
+    md5(md5_query, md5_template)
 
-      channel.fromPath('files/ftp-export/release_note.txt') | release_note
-      channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
+    channel.fromPath('files/ftp-export/release_note.txt') | release_note
+    channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
 
-      channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
-      channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
-      rfam_annotations(rfam_annotation_query, rfam_readme)
+    channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
+    channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
+    rfam_annotations(rfam_annotation_query, rfam_readme)
 
-      gpi()
-      gpi_species()
-      gpi_reference_proteome()
-      id_mapping()
-      export_coordinates()
-      ensembl_export()
-      fasta_export(active_json)
-      rediportal()
-      // Shares this run's dump so the (very slow) active-sequences query runs once.
-      huggingface(channel.of('ready'), active_json)
-    }
+    gpi()
+    gpi_species()
+    gpi_reference_proteome()
+    id_mapping()
+    export_coordinates()
+    ensembl_export()
+    fasta_export(active_json, database_dumps)
+    rediportal()
+  emit:
+    done = md5.out[0]
+      .mix(
+        release_note.out,
+        rfam_go_matches.out,
+        rfam_annotations.out[0],
+        gpi.out,
+        gpi_species.out,
+        gpi_reference_proteome.out,
+        id_mapping.out,
+        export_coordinates.out,
+        ensembl_export.out,
+        fasta_export.out,
+        rediportal.out
+      )
 }
 
 workflow {
   main:
-  ftp(channel.of('ready'), active_sequences())
+  ftp(channel.of('ready'), active_sequences(), database_sequences())
 
   // See analyze.nf: an onError section crashes on Nextflow 26.04.
   onComplete:
