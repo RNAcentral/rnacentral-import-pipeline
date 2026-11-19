@@ -1,0 +1,72 @@
+INFERNAL1/a [1.1.4 | Dec 2020]
+NAME     5_8S_rRNA
+ACC      RF00002
+DESC     5.8S ribosomal RNA
+STATES   481
+NODES    143
+CLEN     154
+W        185
+ALPH     RNA
+RF       no
+CONS     yes
+MAP      yes
+DATE     Wed Jul 10 11:41:36 2024
+COM      [1] /hps/software/users/agb/rfam/bin/cmbuild -F CM SEED
+COM      [2] /hps/software/users/agb/rfam/bin/cmcalibrate --cpu 8 /nfs/production/agb/rfam/users/nawrocki/notebook/22_0831_rfam_twenty_fams/RF00002/CM
+PBEGIN   0.05
+PEND     0.05
+WBETA    1e-07
+QDBBETA1 1e-07
+QDBBETA2 1e-15
+N2OMEGA  1.52588e-05
+N3OMEGA  1.52588e-05
+ELSELF   -0.08926734
+NSEQ     61
+EFFN     3.488586
+CKSUM    863152359
+NULL     0.000  0.000  0.000  0.000
+GA       42.00
+TC       42.00
+NC       41.90
+EFP7GF   -6.1853 0.71788
+ECMLC    0.78886    -8.53028    -0.95807     1600000      471413  0.002546
+ECMGC    0.35518   -26.63271   -16.87268     1600000       12811  0.031223
+ECMLI    0.66150    -9.18781    -0.37608     1600000      407997  0.002941
+ECMGI    0.35993   -18.47370    -8.83210     1600000       12859  0.031107
+CM
+INFERNAL1/a [1.1.4 | Dec 2020]
+NAME     5S_rRNA
+ACC      RF00001
+DESC     5S ribosomal RNA
+STATES   369
+NODES    92
+CLEN     120
+W        138
+ALPH     RNA
+RF       no
+CONS     yes
+MAP      yes
+DATE     Thu Jul  4 16:33:05 2024
+COM      [1] /hps/software/users/agb/rfam/bin/cmbuild -F CM SEED
+COM      [2] /hps/software/users/agb/rfam/bin/cmcalibrate --cpu 8 /nfs/production/agb/rfam/15/rescan/families/RF00001/CM
+PBEGIN   0.05
+PEND     0.05
+WBETA    1e-07
+QDBBETA1 1e-07
+QDBBETA2 1e-15
+N2OMEGA  1.52588e-05
+N3OMEGA  1.52588e-05
+ELSELF   -0.08926734
+NSEQ     712
+EFFN     7.183990
+CKSUM    242171328
+NULL     0.000  0.000  0.000  0.000
+GA       38.00
+TC       38.00
+NC       37.90
+EFP7GF   -8.7281 0.71820
+ECMLC    0.67472    -7.28676     0.99435     1600000      320466  0.003745
+ECMGC    0.39354   -17.40899    -7.65243     1600000       18603  0.021502
+ECMLI    0.60889    -5.17319     3.42707     1600000      225645  0.005318
+ECMGI    0.43406   -11.54712    -2.70406     1600000       18581  0.021527
+CM
