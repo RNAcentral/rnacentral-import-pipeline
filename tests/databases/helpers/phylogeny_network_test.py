@@ -108,7 +108,7 @@ def test_an_ena_404_falls_back_to_uniprot(phy, monkeypatch):
     assert data["scientificName"] == "Acanthamoeba castellanii"
     assert data["commonName"] == "Amoeba"
     assert data["rank"] == "species"
-    assert data["lineage"].startswith("cellular organisms; Eukaryota; Amoebozoa")
+    assert data["lineage"] == load("ena-tax-id-5755.json")["lineage"]
 
 
 def test_an_ena_404_asks_each_service_once(phy, monkeypatch):
@@ -124,10 +124,11 @@ def test_an_ena_404_asks_each_service_once(phy, monkeypatch):
     assert session.calls == [ENA_5755, UNIPROT_5755]
 
 
-@pytest.mark.xfail(
-    reason="UniProt lineage lacks ENA's trailing '; ', so lineage() glues names"
-)
 def test_a_uniprot_lineage_reads_like_an_ena_one(phy, monkeypatch):
+    serve(phy, monkeypatch, {ENA_5755: [Response(200, load("ena-tax-id-5755.json"))]})
+    from_ena = phy.lineage(5755)
+    phy.phylogeny.cache_clear()  # phylogeny() is lru_cached
+
     serve(
         phy,
         monkeypatch,
@@ -136,7 +137,7 @@ def test_a_uniprot_lineage_reads_like_an_ena_one(phy, monkeypatch):
             UNIPROT_5755: [Response(200, load("uniprot-taxonomy-5755.json"))],
         },
     )
-    assert phy.lineage(5755).endswith("; Acanthamoeba; Acanthamoeba castellanii")
+    assert phy.lineage(5755) == from_ena
 
 
 @pytest.mark.xfail(
