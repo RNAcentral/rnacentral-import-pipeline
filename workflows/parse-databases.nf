@@ -2,6 +2,7 @@ include { circatlas } from './databases/circatlas'
 include { circpedia } from './databases/circpedia'
 include { crw } from './databases/crw'
 include { ena } from './databases/ena'
+include { ena_coding } from './databases/ena_coding'
 include { ensembl } from './databases/ensembl'
 include { ensembl_mrna } from './databases/ensembl_mrna'
 include { evlncrnas } from './databases/evlncrnas'
@@ -79,6 +80,7 @@ workflow parse_databases {
       crw(),
       five_s_rrnadb(),
       ena(),
+      ena_coding(),
       ensembl(),
       ensembl_mrna(),
       evlncrnas(),

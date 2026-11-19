@@ -174,9 +174,10 @@ def test_sequences_without_active_accessions_are_still_qa_checked():
     assert status.incomplete_sequence.has_issue is not None
 
 
-def test_sgd_coding_only_sequences_are_not_qa_checked():
+@pytest.mark.parametrize("database", ["SGD_CODING", "ENA_CODING"])
+def test_coding_only_sequences_are_not_qa_checked(database):
     from .. import builders
 
-    utr = builders.sequence(accessions=[builders.accession("SGD_CODING", "SO:0000205")])
+    utr = builders.sequence(accessions=[builders.accession(database, "SO:0000205")])
     status = qa.status(builders.context(), utr, "ncRNA")
     assert not any(getattr(status, f.name).has_issue for f in attr.fields(type(status)))

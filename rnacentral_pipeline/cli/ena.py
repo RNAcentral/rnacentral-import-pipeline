@@ -22,7 +22,7 @@ import click
 import psycopg2
 
 from rnacentral_pipeline.databases import manifest
-from rnacentral_pipeline.databases.ena import context, delta, parser
+from rnacentral_pipeline.databases.ena import coding, context, delta, parser
 from rnacentral_pipeline.rnacentral.notify.slack import send_notification
 from rnacentral_pipeline.writers import entry_writer
 
@@ -259,3 +259,21 @@ def ena_filter(only, ena_file, output):
     """
     written = delta.filter_records(Path(ena_file), Path(only), Path(output))
     click.echo(written)
+
+
+@cli.command("parse-coding")
+@click.option("--taxid", type=int, required=True)
+@click.option(
+    "--assembly", default=None, help="Set for a genome; leave out for viruses."
+)
+@click.option("--end", type=int, default=None, help="Keep only bases 1 to END.")
+@click.argument("embl_file", type=click.File("r"))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+def process_coding(taxid, assembly, end, embl_file, output):
+    """Parse ENA EMBL records into mRNAs and their UTRs."""
+    with entry_writer(Path(output)) as writer:
+        writer.write(coding.parse(embl_file, taxid, assembly, end))

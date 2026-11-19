@@ -58,3 +58,24 @@ def test_systematic_names_are_searched_as_they_are(monkeypatch, tmp_path):
     result = CliRunner().invoke(checker.main, ["sgd_coding", str(raw), str(out)])
     assert result.exit_code == 0, result.output
     assert out.read_text() == "YAL001C|URS0000ABCD_559292\n"
+
+
+def test_the_ena_coding_query_searches_mrnas_by_their_external_id_only():
+    query = (ROOT / "workflows" / "litscan" / "queries" / "ena_coding.sql").read_text()
+    assert "'ENA_CODING'" in query
+    assert "feature_name = 'mRNA'" in query
+    columns = query.split("select", 1)[1].split("from", 1)[0]
+    assert [c.strip() for c in columns.split(",")] == ["urs", "taxid", "external_id"]
+
+
+# A virus has no locus tag; an empty extra column made check-ids drop its accession
+def test_ena_coding_ids_are_searched_without_their_version(monkeypatch, tmp_path):
+    checker = load_checker(monkeypatch)
+    raw = tmp_path / "results"
+    raw.write_text("URS0000ABCD|11082|AF404756.1\nURS0000EF01|264730|PSPPH_0005\n")
+    out = tmp_path / "output"
+    result = CliRunner().invoke(checker.main, ["ena_coding", str(raw), str(out)])
+    assert result.exit_code == 0, result.output
+    assert out.read_text() == (
+        "AF404756|URS0000ABCD_11082\nPSPPH_0005|URS0000EF01_264730\n"
+    )
