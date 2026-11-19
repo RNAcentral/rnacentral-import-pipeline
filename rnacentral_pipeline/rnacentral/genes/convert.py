@@ -65,8 +65,9 @@ def get_assembly(path: Path) -> str:
     raise ValueError(f"Could not find assembly id in {path}")
 
 
-## circRNAs and piRNAs are not clustered into genes; these are the `type`s the GFF export writes
-EXCLUDED_RNA_TYPES = {"circRNA", "piRNA"}
+## circRNAs, piRNAs and coding mRNAs are not clustered into genes; these are the `type`s the
+## GFF export writes. Matches extract.QUERY, except UTRs: the GFF types them as ncRNA.
+EXCLUDED_RNA_TYPES = {"circRNA", "piRNA", "mRNA"}
 
 
 def keep_valid_start(feature):
