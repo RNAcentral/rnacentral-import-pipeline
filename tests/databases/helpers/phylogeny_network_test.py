@@ -140,11 +140,14 @@ def test_a_uniprot_lineage_reads_like_an_ena_one(phy, monkeypatch):
     assert phy.lineage(5755) == from_ena
 
 
-@pytest.mark.xfail(
-    reason="ten 500s leave `data` unbound: UnboundLocalError, not FailedTaxonId"
-)
 def test_persistent_server_errors_raise_failed_taxon_id(phy, monkeypatch):
     serve(phy, monkeypatch, {ENA_5755: [Response(500)]})
+    with pytest.raises(phy.FailedTaxonId):
+        phy.phylogeny(5755)
+
+
+def test_persistent_uniprot_errors_raise_failed_taxon_id(phy, monkeypatch):
+    serve(phy, monkeypatch, {ENA_5755: [Response(404)], UNIPROT_5755: [Response(500)]})
     with pytest.raises(phy.FailedTaxonId):
         phy.phylogeny(5755)
 
