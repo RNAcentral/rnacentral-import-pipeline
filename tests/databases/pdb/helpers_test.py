@@ -17,6 +17,8 @@ import datetime as dt
 
 import pytest
 
+from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.pdb import fetch, helpers
 from rnacentral_pipeline.databases.pdb.data import ChainInfo
 
@@ -111,4 +113,56 @@ def test_description_omits_source_when_organism_name_is_missing():
     assert (
         helpers.description(info)
         == "HCV IRES pseudoknot domain plus crystallization module (PDB 3T4B, chain A)"
+    )
+
+
+def publication(**overrides):
+    """A PDBe publication record, as fetch.py hands it to as_reference."""
+    row = {
+        "pubmed_id": None,
+        "doi": None,
+        "title": "Structures of the bacterial ribosome in classical and hybrid states",
+        "journal_info": {"pdb_abbreviation": "Science"},
+        "author_list": [],
+    }
+    row.update(overrides)
+    return row
+
+
+def test_a_pubmed_id_wins_over_a_doi():
+    # Production: 4V9D is referenced as PMID 21596992 / doi 10.1126/science.1202692
+    ref = helpers.as_reference(
+        publication(pubmed_id="21596992", doi="10.1126/science.1202692")
+    )
+    assert ref == pubs.reference(21596992)
+
+
+@pytest.mark.parametrize(
+    "doi", ["10.1126/science.1202692", "DOI:10.1126/science.1202692"]
+)
+def test_a_doi_is_used_when_there_is_no_pubmed_id(doi):
+    assert helpers.as_reference(publication(doi=doi)) == pubs.reference(
+        "doi:10.1126/science.1202692"
+    )
+
+
+def test_without_ids_the_reference_is_built_from_the_record():
+    # Older production rows (e.g. reference 446176) keep the commas inside each
+    # name; the current code drops them, as its comment intends.
+    ref = helpers.as_reference(
+        publication(
+            author_list=[
+                {"full_name": "Zhang, D.", "last_name": "Zhang", "first_name": "D."},
+                {"full_name": None, "last_name": "Yan", "first_name": "K."},
+                {"full_name": None, "last_name": "Liu", "first_name": None},
+            ],
+            journal_info={"pdb_abbreviation": "Nat.Struct.Mol.Biol."},
+        )
+    )
+    assert ref == Reference(
+        authors="Zhang D., Yan K., Liu",
+        location="Nat.Struct.Mol.Biol.",
+        title="Structures of the bacterial ribosome in classical and hybrid states",
+        pmid=None,
+        doi=None,
     )
