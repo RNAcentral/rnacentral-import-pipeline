@@ -28,7 +28,7 @@ def canonical(gff_file: Path) -> ty.Dict[str, str]:
     """
     return {
         gene: transcript
-        for transcript, (gene, tags) in mrna.protein_coding(gff_file).items()
+        for transcript, (gene, tags, _) in mrna.protein_coding(gff_file).items()
         if "Ensembl_canonical" in tags
     }
 
