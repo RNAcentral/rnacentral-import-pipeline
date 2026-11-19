@@ -14,6 +14,7 @@ that broke ``REFERENCES``), a description containing a comma and a quote, and
 an entry with none of the optional collections populated.
 """
 
+import attr
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
@@ -208,3 +209,59 @@ def test_entry_writer_schemas_are_all_arrow_schemas():
     """Guards against a plain dict or list sneaking into the registry."""
     for name, schema in schemas.ENTRY_WRITER_SCHEMAS.items():
         assert isinstance(schema, pa.Schema), name
+
+
+# --- build_parquet: the generic writer behind cpat, quickgo and precompute ---
+
+
+@attr.s()
+class TwoTables:
+    hits = attr.ib()
+    misses = attr.ib()
+
+
+TWO_SCHEMAS = {
+    "hits": pa.schema([("urs_taxid", pa.string()), ("score", pa.float64())]),
+    "misses": pa.schema([("urs_taxid", pa.string())]),
+}
+
+
+def test_build_parquet_writes_one_file_per_field_across_row_groups(tmp_path):
+    rows = [(f"URS000000000{i}_9606", float(i)) for i in range(5)]
+    with writers.build_parquet(TwoTables, tmp_path, TWO_SCHEMAS, batch_size=2) as out:
+        out.hits.writerows(rows)
+        out.misses.writerow(("URS0000000009_9606",))
+
+    hits = pq.ParquetFile(tmp_path / "hits.parquet")
+    assert hits.schema_arrow == TWO_SCHEMAS["hits"]
+    assert hits.num_row_groups == 3  # 2 + 2 + 1
+    assert [tuple(r.values()) for r in hits.read().to_pylist()] == rows
+    assert pq.read_table(tmp_path / "misses.parquet").num_rows == 1
+
+
+def test_build_parquet_leaves_a_typed_empty_file_for_an_unused_field(tmp_path):
+    with writers.build_parquet(TwoTables, tmp_path, TWO_SCHEMAS) as out:
+        out.hits.writerow(("URS0000000001_9606", 1.0))
+
+    misses = pq.read_table(tmp_path / "misses.parquet")
+    assert misses.num_rows == 0
+    assert misses.schema == TWO_SCHEMAS["misses"]
+
+
+def test_build_parquet_closes_its_files_when_the_block_raises(tmp_path):
+    with pytest.raises(RuntimeError):
+        with writers.build_parquet(
+            TwoTables, tmp_path, TWO_SCHEMAS, batch_size=1
+        ) as out:
+            out.hits.writerow(("URS0000000001_9606", 1.0))
+            raise RuntimeError("boom")
+
+    # Closed writers leave valid files: what was flushed is still readable
+    assert pq.read_table(tmp_path / "hits.parquet").num_rows == 1
+    assert pq.read_table(tmp_path / "misses.parquet").num_rows == 0
+
+
+def test_build_parquet_needs_a_schema_for_every_field(tmp_path):
+    with pytest.raises(KeyError):
+        with writers.build_parquet(TwoTables, tmp_path, {"hits": TWO_SCHEMAS["hits"]}):
+            pass
