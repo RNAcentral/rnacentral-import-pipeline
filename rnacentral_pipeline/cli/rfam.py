@@ -63,15 +63,3 @@ def rfam_group_families(filename, output):
 @format_option
 def rfam_group_clans(filename, output):
     rfam.clans.from_file(filename, Path(output))
-
-
-@cli.command("ontology-terms")
-@click.argument("filename", default="data.tsv", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False),
-)
-@format_option
-def ontologies_rfam_terms(filename, output):
-    rfam.cross_references.from_file(filename, Path(output))

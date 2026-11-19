@@ -172,3 +172,11 @@ def test_sequences_without_active_accessions_are_still_qa_checked():
     retired = builders.sequence(accessions=[], rfam_hits=[hit])
     status = qa.status(builders.context(), retired, "rRNA")
     assert status.incomplete_sequence.has_issue is not None
+
+
+def test_repetitive_region_is_always_reported_ok():
+    # The column is NOT NULL in the QA table; the check itself was removed.
+    from .. import builders
+
+    status = qa.status(builders.context(), builders.sequence(), "rRNA")
+    assert status.from_repetitive_region.has_issue is False

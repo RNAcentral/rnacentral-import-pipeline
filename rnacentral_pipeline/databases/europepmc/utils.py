@@ -13,13 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-import csv
-import logging
-
 import html
-
-from rnacentral_pipeline.databases.helpers.publications import reference
+import logging
+import re
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +33,7 @@ def pretty_location(data):
     if "pageInfo" in data and pages:
         pages = ":" + pages
 
-    location = u"{title} {volume}{issue}{pages} ({year})".format(
+    location = "{title} {volume}{issue}{pages} ({year})".format(
         title=data.get("journalTitle", ""),
         issue=issue,
         volume=data.get("journalVolume", ""),
@@ -56,24 +52,3 @@ def clean_title(title):
     """
     stripped = re.sub(r"\.$", "", title)
     return html.unescape(stripped)
-
-
-def id_refs_from_handle(handle, column):
-    for row in csv.reader(handle):
-        raw = row[column]
-        rest = [d for i, d in enumerate(row) if i != column]
-        yield (reference(raw), rest)
-
-
-def write_lookup(handler, handle, output, column=0, ignore_errors=False):
-    writer = csv.writer(output)
-    for id_ref, rest in id_refs_from_handle(handle, column):
-        try:
-            ref = handler(id_ref)
-        except Exception as err:
-            LOGGER.warning("Failed to lookup: %s", id_ref)
-            LOGGER.exception(err)
-            if not ignore_errors:
-                raise err
-            continue
-        writer.writerows(ref.writeable(rest))

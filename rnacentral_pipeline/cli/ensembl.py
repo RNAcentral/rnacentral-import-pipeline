@@ -14,22 +14,18 @@ limitations under the License.
 """
 
 import csv
-import itertools as it
 import logging
-import operator as op
 from pathlib import Path
 
 import click
 import psycopg2
 
-from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases import manifest
 from rnacentral_pipeline.databases.ensembl import (
     delta,
     homology,
     mrna,
     parser,
-    pseudogenes,
     urls,
 )
 from rnacentral_pipeline.databases.ensembl.metadata import (
@@ -38,8 +34,6 @@ from rnacentral_pipeline.databases.ensembl.metadata import (
     proteins,
 )
 from rnacentral_pipeline.output_format import format_option
-from rnacentral_pipeline.parquet_writers import row_writer
-from rnacentral_pipeline.rnacentral.notify import slack
 from rnacentral_pipeline.writers import entry_writer
 
 LOGGER = logging.getLogger(__name__)
@@ -307,14 +301,3 @@ def ensembl_compara(fasta, output):
     homologous.
     """
     compara.write(fasta, output)
-
-
-@cli.command("pseudogenes")
-@click.argument("embl_file", type=click.File("r"))
-@click.argument("output", default="ensembl-pseudogenes.csv", type=click.Path())
-@format_option
-def ensembl_pseudogenes(embl_file, output):
-    genes = pseudogenes.parse(embl_file)
-    genes = it.chain.from_iterable(g.writeable() for g in genes)
-    with row_writer(Path(output), schemas.ENSEMBL_PSEUDOGENES) as writer:
-        writer.writerows(genes)

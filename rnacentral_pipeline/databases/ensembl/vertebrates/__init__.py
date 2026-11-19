@@ -16,7 +16,6 @@ limitations under the License.
 import typing as ty
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.ensembl.data import Pseudogene
 from rnacentral_pipeline.databases.ensembl.vertebrates import parser
 
 
@@ -26,7 +25,3 @@ def parse(
     return parser.parse(
         raw, gff_file, family_file=family_file, excluded_file=excluded_file
     )
-
-
-def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
-    return parser.pseudogenes(handle)

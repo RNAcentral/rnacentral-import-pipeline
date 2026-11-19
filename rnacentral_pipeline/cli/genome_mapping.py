@@ -20,9 +20,7 @@ from rnacentral_pipeline.output_format import format_option
 from rnacentral_pipeline.rnacentral import attempted
 from rnacentral_pipeline.rnacentral.genome_mapping import (
     blat,
-    igv,
     remote_files,
-    urls,
 )
 
 
@@ -114,32 +112,9 @@ def find_remote_files(assemblies, output, location=None):
     remote_files.write(location, assemblies, output)
 
 
-@cli.command("urls-for")
-@click.argument("filename", default="-", type=click.File("r"))
-@click.argument("output", default="-", type=click.File("w"))
-def find_remote_urls(filename, output):
-    """
-    Determine the remote URL to fetch a the genomes for all entries in a file,
-    where the file is a csv of species,assembly. The urls is written to the
-    output file and may include '*'.
-    """
-    urls.write_urls_for(filename, output)
-
-
 @cli.command("create-attempted")
 @click.argument("filename", type=click.File("r"))
 @click.argument("assembly_id")
 @click.argument("output", type=click.Path())
 def parse_attempted_sequences(filename, assembly_id, output):
     attempted.genome_mapping(filename, assembly_id, output)
-
-
-@cli.command("igv")
-@click.argument("species")
-@click.argument("assembly_id")
-@click.argument("output", default="-", type=click.File("w"))
-def find_url_and_create_json(species, assembly_id, output):
-    """
-    Check which files are available to be used by IGV
-    """
-    igv.create_json(species, assembly_id, output)

@@ -2,7 +2,6 @@
 
 nextflow.enable.dsl=2
 
-/* include { repeats } from './workflows/precompute/repeats' */
 include { build_precompute_accessions } from './workflows/precompute/accessions'
 include { build_urs_table } from './workflows/precompute/build_urs_table'
 
@@ -19,25 +18,6 @@ include { qc_precompute } from './workflows/utils/qc'
 
 include { slack_closure } from './workflows/utils/slack'
 include { slack_message } from './workflows/utils/slack'
-
-process build_precompute_context {
-  input:
-  path('species-repeats*')
-
-  output:
-  path('context')
-
-  script:
-  """
-  mkdir repeat-tree
-  mv species-repeats* repeat-tree
-  pushd repeat-tree
-  rnac repeats build-tree .
-  popd
-  mkdir context
-  mv repeat-tree context
-  """
-}
 
 process build_metadata {
   input:
@@ -246,7 +226,6 @@ workflow precompute {
     channel.fromPath('files/precompute/queries/stopfree.sql') | set { stopfree_sql }
     channel.fromPath('files/precompute/queries/tcode.sql') | set { tcode_sql }
 
-    // repeats | build_precompute_context | set { context }
     channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
     urs_counts | build_precompute_accessions | set { accessions_ready }
 
