@@ -233,10 +233,20 @@ This builds the text search, sequence search and ftp exports. It is run with:
 $ nextflow run -profile prod export.nf
 ```
 
-This runs all parts, but individual parts can be run like:
+This runs all parts and publishes each into a folder named after it
+(`text-search`, `sequence-search`, `sankey`, `ftp`) in the directory you launch
+from. HuggingFace is a section too and needs `export.huggingface.update_specs` set.
+The `update_public` section dumps the production database, restores it into the
+public database and publishes the dump to `ftp/database_files/database_files.tar`.
+It replaces running `update-public.nf` separately. To run only some parts, turn the others off in your config:
 
-```sh
-$ nextflow run -profile prod workflows/export/sequence-search.nf
+```groovy
+params {
+  export {
+    search.run = false
+    sankey.run = false
+  }
+}
 ```
 
 ## Other notes
