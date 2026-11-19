@@ -1,4 +1,0 @@
-# RNC Test Utils
-
-A set of a few utility functions to help with testing. Mostly this is focused
-on command line programs.
