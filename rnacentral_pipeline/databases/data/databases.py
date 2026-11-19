@@ -101,6 +101,7 @@ class Database(enum.Enum):
     ensembl_coding = DatabaseValue(60, "Ensembl coding", "ENSEMBL_CODING")
     sgd_coding = DatabaseValue(61, "SGD coding", "SGD_CODING")
     ena_coding = DatabaseValue(62, "ENA coding", "ENA_CODING")
+    regulondb = DatabaseValue(63, "RegulonDB", "REGULONDB")
 
     @classmethod
     def build(cls, name: str) -> Database:
@@ -142,7 +143,13 @@ class Database(enum.Enum):
         return self.value.pretty
 
 
-# mRNAs and UTRs, kept below the ncRNAs in QA and search
+# Databases with mRNAs and UTRs, which are kept below the ncRNAs in QA and search
+CODING_RNA_TYPES = frozenset({"SO:0000234", "SO:0000204", "SO:0000205"})
 CODING_DATABASES = frozenset(
-    {Database.ensembl_coding, Database.sgd_coding, Database.ena_coding}
+    {
+        Database.ensembl_coding,
+        Database.sgd_coding,
+        Database.ena_coding,
+        Database.regulondb,
+    }
 )

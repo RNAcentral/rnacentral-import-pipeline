@@ -251,6 +251,7 @@ class Entry:
             "ENSEMBL_CODING",
             "SGD_CODING",
             "ENA_CODING",
+            "REGULONDB",
         }:
             LOGGER.warn("Skipping a mRNA")
             return False

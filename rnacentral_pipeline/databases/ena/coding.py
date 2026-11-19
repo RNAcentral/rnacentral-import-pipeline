@@ -130,7 +130,16 @@ def annotated(record) -> ty.Iterable[Transcript]:
 
 
 def as_entry(
-    record, transcript, spans, accession, rna_type, label, taxid, assembly
+    record,
+    transcript,
+    spans,
+    accession,
+    rna_type,
+    label,
+    taxid,
+    assembly,
+    database,
+    references,
 ) -> data.Entry:
     sequence = location(spans, transcript.strand).extract(record.seq)
     regions = []
@@ -147,9 +156,9 @@ def as_entry(
     version = transcript.accession.rsplit(".", 1)
     return data.Entry(
         primary_id=accession,
-        accession=f"ENA_CODING:{accession}",
+        accession=f"{database}:{accession}",
         ncbi_tax_id=taxid,
-        database="ENA_CODING",
+        database=database,
         sequence=str(sequence).upper(),
         regions=regions,
         rna_type=rna_type,
@@ -160,20 +169,31 @@ def as_entry(
         gene=transcript.gene,
         locus_tag=transcript.locus_tag,
         optional_id=transcript.locus_tag,
-        references=embl.references(record),
+        references=references,
         mol_type=first(record.features[0], "mol_type"),
         description=f"{transcript.name} {label}",
     )
 
 
-def entries(record, transcript, taxid, assembly) -> ty.Iterable[data.Entry]:
+def entries(
+    record, transcript, taxid, assembly, database, references
+) -> ty.Iterable[data.Entry]:
     start, stop = transcript.spans[0][0], transcript.spans[-1][1]
     cds_start, cds_stop = transcript.cds
     if cds_start < start or cds_stop > stop:
         return
     accession = transcript.accession
     entry = as_entry(
-        record, transcript, transcript.spans, accession, MRNA, "mRNA", taxid, assembly
+        record,
+        transcript,
+        transcript.spans,
+        accession,
+        MRNA,
+        "mRNA",
+        taxid,
+        assembly,
+        database,
+        references,
     )
     # The IGV export draws the CDS from this 1-based genomic span, as for Ensembl
     entry = attr.evolve(entry, note_data={"cds": [cds_start, cds_stop]})
@@ -201,6 +221,8 @@ def entries(record, transcript, taxid, assembly) -> ty.Iterable[data.Entry]:
             label,
             taxid,
             assembly,
+            database,
+            references,
         )
         if utr.is_valid():
             utrs.append(utr)
@@ -243,5 +265,8 @@ def parse(
         if "organelle" in record.features[0].qualifiers:
             continue
         transcripts = annotated(record) if assembly else whole_record(record)
+        references = embl.references(record)
         for transcript in transcripts:
-            yield from entries(record, transcript, taxid, assembly)
+            yield from entries(
+                record, transcript, taxid, assembly, "ENA_CODING", references
+            )

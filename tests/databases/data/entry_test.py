@@ -286,6 +286,7 @@ def test_write_ac_info_truncates_long_description_for_load_table():
         ("SGD_CODING", True),
         ("ENA", False),
         ("ENA_CODING", True),
+        ("REGULONDB", True),
     ],
 )
 def test_only_coding_databases_may_import_mrna(database, valid):
