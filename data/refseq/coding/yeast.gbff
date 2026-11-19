@@ -1,0 +1,56 @@
+LOCUS       NC_006037                600 bp    DNA     linear   CON 01-JAN-1980
+DEFINITION  Kluyveromyces lactis strain NRRL Y-1140 chromosome A complete
+            sequence.
+ACCESSION   NC_006037
+VERSION     NC_006037.1
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  Kluyveromyces lactis
+            Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina;
+            Saccharomycetes; Saccharomycetales; Saccharomycetaceae;
+            Kluyveromyces.
+FEATURES             Location/Qualifiers
+     source          1..600
+                     /organism="Kluyveromyces lactis"
+                     /mol_type="genomic DNA"
+                     /strain="NRRL Y-1140"
+                     /db_xref="taxon:28985"
+                     /chromosome="A"
+                     /note="label:Klla0A"
+     gene            complement(<133..>474)
+                     /gene="PCC1"
+                     /locus_tag="KLLA0_A00539g"
+                     /db_xref="GeneID:9487336"
+     mRNA            complement(join(<133..361,440..>474))
+                     /gene="PCC1"
+                     /locus_tag="KLLA0_A00539g"
+                     /product="chromatin DNA-binding EKC/KEOPS complex subunit
+                     PCC1"
+                     /transcript_id="XM_002999299.1"
+                     /db_xref="GeneID:9487336"
+     CDS             complement(join(133..361,440..474))
+                     /gene="PCC1"
+                     /locus_tag="KLLA0_A00539g"
+                     /note="highly similar to uniprot|Q3E833 Saccharomyces
+                     cerevisiae YKR095W-A PCC1 Protein"
+                     /codon_start=1
+                     /product="chromatin DNA-binding EKC/KEOPS complex subunit
+                     PCC1"
+                     /protein_id="XP_002999345.1"
+                     /db_xref="GeneID:9487336"
+                     /db_xref="InterPro:IPR015419"
+                     /db_xref="UniProtKB/TrEMBL:B5RSI3"
+                     /translation="MNKGDTSFEHSLHLEIPFESIKQADVARKVLLPDPIMKPEDFQVT
+                     YSTQDTKLICDFESVDERILRVGVNSVIESIKTIVETIDELC"
+ORIGIN
+        1 atgcaatgac acaaattgtt ctgcgtttag tttttctgcc ttaagaaatt tcatagtacc
+       61 ataggttaga aagtaataga aagatgggaa gatgatgaaa aggcaccccg aacgtgtact
+      121 gttctgtttg cattagcaca actcatcaat agtttctacg attgtcttga ttgattcaat
+      181 gacactgttc acacctacac gtaaaatacg ctcgtcaacg ctttcaaaat cacatataag
+      241 tttggtgtct tgcgtagaat aagtaacttg gaaatcctct ggtttcatga tggggtctgg
+      301 aagcagcact ttccttgcta catcagcttg tttaatgctt tcaaatggta tttccaaatg
+      361 tctgtacggc attttacatc acaacttgtt agtatttcaa gttataaact tgcattcata
+      421 agagccagaa ataacataca aagagtgctc gaaagacgtg tctcctttat tcatcttaaa
+      481 agagtactat ttatccgctg attgaactca ctactgcagc aagtttcaag tgtgtatcat
+      541 tcataaagat ctcaaagtca ataagttcat cctgaacatg aaccacacac agtacggatg
+//
