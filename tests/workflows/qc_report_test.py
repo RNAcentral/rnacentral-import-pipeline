@@ -25,7 +25,6 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 QC_WORKFLOW = ROOT / "workflows" / "utils" / "qc.nf"
-MAIN_WORKFLOW = ROOT / "main.nf"
 QC_SQL_DIR = ROOT / "files" / "qc"
 
 PROCESS_RE = re.compile(r"^process\s+(\w+)\s*\{", re.MULTILINE)

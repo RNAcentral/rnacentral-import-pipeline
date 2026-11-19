@@ -7,13 +7,14 @@
 This is the main pipeline that is used internally for loading the data into the
 RNAcentral database. [More
 information](http://www.ebi.ac.uk/seqdb/confluence/display/RNAC/RNAcentral+data+import+pipeline).
-The pipeline is [nextflow](https://www.nextflow.io) based and the main entry
-point is main.nf.
+The pipeline is [nextflow](https://www.nextflow.io) based and is run stage by
+stage, each stage being its own entry point: `import-data.nf`, `analyze.nf`,
+`precompute.nf`, `genes.nf` and `export.nf`.
 
-The pipeline is typically run as:
+A stage is typically run as:
 
 ```sh
-nextflow run -profile env -with-singularity pipeline.sif main.nf
+nextflow run -profile env -with-singularity pipeline.sif import-data.nf
 ```
 
 The pipeline is meant to run

@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-// Also derived in main.nf; without these a direct run leaves should_release
+// Without these a direct run leaves should_release
 // false, so the load stops at the staging tables. Must stay above the includes:
 // a module captures params as they are when it is included, so load_data would
 // not see these and `release` would never be scheduled.
