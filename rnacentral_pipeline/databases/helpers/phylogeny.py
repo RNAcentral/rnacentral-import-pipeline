@@ -102,6 +102,8 @@ def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
             else:
                 LOGGER.exception(err)
                 raise FailedTaxonId("Unknown error")
+    else:
+        raise FailedTaxonId(f"UniProt taxonomy kept failing for {taxon_id}")
 
     if "scientificName" not in data or "rank" not in data:
         raise FailedTaxonId(f"UniProt taxonomy payload for {taxon_id} is incomplete")
@@ -158,6 +160,8 @@ def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
             else:
                 LOGGER.exception(err)
                 raise FailedTaxonId(f"Could not get taxon id for {taxon_id}")
+    else:
+        raise FailedTaxonId(f"ENA taxonomy kept failing for {taxon_id}")
 
     if not data:
         raise FailedTaxonId("Somehow got no data")
