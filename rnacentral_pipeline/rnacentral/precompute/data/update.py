@@ -31,7 +31,6 @@ from rnacentral_pipeline.rnacentral.precompute.description import (
 from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 from rnacentral_pipeline.rnacentral.precompute.rna_type import rna_type_of
-from rnacentral_pipeline.rnacentral.repeats import tree
 
 
 def previous_rna_type(previous: ty.Dict[str, ty.Any]) -> str:
