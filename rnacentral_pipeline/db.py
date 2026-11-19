@@ -70,9 +70,13 @@ def cursor(config, commit_on_leave=True):
             cur.close()
 
 
-def run_query(url, query, **kwargs):
+def run_query(url, query, commit_on_leave=True, **params):
+    """
+    Run a query and yield each row. ``params`` are the query parameters;
+    ``commit_on_leave`` is a connection option, not a parameter.
+    """
 
-    with cursor(url) as cur:
-        cur.execute(query, kwargs)
+    with cursor(url, commit_on_leave=commit_on_leave) as cur:
+        cur.execute(query, params)
         for result in cur:
             yield result
