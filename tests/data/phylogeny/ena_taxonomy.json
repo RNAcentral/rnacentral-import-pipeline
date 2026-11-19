@@ -190,6 +190,43 @@
     "submittable": "true",
     "taxId": "164674"
   },
+  "1659": {
+    "authority": "(Kruse 1896) Lachner-Sandoval 1898 (Approved Lists 1980)",
+    "binomial": "true",
+    "division": "PRO",
+    "formalName": "true",
+    "geneticCode": "11",
+    "lineage": "Bacteria; Bacillati; Actinomycetota; Actinomycetes; Actinomycetales; Actinomycetaceae; Actinomyces; ",
+    "metagenome": "false",
+    "otherNames": [
+      "Actinomyces israeli (Kruse 1896) Lachner-Sandoval 1898 (Approved Lists 1980):authority",
+      "\"Streptothrix israeli\" Kruse 1896:authority",
+      "\"Oospora israeli\" (Kruse 1896) Sartory 1920:authority",
+      "\"Nocardia israeli\" (Kruse 1896) Castellani and Chalmers 1913:authority",
+      "\"Discomyces israeli\" (Kruse 1896) Gedoelst 1902:authority",
+      "\"Proactinomyces israeli\" (Kruse 1896) Negroni 1934:authority",
+      "\"Cohnistreptothrix israeli\" (Kruse 1896) Pinoy 1913:authority",
+      "\"Brevistreptothrix israeli\" (Kruse 1896) Lignieres 1924:authority",
+      "\"Actinobacterium israeli\" (Kruse 1896) Sampietro 1908:authority",
+      "Actinomyces israelii (Kruse 1896) Lachner-Sandoval 1898 (Approved Lists 1980) emend. Nouioui et al. 2018:authority",
+      "\"Corynebacterium israeli\" (Kruse 1896) Haupt and Zeki 1933:authority",
+      "Actinomyces israeli:synonym",
+      "Proactinomyces israeli:synonym",
+      "Oospora israeli:synonym",
+      "Nocardia israeli:synonym",
+      "Discomyces israeli:synonym",
+      "Corynebacterium israeli:synonym",
+      "Cohnistreptothrix israeli:synonym",
+      "Brevistreptothrix israeli:synonym",
+      "Actinomyces israelii corrig. (Kruse 1896) Lachner-Sandoval 1898 (Approved Lists 1980):synonym",
+      "Actinobacterium israeli:synonym",
+      "Streptothrix israeli:synonym"
+    ],
+    "rank": "species",
+    "scientificName": "Actinomyces israelii",
+    "submittable": "true",
+    "taxId": "1659"
+  },
   "173247": {
     "binomial": "true",
     "commonName": "live sharksucker",
@@ -812,6 +849,25 @@
   "562": {
     "lineage": "Bacteria; Pseudomonadota; Gammaproteobacteria; Enterobacterales; Enterobacteriaceae; Escherichia; ",
     "scientificName": "Escherichia coli"
+  },
+  "5755": {
+    "binomial": "true",
+    "division": "INV",
+    "formalName": "true",
+    "geneticCode": "1",
+    "lineage": "Eukaryota; Amoebozoa; Discosea; Longamoebia; Centramoebida; Acanthamoebidae; Acanthamoeba; ",
+    "metagenome": "false",
+    "mitochondrialGeneticCode": "4",
+    "otherNames": [
+      "Acanthamoeba castellanii (Douglas 1930):authority",
+      "Acanthamoeba sp. ATCC 30011:includes",
+      "Acanthamoeba castellani:synonym"
+    ],
+    "plastIdGeneticCode": "11",
+    "rank": "species",
+    "scientificName": "Acanthamoeba castellanii",
+    "submittable": "true",
+    "taxId": "5755"
   },
   "5762": {
     "binomial": "true",
