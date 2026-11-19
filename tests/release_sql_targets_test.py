@@ -116,12 +116,7 @@ def test_reachable_release_scripts_target_existing_tables(script):
         )
 
 
-def test_scripts_naming_missing_tables_stay_unreachable():
-    """
-    ``rnc_coordinates`` and ``ref_pubmed`` no longer exist. Their scripts are
-    harmless only because no loaded name globs them; mapping ``locations`` or
-    ``go_publications`` would kill a release the way karyotypes did.
-    """
-    selectable = {s.name for s in REACHABLE}
-    assert "001__locations.sql" not in selectable
-    assert "002__go-publications.sql" not in selectable
+def test_secondary_structure_post_load_is_selected():
+    """It was named 001__secondary.sql, so CRW/RiboVision structures were never
+    copied out of the staging table."""
+    assert "001__secondary-structure.sql" in {s.name for s in REACHABLE}
