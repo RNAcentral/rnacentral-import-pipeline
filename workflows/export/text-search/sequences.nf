@@ -2,7 +2,6 @@
 
 nextflow.enable.dsl=2
 
-include { query as accession_query } from './utils'
 include { query as base_query } from './utils'
 include { query as crs_query } from './utils'
 include { query as feeback_query } from './utils'
@@ -12,7 +11,6 @@ include { query as rnas_query } from './utils'
 include { query as precompute_query } from './utils'
 include { query as qa_query } from './utils'
 include { query as r2dt_query } from './utils'
-include { query as ref_query } from './utils'
 include { query as rfam_query } from './utils'
 include { query as orf_query } from './utils'
 include { fetch_schema } from './utils'

@@ -11,19 +11,6 @@ process slack_message {
 }
 
 
-process slack_file {
-  input:
-  path(message)
-
-  when: params.get('notify', false)
-
-  script:
-  params.notify ? """
-  rnac notify file "$message"
-  """ : "true"
-}
-
-
 // A groovy function for use in closures - uses groovy's own URL class to make the request
 def slack_closure(msg) {
   if (!params.notify) {
