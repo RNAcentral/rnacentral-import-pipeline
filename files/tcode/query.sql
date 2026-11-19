@@ -11,7 +11,7 @@ COPY (
     rna.id >= :min
     AND rna.id < :max
     AND pre.is_active = true
-    -- Whole Ensembl, SGD and RefSeq mRNAs (dbid 60-62) are left out, their UTRs are kept. Read
+    -- Whole Ensembl, SGD and ENA mRNAs (dbid 60-62) are left out, their UTRs are kept. Read
     -- xref: precompute has not filled pre.databases for new sequences yet.
     AND NOT EXISTS (
       SELECT 1

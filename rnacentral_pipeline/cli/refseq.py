@@ -17,7 +17,7 @@ from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.databases.refseq import coding, parser
+from rnacentral_pipeline.databases.refseq import parser
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -47,20 +47,3 @@ def process_refseq(refseq_file, output):
     entries = parser.parse(refseq_file)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
-
-
-@cli.command("parse-coding")
-@click.option("--taxid", type=int, required=True)
-@click.option(
-    "--assembly", default=None, help="Set for a genome; leave out for viruses."
-)
-@click.argument("genbank_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False),
-)
-def process_coding(taxid, assembly, genbank_file, output):
-    """Parse RefSeq GenBank records into mRNAs and their UTRs."""
-    with entry_writer(Path(output)) as writer:
-        writer.write(coding.parse(genbank_file, taxid, assembly))

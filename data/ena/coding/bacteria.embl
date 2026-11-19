@@ -1,0 +1,101 @@
+ID   CP000058; SV 1; circular; genomic DNA; ; PRO; 2900 BP.
+XX
+AC   CP000058;
+XX
+DE   Pseudomonas savastanoi pv. phaseolicola 1448A chromosome, complete genome.
+XX
+OS   Pseudomonas savastanoi pv. phaseolicola 1448A
+OC   Bacteria; Proteobacteria; Gammaproteobacteria; Pseudomonadales;
+OC   Pseudomonadaceae; Pseudomonas.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..2900
+FT                   /organism="Pseudomonas savastanoi pv. phaseolicola 1448A"
+FT                   /strain="1448A; BAA-978"
+FT                   /mol_type="genomic DNA"
+FT                   /note="pathovar: phaseolicola"
+FT                   /db_xref="taxon:264730"
+FT   gene            73..1398
+FT                   /locus_tag="PSPPH_0005"
+FT                   /note="PSPPH0005"
+FT   CDS             73..1398
+FT                   /codon_start=1
+FT                   /transl_table=11
+FT                   /locus_tag="PSPPH_0005"
+FT                   /product="oxidoreductase, FAD-binding"
+FT                   /note="identified by match to protein family HMM PF01266"
+FT                   /db_xref="EnsemblGenomes-Gn:PSPPH_0005"
+FT                   /db_xref="EnsemblGenomes-Tr:AAZ34480"
+FT                   /db_xref="GOA:Q48QJ6"
+FT                   /db_xref="InterPro:IPR006076"
+FT                   /db_xref="InterPro:IPR036188"
+FT                   /db_xref="UniProtKB/TrEMBL:Q48QJ6"
+FT                   /protein_id="AAZ34480.1"
+FT                   /translation="MPAPLIPVETSPKLPLEADVVVIGGGIIGSFTAYYLALRGMKVAL
+FT                   VEKGRIGAEQSSRNWGWCRQQNRDARELPMATKSLDLWEQFAKQSGEQTGFTRCGLLYL
+FT                   SNDEKELAGWARWGEFARTVGVQTYMLTAQQAAERGKATGKQWKGGVYAPTDGTADPSR
+FT                   AAPAVARAIMALGGTVHQGCAARGLETEGGRLSAVVTENGTIRTRLAVLAGGAWASSFC
+FT                   RQYGISFPQATIRQTVMSVSPPTGELVPALHTSNVSMTRRHDGSYTLAISGRGRVDPTP
+FT                   QLFGFAAQFLPMFGRRWRNLAPGGLEGLRSGHEGRGRWRLDQPTPMEKMRILDPKVDTS
+FT                   AVELTYKRAVAMVPALKQSSVNAAWAGYVDSTPDGVPGIGEIASLPGLVLAAGFSGHGF
+FT                   GIGPGAGHLIAHIVSGVAPIVDPKPYHPDRFHGSAWGKVADF"
+FT   gene            complement(1600..2832)
+FT                   /pseudo=""
+FT                   /locus_tag="PSPPH_0006"
+FT                   /note="PSPPH0006; IS801, transposase, authentic point
+FT                   mutation; this gene contains a premature stop which is not
+FT                   the result of sequencing error; identified by similarity to
+FT                   SP:P24607"
+XX
+SQ   Sequence 2900 BP; 586 A; 800 C; 903 G; 611 T; 0 other;
+     cgattaacct gatcaatatc gcagccgctc aaggctgcac gtattactac gatattggca        60
+     ggaatagcaa aaatgcccgc acctctgatc cccgtcgaga cctcccccaa gcttcccttg       120
+     gaggcagatg tagttgtaat tggcggcggc ataataggca gcttcaccgc ctactacctc       180
+     gccctgcgcg gcatgaaggt cgctctggtt gaaaaaggcc gtatcggtgc cgagcaatcg       240
+     agtcgtaatt gggggtggtg ccggcagcag aatcgggatg cccgggagct gccgatggca       300
+     accaaaagcc tggacctgtg ggagcagttt gccaagcaga gcggcgagca gacaggcttc       360
+     acccgctgcg gcctgcttta cttgagcaac gacgagaaag aacttgcggg atgggcacgc       420
+     tggggagaat ttgcccgtac tgtaggtgtc cagacttaca tgttgaccgc ccagcaggct       480
+     gctgaacgcg gaaaggctac aggcaagcaa tggaagggcg gagtctatgc gcctacggat       540
+     ggtactgccg atccatctcg tgcagcacca gctgttgcgc gagcgatcat ggcgctgggc       600
+     ggcaccgtgc atcaaggttg cgccgctcgg gggctggaaa ccgaaggtgg gcgattgtct       660
+     gccgtggtca ccgagaacgg caccattcgt acccggctcg cggtacttgc cggaggcgcg       720
+     tgggcttcct cattctgtcg ccagtacggt attagttttc cccaggccac tattcgccag       780
+     acggtgatgt cagtttcccc gccgaccggt gagttggtgc ccgcattgca tacttcaaat       840
+     gtttccatga ctcgccgtca tgacggtagc tacaccctgg caatcagtgg ccgtggaagg       900
+     gttgatccta ccccacagct gttcgggttt gctgcgcagt ttctgcccat gtttgggcgc       960
+     cgttggcgca atctggcgcc gggaggtctg gaaggcttgc gctcaggtca cgagggccgt      1020
+     ggcaggtggc gtctcgacca gccgacacct atggagaaaa tgcgcatact cgatccaaag      1080
+     gtagatacat ctgcggtgga gttgacctac aagcgcgcgg tggcgatggt ccccgctctc      1140
+     aagcaatcat cggtcaacgc agcctgggcc ggttatgtcg acagcacccc tgatggtgtg      1200
+     ccgggaatag gcgaaatcgc cagcctgccc gggctggtgc tggccgccgg gttcagtggc      1260
+     catggtttcg gtattggacc aggagcaggt catttgatcg ctcacattgt cagcggtgtc      1320
+     gcccctatcg tcgaccctaa accttatcat ccagaccgtt tccacggttc agcctggggc      1380
+     aaggtggcag atttctgagt gaaacgagga gcgacgttca tgcataggaa tttcaaaatg      1440
+     cctatgcatc aggctgacgc tatgacggag gcgtcatgcc ttcaaagcga tgggtaggaa      1500
+     gacgctgatg cgttacttat gcagtgaaaa tccctatcaa caagcattaa tgcaggttat      1560
+     ttcaccgcga agcctaggtg cggacgcacc taggccctgt cagggcttca cgtacctcat      1620
+     ctgcgcaatc gcctgagcgt tgaggttcag tccctgcacc gtcagcccgc tgattgccgc      1680
+     cgtgtatacc atccgcgcgc cacacagcac gcagcggaac ggatcgacgt ttagaaaggc      1740
+     tttggccatc tgcacaaaat acagcttcgg tgtcggtcct ggcgtcgcca tcttcagtgc      1800
+     ttcatagacc tttggcaggt actgcccgca gacccgattg gccagaaaac caaaataccg      1860
+     gatcatccgg aaatgctttt ccgggatgtg ctgcaccacc cggaaaagca tgtcggcctg      1920
+     gctcagcgtt tcctgctgat aggtcttggt gcggtgatcc aggtaggtaa aactcaaggt      1980
+     tgcgctgttg gtgtaatggg ccaatcggct gcccgagatg ggcggttttt tcaggtagcg      2040
+     gcccaggtaa ttgacggtct ttcggccgtt tttcgtcttc ttcgacaagt ggatgtgcca      2100
+     gtgctggcca ccagcggtca gtatcaaacg gcgccagtcg ctttcacaga ggatgtgggc      2160
+     cagcggcggc ggcatcgtca gttgcgaaag cggctgtccc agcaggtaat cgcgcaccag      2220
+     ccacatccag cgccgccgca gggcctcttt gtggaacgac agatttttcc agacgccctg      2280
+     ctcatccagg ccgcccgcgg tcaccgacag gtggacgtgg ggatgccagt tgagccgccg      2340
+     gccataggtg tgcagcgccc cttaaatccc gacgcgcaaa ccgcgccgct tggcggcgta      2400
+     gatcaggtta tcggccgcca gccgaaacag cgcatcgagc agccagcggt tgtagaagaa      2460
+     caggggccat agcgtgtcgg gcagcgtgaa caccagatgc tgccaggggc agtcgggcag      2520
+     acggttgttt tgcacggtga tccactggtc ggtggccttt ttgccgcagg agggacaggc      2580
+     ccggcaatgg caggtgttgc acaggtattt gacgtgcggg cagctgtggt tgccgcaggt      2640
+     gtagtgtttg acgcccagta tcgaggtgcc gcaggcgagc attttggtga cggactcgac      2700
+     ttcgatgtcg cgtaagccgc cctcctcgag gaggtgtgcc cagcactggt tagcggtgaa      2760
+     gaggtttttg agcggtcgag gtgtgtaggc aggactcatc tgaagcagca gcggtgggta      2820
+     agcaggcttc atgatggtca ataacgggcc tcatggcaaa gctcaaatcg atgtttctgc      2880
+     tgctacgcga tcgtaagaac                                                  2900
+//
