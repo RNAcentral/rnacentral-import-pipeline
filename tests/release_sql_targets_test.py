@@ -33,7 +33,11 @@ RELEASE_DIRS = [
 ]
 
 # Run unconditionally by load-data.nf rather than selected by a loaded name.
-ALWAYS_RUN = {"000__populate_precompute.sql", "999__cleanup.sql"}
+ALWAYS_RUN = {
+    "000__populate_precompute.sql",
+    "002__assembly-cleanup.sql",
+    "999__cleanup.sql",
+}
 
 # Tables in the RNAcentral schema that release scripts write to. Verified to
 # exist; ``rnc_coordinates`` and ``ref_pubmed`` are deliberately absent because
@@ -120,3 +124,14 @@ def test_secondary_structure_post_load_is_selected():
     """It was named 001__secondary.sql, so CRW/RiboVision structures were never
     copied out of the staging table."""
     assert "001__secondary-structure.sql" in {s.name for s in REACHABLE}
+
+
+def test_assembly_cleanup_runs_and_keeps_selected_genomes():
+    """Genome mapping maps only into selected genomes and runs after this
+    script, so deleting a selected genome with no regions yet would stop it ever
+    being mapped."""
+    assert "002__assembly-cleanup.sql" in {s.name for s in REACHABLE}
+    sql = (
+        ROOT / "files/import-data/post-release/002__assembly-cleanup.sql"
+    ).read_text()
+    assert "selected_genome IS NOT TRUE" in sql
