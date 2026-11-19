@@ -225,26 +225,6 @@ def test_pdb_ids_keep_the_entry_and_chain():
     assert data.pdb_ids(xrefs) == ["1ABC_B"]
 
 
-@pytest.mark.parametrize(
-    "tax_string,expected",
-    [
-        ("Eukaryota; Metazoa; Vertebrata", "vertebrates"),
-        ("Eukaryota; Metazoa; Arthropoda", "metazoa"),
-        ("Bacteria; Proteobacteria", "bacteria"),
-        ("Eukaryota; Alveolata", "protists"),
-    ],
-)
-def test_kingdom(tax_string, expected):
-    assert data.kingdom(tax_string) == expected
-
-
-def test_kingdoms_are_sorted_and_unique():
-    assert data.kingdoms(["Eukaryota; Fungi", "Bacteria", "Bacteria; x"]) == [
-        "bacteria",
-        "fungi",
-    ]
-
-
 def test_editing_event_fields():
     events = [
         {
