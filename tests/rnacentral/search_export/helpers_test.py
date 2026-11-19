@@ -15,14 +15,14 @@ def refs(items):
 @pytest.mark.parametrize(
     "args,expected",
     [
-        ((9606, ["N"], ["lncRNA"], [], NO_ISSUE), "3"),
-        ((1, ["N"], ["lncRNA"], ["HGNC"], NO_ISSUE), "4"),
-        ((10090, ["N"], ["lncRNA"], [], NO_ISSUE), "2"),
-        ((1, ["N"], ["lncRNA"], [], NO_ISSUE), "1"),
-        ((9606, ["Y"], ["lncRNA"], [], NO_ISSUE), "0"),
-        ((9606, ["N"], ["misc_RNA"], [], NO_ISSUE), "2.5"),
-        ((9606, ["N"], ["lncRNA"], [], {"has_issue": True}), "2.5"),
-        ((9606, ["Y"], ["misc_RNA"], [], {"has_issue": True}), "-1.0"),
+        ((9606, ["N"], ["lncRNA"], [], [], NO_ISSUE), "3"),
+        ((1, ["N"], ["lncRNA"], [], ["HGNC"], NO_ISSUE), "4"),
+        ((10090, ["N"], ["lncRNA"], [], [], NO_ISSUE), "2"),
+        ((1, ["N"], ["lncRNA"], [], [], NO_ISSUE), "1"),
+        ((9606, ["Y"], ["lncRNA"], [], [], NO_ISSUE), "0"),
+        ((9606, ["N"], ["misc_RNA"], [], [], NO_ISSUE), "2.5"),
+        ((9606, ["N"], ["lncRNA"], [], [], {"has_issue": True}), "2.5"),
+        ((9606, ["Y"], ["misc_RNA"], [], [], {"has_issue": True}), "-1.0"),
     ],
 )
 def test_boost_orders_results(args, expected):

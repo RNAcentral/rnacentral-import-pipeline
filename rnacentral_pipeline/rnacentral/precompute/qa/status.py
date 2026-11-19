@@ -15,7 +15,7 @@ limitations under the License.
 
 import attr
 
-from rnacentral_pipeline.databases.data import CODING_DATABASES
+from rnacentral_pipeline.databases.data import CODING_DATABASES, CODING_RNA_TYPES
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa import coding_potential, contamination
@@ -32,9 +32,12 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
     """
 
     # These checks judge ncRNAs; on mRNAs and UTRs they only raise meaningless
-    # flags, so a sequence known only from a coding database is not checked.
+    # flags, so a sequence known only as a coding database's mRNA or UTR is not checked.
     accessions = sequence.accessions
-    if accessions and all(a.database in CODING_DATABASES for a in accessions):
+    if accessions and all(
+        a.database in CODING_DATABASES and a.rna_type.so_term.so_id in CODING_RNA_TYPES
+        for a in accessions
+    ):
         fields = attr.fields(QaStatus)
         return QaStatus(**{f.name: QaResult.null(f.name) for f in fields})
 

@@ -182,10 +182,23 @@ def test_repetitive_region_is_always_reported_ok():
     assert status.from_repetitive_region.has_issue is False
 
 
-@pytest.mark.parametrize("database", ["SGD_CODING", "ENA_CODING"])
+@pytest.mark.parametrize("database", ["SGD_CODING", "ENA_CODING", "REGULONDB"])
 def test_coding_only_sequences_are_not_qa_checked(database):
     from .. import builders
 
     utr = builders.sequence(accessions=[builders.accession(database, "SO:0000205")])
     status = qa.status(builders.context(), utr, "ncRNA")
     assert not any(getattr(status, f.name).has_issue for f in attr.fields(type(status)))
+
+
+def test_ncrnas_from_a_coding_database_are_still_qa_checked():
+    from .. import builders
+
+    hit = builders.rfam_hit(
+        "RF00177", "SO:0000650", sequence_completeness=0.3, model_domain="Bacteria"
+    )
+    srna = builders.sequence(
+        accessions=[builders.accession("REGULONDB", "SO:0000655")], rfam_hits=[hit]
+    )
+    status = qa.status(builders.context(), srna, "ncRNA")
+    assert status.possible_contamination.has_issue
