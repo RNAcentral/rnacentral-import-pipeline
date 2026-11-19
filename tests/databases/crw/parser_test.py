@@ -47,9 +47,9 @@ def test_models_without_a_sequence_are_skipped(entries):
             "CRW:b.16.m.A.castellanii",
             5755,
             "SO:0002344",
-            # sic: SO_RNA_NAME_LOOKUP spells it "mt_SSU_rrNA", and that typo is
-            # what production descriptions show today
-            "Acanthamoeba castellanii mt SSU rrNA",
+            # production still says "mt SSU rrNA": the lookup misspelt it until
+            # 2026-11-19, so this changes on the next CRW import
+            "Acanthamoeba castellanii mt SSU rRNA",
             1560,
         ),
     ],
