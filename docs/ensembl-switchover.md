@@ -163,6 +163,29 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
     and LitScan searches them by systematic ORF name (e.g. YAL001C), so expect
     protein papers.
 
+## RefSeq coding (`REFSEQ_CODING`, branch `update/RefSeq-mrna`)
+
+22. **Create the database row and xref partitions for dbid 62.** Use this row, then
+    item 10's partition SQL with `62` in place of `60`. Item 11's link types are
+    shared.
+
+    ```sql
+    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr, description, url, reference)
+    VALUES (62, now(), 'RNACEN', 'REFSEQ_CODING', 'Y', 'RefSeq coding', 'RefSeq coding',
+      ': mRNAs and their 5'' and 3'' UTRs from NCBI RefSeq, for organisms with RNA structure probing data',
+      'https://www.ncbi.nlm.nih.gov/refseq/',
+      '[{"title":"Reference sequence (RefSeq) database at NCBI: current status, taxonomic expansion, and functional annotation","authors":"O''Leary NA, Wright MW, Brister JR, et al.","journal":"Nucleic Acids Research, 2016","pubmed_id":"26553804"}]'::jsonb);
+    ```
+23. **Run the import with `databases.refseq_coding.run = true`.** It downloads the
+    yeast and bacterial genomes from the NCBI FTP and the virus genomes from efetch,
+    so it needs network access to NCBI. Yeast mRNAs are placed on their assemblies;
+    bacterial coding sequences stand in for mRNAs, so they have no UTRs; each virus
+    genome or segment is one mRNA without coordinates. Organelle records are skipped.
+24. **Ask EBI Search to accept the `expert_db` value "RefSeq coding"** and the
+    `REFSEQ_CODING` cross-reference name, with item 17's values. Entries only in
+    RefSeq coding rank below every ncRNA, as for the other coding databases.
+    LitScan searches mRNAs by transcript id, without its version, and locus tag.
+
 ## Assemblies: review before the first production run
 
 The import now keeps each species on the exact assembly RNAcentral selects today

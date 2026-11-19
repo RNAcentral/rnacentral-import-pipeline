@@ -58,3 +58,29 @@ def test_systematic_names_are_searched_as_they_are(monkeypatch, tmp_path):
     result = CliRunner().invoke(checker.main, ["sgd_coding", str(raw), str(out)])
     assert result.exit_code == 0, result.output
     assert out.read_text() == "YAL001C|URS0000ABCD_559292\n"
+
+
+def test_the_refseq_coding_query_searches_mrnas_by_their_ids_only():
+    query = (
+        ROOT / "workflows" / "litscan" / "queries" / "refseq_coding.sql"
+    ).read_text()
+    assert "'REFSEQ_CODING'" in query
+    assert "feature_name = 'mRNA'" in query
+    columns = query.split("select", 1)[1].split("from", 1)[0]
+    assert [c.strip() for c in columns.split(",")] == [
+        "urs",
+        "taxid",
+        "external_id",
+        "locus_tag",
+    ]
+
+
+# Unversioned, as RefSeq ncRNA ids are stored
+def test_refseq_coding_ids_are_searched_without_their_version(monkeypatch, tmp_path):
+    checker = load_checker(monkeypatch)
+    raw = tmp_path / "results"
+    raw.write_text("URS0000ABCD|28985|XM_002999299.1|KLLA0_A00539g\n")
+    out = tmp_path / "output"
+    result = CliRunner().invoke(checker.main, ["refseq_coding", str(raw), str(out)])
+    assert result.exit_code == 0, result.output
+    assert out.read_text() == "KLLA0_A00539g|XM_002999299|URS0000ABCD_28985\n"
