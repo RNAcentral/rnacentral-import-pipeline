@@ -32,7 +32,6 @@ class Accession:
     gene = attr.ib(validator=optional(is_a(str)))
     optional_id = attr.ib(validator=optional(is_a(str)))
     database = attr.ib(validator=is_a(Database))
-    database_name = attr.ib(validator=is_a(str))
     species = attr.ib(validator=optional(is_a(str)))
     common_name = attr.ib(validator=optional(is_a(str)))
     description = attr.ib(validator=is_a(str), converter=str)
@@ -60,7 +59,6 @@ class Accession:
             gene=data["gene"],
             optional_id=data["optional_id"],
             database=Database.build(data["database"]),
-            database_name=data["database"],
             species=data["species"],
             common_name=data["common_name"],
             description=data["description"],
@@ -104,7 +102,7 @@ class Accession:
 
     @property
     def pretty_database(self):
-        return self.database_name
+        return self.database.pretty()
 
     def is_mitochondrial(self) -> bool:
         """

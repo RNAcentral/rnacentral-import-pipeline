@@ -41,6 +41,22 @@ def balanced_ranges(counts, max_urs, max_accessions):
     return ranges
 
 
+def accession_counts(db_url):
+    # Named cursor so the per-URS counts stream rather than load into memory.
+    with psycopg2.connect(db_url) as conn:
+        with conn.cursor(name="accession_counts") as cur:
+            cur.execute(
+                "SELECT precompute_urs_id, count(*) FROM precompute_urs_accession "
+                "GROUP BY precompute_urs_id ORDER BY precompute_urs_id"
+            )
+            yield from cur
+
+
+def write_balanced(output, max_urs, max_accessions, db_url=None):
+    ranges = balanced_ranges(accession_counts(db_url), max_urs, max_accessions)
+    csv.writer(output).writerows(("precompute_urs", a, b) for a, b in ranges)
+
+
 def upi_taxid_ranges(ranges, tablename, db_url):
     table = Table(tablename)
     with psycopg2.connect(db_url) as conn:

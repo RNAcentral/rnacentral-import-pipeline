@@ -340,7 +340,6 @@ def as_accession(database, so_id):
         gene=None,
         optional_id=None,
         database=Database.build(database),
-        database_name=Database.build(database).value.descr,
         species="Homo sapiens",
         common_name="human",
         description="a sequence",
