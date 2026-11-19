@@ -17,7 +17,7 @@ import typing as ty
 
 import attr
 from Bio import SeqIO
-from Bio.SeqFeature import CompoundLocation, FeatureLocation
+from Bio.SeqFeature import CompoundLocation, FeatureLocation, SeqFeature
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.ensembl.mrna import (
@@ -26,12 +26,9 @@ from rnacentral_pipeline.databases.ensembl.mrna import (
     THREE_PRIME_UTR,
     UTRS,
 )
-from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases.helpers import embl
 
-URL = "https://www.ncbi.nlm.nih.gov/nuccore/{accession}"
-GENE_URL = "https://www.ncbi.nlm.nih.gov/gene/?term={locus_tag}"
-# The RefSeq database paper
-REFERENCES = [26553804]
+URL = "https://www.ebi.ac.uk/ena/browser/view/{accession}"
 
 Parts = ty.List[ty.Tuple[int, int]]
 
@@ -119,7 +116,7 @@ def annotated(record) -> ty.Iterable[Transcript]:
         gene = first(feature, "gene")
         transcript_id = first(feature, "transcript_id")
         accession = transcript_id or locus_tag
-        url = URL.format(accession=transcript_id) if transcript_id else None
+        url = URL.format(accession=first(coding, "protein_id") or record.id)
         yield Transcript(
             accession=accession,
             spans=parts(feature.location),
@@ -128,7 +125,7 @@ def annotated(record) -> ty.Iterable[Transcript]:
             name=f"{organism} {gene or locus_tag}",
             gene=gene,
             locus_tag=locus_tag,
-            url=url or GENE_URL.format(locus_tag=locus_tag),
+            url=url,
         )
 
 
@@ -150,9 +147,9 @@ def as_entry(
     version = transcript.accession.rsplit(".", 1)
     return data.Entry(
         primary_id=accession,
-        accession=f"REFSEQ_CODING:{accession}",
+        accession=f"ENA_CODING:{accession}",
         ncbi_tax_id=taxid,
-        database="REFSEQ_CODING",
+        database="ENA_CODING",
         sequence=str(sequence).upper(),
         regions=regions,
         rna_type=rna_type,
@@ -163,7 +160,7 @@ def as_entry(
         gene=transcript.gene,
         locus_tag=transcript.locus_tag,
         optional_id=transcript.locus_tag,
-        references=[pubs.reference(pmid) for pmid in REFERENCES],
+        references=embl.references(record),
         mol_type=first(record.features[0], "mol_type"),
         description=f"{transcript.name} {label}",
     )
@@ -218,11 +215,30 @@ def entries(record, transcript, taxid, assembly) -> ty.Iterable[data.Entry]:
         yield attr.evolve(utr, related_sequences=[back])
 
 
+def cut(record, end: int):
+    # Slicing drops the record's annotations and its whole-record source feature
+    trimmed = record[:end]
+    trimmed.annotations = record.annotations
+    source = record.features[0]
+    trimmed.features.insert(
+        0,
+        SeqFeature(
+            FeatureLocation(0, end), type=source.type, qualifiers=source.qualifiers
+        ),
+    )
+    return trimmed
+
+
 def parse(
-    handle: ty.IO, taxid: int, assembly: ty.Optional[str] = None
+    handle: ty.IO,
+    taxid: int,
+    assembly: ty.Optional[str] = None,
+    end: ty.Optional[int] = None,
 ) -> ty.Iterable[data.Entry]:
     # With an assembly the records are a genome; without one, virus genomes or segments
-    for record in SeqIO.parse(handle, "genbank"):
+    for record in SeqIO.parse(handle, "embl"):
+        if end:
+            record = cut(record, end)
         # Ensembl has no organelle sequences for these genomes, so there is nowhere to place them
         if "organelle" in record.features[0].qualifiers:
             continue

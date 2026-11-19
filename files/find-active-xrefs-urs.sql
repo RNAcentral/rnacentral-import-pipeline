@@ -4,7 +4,7 @@ COPY (
   FROM xref
   where
     xref.deleted = 'N'
-    -- Whole Ensembl, SGD and RefSeq mRNAs (dbid 60-62) are not scanned, only their UTRs
+    -- Whole Ensembl, SGD and ENA mRNAs (dbid 60-62) are not scanned, only their UTRs
     and not (
       xref.dbid IN (60, 61, 62)
       and exists (

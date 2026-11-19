@@ -159,8 +159,8 @@ def notes_can_parse_weird_notes():
         ["ENSEMBL_CODING"],
         ["SGD coding"],
         ["SGD_CODING"],
-        ["RefSeq coding"],
-        ["REFSEQ_CODING"],
+        ["ENA coding"],
+        ["ENA_CODING"],
         ["Ensembl coding", "SGD coding"],
     ],
 )
@@ -179,7 +179,7 @@ def test_coding_only_entries_rank_below_any_active_ncrna(rna_type, dbs):
         ["ZWD"],
         ["Ensembl coding", "ZWD"],
         ["SGD_CODING", "SGD"],
-        ["REFSEQ_CODING", "RefSeq"],
+        ["ENA_CODING", "ENA"],
     ],
 )
 def test_utr_elements_from_other_databases_keep_their_rank(dbs):

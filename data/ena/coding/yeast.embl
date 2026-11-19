@@ -1,0 +1,48 @@
+ID   CR382121; SV 1; linear; genomic DNA; ; FUN; 500 BP.
+XX
+AC   CR382121;
+XX
+DE   Kluyveromyces lactis strain NRRL Y-1140 chromosome A complete sequence.
+XX
+OS   Kluyveromyces lactis
+OC   Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes;
+OC   Saccharomycetales; Saccharomycetaceae; Kluyveromyces.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..500
+FT                   /organism="Kluyveromyces lactis"
+FT                   /chromosome="A"
+FT                   /strain="NRRL Y-1140"
+FT                   /mol_type="genomic DNA"
+FT                   /note="label:Klla0A"
+FT                   /db_xref="taxon:28985"
+FT   gene            complement(<133..>474)
+FT                   /locus_tag="KLLA0_A00539g"
+FT                   /old_locus_tag="Klla0A.mRNA.1150.m"
+FT   CDS             complement(join(133..361,440..474))
+FT                   /locus_tag="KLLA0_A00539g"
+FT                   /old_locus_tag="Klla0A.mRNA.1150.m"
+FT                   /product="KLLA0A00539p"
+FT                   /note="highly similar to uniprot|Q3E833 Saccharomyces
+FT                   cerevisiae YKR095W-A PCC1 Protein"
+FT                   /db_xref="EnsemblGenomes-Gn:KLLA0_A00539g"
+FT                   /db_xref="EnsemblGenomes-Tr:CAR65216"
+FT                   /db_xref="GOA:B5RSI3"
+FT                   /db_xref="InterPro:IPR015419"
+FT                   /db_xref="UniProtKB/TrEMBL:B5RSI3"
+FT                   /protein_id="CAR65216.1"
+FT                   /translation="MNKGDTSFEHSLHLEIPFESIKQADVARKVLLPDPIMKPEDFQVT
+FT                   YSTQDTKLICDFESVDERILRVGVNSVIESIKTIVETIDELC"
+XX
+SQ   Sequence 500 BP; 153 A; 94 C; 90 G; 163 T; 0 other;
+     atgcaatgac acaaattgtt ctgcgtttag tttttctgcc ttaagaaatt tcatagtacc        60
+     ataggttaga aagtaataga aagatgggaa gatgatgaaa aggcaccccg aacgtgtact       120
+     gttctgtttg cattagcaca actcatcaat agtttctacg attgtcttga ttgattcaat       180
+     gacactgttc acacctacac gtaaaatacg ctcgtcaacg ctttcaaaat cacatataag       240
+     tttggtgtct tgcgtagaat aagtaacttg gaaatcctct ggtttcatga tggggtctgg       300
+     aagcagcact ttccttgcta catcagcttg tttaatgctt tcaaatggta tttccaaatg       360
+     tctgtacggc attttacatc acaacttgtt agtatttcaa gttataaact tgcattcata       420
+     agagccagaa ataacataca aagagtgctc gaaagacgtg tctcctttat tcatcttaaa       480
+     agagtactat ttatccgctg                                                   500
+//

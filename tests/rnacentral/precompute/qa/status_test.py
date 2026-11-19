@@ -182,7 +182,7 @@ def test_repetitive_region_is_always_reported_ok():
     assert status.from_repetitive_region.has_issue is False
 
 
-@pytest.mark.parametrize("database", ["SGD_CODING", "REFSEQ_CODING"])
+@pytest.mark.parametrize("database", ["SGD_CODING", "ENA_CODING"])
 def test_coding_only_sequences_are_not_qa_checked(database):
     from .. import builders
 

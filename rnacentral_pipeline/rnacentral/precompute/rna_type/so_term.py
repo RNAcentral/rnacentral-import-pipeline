@@ -36,6 +36,7 @@ EXCLUDED_DATABASES = {
 ACCEPTED_DATABASES = {
     Database.circatlas,
     Database.circpedia,
+    Database.ena_coding,
     Database.ensembl_coding,
     Database.five_srrnadb,
     Database.flybase,
@@ -47,7 +48,6 @@ ACCEPTED_DATABASES = {
     Database.pirbase,
     Database.plncdb,
     Database.pombase,
-    Database.refseq_coding,
     # Database.sgd, This is excluded because they tend ot use things like rRNA_gene, which we don't like as much as the transcript terms
     Database.sgd_coding,
     Database.snodb,
