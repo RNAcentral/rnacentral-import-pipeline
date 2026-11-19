@@ -17,7 +17,6 @@ import typing as ty
 
 from rnacentral_pipeline.databases.data import (
     Entry,
-    GoTermAnnotation,
     IdReference,
     Interaction,
 )
@@ -34,23 +33,6 @@ def references(interactions: ty.List[Interaction]) -> ty.List[IdReference]:
     for interaction in interactions:
         ids.extend(interaction.publications)
     return ids
-
-
-def go_annotations(interactions: ty.List[Interaction]) -> ty.List[GoTermAnnotation]:
-    annotations = []
-    for interaction in interactions:
-        annotations.append(
-            GoTermAnnotation(
-                rna_id=interaction.urs_taxid(),
-                qualifier="",
-                term_id="",
-                evidence_code="",
-                extensions={},
-                assigned_by=interaction.database(),
-                publications=[],
-            )
-        )
-    return annotations
 
 
 def as_entry(

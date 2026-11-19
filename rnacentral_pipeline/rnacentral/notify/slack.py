@@ -70,8 +70,6 @@ def pipeline_report():
 
     client = WebClient(token=client_token)
 
-    lock_text_template = "New sequences from *{0}* {1:,}"
-
     summary_blocks = [
         {
             "type": "header",

@@ -33,7 +33,6 @@ FILES_TABLE = "rnacen.pipeline_tracking_import_files"
 
 MANIFEST_CSV = "manifest.csv"
 DELETIONS_CSV = "deletions.csv"
-SOURCES_CSV = "sources.csv"
 
 # database leads the PK because every query scopes to one, and a partition key must
 # be part of it.

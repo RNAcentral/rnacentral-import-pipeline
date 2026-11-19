@@ -76,18 +76,3 @@ def run_query(url, query, **kwargs):
         cur.execute(query, kwargs)
         for result in cur:
             yield result
-
-
-def get_db_connection(config, **options):
-    """
-    Open a database connection.
-    Should be used in situations where @contextmanager connection doesn't work.
-    For example, loading a new release should not be done with @contextmanager
-    because it wraps all work in a giant database transaction
-    that is likely to crash.
-    """
-
-    conn = connect(config, **options)
-    conn.set_session(autocommit=False)
-    conn.set_isolation_level(0)
-    return conn
