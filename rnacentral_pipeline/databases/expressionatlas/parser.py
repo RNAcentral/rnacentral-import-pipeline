@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import json
 import logging
 import operator as op
@@ -118,12 +119,12 @@ def parse_baseline(tpms, sdrf_path, lookup):
             null_values=["NA"],
         )
         .with_columns(
-            pl.selectors.matches("^g\d+")
+            pl.selectors.matches(r"^g\d+")
             .str.split(",")
             .list.eval(pl.element().cast(pl.Float64))
         )
-        .with_columns(pl.selectors.matches("^g\d+").list.median())
-        .filter(pl.any_horizontal(pl.selectors.matches("^g\d+").gt(0.5)))
+        .with_columns(pl.selectors.matches(r"^g\d+").list.median())
+        .filter(pl.any_horizontal(pl.selectors.matches(r"^g\d+").gt(0.5)))
         .with_columns(experiment=pl.lit(tpms.parent.parts[-1]))
     )
     if "Gene ID" in tpms_data.columns:

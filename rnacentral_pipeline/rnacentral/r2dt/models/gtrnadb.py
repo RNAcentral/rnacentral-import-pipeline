@@ -62,7 +62,7 @@ def parse_model(handle) -> ModelInfo:
         line = line.strip()
         if line == "CM":
             break
-        key, value = re.split("\s+", line, maxsplit=1)
+        key, value = re.split(r"\s+", line, maxsplit=1)
         if key == "NAME":
             name = value
         if key == "CLEN":
