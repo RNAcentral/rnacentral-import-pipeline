@@ -31,6 +31,7 @@ include { pombase } from './databases/pombase'
 include { psicquic } from './databases/psicquic'
 include { quickgo } from './databases/quickgo'
 include { refseq } from './databases/refseq'
+include { regulondb } from './databases/regulondb'
 include { rfam } from './databases/rfam'
 include { rgd } from './databases/rgd'
 include { ribovision } from './databases/ribovision'
@@ -108,6 +109,7 @@ workflow parse_databases {
       psicquic(),
       quickgo(),
       refseq(),
+      regulondb(),
       rfam(),
       rgd(),
       ribovision(),

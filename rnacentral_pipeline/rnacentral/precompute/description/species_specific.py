@@ -95,6 +95,7 @@ ORDERING = [
     Database.ensembl_coding,
     Database.sgd_coding,
     Database.ena_coding,
+    Database.regulondb,
 ]
 """
 A dict that defines the ordered choices for each type of RNA. This is the
