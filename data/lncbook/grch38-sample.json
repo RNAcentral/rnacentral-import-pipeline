@@ -1,0 +1,147 @@
+{
+ "metaData": {
+  "dateProduced": "2018-06-30T14:08:12+00:00",
+  "dataProvider": "LncBook",
+  "release": "2.0",
+  "schemaVersion": "0.4.0",
+  "publications": [
+   "PMID:30715521"
+  ],
+  "genomicCoordinateSystem": "1-start, fully-closed"
+ },
+ "data": [
+  {
+   "primaryId": "LncBook:HSALNT0276659",
+   "taxonId": "NCBITaxon:9606",
+   "soTermId": "SO:0001904",
+   "sequence": "taggaaaggttcaacttggcaaatgtagtgctttatgaaactcggtttgtcaggaatcacgcagaagattgttactgctaataaatagaaattgttactgctaatgaaaattatgggattgctgtgatacggaattgtccattataaatgttaagctttctgcatatcgtagtctttaatgtaattagctatgtcctagcaagattgtatgttattcaaaagattaaactaatctgaatgttaaggataaagtagacctagattagactggttttactgttactattttgtaataattttctcgctgtaattatggatccttgtataagaaaaatatttttgaaagattattacatgtactcaacatcacctttgaatttttcccttgctgttttgttagcaaagtggataaagccatatgaacataagggttaaaacaagtgatcttaatacattaatgtatctgattaatacatgctaaaaggtaggtgaaccttgtaaacagcgttctaggtgaaagaagctagacacaaaagaccacacattgtataacttgatttatatgaagtgttcacaactggcaaatttgtagagatggaaagtagatcagtggttttcaggagcttggggtaggaggaagtggtgaataactgctgatggatgtggaacttttaggggtgataaataaattacattgattgtggtgatagatgtacaattctgtgaatatactaaaatctctgaattgtataaaagggtgaatttatggtgtgtgaattatatctcaataaagttattcaaattctagtgttctg",
+   "gene": {
+    "geneId": "LncBook:HSALNG0134763",
+    "synonyms": [],
+    "url": "http://bigd.big.ac.cn/lncbook/gene?geneid=HSALNG0134763"
+   },
+   "name": "HSALNT0276659",
+   "genomeLocations": [
+    {
+     "assembly": "GRCh37",
+     "exons": [
+      {
+       "chromosome": "chr22",
+       "startPosition": 28896000,
+       "endPosition": 28896784,
+       "strand": "-"
+      }
+     ]
+    },
+    {
+     "assembly": "GRCh38",
+     "exons": [
+      {
+       "chromosome": "chr22",
+       "startPosition": 28500011,
+       "endPosition": 28500795,
+       "strand": "-"
+      },
+      {
+       "chromosome": "chr22",
+       "startPosition": 28514757,
+       "endPosition": 28514786,
+       "strand": "-"
+      }
+     ]
+    }
+   ],
+   "url": "http://bigd.big.ac.cn/lncbook/transcript?transid=HSALNT0276659",
+   "crossReferenceIds": [],
+   "publications": []
+  },
+  {
+   "primaryId": "LncBook:HSALNT0279498",
+   "taxonId": "NCBITaxon:9606",
+   "soTermId": "SO:0001904",
+   "sequence": "CAGGTTTCAATTTCTATCGCCTATACTTTATTTGGGTAAATGGTTTGGCTAAGGTTGTCTGGTAGTAAGGGCTGTGCAGACATTCAATTGTTATTATTATGTCCTACAAGCATTAATTAATTAACACACTTTAGTAAGTATGTTCGCCTGTAATATTGAACGTAGGTGCGATAAATAATAGGATGAGGCAGGAATCAAAGACAGATACTGCGACATAGGGTGCTCCGGCTCCAGCGTCTCGCAATGCTATCGCGTGCATACCCCCCAGACGAAAATACCAAATGCATGGAGAGCTCCCGTGAGTGGTTAATAGGGTGATAGACCTGTGAT",
+   "gene": {
+    "geneId": "LncBook:HSALNG0136336",
+    "synonyms": [],
+    "url": "http://bigd.big.ac.cn/lncbook/gene?geneid=HSALNG0136336"
+   },
+   "name": "HSALNT0279498",
+   "genomeLocations": [
+    {
+     "assembly": "GRCh38",
+     "exons": [
+      {
+       "chromosome": "chrM",
+       "startPosition": 2,
+       "endPosition": 262,
+       "strand": "-"
+      },
+      {
+       "chromosome": "chrM",
+       "startPosition": 1699,
+       "endPosition": 1767,
+       "strand": "-"
+      }
+     ]
+    }
+   ],
+   "url": "http://bigd.big.ac.cn/lncbook/transcript?transid=HSALNT0279498",
+   "crossReferenceIds": [],
+   "publications": []
+  },
+  {
+   "primaryId": "LncBook:HSALNT0000002",
+   "taxonId": "NCBITaxon:9606",
+   "soTermId": "SO:0001904",
+   "sequence": "CGCGGCCCCTGTAGGCCAAGGCGCCAGGCAGGACGACAGCAGCAGCAGCGCGTCTCCTTCAGCTTCACTGCTGTGTCTCCCAGTGTAACCCTAGCATCCAGAAGTGGCACAAAACCCCTCTGCTGGCTCGTGTGTGCAACTGAGACTGTCAGAGCATGGCTAGCTCAGGGGTCCAGCTCTGCAGGGTGGGGGCTAGAGAGGAAGCAGGGAGTATCTGCACACAGGATGCCCGCGCTCAGGTGGTTGCAGAAGTCAGTGCCCAGGCCCCCACACACAGTCTCCAAAGGTCCGGCCTCCCCAGCGCAGGGCTCCTCGTTTGAGGGGAGGTGACTTCCCTCCATCGGCAAGGCCAAGCTGCGCAGCATGAAGGAGCGAAAGCTGGAGAAGCAGCAGCAGAAGGAGCAGGAGCAAGTTGATGTCGGATCTCTTCAACAAGCTGGTCATGAGGCGCAAGGGCATCTCTGGGAAAGGACCTGGGGCTGGTGAGGGGCCCGGAGGAGCCTTTGC",
+   "gene": {
+    "geneId": "LncBook:HSALNG0000002",
+    "synonyms": [],
+    "url": "http://bigd.big.ac.cn/lncbook/gene?geneid=HSALNG0000002"
+   },
+   "name": "HSALNT0000002",
+   "genomeLocations": [
+    {
+     "assembly": "GRCh37",
+     "exons": [
+      {
+       "chromosome": "chr1",
+       "startPosition": 14778,
+       "endPosition": 14829,
+       "strand": "-"
+      },
+      {
+       "chromosome": "chr1",
+       "startPosition": 14970,
+       "endPosition": 15012,
+       "strand": "-"
+      },
+      {
+       "chromosome": "chr1",
+       "startPosition": 15796,
+       "endPosition": 15869,
+       "strand": "-"
+      },
+      {
+       "chromosome": "chr1",
+       "startPosition": 16035,
+       "endPosition": 16310,
+       "strand": "-"
+      },
+      {
+       "chromosome": "chr1",
+       "startPosition": 16607,
+       "endPosition": 16668,
+       "strand": "-"
+      }
+     ]
+    }
+   ],
+   "url": "http://bigd.big.ac.cn/lncbook/transcript?transid=HSALNT0000002",
+   "crossReferenceIds": [
+    "NONCODE:NONHSAT000005.2"
+   ],
+   "publications": []
+  }
+ ]
+}
