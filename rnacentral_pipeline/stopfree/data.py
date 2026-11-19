@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import typing as ty
 
 import attr
@@ -43,24 +42,6 @@ class StopfreeResult:
             self.run_probability,
             str(self.is_protein_coding),
         ]
-
-
-@attr.s()
-class StopfreeWriter:
-    results = attr.ib(
-        metadata={
-            "csv_options": {
-                "delimiter": ",",
-                "quotechar": '"',
-                "quoting": csv.QUOTE_MINIMAL,
-                "lineterminator": "\n",
-            }
-        }
-    )
-
-    def write(self, results: ty.Iterable[StopfreeResult]):
-        for result in results:
-            self.results.writerow(result.writeable())
 
 
 def _format_value(

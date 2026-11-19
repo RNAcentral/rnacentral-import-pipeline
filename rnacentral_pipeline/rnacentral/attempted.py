@@ -22,7 +22,7 @@ from pathlib import Path
 import pyarrow as pa
 from Bio import SeqIO
 
-from rnacentral_pipeline import psql, schemas
+from rnacentral_pipeline import schemas
 from rnacentral_pipeline.parquet_writers import parquet_writer
 
 LOGGER = logging.getLogger(__name__)
@@ -30,21 +30,6 @@ LOGGER = logging.getLogger(__name__)
 
 id_attribute = op.attrgetter("id")
 id_key = op.itemgetter("id")
-
-
-def append_taxid(taxid, getter=id_key):
-    def fn(entry):
-        urs = getter(entry)
-        return f"{urs}_{taxid}"
-
-    return fn
-
-
-def json_parser(
-    handle: ty.IO, id_generator=id_key, extra_fields: ty.List[str] = []
-) -> ty.Iterable[ty.List[str]]:
-    for entry in psql.json_handler(handle):
-        yield [id_generator(entry)] + extra_fields
 
 
 def fasta_parser(

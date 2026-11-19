@@ -20,7 +20,6 @@ import re
 import typing as ty
 
 import attr
-from attr.validators import in_
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 from furl import furl
@@ -75,15 +74,6 @@ class Reference(object):
         ]
 
         return md5("".join(data).encode("utf-8"))
-
-    def writeable_generic_pubmed(self):
-        return [
-            self.pmid,
-            self.authors,
-            self.location,
-            self.title,
-            self.doi,
-        ]
 
     def writeable(self, extra):
         data = [self.md5()]

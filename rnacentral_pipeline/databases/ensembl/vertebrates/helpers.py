@@ -31,15 +31,6 @@ CODING_RNA_TYPES = set(
 )
 
 
-class CouldNotTrimDescription(Exception):
-    """
-    Raised when a description could not be trimmed to only the organisms
-    suffix.
-    """
-
-    pass
-
-
 def references():
     """
     Get the standard reference for all Ensembl entries.
@@ -187,13 +178,6 @@ def organism_naming(record):
         common_name = match.group(1)
         species = re.sub(pattern, "", species).strip()
     return (species, common_name)
-
-
-def is_transcript(feature):
-    """
-    Check if this feature is a transcript.
-    """
-    return transcript(feature) is not None
 
 
 def notes(feature):
