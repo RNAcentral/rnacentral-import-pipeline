@@ -172,3 +172,26 @@ def test_parse_accepts_a_semicolon_in_the_scaffold_name():
     new_id = "ID   ScDaJbz_878;HRSCAF=2598    standard; DNA; HTG; 327 BP."
     result = parse_plasmodium_with(gff, embl_text=embl.replace(old_id, new_id, 1))
     assert result.exit_code == 0, result.output
+
+
+def test_source_diff_writes_an_empty_scanned_list_when_nothing_changed(
+    tmp_path, monkeypatch
+):
+    species = tmp_path / "species.csv"
+    species.write_text(
+        "homo_sapiens,9606,http://x/h.embl.gz,http://x/h.gff3.gz,GRCh38,\n"
+    )
+    same = {"http://x/h.embl.gz": "s1"}
+    monkeypatch.setattr(ensembl.delta, "signatures", lambda rows, read: dict(same))
+    monkeypatch.setattr(
+        ensembl.manifest, "load_file_signatures_for", lambda url, db: dict(same)
+    )
+    out = [tmp_path / n for n in ("to_fetch.csv", "scanned.txt", "sources.csv")]
+    result = CliRunner().invoke(
+        ensembl.cli,
+        ["source-diff", "--ftp-url", "http://x", "--nfs-path", str(tmp_path)]
+        + [str(species)]
+        + [str(p) for p in out],
+    )
+    assert result.exit_code == 0, result.output
+    assert out[1].read_text() == ""

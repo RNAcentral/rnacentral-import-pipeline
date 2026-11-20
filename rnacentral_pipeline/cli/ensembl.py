@@ -79,7 +79,8 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
 @click.option("--database", default="ENSEMBL", help="Whose stored signatures to use.")
 @click.argument("species_csv", type=click.Path(exists=True))
 @click.argument("to_fetch", type=click.File("w"))
-@click.argument("scanned", type=click.File("w"))
+# Not lazy: an unchanged run writes nothing here, and Nextflow still needs the file.
+@click.argument("scanned", type=click.File("w", lazy=False))
 @click.argument("sources_csv", type=click.File("w"))
 def source_diff(
     species_csv,
