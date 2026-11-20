@@ -1,0 +1,4 @@
+model_name	species	taxid  rna_type
+d.16.b.A.israelii	Actinomyces israelii	1659	rRNA_16S
+d.16.b.A.hydrophila	Aeromonas hydrophila	644	rRNA_16S
+b.16.m.A.castellanii	Acanthamoeba castellanii	5755	mt_rRNA

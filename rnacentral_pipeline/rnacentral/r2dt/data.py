@@ -62,7 +62,7 @@ SO_RNA_NAME_LOOKUP = {
     "SO:0002128": "mt_rRNA",
     "SO:0000407": "cytosolic_18S_rRNA",
     "SO:0002345": "mt_LSU_rRNA",
-    "SO:0002344": "mt_SSU_rrNA",
+    "SO:0002344": "mt_SSU_rRNA",
     "SO:0001001": "cytosolic_23S_rRNA",
     "SO:0000391": "U1_snRNA",
     "SO:0000392": "U2_snRNA",  # below here added...

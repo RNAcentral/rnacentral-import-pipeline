@@ -1,0 +1,19 @@
+{
+ "binomial": "true",
+ "division": "INV",
+ "formalName": "true",
+ "geneticCode": "1",
+ "lineage": "Eukaryota; Amoebozoa; Discosea; Longamoebia; Centramoebida; Acanthamoebidae; Acanthamoeba; ",
+ "metagenome": "false",
+ "mitochondrialGeneticCode": "4",
+ "otherNames": [
+  "Acanthamoeba castellanii (Douglas 1930):authority",
+  "Acanthamoeba sp. ATCC 30011:includes",
+  "Acanthamoeba castellani:synonym"
+ ],
+ "plastIdGeneticCode": "11",
+ "rank": "species",
+ "scientificName": "Acanthamoeba castellanii",
+ "submittable": "true",
+ "taxId": "5755"
+}

@@ -13,8 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+import json
 from io import StringIO
 
+import pyarrow.parquet as pq
 import pytest
 
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
@@ -277,3 +280,90 @@ def test_parse_emits_deleted_taxids():
     assert by_id[9606].name == "Homo sapiens"
     # live taxa are flagged not-deleted
     assert by_id[9443].is_deleted is False
+
+
+# --- write(): the whole taxdump directory to the rnc_taxonomy load file ---
+# data/ncbi/taxdump is a cut-down taxdump in NCBI's format. Every expected row
+# below is what RNAcentral production's rnc_taxonomy holds for that taxid. The
+# proteome stats file only needs the taxid column; its UP ids are placeholders.
+
+TAXDUMP = "data/ncbi/taxdump"
+PROTEOMES = "data/ncbi/taxdump/reference-proteomes-stats.tsv"
+
+HALO_LINEAGE = (
+    "cellular organisms; Archaea; Methanobacteriati; Methanobacteriota; "
+    "Stenosarchaea group; Halobacteria; Halobacteriales; Haloarculaceae; "
+    "Haloarcula; Haloarcula salinisoli"
+)
+
+PRODUCTION = {
+    9606: (
+        "Homo sapiens",
+        "human",
+        ["Homo sapiens", "human"],
+        None,
+        "species",
+        True,
+        False,
+    ),
+    2487746: (
+        "Haloarcula salinisoli",
+        "",
+        ["Haloarcula salinisoli", "Halomicroarcula salinisoli"],
+        None,
+        "species",
+        True,
+        False,
+    ),
+    # merged into 2487746: same taxon, pointing at its replacement
+    2487748: (
+        "Haloarcula salinisoli",
+        "",
+        ["Haloarcula salinisoli", "Halomicroarcula salinisoli"],
+        2487746,
+        "species",
+        True,
+        False,
+    ),
+    3441763: ("deleted taxid 3441763", "", [], None, "", False, True),
+}
+
+
+def by_taxid(rows):
+    return {
+        int(r[0]): (
+            r[1],
+            r[3],
+            json.loads(r[4]),
+            int(r[5]) if r[5] not in ("", None) else None,
+            r[6],
+            r[7] in (True, "True"),
+            r[8] in (True, "True"),
+        )
+        for r in rows
+    }
+
+
+@pytest.mark.parametrize("fmt", ["csv", "parquet"])
+def test_write_reproduces_production_rows(tmp_path, monkeypatch, fmt):
+    monkeypatch.setenv("RNAC_OUTPUT_FORMAT", fmt)
+    out = tmp_path / f"taxonomy.{fmt}"
+    taxonomy.write(TAXDUMP, out, ref_proteomes_path=PROTEOMES)
+
+    if fmt == "csv":
+        with out.open() as raw:
+            rows = list(csv.reader(raw))
+    else:
+        rows = [list(r.values()) for r in pq.read_table(out).to_pylist()]
+
+    assert by_taxid(rows) == PRODUCTION
+    lineages = {int(r[0]): r[2] for r in rows}
+    assert lineages[2487746] == HALO_LINEAGE
+    assert lineages[9606].startswith("cellular organisms; Eukaryota; Opisthokonta")
+    assert lineages[9606].endswith("; Homininae; Homo; Homo sapiens")
+
+
+def test_parse_directory_without_proteomes_marks_none(tmp_path):
+    entries = list(taxonomy.parse_directory(TAXDUMP))
+    assert {e.tax_id for e in entries} == set(PRODUCTION)
+    assert not any(e.reference_proteome for e in entries)

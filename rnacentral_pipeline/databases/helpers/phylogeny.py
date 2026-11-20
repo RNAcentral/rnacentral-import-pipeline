@@ -102,20 +102,25 @@ def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
             else:
                 LOGGER.exception(err)
                 raise FailedTaxonId("Unknown error")
+    else:
+        raise FailedTaxonId(f"UniProt taxonomy kept failing for {taxon_id}")
 
     if "scientificName" not in data or "rank" not in data:
         raise FailedTaxonId(f"UniProt taxonomy payload for {taxon_id} is incomplete")
 
     ## Parse the data a bit to normalise to ENA taxonomy
+    # ENA writes the lineage without the root and with a trailing "; ", which
+    # lineage() relies on when it appends the species name.
     raw_lineage = data.get("lineage", [])
+    names = []
     if isinstance(raw_lineage, list):
-        lineage = "; ".join(
+        names = [
             level["scientificName"]
             for level in raw_lineage
-            if isinstance(level, dict) and "scientificName" in level
-        )
-    else:
-        lineage = ""
+            if isinstance(level, dict)
+            and level.get("scientificName") not in (None, "cellular organisms")
+        ]
+    lineage = "".join(f"{name}; " for name in names)
 
     ena_data = {
         "taxId": str(taxon_id),
@@ -151,9 +156,12 @@ def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
             elif response.status_code == 404:
                 ## ENA taxonomy doesn't know this, so fallback to uniprot
                 data = uniprot_taxonomy_fallback(taxon_id)
+                break
             else:
                 LOGGER.exception(err)
                 raise FailedTaxonId(f"Could not get taxon id for {taxon_id}")
+    else:
+        raise FailedTaxonId(f"ENA taxonomy kept failing for {taxon_id}")
 
     if not data:
         raise FailedTaxonId("Somehow got no data")
