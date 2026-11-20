@@ -3,8 +3,6 @@ nextflow.enable.dsl=2
 include { model_info } from './r2dt/model-info.nf'
 
 process fetch_model_mapping {
-  memory '16 MB'
-
   input:
   val(_flag)
   path(query)
