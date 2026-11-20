@@ -66,7 +66,6 @@ from rnacentral_pipeline.cli import (
     rediportal,
     refseq,
     release,
-    repeats,
     rfam,
     rgd,
     ribocentre,
@@ -140,7 +139,6 @@ cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
 cli.add_command(mirtrondb.cli)
 cli.add_command(modomics.cli)
-cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
@@ -160,7 +158,6 @@ cli.add_command(rediportal.cli)
 cli.add_command(refseq.cli)
 cli.add_command(release.cli)
 cli.add_command(rgd.cli)
-cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
 cli.add_command(ribovision.cli)
 cli.add_command(ribocentre.cli)

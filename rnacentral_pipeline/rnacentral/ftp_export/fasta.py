@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import itertools as it
 import re
 
 from Bio import SeqIO
@@ -32,9 +31,3 @@ def valid_nhmmer(handle, output):
     sequences = SeqIO.parse(handle, "fasta")
     accepted = filter(is_valid_nhmmer_record, sequences)
     SeqIO.write(accepted, output, "fasta")
-
-
-def invalid_nhmmer(handle, output):
-    sequences = SeqIO.parse(handle, "fasta")
-    rejected = it.filterfalse(is_valid_nhmmer_record, sequences)
-    SeqIO.write(rejected, output, "fasta")

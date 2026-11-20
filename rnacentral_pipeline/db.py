@@ -70,24 +70,13 @@ def cursor(config, commit_on_leave=True):
             cur.close()
 
 
-def run_query(url, query, **kwargs):
+def run_query(url, query, commit_on_leave=True, **params):
+    """
+    Run a query and yield each row. ``params`` are the query parameters;
+    ``commit_on_leave`` is a connection option, not a parameter.
+    """
 
-    with cursor(url) as cur:
-        cur.execute(query, kwargs)
+    with cursor(url, commit_on_leave=commit_on_leave) as cur:
+        cur.execute(query, params)
         for result in cur:
             yield result
-
-
-def get_db_connection(config, **options):
-    """
-    Open a database connection.
-    Should be used in situations where @contextmanager connection doesn't work.
-    For example, loading a new release should not be done with @contextmanager
-    because it wraps all work in a giant database transaction
-    that is likely to crash.
-    """
-
-    conn = connect(config, **options)
-    conn.set_session(autocommit=False)
-    conn.set_isolation_level(0)
-    return conn

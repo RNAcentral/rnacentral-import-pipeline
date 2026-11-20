@@ -91,7 +91,6 @@ bin/ftp-export
 bin/kv
 bin/precompute
 bin/search-export
-bin/json2dfasta
 bin/expression-parse
 stubs
 .envrc
@@ -102,7 +101,6 @@ workflows/litscan/metadata/merged_metadata
 workflows/litscan/backup
 workflows/litscan/submit
 singularity/*
-bin/bed-expander
 .projections.json
 *.slurm
 tmp/*

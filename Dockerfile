@@ -143,7 +143,7 @@ COPY --from=python-builder /app/.venv $RNA/venv
 COPY --from=rust-utils /rna/bin/* $RNACENTRAL_IMPORT_PIPELINE/bin/
 
 # Package metadata - required for module imports
-COPY pyproject.toml setup-env $RNACENTRAL_IMPORT_PIPELINE/
+COPY pyproject.toml $RNACENTRAL_IMPORT_PIPELINE/
 
 WORKDIR $RNA
 # Setup environmental variables

@@ -23,9 +23,6 @@ from rnacentral_pipeline.rnacentral.precompute.qa import (
     incomplete_sequence as incomplete,
 )
 from rnacentral_pipeline.rnacentral.precompute.qa import missing_rfam_match as missing
-from rnacentral_pipeline.rnacentral.precompute.qa import (
-    repetitive_regions as repetitive,
-)
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult, QaStatus
 
 
@@ -46,7 +43,10 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
         incomplete_sequence=incomplete.validate(sequence),
         possible_contamination=contamination.validate(rna_type, sequence),
         missing_rfam_match=missing.validate(rna_type, sequence),
-        from_repetitive_region=repetitive.validate(context, sequence),
+        # ponytail: repeat check removed (it never had data, see
+        # docs/repetitive-region-qa-disabled.md); the column stays until RepeatMasker
+        # QA replaces it.
+        from_repetitive_region=QaResult.ok("from_repetitive_region"),
         possible_orf=orf,
         possible_orf_stopfree=stopfree,
         possible_orf_tcode=tcode,

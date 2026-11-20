@@ -152,6 +152,7 @@ workflow load_data {
       .mix(
         channel.fromPath([
           'files/import-data/post-release/000__populate_precompute.sql',
+          'files/import-data/post-release/002__assembly-cleanup.sql',
           'files/import-data/post-release/999__cleanup.sql',
         ])
       )

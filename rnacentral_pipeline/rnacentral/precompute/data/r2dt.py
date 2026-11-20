@@ -17,8 +17,8 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from rnacentral_pipeline.rnacentral.r2dt.data import Source as ModelSource
 from rnacentral_pipeline.databases.data import RnaType
+from rnacentral_pipeline.rnacentral.r2dt.data import Source as ModelSource
 
 
 def maybe(fn, value):
@@ -55,6 +55,3 @@ class R2dtHit:
         if self.sequence_basepairs is None or self.model_basepairs is None:
             return None
         return float(self.sequence_basepairs) / float(self.model_basepairs)
-
-    def is_rfam_model(self):
-        return self.model_source == ModelSource.rfam

@@ -1,6 +1,6 @@
 nextflow.enable.dsl=2
 
-// Databases with run=true this run (mirrors main.nf), normalised for matching
+// Databases with run=true this run, normalised for matching
 // rnc_database.descr/display_name in SQL.
 def running_databases() {
   def out = []

@@ -17,23 +17,8 @@ import csv
 import json
 import typing as ty
 
-from rnacentral_pipeline.databases.generic import v1
 from rnacentral_pipeline.databases import data
-
-
-def get_genomes(row: ty.Dict[str, str], name: str) -> ty.List[str]:
-    raw = row["source"]
-    authority = row[f"{name}Authority"]
-    if authority == "genbank":
-        pass
-    return [raw]
-
-
-def get_sources(row: ty.Dict[str, str]) -> ty.List[str]:
-    raw = row["source"]
-    if row["sourceAuthority"] == "genbank":
-        pass
-    return [raw]
+from rnacentral_pipeline.databases.generic import v1
 
 
 def load_assembly_mapping(handle: ty.IO) -> ty.Dict[str, str]:

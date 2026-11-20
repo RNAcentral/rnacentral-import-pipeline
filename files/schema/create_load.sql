@@ -225,16 +225,6 @@ CREATE UNLOGGED TABLE load_interactions (
   taxid int NOT NULL
 );
 
-DROP TABLE IF EXISTS load_rnc_coordinates;
-CREATE UNLOGGED TABLE load_rnc_coordinates (
-    accession varchar(200) NULL,
-    local_start int8 NULL,
-    local_end int8 NULL,
-    chromosome varchar(100) NULL,
-    strand int8 NULL,
-    assembly_id varchar(255) NULL
-);
-
 DROP TABLE IF EXISTS load_ontology_terms;
 CREATE UNLOGGED TABLE load_ontology_terms (
   ontology_term_id varchar(15),
@@ -296,12 +286,6 @@ CREATE UNLOGGED TABLE load_rfam_models (
     short_name character varying(50) COLLATE pg_catalog."default",
     rfam_rna_type character varying(250) COLLATE pg_catalog."default",
     so_rna_type text
-);
-
-DROP TABLE IF EXISTS load_rfam_go_terms;
-CREATE UNLOGGED TABLE load_rfam_go_terms (
-    ontology_term_id character varying(10) COLLATE pg_catalog."default" NOT NULL,
-    rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL
 );
 
 DROP TABLE IF EXISTS load_rnc_secondary_structure;
@@ -380,18 +364,6 @@ CREATE UNLOGGED TABLE load_secondary_layout_models (
     model_source text not null,
     model_length int,
     model_basepair_count int
-);
-
-DROP TABLE IF EXISTS load_ensembl_pseudogenes;
-create UNLOGGED table load_ensembl_pseudogenes (
-    gene text not null,
-    region_name text not null,
-    chromosome text not null,
-    strand int4 not null,
-    exon_start int4 not null,
-    exon_stop int4 not null,
-    assembly_id varchar(255) not null,
-    exon_count int not null
 );
 
 DROP TABLE IF EXISTS load_stopfree;
@@ -482,17 +454,6 @@ CREATE UNLOGGED TABLE load_genome_mapping (
   exon_count int,
   identity float,
   providing_database text
-);
-
-DROP TABLE IF EXISTS load_crs_features;
-CREATE UNLOGGED TABLE load_crs_features (
-  upi text,
-  taxid int,
-  accession text,
-  start int,
-  stop int,
-  feature_name text,
-  metadata jsonb
 );
 
 DROP TABLE IF EXISTS load_rediportal_features;

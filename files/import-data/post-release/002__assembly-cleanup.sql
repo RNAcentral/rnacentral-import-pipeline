@@ -6,7 +6,9 @@ BEGIN;
 -- release because of the mapping procedure. Even if we don't fetch that data
 -- from Ensembl yet we may map sequences into that genome. Thus we wait until
 -- after running a release to detect and remove entries from the
--- ensembl_assembly table.
+-- ensembl_assembly table. Selected genomes are kept: genome mapping (analyze.nf,
+-- which runs after this) maps only into those, so a newly selected genome has
+-- no regions yet and must not be removed before it is mapped.
 CREATE TEMP TABLE assemblies_with_no_regions as
 SELECT
   assem.*
@@ -16,6 +18,7 @@ ON
   regions.assembly_id = assem.assembly_id
 WHERE
 	regions.id is null
+	AND assem.selected_genome IS NOT TRUE
 ;
 
 DELETE FROM ensembl_assembly

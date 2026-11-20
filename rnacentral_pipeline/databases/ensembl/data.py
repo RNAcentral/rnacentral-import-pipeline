@@ -46,12 +46,3 @@ class TranscriptInfo:
             regions=helpers.regions(record, feature),
             from_gencode=False,
         )
-
-
-@attr.s()
-class Pseudogene:
-    gene = attr.ib(validator=is_a(str))
-    region = attr.ib(validator=is_a(SequenceRegion))
-
-    def writeable(self) -> ty.Iterable[ty.List[str]]:
-        return self.region.writeable(self.gene, is_upi=False)

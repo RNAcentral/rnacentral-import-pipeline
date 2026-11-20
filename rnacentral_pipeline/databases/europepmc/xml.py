@@ -15,149 +15,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
-import dbm
-import functools as ft
-import json
 import logging
 import os
-import re
-import typing
-from contextlib import ExitStack, contextmanager
 from glob import glob
-from pathlib import Path
 
-import attr
-import more_itertools as more
-from attr.validators import instance_of as is_a
 from lxml import etree as ET
 
-from rnacentral_pipeline.databases.data import IdReference, KnownServices, Reference
-from rnacentral_pipeline.databases.europepmc.fetch import lookup
+from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.europepmc.utils import (
     clean_title,
     pretty_location,
-    write_lookup,
 )
-from rnacentral_pipeline.databases.helpers.publications import reference
 
 LOGGER = logging.getLogger(__name__)
 
 COMMIT_SIZE = 100000
-
-
-class UncachedReference(Exception):
-    """
-    This is created when the requested reference was never indexed. This may be
-    because it is not an open access publication, or it does not exist at all.
-    """
-
-    pass
-
-
-@attr.s()
-class Storage(object):
-    namespace = attr.ib(validator=is_a(KnownServices))
-    path = attr.ib(validator=is_a(Path))
-
-    @classmethod
-    def build(cls, service, base_path):
-        return Storage(service, base_path / service.name)
-
-    def store(self, id_ref, json_data):
-        assert id_ref.namespace is self.namespace
-        key = self.__normalize_key__(id_ref.external_id)
-        self.db[key] = json_data
-
-    def get(self, id_ref):
-        assert id_ref.namespace is self.namespace
-        key = self.__normalize_key__(id_ref.external_id)
-        data = self.db.get(key, None)
-        if not data:
-            return None
-        return Reference(**json.loads(data))
-
-    @contextmanager
-    def open(self, mode="r"):
-        self.db = dbm.open(str(self.path), mode)
-        yield self
-        # dbm.sqlite3 (the default backend on Python 3.13+) commits per write
-        # and has no sync(), unlike dbm.gnu.
-        sync = getattr(self.db, "sync", None)
-        if sync is not None:
-            sync()
-        self.db.close()
-
-    def __normalize_key__(self, raw):
-        if isinstance(raw, str):
-            encoded = raw.encode("ascii", "ignore")
-        else:
-            encoded = str(raw)
-        assert encoded
-        return encoded
-
-
-@attr.s()
-class Cache(object):
-    _path = attr.ib(type=Path, validator=is_a(Path))
-    _pmid = attr.ib(validator=is_a(Storage))
-    _doi = attr.ib(validator=is_a(Storage))
-    _pmcid = attr.ib(validator=is_a(Storage))
-
-    @classmethod
-    def build(cls, base_path):
-        path = Path(base_path)
-        if not path.exists():
-            path.mkdir()
-        kwargs = {}
-        for service in KnownServices:
-            kwargs[service.name] = Storage.build(service, path)
-        return cls(path=path, **kwargs)
-
-    @classmethod
-    def populate_with(cls, base_path, references):
-        cache = cls.build(base_path)
-        chunks = more.chunked(references, COMMIT_SIZE)
-        for index, chunk in enumerate(chunks):
-            with cache.open(mode="c") as cache:
-                for reference in chunk:
-                    cache.store(reference)
-
-    @contextmanager
-    def open(self, mode="r"):
-        with ExitStack() as stack:
-            for service in KnownServices:
-                storage = self.__storage__(service)
-                stack.enter_context(storage.open(mode))
-            yield self
-
-    def get(self, id_reference, allow_fallback=False):
-        storage = self.__storage__(id_reference.namespace)
-        data = storage.get(id_reference)
-        if data:
-            return data
-        elif allow_fallback:
-            return lookup(id_reference)
-        raise UncachedReference(id_reference)
-
-    def store(self, reference):
-        data = json.dumps(attr.asdict(reference))
-        for id_reference in reference.id_references:
-            storage = self.__storage__(id_reference)
-            storage.store(id_reference, data)
-
-    def __storage__(self, ref):
-        if isinstance(ref, KnownServices):
-            name = ref.name
-        elif isinstance(ref, IdReference):
-            name = ref.namespace.name
-        else:
-            raise ValueError("Unknown type: %s" % ref)
-
-        key = "_" + name
-        if not hasattr(self, key):
-            raise ValueError("Never cached references for: %s" % name)
-        return getattr(self, key)
 
 
 def xml_text(tag, node, missing=None, fn=None):
@@ -219,27 +91,3 @@ def parse_directory(directory):
     for filename in glob(os.path.join(directory, "*.xml")):
         for ref in parse(filename):
             yield ref
-
-
-def index_directory(directory, output):
-    Cache.populate_with(output, parse_directory(directory))
-
-
-def id_refs_from_handle(handle, column=0):
-    for row in csv.reader(handle):
-        raw = row[column]
-        rest = [d for i, d in enumerate(row) if i != column]
-        yield (reference(raw), rest)
-
-
-def write_file_lookup(
-    cache_path, handle, output, column=0, allow_fallback=False, ignore_missing=True
-):
-    with Cache.build(cache_path).open() as db:
-        write_lookup(
-            ft.partial(db.get, allow_fallback=allow_fallback),
-            handle,
-            output,
-            column=column,
-            ignore_errors=ignore_missing,
-        )

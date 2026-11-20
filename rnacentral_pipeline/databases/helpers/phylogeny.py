@@ -191,15 +191,6 @@ def species(taxon_id: int) -> str:
     return data["scientificName"]
 
 
-def division(taxon_id: int) -> str:
-    """
-    Get the annotated division for the given taxon id.
-    """
-
-    data = phylogeny(taxon_id)
-    return data["division"]
-
-
 @lru_cache(maxsize=None)
 def taxid(species: str) -> int:
     """

@@ -1,12 +1,11 @@
-from pathlib import Path
 import sys
 import types
+from pathlib import Path
 
 import pytest
 
 from rnacentral_pipeline.stopfree import scan
 from rnacentral_pipeline.stopfree.data import StopfreeResult
-
 
 FASTA_FIXTURE = Path(__file__).resolve().parents[2] / "data/attempted/rfam/raw.fasta"
 
@@ -84,9 +83,7 @@ def test_run_writes_csv(monkeypatch, tmp_path: Path):
         scan,
         "calculate_results",
         lambda records, max_probability: [
-            StopfreeResult.build(
-                records[0][0], 4, 0.4, 0.001, max_probability
-            )
+            StopfreeResult.build(records[0][0], 4, 0.4, 0.001, max_probability)
         ],
     )
     output = tmp_path / "out"
@@ -94,3 +91,28 @@ def test_run_writes_csv(monkeypatch, tmp_path: Path):
     scan.run(FASTA_FIXTURE, output, 0.05)
 
     assert (output / "results.csv").read_text() == "URS0000000019,4,0.4,0.001,True\n"
+
+
+@pytest.mark.stopfree
+def test_rnac_stopfree_scan_writes_results(tmp_path: Path, monkeypatch):
+    # stopfree.nf runs `rnac stopfree scan <fasta> . --max-probability ...`
+    from click.testing import CliRunner
+
+    from rnacentral_pipeline.cli import cli
+
+    monkeypatch.setenv("RNAC_OUTPUT_FORMAT", "csv")
+    fasta = tmp_path / "input.fasta"
+    fasta.write_text(">URS0000000001\nAUGAAAUAA\n")
+    result = CliRunner().invoke(
+        cli,
+        [
+            "stopfree",
+            "scan",
+            str(fasta),
+            str(tmp_path / "out"),
+            "--max-probability",
+            "0.5",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "out" / "results.csv").read_text().startswith("URS0000000001")

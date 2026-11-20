@@ -21,7 +21,6 @@ import re
 import tempfile
 from contextlib import contextmanager
 
-import attr
 from Bio import SeqIO
 
 from rnacentral_pipeline.databases import data
@@ -74,76 +73,6 @@ def known_organisms():
     in Rfam, that tracks down genomes. This isn't needed yet.
     """
     return ["rat"]
-
-
-@attr.s()
-class RgdInfo(object):
-    organism = attr.ib()
-
-    @classmethod
-    def from_name(cls, name):
-        return cls(
-            organism=name,
-        )
-
-    @property
-    def sequence_path(self):
-        if self.organism == "rat":
-            return "pub/data_release/UserReqFiles/RAT_NUCLEOTIDE_SEQUENCES.fa.gz"
-        raise ValueError("Cannot find sequences for %s" % self.organism)
-
-    @property
-    def gene_path(self):
-        filename = "GENES_%s.txt" % (self.organism.upper())
-        return "pub/data_release/{filename}".format(filename=filename)
-
-    def sequence_uri(self, config):
-        return "ftp://{host}/{path}".format(
-            host=config.host,
-            path=self.sequence_path,
-        )
-
-    def gene_uri(self, config):
-        return "ftp://{host}/{path}".format(
-            host=config.host,
-            path=self.gene_path,
-        )
-
-
-@attr.s()
-class RgdLocation(object):
-    chromosomes = attr.ib()
-    starts = attr.ib()
-    stops = attr.ib()
-    strands = attr.ib()
-
-    @classmethod
-    def from_dict(cls, entry):
-        suffix = _assembly_suffix(entry)
-        if not entry[f"CHROMOSOME_{suffix}"]:
-            return None
-
-        chromosomes = entry[f"CHROMOSOME_{suffix}"].split(";")
-        starts = [int(p) for p in entry[f"START_POS_{suffix}"].split(";")]
-        stops = [int(p) for p in entry[f"STOP_POS_{suffix}"].split(";")]
-        strands = entry[f"STRAND_{suffix}"].split(";")
-        assert len(chromosomes) == len(starts) == len(stops) == len(strands)
-
-        return cls(
-            chromosomes=chromosomes,
-            starts=starts,
-            stops=stops,
-            strands=strands,
-        )
-
-    def endpoints(self):
-        for index, chromosome in enumerate(self.chromosomes):
-            yield (
-                chromosome,
-                self.starts[index],
-                self.stops[index],
-                self.strands[index],
-            )
 
 
 def corrected_records(handle):
@@ -219,10 +148,6 @@ def rna_type(entry):
     if basic == "snrna":
         return "snRNA"
     raise ValueError("Cannot determine rna type for %s" % entry)
-
-
-def indexed_gene_id(entry):
-    return primary_id(entry)
 
 
 def accession(entry, index=None):
