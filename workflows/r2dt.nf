@@ -78,7 +78,8 @@ process fetch_tracked {
 
 
 process extract_sequences {
-  memory '12GB'
+  memory { 12.GB * task.attempt }
+  errorStrategy { task.attempt < 3 ? 'retry' : 'terminate' }
 
   input:
   path(xrefs)
