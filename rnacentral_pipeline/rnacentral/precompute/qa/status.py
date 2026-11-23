@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.data import CODING_DATABASES
+from rnacentral_pipeline.databases.data import CODING_DATABASES, CODING_RNA_TYPES
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa import coding_potential, contamination
@@ -48,7 +48,17 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
             possible_orf_tcode=null("possible_orf_tcode"),
         )
 
-    orf, stopfree, tcode = coding_potential.validate(sequence)
+    # A coding database's UTR is part of an mRNA, so an ORF in it is not a warning sign.
+    if accessions and all(
+        a.database in CODING_DATABASES and a.rna_type.so_term.so_id in CODING_RNA_TYPES
+        for a in accessions
+    ):
+        orf, stopfree, tcode = (
+            QaResult.null(n)
+            for n in ("possible_orf", "possible_orf_stopfree", "possible_orf_tcode")
+        )
+    else:
+        orf, stopfree, tcode = coding_potential.validate(sequence)
     return QaStatus(
         incomplete_sequence=incomplete.validate(sequence),
         possible_contamination=contamination.validate(rna_type, sequence),

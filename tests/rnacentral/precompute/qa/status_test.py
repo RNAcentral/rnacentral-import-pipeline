@@ -232,3 +232,20 @@ def test_ncrnas_from_a_coding_database_are_still_qa_checked():
     )
     status = qa.status(builders.context(), srna, "ncRNA")
     assert status.possible_contamination.has_issue
+
+
+def test_utrs_from_a_coding_database_get_no_orf_flags():
+    # Release-29: ORF checks alone put QA warnings on 64k coding-database UTRs.
+    from .. import builders
+
+    utr = builders.sequence(
+        accessions=[builders.accession("ENSEMBL_CODING", "SO:0000205")],
+        possible_orf=True,
+        possible_orf_stopfree=True,
+        possible_orf_tcode=True,
+    )
+    status = qa.status(builders.context(), utr, "ncRNA")
+    assert status.possible_orf.has_issue is None
+    assert status.possible_orf_stopfree.has_issue is None
+    assert status.possible_orf_tcode.has_issue is None
+    assert not status.has_issue
