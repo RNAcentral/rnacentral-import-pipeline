@@ -13,9 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
-
-from rnacentral_pipeline.databases.data import CODING_DATABASES, CODING_RNA_TYPES
+from rnacentral_pipeline.databases.data import CODING_DATABASES
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa import coding_potential, contamination
@@ -31,15 +29,24 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
     Generate the QaStatus for a given Sequence object
     """
 
-    # These checks judge ncRNAs; on mRNAs and UTRs they only raise meaningless
-    # flags, so a sequence known only as a coding database's mRNA or UTR is not checked.
+    # These checks judge ncRNAs; on mRNAs they only raise meaningless flags, so a
+    # sequence known only as a coding database's mRNA is not checked.
     accessions = sequence.accessions
     if accessions and all(
-        a.database in CODING_DATABASES and a.rna_type.so_term.so_id in CODING_RNA_TYPES
+        a.database in CODING_DATABASES and a.rna_type.so_term.so_id == "SO:0000234"
         for a in accessions
     ):
-        fields = attr.fields(QaStatus)
-        return QaStatus(**{f.name: QaResult.null(f.name) for f in fields})
+        # The QA table needs the first four checks set; only the ORF columns take nulls.
+        ok, null = QaResult.ok, QaResult.null
+        return QaStatus(
+            incomplete_sequence=ok("incomplete_sequence"),
+            possible_contamination=ok("possible_contamination"),
+            missing_rfam_match=ok("missing_rfam_match"),
+            from_repetitive_region=ok("from_repetitive_region"),
+            possible_orf=null("possible_orf"),
+            possible_orf_stopfree=null("possible_orf_stopfree"),
+            possible_orf_tcode=null("possible_orf_tcode"),
+        )
 
     orf, stopfree, tcode = coding_potential.validate(sequence)
     return QaStatus(
