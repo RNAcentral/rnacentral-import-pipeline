@@ -11,7 +11,7 @@ COPY (
     rna.id >= :min
     AND rna.id < :max
     AND pre.is_active = true
-    -- Whole Ensembl, SGD, ENA and RegulonDB mRNAs (dbid 60-63) are left out, their UTRs are kept. Read
+    -- Ensembl, SGD, ENA and RegulonDB mRNAs and UTRs (dbid 60-63) are left out: QA ignores their ORF flags. Read
     -- xref: precompute has not filled pre.databases for new sequences yet.
     AND NOT EXISTS (
       SELECT 1
@@ -21,7 +21,7 @@ COPY (
         AND xref.deleted = 'N'
         AND xref.urs = pre.urs
         AND xref.taxid = pre.taxid
-        AND acc.rna_type = 'SO:0000234'
+        AND acc.rna_type IN ('SO:0000234', 'SO:0000204', 'SO:0000205')
     )
     AND pre.taxid IS NOT NULL
     AND NOT EXISTS (select 1 from stopfree_results as sf where sf.urs_taxid = pre.urs_taxid)
