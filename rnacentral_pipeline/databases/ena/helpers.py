@@ -30,8 +30,6 @@ LOGGER = logging.getLogger(__name__)
 
 ONTOLOGIES = set(["ECO", "SO", "GO"])
 
-MAY_SKIP = set([1169740, 1202446, 1325974, 408170, 410658, 506600, 77133, 939928])
-
 
 KNOWN_DBS = set(
     [
@@ -183,13 +181,6 @@ def accession(record):
     Uses the record id as the accession for a feature.
     """
     return record.id
-
-
-def is_composite(_):
-    """
-    Always returns 'N'
-    """
-    return "N"
 
 
 def function(feature):

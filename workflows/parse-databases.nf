@@ -3,6 +3,7 @@ include { circpedia } from './databases/circpedia'
 include { crw } from './databases/crw'
 include { ena } from './databases/ena'
 include { ensembl } from './databases/ensembl'
+include { ensembl_mrna } from './databases/ensembl_mrna'
 include { evlncrnas } from './databases/evlncrnas'
 include { expressionatlas } from './databases/expressionatlas'
 include { five_s_rrnadb } from './databases/5srrnadb'
@@ -78,6 +79,7 @@ workflow parse_databases {
       five_s_rrnadb(),
       ena(),
       ensembl(),
+      ensembl_mrna(),
       evlncrnas(),
       expressionatlas(),
       flybase(),

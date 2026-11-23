@@ -27,33 +27,6 @@ from Bio import SeqIO
 
 from rnacentral_pipeline.databases.data import RibovoreResult
 
-TRNAS = {
-    "SO:0000254",
-    "SO:0000259",
-    "SO:0000268",
-    "SO:0000260",
-    "SO:0000266",
-    "SO:0000256",
-    "SO:0000270",
-    "SO:0000261",
-    "SO:0000273",
-    "SO:0000272",
-    "SO:0000258",
-    "SO:0000263",
-    "SO:0000269",
-    "SO:0000264",
-    "SO:0000271",
-    "SO:0005857",
-    "SO:0000766",
-    "SO:0000265",
-    "SO:0000257",
-    "SO:0001036",
-    "SO:0000262",
-    "SO:0001172",
-    "SO:0002129",
-    "SO:0000267",
-}
-
 SO_RNA_NAME_LOOKUP = {
     "SO:0000254": "alanyl_tRNA",
     "SO:0000259": "glutaminyl_tRNA",
@@ -89,7 +62,7 @@ SO_RNA_NAME_LOOKUP = {
     "SO:0002128": "mt_rRNA",
     "SO:0000407": "cytosolic_18S_rRNA",
     "SO:0002345": "mt_LSU_rRNA",
-    "SO:0002344": "mt_SSU_rrNA",
+    "SO:0002344": "mt_SSU_rRNA",
     "SO:0001001": "cytosolic_23S_rRNA",
     "SO:0000391": "U1_snRNA",
     "SO:0000392": "U2_snRNA",  # below here added...
@@ -219,11 +192,6 @@ class ModelInfo(object):
             self.length,
             self.basepairs,
         ]
-
-    def fraction_paired(self) -> ty.Optional[float]:
-        if self.length is not None and self.basepairs is not None:
-            return float(self.basepairs) / float(self.length)
-        return None
 
 
 @attr.s(hash=True)
@@ -367,7 +335,7 @@ class R2DTResultInfo(object):
 
     def __filename__(self, extension):
         if self.source == Source.gtrnadb and extension == "fasta":
-            return f"{self.urs}-{self.model_name.replace('-','_')}.{extension}"
+            return f"{self.urs}-{self.model_name.replace('-', '_')}.{extension}"
         if self.source == Source.rfam and not self.model_name.startswith("RF"):
             if extension == "fasta":
                 return f"{self.urs}-{self.model_alias}.{extension}"

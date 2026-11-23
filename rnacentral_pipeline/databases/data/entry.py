@@ -47,6 +47,12 @@ FEATURE_TYPE_RNAS = set(
     ]
 )
 
+CODING_FEATURE_NAMES = {
+    "SO:0000234": "mRNA",
+    "SO:0000204": "5'UTR",
+    "SO:0000205": "3'UTR",
+}
+
 
 @attr.s(frozen=True, slots=True)
 class Entry:
@@ -150,6 +156,8 @@ class Entry:
         """
         if self.rna_type in FEATURE_TYPE_RNAS:
             return utils.SO_INSDC_MAPPING[self.rna_type]
+        if self.rna_type in CODING_FEATURE_NAMES:
+            return CODING_FEATURE_NAMES[self.rna_type]
         return "ncRNA"
 
     @property
@@ -239,7 +247,7 @@ class Entry:
             LOGGER.warn("%s has too many (%i/%i) N's", self.accession, counts, length)
             return False
 
-        if self.rna_type == "SO:0000234":
+        if self.rna_type == "SO:0000234" and self.database != "ENSEMBL_CODING":
             LOGGER.warn("Skipping a mRNA")
             return False
 

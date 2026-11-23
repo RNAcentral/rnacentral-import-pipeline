@@ -15,11 +15,8 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import upi_ranges
-
 from rnacentral_pipeline.databases.crs import parser as crs
-
-from rnacentral_pipeline.rnacentral import pgloader
+from rnacentral_pipeline.rnacentral import pgloader, upi_ranges
 
 
 @click.command("upi-ranges")

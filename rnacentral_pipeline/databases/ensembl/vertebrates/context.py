@@ -19,16 +19,14 @@ from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
-
 from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.rfam import utils as rfutils
-
 from rnacentral_pipeline.databases.ensembl.gff import load_coordinates
 from rnacentral_pipeline.databases.ensembl.vertebrates.rna_type_inference import (
     RnaTypeInference,
 )
+from rnacentral_pipeline.databases.rfam import utils as rfutils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +38,17 @@ class Context:
     rfam_names: ty.Dict[str, str] = attr.ib(validator=is_a(dict))
     excluded = attr.ib(validator=is_a(set))
     gff = attr.ib(validator=is_a(SqliteDict))
+    gca = attr.ib(default=None)
 
     @classmethod
-    def build(cls, gff_file: Path, family_file=None, excluded_file=None):
+    def build(
+        cls,
+        gff_file: Path,
+        family_file=None,
+        excluded_file=None,
+        assembly_id=None,
+        gca=None,
+    ):
         """
         Create a Context, by parsing the family file (families from Rfam), and
         the gencode_file (gff3 file from GENCODE) and excluded_file a list of
@@ -76,7 +82,8 @@ class Context:
             inference,
             rfam_names=rfam_names,
             excluded=excluded,
-            gff=load_coordinates(gff_file),
+            gff=load_coordinates(gff_file, assembly_id),
+            gca=gca,
         )
 
     def rfam_name(self, locus_tag: str, default=None):

@@ -31,15 +31,6 @@ CODING_RNA_TYPES = set(
 )
 
 
-class CouldNotTrimDescription(Exception):
-    """
-    Raised when a description could not be trimmed to only the organisms
-    suffix.
-    """
-
-    pass
-
-
 def references():
     """
     Get the standard reference for all Ensembl entries.
@@ -112,10 +103,9 @@ def seq_version(feature):
     Compute the sequence version, if any, of the given id.
     """
 
-    acc = accession(feature)
-    if "." in acc:
-        return acc.split(".", 1)[1]
-    return "1"
+    # Only a trailing number: RefSeq ids can be locations (NC_001566.1:6734..6802)
+    found = re.match(r"^[^.:]+\.(\d+)$", accession(feature))
+    return found.group(1) if found else "1"
 
 
 def transcript(feature):
@@ -154,6 +144,18 @@ def accession(feature):
     return acc
 
 
+# Ensembl stable ids (and MGP mouse-strain ids) are unique across species; local ids like '1-RA' are not
+STABLE_ID = re.compile(r"^(ENS[A-Z]*T\d|MGP_)")
+# Release 29: Ensembl gave each of these stable-id prefixes to two genomes
+SHARED_PREFIX = re.compile(r"^ENS(HGA|MMW|ZGS|WEM|MTQ|BQF|BDQ|ELI|JBH)T\d")
+
+
+def unique_accession(acc, gca):
+    if gca and (not STABLE_ID.match(acc) or SHARED_PREFIX.match(acc)):
+        return "%s:%s" % (gca, acc)
+    return acc
+
+
 def url(feature):
     """
     Get the URL for the given Enesmbl feature.
@@ -176,13 +178,6 @@ def organism_naming(record):
         common_name = match.group(1)
         species = re.sub(pattern, "", species).strip()
     return (species, common_name)
-
-
-def is_transcript(feature):
-    """
-    Check if this feature is a transcript.
-    """
-    return transcript(feature) is not None
 
 
 def notes(feature):

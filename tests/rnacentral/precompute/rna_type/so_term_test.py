@@ -107,7 +107,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS00000101E5_9606", "antisense_lncRNA"),
         ("URS0000016972_6239", "miRNA"),
         ("URS000001E7BA_559292", "glutaminyl_tRNA"),
-        ("URS00000478B7_9606", "circular_ncRNA"),
+        ("URS00000478B7_9606", "SRP_RNA"),
         ("URS00000490A3_6239", "snRNA"),
         ("URS000006F31F_4932", "snoRNA"),
         ("URS0000086133_9606", "transcript"),
@@ -123,7 +123,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS0000130A6B_3702", "pre_miRNA"),
         ("URS00001380AF_9606", "U5_snRNA"),
         ("URS000013F331_9606", "RNase_P_RNA"),
-        ("URS0000149178_9606", "circular_ncRNA"),
+        ("URS0000149178_9606", "U4_snRNA"),
         ("URS0000157BA2_4896", "antisense_RNA"),
         ("URS000015995E_4615", "miRNA"),
         ("URS000015F227_9606", "scaRNA"),
@@ -193,7 +193,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS00005A245E_10090", "tRNA"),
         ("URS00005A2612_9606", "scaRNA"),
         ("URS00005CDD41_352472", "RNase_P_RNA"),
-        ("URS00005CF03F_9606", "circular_ncRNA"),
+        ("URS00005CF03F_9606", "Y_RNA"),
         ("URS00005D0BAB_9606", "piRNA"),
         ("URS00005EB5B7_78454", "pre_miRNA"),
         ("URS00005EB5B7_9447", "pre_miRNA"),
@@ -205,7 +205,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS00005F4CAF_3702", "methionyl_tRNA"),
         ("URS00005FCB94_9606", "snRNA"),
         ("URS000060B496_10090", "H_ACA_box_snoRNA"),
-        ("URS000060F99B_559292", "mt_SSU_rRNA"),
+        ("URS000060F99B_559292", "mt_rRNA"),
         ("URS000061DECF_1235461", "group_II_intron"),
         ("URS00006233F9_9606", "ribozyme"),
         ("URS000063164F_9606", "U2_snRNA"),
@@ -224,7 +224,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS00006C670E_30608", "hammerhead_ribozyme"),
         ("URS00006CE02F_9606", "C_D_box_snoRNA"),
         ("URS00006D80BC_9913", "pre_miRNA"),
-        ("URS00006DC8B9_6239", "prolyl_tRNA"),
+        ("URS00006DC8B9_6239", "tRNA"),
         ("URS00006F5B4D_9606", "U4atac_snRNA"),
         ("URS000070D8C8_9606", "U6atac_snRNA"),
         ("URS0000714027_9031", "ncRNA"),
@@ -261,7 +261,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS000080DE76_9606", "rRNA"),
         ("URS000080DFDA_32630", "hammerhead_ribozyme"),
         ("URS000082AF7D_5699", "guide_RNA"),
-        ("URS000083F182_242161", "seryl_tRNA"),
+        ("URS000083F182_242161", "tRNA"),
         ("URS000086852D_32630", "hammerhead_ribozyme"),
         ("URS00008B56F3_9606", "lncRNA"),
         ("URS00008E398A_9606", "H_ACA_box_snoRNA"),
@@ -276,7 +276,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS0000A767C0_3702", "lncRNA"),
         ("URS0000A770BD_3702", "snRNA"),
         ("URS0000A7BB1C_9606", "snRNA"),
-        ("URS0000A85A32_10090", "seryl_tRNA"),
+        ("URS0000A85A32_10090", "miRNA"),
         ("URS0000A86584_10090", "ncRNA"),
         ("URS0000A8F612_9371", "snoRNA"),
         ("URS0000A96391_9606", "snRNA"),
@@ -294,7 +294,7 @@ def test_can_detect_parent_properly(first, second, expected):
         ("URS0000D570F5_9606", "lncRNA"),
         ("URS0000D5C855_9606", "antisense_lncRNA"),
         ("URS0000E305C6_573", "autocatalytically_spliced_intron"),
-        ("URS0000EE1237_5661", "cytosolic_SSU_rRNA"),
+        ("URS0000EE1237_5661", "rRNA"),
         ("URS0000EEE7A7_9606", "antisense_lncRNA"),
         ("URS0000EF7A6A_6945", "ncRNA"),
         ("URS0001980FDE_6239", "ncRNA"),
@@ -309,7 +309,7 @@ def test_can_detect_parent_properly(first, second, expected):
             marks=pytest.mark.xfail(reason="Data change"),
         ),
         ("URS00021528E4_7515", "cytosolic_28S_rRNA"),
-        ("URS0002176781_1658108", "alanyl_tRNA"),
+        ("URS0002176781_1658108", "cytosolic_23S_rRNA"),
         ("URS00001AD070_9606", "cysteinyl_tRNA"),
         ("URS00001F11B5_6239", "ncRNA"),
         ("URS000048B30C_3702", "ncRNA"),
@@ -324,7 +324,7 @@ def test_can_detect_parent_properly(first, second, expected):
             "miRNA",
             marks=pytest.mark.xfail(reason="Inactive sequence"),
         ),
-        ("URS000060C682_9606", "vault_RNA"),
+        ("URS000060C682_9606", "ncRNA"),
     ],
 )
 @pytest.mark.db
@@ -340,7 +340,6 @@ def as_accession(database, so_id):
         gene=None,
         optional_id=None,
         database=Database.build(database),
-        database_name=Database.build(database).value.descr,
         species="Homo sapiens",
         common_name="human",
         description="a sequence",
@@ -423,6 +422,63 @@ def test_rfam_hit_still_corrects_a_generic_database():
     result = so_term.rna_type_of(context, sequence)
     assert result is not None
     assert result.so_term.name == "tRNA"
+
+
+@pytest.mark.parametrize("circ_db", ["CIRCATLAS", "CIRCPEDIA"])
+@pytest.mark.parametrize(
+    "other_db,so_id,expected",
+    [
+        ("ENSEMBL", "SO:0000275", "snoRNA"),
+        ("HGNC", "SO:0000274", "snRNA"),
+        ("PIRBASE", "SO:0001035", "piRNA"),
+        ("ENA", "SO:0002291", "circular_ncRNA"),
+        ("ENA", "SO:0000655", "circular_ncRNA"),
+    ],
+)
+def test_circrna_database_defers_to_a_specific_linear_type(
+    circ_db, other_db, so_id, expected
+):
+    # Small RNAs reported as circRNAs share a URS with the linear RNA; only a
+    # bare ncRNA from another database leaves the circRNA call standing.
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession(circ_db, "SO:0002291"), as_accession(other_db, so_id)], []
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == expected
+
+
+@pytest.mark.parametrize(
+    "database,so_id",
+    [
+        ("CIRCPEDIA", "SO:0002291"),
+        ("PIRBASE", "SO:0001035"),
+    ],
+)
+def test_agreeing_database_keeps_the_type_safe_from_a_stray_rfam_hit(database, so_id):
+    context = ctx.Context(so_tree=SO_TREE)
+    sequence = as_sequence(
+        [as_accession(database, so_id), as_accession("ENA", so_id)],
+        [as_rfam_hit("RF00005", "SO:0000253")],
+    )
+    result = so_term.rna_type_of(context, sequence)
+    assert result is not None
+    assert result.so_term.name == RnaType.from_so_id(SO_TREE, so_id).so_term.name
+
+
+@pytest.mark.parametrize("mirna_db", ["MIRBASE", "MIRGENEDB", "FLYBASE"])
+def test_pirbase_defers_to_a_mature_mirna(mirna_db):
+    # piRBase lists many mature miRNAs; with two trusted databases the first
+    # accession used to win, so the same miRNA could come out as piRNA
+    context = ctx.Context(so_tree=SO_TREE)
+    for accessions in (
+        [as_accession("PIRBASE", "SO:0001035"), as_accession(mirna_db, "SO:0000276")],
+        [as_accession(mirna_db, "SO:0000276"), as_accession("PIRBASE", "SO:0001035")],
+    ):
+        result = so_term.rna_type_of(context, as_sequence(accessions, []))
+        assert result is not None
+        assert result.so_term.name == "miRNA"
 
 
 @pytest.mark.parametrize(

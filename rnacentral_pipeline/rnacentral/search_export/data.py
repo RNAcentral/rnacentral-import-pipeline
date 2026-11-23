@@ -14,16 +14,14 @@ limitations under the License.
 """
 
 import collections as coll
-import itertools as it
 import json
 import operator as op
 import re
-from datetime import datetime as dt
 from xml.sax.saxutils import escape
 
-import networkx as nx
-import obonet
 from lxml import etree
+
+from rnacentral_pipeline.databases.data import Database
 
 GENERIC_TYPES = set(["misc_RNA", "misc RNA", "other"])
 
@@ -145,26 +143,6 @@ def field(field_name, func, keys=None):
 def fields(field_name, func, keys=None):
     keys = keys or field_name
     return tags("field", func, attrib={"name": field_name}, keys=keys)
-
-
-def date_tag(date_name, func):
-    def fn(timestamps):
-        dates = []
-        for timestamp in timestamps:
-            format_str = "%Y-%m-%dT%H:%M:%S"
-            if "." in timestamp:
-                format_str += ".%f"
-            dates.append(dt.strptime(timestamp, format_str))
-        date = func(dates)
-
-        return {
-            "attrib": {
-                "value": date.strftime("%d %b %Y"),
-                "type": date_name,
-            },
-        }
-
-    return tag("date", fn, keys=date_name)
 
 
 def unique(values):
@@ -473,6 +451,10 @@ def boost(taxid, deleted, rna_type, expert_dbs, status):
 
     if normalize_rna_type(rna_type) in GENERIC_TYPES:
         value = value - 0.5
+
+    # An ncRNA database first: entries only in Ensembl coding drop below every ncRNA
+    if expert_dbs == {Database.ensembl_coding.pretty()}:
+        value = value - 5
 
     if bool(status["has_issue"]):
         value = value - 0.5

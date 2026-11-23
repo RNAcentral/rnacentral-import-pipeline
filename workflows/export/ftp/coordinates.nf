@@ -88,7 +88,7 @@ process generate_gff3 {
   tuple val(assembly), val(species), path(raw_data)
 
   output:
-  path("${species}.${assembly}.gff3.gz")
+  tuple val(assembly), val(species), path("${species}.${assembly}.gff3.gz")
 
   script:
   """
@@ -109,7 +109,7 @@ process generate_gff3_for_igv {
   maxRetries 3
 
   input:
-  tuple val(assembly), val(species), path(raw_data)
+  tuple val(assembly), val(species), path(gff3)
 
   output:
   path("${species}.${assembly}.rnacentral.gff3.gz")
@@ -118,10 +118,51 @@ process generate_gff3_for_igv {
   """
   set -euo pipefail
 
-  rnac ftp-export coordinates as-gff3 $raw_data - |\
+  zcat $gff3 | sed s/noncoding_exon/exon/g | bgzip > "${species}.${assembly}.rnacentral.gff3.gz"
+  """
+}
+
+process fetch_mrna {
+  tag { "${assembly}-${species}" }
+  maxForks 2
+  time { 20.m * (2 ** (task.attempt - 1)) }
+  memory '512 MB'
+  errorStrategy 'retry'
+  maxRetries 5
+
+  input:
+  tuple val(assembly), val(species), val(taxid), path(query)
+
+  output:
+  tuple val(assembly), val(species), path('mrna.json')
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "\$PGDATABASE" > mrna.json
+  """
+}
+
+// Takes the place of Ensembl's own annotation in the site's IGV, which looks
+// for <species>.<assembly>.ensembl.gff3.gz beside the RNAcentral track.
+process generate_mrna_gff3_for_igv {
+  tag { "${assembly}-${species}" }
+  publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
+  time '30m'
+  memory '2 GB'
+
+  input:
+  tuple val(assembly), val(species), path(raw_data)
+
+  output:
+  path("${species}.${assembly}.ensembl.gff3.gz")
+
+  script:
+  """
+  set -euo pipefail
+
+  rnac ftp-export coordinates mrna-as-gff3 $raw_data - |\
   sort -T . -t"`printf '\\t'`" -k1,1 -k4,4n |\
-  sed s/noncoding_exon/exon/g |\
-  bgzip > "${species}.${assembly}.rnacentral.gff3.gz"
+  bgzip > "${species}.${assembly}.ensembl.gff3.gz"
   """
 }
 
@@ -141,14 +182,16 @@ process index_gff3 {
 }
 
 workflow export_coordinates {
+  main:
   channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql') | set { known }
   channel.fromPath('files/ftp-export/genome_coordinates/query.sql') | set { query }
+  channel.fromPath('files/ftp-export/genome_coordinates/mrna.sql') | set { mrna_query }
 
   readme(channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd'))
 
-  known \
-  | find_jobs \
-  | splitCsv \
+  known | find_jobs | splitCsv | set { jobs }
+
+  jobs \
   | combine(query) \
   | fetch \
   | filter { _a, _s, fn -> !fn.isEmpty() } \
@@ -156,5 +199,14 @@ workflow export_coordinates {
 
   coordinates | generate_bed
   coordinates | generate_gff3
-  coordinates | generate_gff3_for_igv | index_gff3
+  jobs \
+  | combine(mrna_query) \
+  | fetch_mrna \
+  | filter { _a, _s, fn -> !fn.isEmpty() } \
+  | generate_mrna_gff3_for_igv \
+  | set { mrna_gff3 }
+
+  generate_gff3.out | generate_gff3_for_igv | mix(mrna_gff3) | index_gff3
+
+  emit: generate_bed.out.mix(generate_gff3.out, index_gff3.out)
 }

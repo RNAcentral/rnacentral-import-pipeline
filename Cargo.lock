@@ -156,15 +156,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2261d10cca569e4643e526d8dc2e62e433cc8aba21ab764233731f8d369bf394"
 
 [[package]]
-name = "block-buffer"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4"
-dependencies = [
- "generic-array",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -331,15 +322,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "digest"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
-dependencies = [
- "generic-array",
-]
-
-[[package]]
 name = "dirs"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -404,12 +386,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fallible-iterator"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4443176a9f2c162692bd3d352d745ef9413eec5782a80d8fd6f8a1ac692a07f7"
-
-[[package]]
 name = "fastrand"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -464,16 +440,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
 dependencies = [
  "byteorder",
-]
-
-[[package]]
-name = "generic-array"
-version = "0.14.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
-dependencies = [
- "typenum",
- "version_check",
 ]
 
 [[package]]
@@ -635,17 +601,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "json2dfasta"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "rnc-utils",
- "serde",
- "serde_json",
- "structopt",
-]
-
-[[package]]
 name = "json2fasta"
 version = "0.1.0"
 dependencies = [
@@ -700,17 +655,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "916806ba0031cd542105d916a97c8572e1fa6dd79c9c51e7eb43a09ec2dd84c1"
 dependencies = [
  "rawpointer",
-]
-
-[[package]]
-name = "md-5"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b5a279bb9607f9f53c22d496eade00d138d1bdcccd07d74650387cf94942a15"
-dependencies = [
- "block-buffer",
- "digest",
- "opaque-debug",
 ]
 
 [[package]]
@@ -783,12 +727,6 @@ name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
-
-[[package]]
-name = "opaque-debug"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "ordered-float"
@@ -907,15 +845,6 @@ name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
-
-[[package]]
-name = "quick-xml"
-version = "0.18.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cc440ee4802a86e357165021e3e255a9143724da31db1e2ea540214c96a0f82"
-dependencies = [
- "memchr",
-]
 
 [[package]]
 name = "quick-xml"
@@ -1159,26 +1088,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bio",
- "csv",
- "fallible-iterator",
- "fnv",
  "itertools 0.9.0",
  "lazy_static",
- "md-5",
- "quick-xml 0.18.1",
  "regex",
  "rnc-utils",
  "serde",
  "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "rnc-test-utils"
-version = "0.1.0"
-dependencies = [
- "serde_json",
  "tempfile",
+ "thiserror",
 ]
 
 [[package]]
@@ -1228,7 +1145,7 @@ dependencies = [
  "itertools 0.10.5",
  "log",
  "phf",
- "quick-xml 0.22.0",
+ "quick-xml",
  "rnc-core",
  "rnc-utils",
  "serde",
@@ -1239,6 +1156,7 @@ dependencies = [
  "structopt",
  "strum 0.21.0",
  "strum_macros 0.21.1",
+ "tempfile",
  "thiserror",
  "typed-builder",
 ]
@@ -1566,12 +1484,6 @@ dependencies = [
  "quote 1.0.40",
  "syn 1.0.109",
 ]
-
-[[package]]
-name = "typenum"
-version = "1.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "unicode-ident"

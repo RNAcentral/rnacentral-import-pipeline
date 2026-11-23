@@ -31,15 +31,6 @@ IGNORE_FEATURES = {
 }
 
 
-class MissingTaxId(Exception):
-    """
-    This is  raised when an operation which should have a NCBI taxon id should,
-    but does not.
-    """
-
-    pass
-
-
 class MissingSource(Exception):
     """
     This is raised if we cannot extract the source feature from an EMBL record.
@@ -156,17 +147,6 @@ def organism(record) -> str:
     return record.qualifiers["organism"]
 
 
-def project(record) -> ty.Optional[str]:
-    """
-    Get the annotated project xref if one exists.
-    """
-
-    for xref in record.dbxrefs:
-        if "Project" in xref:
-            return xref.split(":", 1)[1]
-    return None
-
-
 def description(record) -> str:
     """
     Get the description of this record.
@@ -275,6 +255,27 @@ def is_gene(feature):
     Check if this feature is a gene
     """
     return feature.type == "gene"
+
+
+def without_cds(lines: ty.Iterable[str]) -> ty.Iterator[str]:
+    """Drop the CDS features, whose translations are most of a gene-rich file."""
+    skipping = False
+    for line in lines:
+        if line.startswith("FT"):
+            # A feature key starts in column 6; continuation lines are indented past it.
+            if line[5:6].strip():
+                skipping = line[5:21].strip() == "CDS"
+            if skipping:
+                continue
+        yield line
+
+
+def without_id_semicolon(lines: ty.Iterable[str]) -> ty.Iterator[str]:
+    for line in lines:
+        # Biopython reads a ';' inside the ID name as the start of the new-style layout.
+        if line.startswith("ID"):
+            line = re.sub(r"^(ID\s+\S*?);(?=\S)", r"\1_", line)
+        yield line
 
 
 def rna_type(feature):

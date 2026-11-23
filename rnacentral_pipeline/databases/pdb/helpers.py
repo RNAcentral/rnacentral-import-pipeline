@@ -193,7 +193,6 @@ def rna_type(info: ChainInfo) -> str:
         raise MissingTypeInfo(
             f'Cannot find RNA type for {info}, falling back to "misc_RNA"'
         )
-        return "misc_RNA"
     return compound_rna_type(info.molecule_names[0])
 
 

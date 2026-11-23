@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import csv
 import re
 import typing as ty
@@ -112,26 +111,3 @@ def run(input_fasta: Path, output: Path, max_probability: float) -> None:
     results = calculate_results(records, max_probability)
     output.mkdir(parents=True, exist_ok=True)
     write_results(results, output)
-
-
-def build_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run stopfree on a FASTA file")
-    parser.add_argument("input_fasta", type=Path)
-    parser.add_argument("output", type=Path)
-    parser.add_argument(
-        "--max-probability",
-        type=float,
-        default=0.0001,
-        help="Maximum null-model probability still considered protein coding",
-    )
-    return parser
-
-
-def main(argv: ty.Sequence[str] | None = None) -> int:
-    args = build_argument_parser().parse_args(argv)
-    run(args.input_fasta, args.output, args.max_probability)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

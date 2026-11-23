@@ -11,7 +11,6 @@ Dockerfile.old
 .pre-commit-config.yaml
 pytest.ini
 .python-version
-RELEASE.rst
 LICENSE
 README.md
 *.md

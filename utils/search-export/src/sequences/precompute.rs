@@ -43,14 +43,11 @@ static SO_MAPPING: phf::Map<&'static str, &'static str> = phf_map! {
     "SO:0000122" => "SO:0000673",
     "SO:0005836" => "SO:0000673",
     "SO:0000185" => "SO:0000673",
-    "SO:0000204" => "SO:0000673",
     "SO:0000140" => "SO:0000673",
     "SO:0000243" => "SO:0000673",
-    "SO:0000205" => "SO:0000673",
     "SO:1001274" => "SO:0000673",
     "SO:0000726" => "SO:0000673",
     "SO:0000077" => "SO:0000673",
-    "SO:0000836" => "SO:0000673",
     "SO:0000233" => "SO:0000673",
     "SO:0001267" => "SO:0000275",
     "SO:0001243" => "SO:0001244",
@@ -113,4 +110,73 @@ impl grouper::HasIndex for Precompute {
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
     grouper::group::<Precompute>(grouper::Criteria::ExactlyOne, &path, 1, max, &output)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // UTR sequences must land under mRNA_region > UTR in search, as genes do
+    #[test]
+    fn utr_and_mrna_region_types_are_kept() {
+        for so_id in ["SO:0000204", "SO:0000205", "SO:0000836"] {
+            let pre = Precompute {
+                id: 1,
+                description: String::new(),
+                rna_type: String::from("ncRNA"),
+                has_coordinates: true,
+                so_rna_type: SoId::try_from(so_id.to_string()).unwrap(),
+                databases: vec![],
+            };
+            assert_eq!(pre.so_rna_type().to_string(), so_id);
+        }
+    }
+
+    fn precompute(so_rna_type: &str) -> Precompute {
+        serde_json::from_value(json!({
+            "id": 1,
+            "description": "a thing",
+            "rna_type": "lnc_RNA",
+            "has_coordinates": true,
+            "so_rna_type": so_rna_type,
+            "databases": "ENA,RefSeq",
+        }))
+        .unwrap()
+    }
+
+    fn so(id: &str) -> SoId {
+        SoId::try_from(id).unwrap()
+    }
+
+    #[test]
+    fn retired_so_terms_are_mapped_to_their_replacement() {
+        assert_eq!(precompute("SO:0001263").so_rna_type(), so("SO:0000655"));
+        assert_eq!(precompute("SO:0001637").so_rna_type(), so("SO:0000252"));
+        assert_eq!(precompute("SO:0000122").so_rna_type(), so("SO:0000673"));
+    }
+
+    #[test]
+    fn other_so_terms_are_left_alone() {
+        assert_eq!(precompute("SO:0000374").so_rna_type(), so("SO:0000374"));
+    }
+
+    #[test]
+    fn databases_are_split_on_commas() {
+        let summary = PrecomputeSummary::from(&precompute("SO:0000374"));
+        assert_eq!(summary.databases(), ["ENA", "RefSeq"]);
+    }
+
+    #[test]
+    fn the_summary_shows_the_rna_type_with_spaces() {
+        let summary = PrecomputeSummary::from(&precompute("SO:0000374"));
+        assert_eq!(summary.rna_type, "lnc RNA");
+        assert!(summary.has_coordinates());
+        assert_eq!(summary.description(), "a thing");
+    }
+
+    #[test]
+    fn coordinates_are_written_as_python_style_booleans() {
+        assert_eq!(precompute("SO:0000374").has_coordiante_string(), "True");
+    }
 }

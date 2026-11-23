@@ -15,6 +15,7 @@ limitations under the License.
 
 import json
 
+import pytest
 from lxml import etree as ET
 
 from rnacentral_pipeline.rnacentral.search_export import data
@@ -32,11 +33,11 @@ def test_create_tag_with_complete_dict():
 
 def create_tag_can_handle_unicode():
     root = ET.Element("a")
-    entry = u"tRNA Asp ⊄UC"
+    entry = "tRNA Asp ⊄UC"
     element = data.create_tag(root, "example", entry)
     assert element.tag == "example"
     assert element.attrib == {}
-    assert element.text == u"tRNA Asp ⊄UC"
+    assert element.text == "tRNA Asp ⊄UC"
     assert element in list(root)
 
 
@@ -146,3 +147,25 @@ def notes_can_parse_weird_notes():
     ]
     refs = data.note_references(notes)
     assert refs
+
+
+# RNAcentral is an ncRNA database: entries only in Ensembl coding rank below every ncRNA.
+@pytest.mark.parametrize("rna_type", ["mRNA", "ncRNA"])
+def test_coding_only_entries_rank_below_any_active_ncrna(rna_type):
+    clean = {"has_issue": False}
+    flagged = {"has_issue": True}
+    human_mrna = data.boost(9606, ["N"], [rna_type], ["Ensembl coding"], clean)
+    worst_ncrna = data.boost(1, ["N"], ["misc_RNA"], ["ENA"], flagged)
+    assert float(human_mrna) < float(worst_ncrna)
+
+
+# ZWD and Ensembl already provide UTR elements; those, and shared sequences, keep their rank.
+@pytest.mark.parametrize("dbs", [["ZWD"], ["Ensembl coding", "ZWD"]])
+def test_utr_elements_from_other_databases_keep_their_rank(dbs):
+    clean = {"has_issue": False}
+    assert data.boost(9606, ["N"], ["ncRNA"], dbs, clean) == "3"
+
+
+def test_ncrna_boost_is_unchanged():
+    clean = {"has_issue": False}
+    assert data.boost(9606, ["N"], ["lncRNA"], ["Ensembl"], clean) == "3"

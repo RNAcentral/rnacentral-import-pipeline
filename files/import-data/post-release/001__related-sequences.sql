@@ -40,8 +40,8 @@ CREATE INDEX IF NOT EXISTS ix_load_rnc_related_sequences__target_accession
   ON load_rnc_related_sequences(target_accession);
 ANALYZE load_rnc_related_sequences;
 
--- xref is PARTITION BY LIST (dbid). The three xref joins below (here, the
--- target_rna/isoform insert, and its follow-up delete) all matched on `ac`
+-- xref is PARTITION BY LIST (dbid). The two xref joins below (source URS here,
+-- target URS before the target_rna/isoform insert) both matched on `ac`
 -- alone, so Postgres Appended every partition and hashed the lot - slow, and a
 -- memory risk. This load table has no `database` column, so derive the dbids
 -- from rnc_accessions: accession is its PK, so this is an index probe per
@@ -132,60 +132,61 @@ delete from load_rnc_related_sequences where relationship_type = 'target_protein
 
 -- For related RNA try to figure out what the accession/URS is.
 
--- If the accession is one we know just use it
+-- If the accession is one we know just use it. Look the target up in xref once:
+-- joining xref inside each batch repeated the whole join 16 times (10h in release 29).
+ALTER TABLE load_rnc_related_sequences ADD COLUMN IF NOT EXISTS target_urs_taxid text;
+
+DO $$
+BEGIN
+  EXECUTE format($q$
+    UPDATE load_rnc_related_sequences load
+    SET target_urs_taxid = target.urs_taxid
+    FROM xref target
+    WHERE
+      target.ac = load.target_accession
+      and load.relationship_type IN ('target_rna', 'isoform', 'five_prime_utr', 'three_prime_utr', 'mrna')
+      and target.deleted = 'N'
+      and target.dbid = ANY(%L::int[])
+  $q$, pg_temp.related_dbids());
+END $$;
+
 DO $$
 DECLARE
   n_batches CONSTANT int := 16;  -- KEEP IN SYNC with the other DO blocks in this file
-  v_dbids CONSTANT int[] := pg_temp.related_dbids();
 BEGIN
   FOR i IN 0..n_batches-1 LOOP
     -- DISTINCT retained here: unlike the DO NOTHING inserts elsewhere, this is
     -- ON CONFLICT DO UPDATE, which errors ("cannot affect row a second time")
     -- if a single statement carries duplicates on the conflict key.
-    EXECUTE format($q$
-      INSERT INTO rnc_related_sequences (
-        source_urs_taxid,
-        source_accession,
-        target_urs_taxid,
-        target_accession,
-        relationship_type,
-        methods
-      ) (
-      select distinct
-        load.source_urs_taxid,
-        load.source_accession,
-        target.urs_taxid,
-        load.target_accession,
-        load.relationship_type::related_sequence_relationship,
-        load.methods
-      from load_rnc_related_sequences load
-      join xref target on target.ac = load.target_accession
-      where
-        load.relationship_type IN ('target_rna', 'isoform')
-        and target.deleted = 'N'
-        and target.dbid = ANY(%L::int[])
-        and abs(hashtext(load.source_accession)) %% %s = %s
-      )
-      ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
-      SET
-        methods = EXCLUDED.methods || rnc_related_sequences.methods
-    $q$, v_dbids, n_batches, i);
+    INSERT INTO rnc_related_sequences (
+      source_urs_taxid,
+      source_accession,
+      target_urs_taxid,
+      target_accession,
+      relationship_type,
+      methods
+    ) (
+    select distinct
+      load.source_urs_taxid,
+      load.source_accession,
+      load.target_urs_taxid,
+      load.target_accession,
+      load.relationship_type::related_sequence_relationship,
+      load.methods
+    from load_rnc_related_sequences load
+    where
+      load.target_urs_taxid IS NOT NULL
+      and abs(hashtext(load.source_accession)) % n_batches = i
+    )
+    ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
+    SET
+      methods = EXCLUDED.methods || rnc_related_sequences.methods
+    ;
   END LOOP;
 END $$;
 
 -- Delete the loaded rnas with a known acccession
-DO $$
-BEGIN
-  EXECUTE format($q$
-    delete from load_rnc_related_sequences load
-    USING xref
-    WHERE
-      xref.ac = load.target_accession
-      and load.relationship_type IN ('target_rna', 'isoform')
-      and xref.deleted = 'N'
-      and xref.dbid = ANY(%L::int[])
-  $q$, pg_temp.related_dbids());
-END $$;
+delete from load_rnc_related_sequences where target_urs_taxid IS NOT NULL;
 
 -- Build a table representing the related Ensembl genes
 create temp table gene_upi_mapping as

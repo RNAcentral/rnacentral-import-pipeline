@@ -67,6 +67,10 @@ impl AccessionVec {
         &self.genes
     }
 
+    pub fn tax_strings(&self) -> &HashSet<String> {
+        &self.tax_strings
+    }
+
     pub fn gene_synonyms(&self) -> &HashSet<String> {
         &self.gene_synonyms
     }

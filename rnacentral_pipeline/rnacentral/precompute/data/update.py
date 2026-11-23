@@ -31,7 +31,6 @@ from rnacentral_pipeline.rnacentral.precompute.description import (
 from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 from rnacentral_pipeline.rnacentral.precompute.rna_type import rna_type_of
-from rnacentral_pipeline.rnacentral.repeats import tree
 
 
 def previous_rna_type(previous: ty.Dict[str, ty.Any]) -> str:
@@ -44,6 +43,13 @@ def previous_rna_type(previous: ty.Dict[str, ty.Any]) -> str:
     if rna_type == "NULL":
         return ""
     return rna_type
+
+
+def insdc_type(so_id: str) -> str:
+    # Whole mRNAs are new to RNAcentral; UTRs keep the existing ncRNA convention
+    if so_id == "SO:0000234":
+        return "mRNA"
+    return SO_INSDC_MAPPING.get(so_id, "ncRNA")
 
 
 @attr.s(frozen=True)
@@ -62,7 +68,7 @@ class SequenceUpdate:
     @classmethod
     def active(cls, context: Context, sequence: Sequence) -> "SequenceUpdate":
         so_rna_type = rna_type_of(context, sequence)
-        insdc_rna_type = SO_INSDC_MAPPING.get(so_rna_type.so_term.so_id, "ncRNA")
+        insdc_rna_type = insdc_type(so_rna_type.so_term.so_id)
         description = description_of(insdc_rna_type, sequence)
         short_description = short_description_for(description, sequence)
 

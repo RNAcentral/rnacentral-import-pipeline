@@ -1,0 +1,5 @@
+#!/bin/bash
+# Exit non-zero when an EMBL file has more ID lines than '//' terminators, i.e. was cut off.
+awk '/^ID /{ids++} /^\/\//{ends++} END{
+  if (ids != ends) { printf "truncated EMBL file %s: %d ID lines, %d // terminators\n", FILENAME, ids, ends > "/dev/stderr"; exit 1 }
+}' "$1"

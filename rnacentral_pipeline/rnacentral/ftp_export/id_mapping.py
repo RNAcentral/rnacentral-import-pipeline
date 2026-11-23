@@ -53,6 +53,9 @@ class IdMapping:
             gene = self.optional_id
         elif self.database == "ENSEMBL":
             gene = self.optional_id
+        elif self.database == "ENSEMBL_CODING":
+            # An mRNA and its UTRs share one ENST id
+            accession = self.accession
         elif self.database == "RFAM":
             if self.rna_type == "pre_miRNA":
                 acc_range, endpoints, _ = self.accession.split(":", 2)

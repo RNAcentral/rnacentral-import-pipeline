@@ -19,7 +19,6 @@ import attr
 import pytest
 
 import rnacentral_pipeline.databases.rfam.cross_references as cr
-
 from rnacentral_pipeline.databases.data.ontology_term import OntologyTerm as Term
 
 

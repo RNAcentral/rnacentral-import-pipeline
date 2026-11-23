@@ -3,8 +3,6 @@ nextflow.enable.dsl=2
 include { model_info } from './r2dt/model-info.nf'
 
 process fetch_model_mapping {
-  memory '16 MB'
-
   input:
   val(_flag)
   path(query)
@@ -80,7 +78,8 @@ process fetch_tracked {
 
 
 process extract_sequences {
-  memory '12GB'
+  memory { 12.GB * task.attempt }
+  errorStrategy { task.attempt < 3 ? 'retry' : 'terminate' }
 
   input:
   path(xrefs)

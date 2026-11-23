@@ -12,7 +12,7 @@ CREATE UNLOGGED TABLE load_rnc_accessions (
     non_coding_id character varying(200) NULL,
     database character varying(40) NULL,
     external_id character varying(300) NULL,
-    optional_id character varying(200) NULL,
+    optional_id text NULL,
     allele character varying(100) NULL,
     anticodon character varying(200) NULL,
     chromosome character varying(200) NULL,
@@ -122,7 +122,7 @@ CREATE UNLOGGED TABLE
     seq_long text NULL,
     database character varying(40) NULL,
     ac character varying(200) NULL,
-    optional_id character varying(100) NULL,
+    optional_id text NULL,
     version integer NULL,
     taxid bigint NULL,
     md5 character varying(32) NULL
@@ -137,7 +137,7 @@ CREATE UNLOGGED TABLE
     seq_long text NULL,
     database character varying(40) NULL,
     ac character varying(200) NULL,
-    optional_id character varying(100) NULL,
+    optional_id text NULL,
     version integer NULL,
     taxid bigint NULL,
     md5 character varying(32) NULL
@@ -152,27 +152,16 @@ CREATE UNLOGGED TABLE load_assemblies (
   common_name varchar(255),
   taxid int4 NOT NULL,
   ensembl_url varchar(100) NULL,
-  division varchar(20) NULL,
   blat_mapping int4 NULL,
   example_chromosome varchar(20) NULL,
   example_end int4 NULL,
-  example_start int4 NULL,
-  subdomain varchar(100) NOT NULL
+  example_start int4 NULL
 );
 
 DROP TABLE IF EXISTS load_compara;
 CREATE UNLOGGED TABLE load_compara (
   homology_group text not null,
   ensembl_transcript text not null
-);
-
-DROP TABLE IF EXISTS load_coordinate_info;
-CREATE UNLOGGED TABLE load_coordinate_info (
-  chromosome text NOT NULL,
-  coordinate_system text NOT NULL,
-  assembly_id text,
-  is_reference bool,
-  karyotype_rank int
 );
 
 DROP TABLE IF EXISTS load_ensembl_analysis_status;
@@ -234,16 +223,6 @@ CREATE UNLOGGED TABLE load_interactions (
   interacting_id text NOT NULL,
   names JSONB NOT NULL,
   taxid int NOT NULL
-);
-
-DROP TABLE IF EXISTS load_rnc_coordinates;
-CREATE UNLOGGED TABLE load_rnc_coordinates (
-    accession varchar(200) NULL,
-    local_start int8 NULL,
-    local_end int8 NULL,
-    chromosome varchar(100) NULL,
-    strand int8 NULL,
-    assembly_id varchar(255) NULL
 );
 
 DROP TABLE IF EXISTS load_ontology_terms;
@@ -391,18 +370,6 @@ CREATE UNLOGGED TABLE load_secondary_layout_models (
     model_source text not null,
     model_length int,
     model_basepair_count int
-);
-
-DROP TABLE IF EXISTS load_ensembl_pseudogenes;
-create UNLOGGED table load_ensembl_pseudogenes (
-    gene text not null,
-    region_name text not null,
-    chromosome text not null,
-    strand int4 not null,
-    exon_start int4 not null,
-    exon_stop int4 not null,
-    assembly_id varchar(255) not null,
-    exon_count int not null
 );
 
 DROP TABLE IF EXISTS load_stopfree;

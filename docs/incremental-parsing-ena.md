@@ -178,7 +178,7 @@ Nothing new is needed on the load side. `get_load_release_type(dbid)` already
 returns `D` for *any* database that has manifest rows, and `load_xref_delta` +
 `incremental_retire_explicit` + `load_deletions` already retire only explicitly
 listed accessions. ENA becomes a delta database purely by producing a manifest.
-`nextflow run main.nf --force_full_import` remains the escape hatch: the diff is
+`nextflow run import-data.nf --force_full_import` remains the escape hatch: the diff is
 skipped, every chunk is parsed, and the release forces `F`, so a run reconciles any
 signature/mapping drift.
 

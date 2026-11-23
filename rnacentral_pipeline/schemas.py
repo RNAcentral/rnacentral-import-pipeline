@@ -522,7 +522,7 @@ CPAT_ORFS = pa.schema(
 
 
 # ---------------------------------------------------------------------------
-# stopfree.data.StopfreeWriter.results -> stopfree-results.parquet (stopfree
+# stopfree.scan.write_results -> stopfree-results.parquet (stopfree
 # workflow). Source: files/stopfree/stopfree.ctl. Loaded into ``load_stopfree``
 # then merged into ``stopfree_results`` via INSERT ON CONFLICT. All numeric
 # fields are nullable: the writer emits "" or "NaN" for missing values and the
@@ -570,25 +570,10 @@ ASSEMBLIES = pa.schema(
         pa.field("common_name", pa.string()),
         pa.field("taxid", pa.int32(), nullable=False),
         pa.field("ensembl_url", pa.string()),
-        pa.field("division", pa.string()),
-        pa.field("subdomain", pa.string(), nullable=False),
         pa.field("example_chromosome", pa.string()),
         pa.field("example_start", pa.int32()),
         pa.field("example_end", pa.int32()),
         pa.field("blat_mapping", pa.int32()),
-    ]
-)
-
-
-# rnac ensembl coordinate-systems -> coordinate_systems.parquet
-# Source: files/import-data/load/coordinate-systems.ctl
-COORDINATE_SYSTEMS = pa.schema(
-    [
-        pa.field("chromosome", pa.string(), nullable=False),
-        pa.field("coordinate_system", pa.string(), nullable=False),
-        pa.field("assembly_id", pa.string()),
-        pa.field("is_reference", pa.bool_()),
-        pa.field("karyotype_rank", pa.int32()),
     ]
 )
 
@@ -607,22 +592,6 @@ PROTEINS = pa.schema(
         # Always written (possibly empty); never null, so blank handling in the
         # typed writer never has to invent an empty list.
         pa.field("synonyms", pa.list_(pa.string()), nullable=False),
-    ]
-)
-
-
-# rnac ensembl pseudogenes -> ensembl-pseudogenes.parquet
-# Source: files/import-data/load/ensembl-pseudogenes.ctl
-ENSEMBL_PSEUDOGENES = pa.schema(
-    [
-        pa.field("gene", pa.string(), nullable=False),
-        pa.field("region_name", pa.string(), nullable=False),
-        pa.field("chromosome", pa.string(), nullable=False),
-        pa.field("strand", pa.int32(), nullable=False),
-        pa.field("assembly_id", pa.string(), nullable=False),
-        pa.field("exon_count", pa.int32(), nullable=False),
-        pa.field("exon_start", pa.int64(), nullable=False),
-        pa.field("exon_stop", pa.int64(), nullable=False),
     ]
 )
 
@@ -702,9 +671,7 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "taxonomy": "load_taxonomy",
     "rfam_ontology_mappings": "load_rfam_go_terms",
     "assemblies": "load_assemblies",
-    "coordinate_systems": "load_coordinate_info",
     "proteins": "load_protein_info",
-    "ensembl-pseudogenes": "load_ensembl_pseudogenes",
     "rfam-families": "load_rfam_models",
     "rfam-clans": "load_rfam_clans",
     "ontology_terms": "load_ontology_terms",

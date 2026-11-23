@@ -343,3 +343,23 @@ def test_can_create_expected_exports(rna_id, expected):
     )
     entries = sorted(ids.IdMapping(**e).entry() for e in entries)
     assert entries == expected
+
+
+# An mRNA and its two UTRs share one ENST id; the accession tells their rows apart.
+@pytest.mark.parametrize(
+    "accession",
+    ["ENST00000269305.9", "ENST00000269305.9:five_prime_UTR"],
+)
+def test_coding_rows_carry_their_own_accession(accession):
+    mapping = ids.IdMapping(
+        upi="URS0000ABCD",
+        accession=accession,
+        taxid=9606,
+        external_id="ENST00000269305.9",
+        optional_id="ENSG00000141510.18",
+        rna_type="mRNA",
+        gene="ENSG00000141510.18",
+        product="",
+        database="ENSEMBL_CODING",
+    )
+    assert mapping.entry()[2] == accession

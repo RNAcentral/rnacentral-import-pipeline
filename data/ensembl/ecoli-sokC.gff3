@@ -1,0 +1,9 @@
+##gff-version 3
+##sequence-region   Chromosome 1 160
+#!genome-build Univ. Wisconsin ASM584v2
+#!genome-version ASM584v2
+#!genome-build-accession GCA_000005845.2
+#!genebuild-last-updated 2018-09
+Chromosome	ena	ncRNA_gene	52	106	.	+	.	ID=gene:sokC;biotype=ncRNA;description=antisense RNA blocking mokC and hokC translation;gene_id=sokC
+Chromosome	ena	ncRNA	52	106	.	+	.	ID=transcript:EBT00049907842;Parent=gene:sokC;Name=sokC;biotype=ncRNA;tag=Ensembl_canonical;transcript_id=EBT00049907842
+Chromosome	ena	exon	52	106	.	+	.	Parent=transcript:EBT00049907842;constitutive=1;exon_id=sokC-1;rank=1

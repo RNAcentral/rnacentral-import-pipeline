@@ -1,4 +1,4 @@
--- Minimal stand-in for the rnacen tables the r2dt display queries touch.
+-- Minimal stand-in for the rnacen tables the SQL tests touch.
 -- Only the columns those queries read are present; this is deliberately not a
 -- copy of production DDL.
 
@@ -43,4 +43,147 @@ CREATE TABLE precompute_urs_taxid (
   precompute_urs_id bigint NOT NULL,
   urs text NOT NULL,
   urs_taxid text NOT NULL
+);
+
+-- Stand-ins for the tables files/import-data/post-release/001__regions.sql touches.
+
+DROP MATERIALIZED VIEW IF EXISTS active_urs_taxids;
+DROP MATERIALIZED VIEW IF EXISTS rnc_sequence_regions_active_provided;
+DROP MATERIALIZED VIEW IF EXISTS rnc_sequence_regions_active_mapped;
+DROP MATERIALIZED VIEW IF EXISTS rnc_sequence_regions_active;
+DROP TABLE IF EXISTS load_rnc_sequence_regions;
+DROP TABLE IF EXISTS xref;
+DROP TABLE IF EXISTS ensembl_assembly;
+DROP TABLE IF EXISTS rnc_gene_members;
+DROP TABLE IF EXISTS rnc_gene_status;
+DROP TABLE IF EXISTS rnc_genes;
+DROP TABLE IF EXISTS rnc_accession_sequence_region;
+DROP TABLE IF EXISTS rnc_sequence_exons;
+DROP TABLE IF EXISTS rnc_sequence_regions;
+DROP TABLE IF EXISTS rnc_rna_precomputed;
+
+CREATE TABLE load_rnc_sequence_regions (
+  accession text,
+  urs_taxid text,
+  region_name text NOT NULL,
+  chromosome text,
+  strand int,
+  exon_start int,
+  exon_stop int,
+  assembly_id text,
+  exon_count int
+);
+
+CREATE TABLE xref (
+  ac text NOT NULL,
+  urs text NOT NULL,
+  taxid int NOT NULL,
+  deleted char(1) NOT NULL,
+  dbid int,
+  urs_taxid text GENERATED ALWAYS AS (urs || '_' || taxid) STORED
+);
+
+CREATE TABLE ensembl_assembly (
+  assembly_id text PRIMARY KEY,
+  assembly_ucsc text
+);
+
+CREATE TABLE rnc_sequence_regions (
+  id serial PRIMARY KEY,
+  urs_taxid text,
+  region_name text NOT NULL,
+  chromosome text,
+  strand int,
+  region_start int,
+  region_stop int,
+  assembly_id text,
+  exon_count int,
+  was_mapped bool,
+  identity float
+);
+CREATE UNIQUE INDEX ON rnc_sequence_regions (md5(region_name), assembly_id);
+
+CREATE TABLE rnc_sequence_exons (
+  id serial PRIMARY KEY,
+  region_id int NOT NULL REFERENCES rnc_sequence_regions(id),
+  exon_start int,
+  exon_stop int,
+  UNIQUE (region_id, exon_start, exon_stop)
+);
+
+CREATE TABLE rnc_accession_sequence_region (
+  accession text NOT NULL,
+  region_id int NOT NULL REFERENCES rnc_sequence_regions(id),
+  UNIQUE (accession, region_id)
+);
+
+CREATE TABLE rnc_genes (
+  id serial PRIMARY KEY,
+  member_count int,
+  is_active bool
+);
+
+CREATE TABLE rnc_gene_members (
+  rnc_gene_id int REFERENCES rnc_genes(id),
+  locus_id int REFERENCES rnc_sequence_regions(id)
+);
+
+CREATE TABLE rnc_gene_status (
+  region_id int REFERENCES rnc_sequence_regions(id)
+);
+
+CREATE TABLE rnc_rna_precomputed (
+  urs_taxid text PRIMARY KEY,
+  has_coordinates bool
+);
+
+CREATE MATERIALIZED VIEW active_urs_taxids AS
+  SELECT DISTINCT urs || '_' || taxid AS urs_taxid FROM xref WHERE deleted = 'N';
+CREATE MATERIALIZED VIEW rnc_sequence_regions_active_provided AS
+  SELECT urs_taxid, assembly_id FROM rnc_sequence_regions WHERE NOT was_mapped;
+CREATE MATERIALIZED VIEW rnc_sequence_regions_active_mapped AS
+  SELECT urs_taxid, assembly_id FROM rnc_sequence_regions WHERE was_mapped;
+CREATE MATERIALIZED VIEW rnc_sequence_regions_active AS
+  SELECT urs_taxid, assembly_id FROM rnc_sequence_regions;
+
+-- Stand-ins for the tables files/import-data/post-release/001__related-sequences.sql touches.
+
+CREATE SCHEMA IF NOT EXISTS rnacen;
+DROP TABLE IF EXISTS rnacen.rnc_related_sequences;
+DROP TABLE IF EXISTS load_rnc_related_sequences;
+DROP TABLE IF EXISTS rnc_accessions;
+DROP TABLE IF EXISTS rnc_database;
+DROP TYPE IF EXISTS related_sequence_relationship;
+
+CREATE TYPE related_sequence_relationship AS ENUM (
+  'target_protein', 'target_rna', 'isoform', 'five_prime_utr', 'three_prime_utr', 'mrna', 'paralogue'
+);
+
+CREATE TABLE rnacen.rnc_related_sequences (
+  source_urs_taxid text,
+  source_accession text NOT NULL,
+  target_urs_taxid text,
+  target_accession text NOT NULL,
+  relationship_type related_sequence_relationship NOT NULL,
+  methods text[],
+  UNIQUE (source_accession, target_accession, relationship_type)
+);
+
+CREATE TABLE load_rnc_related_sequences (
+  source_accession text NOT NULL,
+  source_urs_taxid text,
+  target_accession text NOT NULL,
+  relationship_type text NOT NULL,
+  methods text[]
+);
+
+CREATE TABLE rnc_accessions (
+  accession text PRIMARY KEY,
+  database text,
+  optional_id text
+);
+
+CREATE TABLE rnc_database (
+  id int PRIMARY KEY,
+  descr text
 );

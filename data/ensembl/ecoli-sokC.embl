@@ -1,0 +1,52 @@
+ID   Chromosome.ASM584v2; ; ; DNA; ; UNC; 160 BP.
+XX
+AC   Chromosome.ASM584v2;
+XX
+DE   Escherichia coli str. K-12 substr. MG1655 str. K12 (GCA_000005845)
+DE   chromosome Chromosome ASM584v2 full sequence 1..4641652 annotated by
+DE   Ensembl
+XX
+KW
+XX
+OS   Escherichia coli str. K-12 substr. MG1655 str. K12 (GCA_000005845)
+OC   Bacteria; Pseudomonadati; Pseudomonadota; Gammaproteobacteria;
+OC   Enterobacterales; Enterobacteriaceae; Escherichia coli; Escherichia coli
+OC   K-; 12.
+XX
+CC   This sequence was annotated by Univ. Wisconsin
+CC   (https://bacteria.ensembl.org). Please visit the Ensembl or EnsemblGenomes
+CC   web site, http://www.ensembl.org/ or http://www.ensemblgenomes.org/ for
+CC   more information.
+CC   All feature locations are relative to the first (5') base of the sequence
+CC   in this file.  The sequence presented is always the forward strand of the
+CC   assembly. Features that lie outside of the sequence contained in this file
+CC   have clonal location coordinates in the format: <clone
+CC   accession>.<version>:<start>..<end>
+CC   The /gene indicates a unique id for a gene, /note="transcript_id=..." a
+CC   unique id for a transcript, /protein_id a unique id for a peptide and
+CC   note="exon_id=..." a unique id for an exon. These ids are maintained
+CC   wherever possible between versions.
+CC   All the exons and transcripts in Ensembl are confirmed by similarity to
+CC   either protein or cDNA sequences.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..160
+FT                   /organism="Escherichia coli str. K-12 substr. MG1655 str.
+FT                   K12 (GCA_000005845)"
+FT                   /db_xref="taxon:511145"
+FT   gene            52..106
+FT                   /gene="sokC"
+FT                   /note="antisense RNA blocking mokC and hokC translation"
+FT   misc_RNA        52..106
+FT                   /gene="sokC"
+FT                   /note="ncRNA"
+FT                   /standard_name="EBT00049907842"
+FT   exon            52..106
+FT                   /note="exon_id=sokC-1"
+XX
+SQ   Sequence 160 BP; 35 A; 45 C; 36 G; 44 T; 0 other;
+     cattgctctc ttctccttga ccttacggtc agtaagaggc actctacatg tgttcagcat        60
+     ataggaggcc tcgggttgat ggtaaaatat cactcggggc ttttctctat ctgccgttca       120
+     gctaatgcct gagacagaca gcctcaagca cccgccgcta                             160
+//

@@ -107,10 +107,6 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
             )
 
 
-def parse(iterable):
-    return regions_as_features(coord.parse(iterable))
-
-
 def write_gff_text(features, output, allow_no_features=False, header=True) -> bool:
     first_feature = next(features, None)
     if first_feature is None:

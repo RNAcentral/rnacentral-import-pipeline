@@ -20,9 +20,6 @@ import sys
 from pathlib import Path
 
 import click
-from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 
 # The package is not installed into the container's venv.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -30,15 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from rnacentral_pipeline.rnacentral.ftp_export.sequences_json import parse
 
 EASEL_PATTERN = re.compile(r"^[ACGTN]+$", re.IGNORECASE)
-
-
-def as_record(entry):
-    description = entry.get("description", "") or ""
-    return SeqRecord(
-        Seq(entry["sequence"]),
-        id=entry["id"],
-        description=description,
-    )
+WRAP = 60
 
 
 def select_easel(entry):
@@ -47,13 +36,35 @@ def select_easel(entry):
 
 def sequences(handle, only_valid_easel=False):
     """
-    Parse each line and create a generator of SeqRecords to write.
+    Parse each line and create a generator of entries to write.
     """
 
     data = parse(handle)
     if only_valid_easel:
         data = filter(select_easel, data)
-    return map(as_record, data)
+    return data
+
+
+def write_fasta(entries, output):
+    """
+    Write entries as FASTA exactly as Biopython's SeqIO does (title rules, 60
+    column wrapping), without building a SeqRecord per sequence.
+    """
+
+    for entry in entries:
+        name = entry["id"].replace("\n", " ").replace("\r", " ")
+        description = (
+            (entry.get("description", "") or "").replace("\n", " ").replace("\r", " ")
+        )
+        if description and description.split(None, 1)[0] == name:
+            title = description
+        elif description:
+            title = f"{name} {description}"
+        else:
+            title = name
+        seq = entry["sequence"]
+        output.write(">" + title + "\n")
+        output.writelines(seq[i : i + WRAP] + "\n" for i in range(0, len(seq), WRAP))
 
 
 @click.command()
@@ -65,8 +76,7 @@ def cli(tsv_file, output=None, only_valid_easel=False):
     Turn a file with JSON lines into a FASTA file. Each line must be an object
     with an id and sequence entry and an optional description entry.
     """
-    seqs = sequences(tsv_file, only_valid_easel=only_valid_easel)
-    SeqIO.write(seqs, output, "fasta")
+    write_fasta(sequences(tsv_file, only_valid_easel=only_valid_easel), output)
 
 
 if __name__ == "__main__":

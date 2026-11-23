@@ -32,3 +32,18 @@ def test_the_final_query_skips_the_excluded_set():
 
 def test_the_final_query_does_not_probe_xref_per_sequence():
     assert "xref" not in FINAL
+
+
+def test_whole_mrnas_are_never_sent_to_r2dt():
+    assert "'SO:0000234'" in EXCLUDED
+    assert "'SO:0000204'" not in EXCLUDED
+    assert "'SO:0000205'" not in EXCLUDED
+
+
+def test_pirnas_are_excluded():
+    # piRNAs are 24-32 nt, so any drawing is a force-fit onto a larger model.
+    assert "'SO:0001035'" in EXCLUDED
+
+
+def test_sequences_under_40_nt_are_not_drawn():
+    assert "rna.len >= 40" in FINAL

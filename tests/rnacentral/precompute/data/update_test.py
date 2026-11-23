@@ -17,6 +17,7 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases.data import RnaType, SoTermInfo
+from rnacentral_pipeline.rnacentral.precompute.data import update as update_module
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.data.update import SequenceUpdate
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult, QaStatus
@@ -182,11 +183,11 @@ def test_writeable_statuses_raises_for_an_active_update_with_no_status():
 
 
 # --------------------------------------------------------------------- #
-# databases: the stored column holds rnc_database.descr, not Database.pretty()
+# databases: the query sends rnc_database.descr, the stored column holds Database.pretty()
 # --------------------------------------------------------------------- #
 
 
-def test_accession_build_keeps_the_descr_from_the_query_as_database_name():
+def test_accession_build_turns_the_descr_from_the_query_into_the_pretty_name():
     acc = Accession.build(
         SO_TREE,
         {
@@ -205,11 +206,10 @@ def test_accession_build_keeps_the_descr_from_the_query_as_database_name():
             "is_active": True,
         },
     )
-    assert acc.database_name == "TMRNA_WEB"
-    assert acc.pretty_database == "TMRNA_WEB"
+    assert acc.pretty_database == "tmRNA Website"
 
 
-def test_databases_column_uses_descr_not_pretty_names():
+def test_databases_column_uses_pretty_names_not_descr():
     sequence = b.sequence(
         accessions=[
             b.accession("tmrna_website", TRNA),
@@ -217,4 +217,21 @@ def test_databases_column_uses_descr_not_pretty_names():
             b.accession("ensembl_plants", RRNA),
         ]
     )
-    assert update(sequence=sequence).databases == "ENSEMBL_PLANTS,LNCRNADB,TMRNA_WEB"
+    assert (
+        update(sequence=sequence).databases == "Ensembl Plants,lncRNAdb,tmRNA Website"
+    )
+
+
+# Whole mRNAs are new and get their own type; UTRs keep RNAcentral's ncRNA convention.
+@pytest.mark.parametrize(
+    "so_id,expected",
+    [
+        ("SO:0000234", "mRNA"),
+        ("SO:0000204", "ncRNA"),
+        ("SO:0000205", "ncRNA"),
+        ("SO:0000275", "snoRNA"),
+        pytest.param("SO:9999999", "ncRNA", id="unknown-term-falls-back-to-ncRNA"),
+    ],
+)
+def test_insdc_type_names_coding_sequences(so_id, expected):
+    assert update_module.insdc_type(so_id) == expected

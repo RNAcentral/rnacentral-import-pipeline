@@ -227,3 +227,14 @@ class TestReferences:
         refs = helpers.references()
         assert len(refs) > 0
         assert any("CIRCpedia" in ref.location for ref in refs)
+
+
+class TestRegions:
+    """Test sequence region building."""
+
+    def test_stores_zero_based_location_as_one_based(self):
+        """CIRCpedia locations are BED-style, so the stored start moves up by one."""
+        location = helpers.parse_location_field("V:15874634-15876408(-)")
+        region = helpers.regions(location, "WBcel235")[0]
+        row = list(region.writeable("CIRCPEDIA:CIRCCEL_nhr-102_1"))[0]
+        assert row[-2:] == [15874635, 15876408]

@@ -1,21 +1,15 @@
 nextflow.enable.dsl=2
 
-// Databases with run=true this run (mirrors main.nf; ensembl special-cased),
-// normalised for matching rnc_database.descr/display_name in SQL.
+// Databases with run=true this run, normalised for matching
+// rnc_database.descr/display_name in SQL.
 def running_databases() {
   def out = []
   def dbs = params.databases ?: [:]
-  def ensembl_descr = [
-    vertebrates: 'ensembl', plants: 'ensembl_plants', fungi: 'ensembl_fungi',
-    protists: 'ensembl_protists', metazoa: 'ensembl_metazoa',
-  ]
   // Config key differs from rnc_database.descr/display_name for these.
   def aliases = [pdb: 'pdbe']
   dbs.each { key, db ->
     if (!(db instanceof Map)) return
-    if (key == 'ensembl') {
-      ensembl_descr.each { sub, descr -> if (db[sub]?.get('run', false)) out << descr }
-    } else if (db.get('run', false)) {
+    if (db.get('run', false)) {
       out << (aliases[key] ?: key)
     }
   }
@@ -265,6 +259,7 @@ process qc_export_report {
 
   script:
   def pubdir = params.export?.ftp?.publish ?: ''
+  def dump = params.export?.update_public?.run ? 'database_files/database_files.tar' : ''
   def notify = params.get('notify', false)
   def fence = '```'
   def slack = notify ? """
@@ -294,7 +289,8 @@ process qc_export_report {
       md5/md5.tsv.gz \\
       rfam/rfam_annotations.tsv.gz \\
       go_annotations/rnacentral_rfam_annotations.tsv.gz \\
-      gpi/rnacentral.gpi.gz ; do
+      gpi/rnacentral.gpi.gz \\
+      ${dump} ; do
       p="\$pubdir/\$f"
       if [ ! -e "\$p" ]; then st=MISSING
       elif [ ! -s "\$p" ]; then st=EMPTY

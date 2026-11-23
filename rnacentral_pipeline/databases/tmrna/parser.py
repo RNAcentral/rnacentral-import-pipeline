@@ -40,8 +40,6 @@ name_mapping = {
 
 NO_CODING_SEQUENCE = ["frameshift", "undetermined"]
 
-ORGANELLE = ["Chromatophores", "Mitochondria", "Plastids"]
-
 
 def inferred_species(id: str) -> str:
     raw = id.split(".")[0]

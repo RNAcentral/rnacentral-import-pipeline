@@ -13,6 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
+
+from rnacentral_pipeline.databases.data import Database
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa import coding_potential, contamination
@@ -20,10 +23,7 @@ from rnacentral_pipeline.rnacentral.precompute.qa import (
     incomplete_sequence as incomplete,
 )
 from rnacentral_pipeline.rnacentral.precompute.qa import missing_rfam_match as missing
-from rnacentral_pipeline.rnacentral.precompute.qa import (
-    repetitive_regions as repetitive,
-)
-from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult, QaStatus
 
 
 def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
@@ -31,12 +31,22 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
     Generate the QaStatus for a given Sequence object
     """
 
+    # These checks judge ncRNAs; on Ensembl's mRNAs and UTRs they only raise
+    # meaningless flags, so a sequence known only from there is not checked.
+    accessions = sequence.accessions
+    if accessions and all(a.database == Database.ensembl_coding for a in accessions):
+        fields = attr.fields(QaStatus)
+        return QaStatus(**{f.name: QaResult.null(f.name) for f in fields})
+
     orf, stopfree, tcode = coding_potential.validate(sequence)
     return QaStatus(
         incomplete_sequence=incomplete.validate(sequence),
         possible_contamination=contamination.validate(rna_type, sequence),
         missing_rfam_match=missing.validate(rna_type, sequence),
-        from_repetitive_region=repetitive.validate(context, sequence),
+        # ponytail: repeat check removed (it never had data, see
+        # docs/repetitive-region-qa-disabled.md); the column stays until RepeatMasker
+        # QA replaces it.
+        from_repetitive_region=QaResult.ok("from_repetitive_region"),
         possible_orf=orf,
         possible_orf_stopfree=stopfree,
         possible_orf_tcode=tcode,

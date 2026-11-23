@@ -55,6 +55,16 @@ WITH
 
 AFTER LOAD DO
 $$
+-- The website reads should_show directly, so a force-fit (sequence far longer
+-- than its model) has to be stored hidden, not just filtered out on export.
+UPDATE load_secondary load
+SET inferred_should_show = false
+FROM rna, r2dt_models m
+WHERE rna.urs = load.urs
+  AND m.id = load.model_id
+  AND rna.len::numeric / nullif(m.model_length, 0) >= 1.25;
+$$,
+$$
 INSERT INTO r2dt_results (
     urs,
     model_id,

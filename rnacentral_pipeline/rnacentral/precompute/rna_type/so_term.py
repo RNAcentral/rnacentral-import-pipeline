@@ -36,6 +36,7 @@ EXCLUDED_DATABASES = {
 ACCEPTED_DATABASES = {
     Database.circatlas,
     Database.circpedia,
+    Database.ensembl_coding,
     Database.five_srrnadb,
     Database.flybase,
     Database.gtrnadb,
@@ -57,23 +58,13 @@ ACCEPTED_DATABASES = {
     Database.gencode,
 }
 
-MODEL_GROUPS = {
-    "SO:0000209": {
-        "RF02543",
-        "RF00002",
-        "RF01960",
-        "RF02546",
-        "RF02543",
-        "RF02541",
-        "RF02540",
-        "RF01959",
-        "RF00177",
-        "RF01960",
-        "RF02542",
-        "RF02542",
-        "RF00957",
-    },
-}
+# These collect reads from every kind of RNA, so a sequence they share with a
+# differently typed RNA from another database takes that database's type.
+# Least trusted first: circRNA databases also yield to piRBase.
+DEFERRING_TIERS = [
+    {Database.circatlas, Database.circpedia},
+    {Database.pirbase},
+]
 
 
 @enum.unique
@@ -162,9 +153,6 @@ class RnaTypeAnnotation:
     @classmethod
     def from_rfam(cls, context: context.Context, hit) -> "RnaTypeAnnotation":
         return cls.build(context, hit.model_rna_type, Source.from_rfam(hit))
-
-    def equivalent(self, other: "RnaTypeAnnotation") -> bool:
-        return self.path == other.path
 
     def is_parent_of(self, other: "RnaTypeAnnotation") -> bool:
         if len(self.path) >= len(other.path):
@@ -293,6 +281,22 @@ def all_annotations(
         if accession.database in EXCLUDED_DATABASES:
             continue
         annotations.append(RnaTypeAnnotation.from_accession(context, accession))
+
+    for tier in DEFERRING_TIERS:
+
+        def defers(annotation):
+            return annotation.source_matches(
+                lambda s: s.is_database() and s.data.database in tier
+            )
+
+        deferring = [a for a in annotations if defers(a)]
+        others = [a for a in annotations if not defers(a)]
+        if any(
+            o.is_specific() and not any(o.is_mergeable(d) for d in deferring)
+            for o in others
+        ):
+            annotations = others
+
     for r2dt in sequence.r2dt_hits:
         if r2dt.paired_ratio() is None or r2dt.paired_ratio() > 0.80:
             annotations.append(RnaTypeAnnotation.from_r2dt(context, r2dt))

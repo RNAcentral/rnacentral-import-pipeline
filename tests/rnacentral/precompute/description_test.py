@@ -80,7 +80,7 @@ pytestmark = pytest.mark.db
         (
             "URS000075CF25_9913",
             "precursor_RNA",
-            "Bos taurus (cattle) microRNA bta-mir-10a precursor",
+            "Bos taurus (domestic cattle) microRNA bta-mir-10a precursor",
         ),
         (
             "URS0000769D1B_1507437",
@@ -137,7 +137,7 @@ pytestmark = pytest.mark.db
         (
             "URS00007150F8_9913",
             "pre_miRNA",
-            "Bos taurus (cattle) microRNA bta-mir-431 precursor",
+            "Bos taurus (domestic cattle) microRNA bta-mir-431 precursor",
         ),
         (
             "URS000075B196_7955",
@@ -174,7 +174,7 @@ pytestmark = pytest.mark.db
         (
             "URS00006D80BC_9913",
             "pre_miRNA",
-            "Bos taurus (cattle) microRNA bta-mir-497 precursor",
+            "Bos taurus (domestic cattle) microRNA bta-mir-497 precursor",
         ),
         pytest.param(
             "URS00006DC8B9_6239",

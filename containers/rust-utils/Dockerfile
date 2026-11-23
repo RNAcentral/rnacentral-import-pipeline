@@ -1,5 +1,5 @@
 # Multi-stage build for Rust utilities
-# This container provides all 7 Rust command-line tools used by the pipeline
+# This container provides the Rust command-line tools used by the pipeline
 
 # Default matches .python-version at repo root; override with
 # --build-arg PYTHON_VERSION=$(cat .python-version)-trixie

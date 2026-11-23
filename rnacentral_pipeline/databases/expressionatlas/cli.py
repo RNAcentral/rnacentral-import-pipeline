@@ -134,7 +134,7 @@ def parse_dir(directory, lookup, output):
             try:
                 tpms = list(directory.glob(r"*-tpms.tsv"))
                 tpms = list(
-                    filter(lambda x: re.match(".*\d+-tpms\.tsv$", str(x)), tpms)
+                    filter(lambda x: re.match(r".*\d+-tpms\.tsv$", str(x)), tpms)
                 )
                 if len(tpms) != 1:
                     raise ValueError(

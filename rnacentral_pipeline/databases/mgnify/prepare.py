@@ -5,6 +5,7 @@ These include:
 - Adding a type based on the source model
 
 """
+
 import logging
 
 from psycopg2 import connect
@@ -74,7 +75,7 @@ def prepare_mgnify_data(data, conn_str):
         "human oral genome catalogue": 447426,  # human oral metagenome
         "human skin genome catalogue": 539655,  # human skin metagenome
         "human vaginal genome catalogue": 1632839,  # human vaginal metagenome
-        "marine genome catalogue": 2994539,  # marine eukaryotic metagenome
+        "marine genome catalogue": 408172,  # marine metagenome
         "marine sediment genome catalogue": 412755,  # marine sediment metagenome
         "maize rhizosphere genome catalogue": 939928,  # rhizosphere metagenome
         "mouse gut genome catalogue": 410661,  # mouse gut metagenome
@@ -90,7 +91,6 @@ def prepare_mgnify_data(data, conn_str):
 
     prepared_data = []
     for entry in data["data"]:
-
         taxid = gtdb.get_inferred_species_taxid(entry["inferredPhylogeny"])
 
         ## lookup at genus level
