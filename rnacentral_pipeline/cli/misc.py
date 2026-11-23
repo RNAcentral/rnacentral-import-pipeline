@@ -15,6 +15,7 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.databases.crs import parser as crs
 from rnacentral_pipeline.rnacentral import pgloader, upi_ranges
 
 
@@ -32,6 +33,19 @@ def find_upi_ranges(chunk_size, output, db_url=None, table_name=None):
     table.
     """
     upi_ranges.to_file(db_url, table_name, chunk_size, output)
+
+
+@click.command("crs")
+@click.argument("filename", default="-", type=click.File("r"))
+@click.argument("output", default="complete_features.csv", type=click.File("w"))
+def crs_data(filename, output):
+    """
+    This will parse the CRS file to produce a series of sequence features for
+    import. The features are different from normal sequence features because
+    these are 'complete', they already have a URS/taxid assigned and can just
+    be inserted directly into the database.
+    """
+    crs.from_file(filename, output)
 
 
 @click.command("validate-pgloader")

@@ -357,6 +357,19 @@ TAXONOMY = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# rfam.cross_references.from_file() Writer.rfam_ontology_mappings ->
+# rfam_ontology_mappings.parquet. Source:
+# files/import-data/load/rfam-ontology-mappings.ctl. Loaded into
+# ``load_rfam_go_terms`` (created by files/schema/create_load.sql).
+RFAM_GO_TERMS = pa.schema(
+    [
+        pa.field("rfam_model_id", pa.string(), nullable=False),
+        pa.field("ontology_term_id", pa.string(), nullable=False),
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
 # genome_mapping.blat.write_importable() -> locations.parquet (genome-mapping
 # workflow). Source: files/genome-mapping/load.ctl. Loaded into
 # ``load_genome_mapping`` (created by files/schema/create_load.sql). The
@@ -656,6 +669,7 @@ ENTRY_WRITER_LOAD_TABLES: "dict[str, str | None]" = {
     "go_publication_mappings": "load_go_term_publication_map",
     "compara": "load_compara",
     "taxonomy": "load_taxonomy",
+    "rfam_ontology_mappings": "load_rfam_go_terms",
     "assemblies": "load_assemblies",
     "proteins": "load_protein_info",
     "rfam-families": "load_rfam_models",

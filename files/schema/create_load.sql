@@ -288,6 +288,12 @@ CREATE UNLOGGED TABLE load_rfam_models (
     so_rna_type text
 );
 
+DROP TABLE IF EXISTS load_rfam_go_terms;
+CREATE UNLOGGED TABLE load_rfam_go_terms (
+    ontology_term_id character varying(10) COLLATE pg_catalog."default" NOT NULL,
+    rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL
+);
+
 DROP TABLE IF EXISTS load_rnc_secondary_structure;
 CREATE UNLOGGED TABLE load_rnc_secondary_structure (
     rnc_accession_id varchar(100),
@@ -454,6 +460,17 @@ CREATE UNLOGGED TABLE load_genome_mapping (
   exon_count int,
   identity float,
   providing_database text
+);
+
+DROP TABLE IF EXISTS load_crs_features;
+CREATE UNLOGGED TABLE load_crs_features (
+  upi text,
+  taxid int,
+  accession text,
+  start int,
+  stop int,
+  feature_name text,
+  metadata jsonb
 );
 
 DROP TABLE IF EXISTS load_rediportal_features;
