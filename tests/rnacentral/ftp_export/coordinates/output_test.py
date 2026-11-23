@@ -119,7 +119,7 @@ def test_a_gene_uses_its_own_start_and_end():
 
     row = gff(gene)[1]
 
-    assert row[2:7] == ["predicted_gene", "10", "50", ".", "+"]
+    assert row[2:7] == ["predicted_ncRNA_gene", "10", "50", ".", "+"]
     assert attributes(row[8])["ID"] == "GENE1"
 
 

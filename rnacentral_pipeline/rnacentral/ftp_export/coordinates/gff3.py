@@ -69,7 +69,7 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
         yield Feature(
             seqid=region.chromosome,
             source="RNAcentral",
-            featuretype="predicted_gene" if region.is_gene else "transcript",
+            featuretype="predicted_ncRNA_gene" if region.is_gene else "transcript",
             start=region.start,
             end=region.stop,
             strand=region.string_strand(),

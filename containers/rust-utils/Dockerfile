@@ -5,7 +5,7 @@
 # --build-arg PYTHON_VERSION=$(cat .python-version)-trixie
 ARG PYTHON_VERSION=3.14-trixie
 
-# Stage 1: Builder - compiles Rust utilities AND maturin Python extension
+# Stage 1: Builder - compiles Rust utilities
 FROM python:${PYTHON_VERSION} AS builder
 
 # Install Rust toolchain. Pinned: unpinned, rustup takes whatever stable is
@@ -14,9 +14,6 @@ FROM python:${PYTHON_VERSION} AS builder
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain 1.97.1
 ENV PATH="/root/.cargo/bin:$PATH"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
-
-# Install maturin for Python extension building
-RUN pip install maturin>=1.10
 
 # Copy Rust source and build
 WORKDIR /build
@@ -28,20 +25,13 @@ RUN cargo build --release && \
     mkdir /rust-bins && \
     find target/release -maxdepth 1 -type f -executable -exec mv {} /rust-bins/ \;
 
-# Build maturin Python extension wheel
-WORKDIR /build/utils/genes-preprocessing
-RUN maturin build --release -o /wheels
-
-# Stage 2: Final - minimal runtime image with binaries and wheel
+# Stage 2: Final - minimal runtime image with binaries
 FROM debian:trixie-slim
 
 WORKDIR /rna
 
 # Copy compiled Rust binaries from builder
 COPY --from=builder /rust-bins/* /rna/bin/
-
-# Copy maturin wheel from builder
-COPY --from=builder /wheels/*.whl /rna/wheels/
 
 # Add binaries to PATH
 ENV PATH="/rna/bin:$PATH"
