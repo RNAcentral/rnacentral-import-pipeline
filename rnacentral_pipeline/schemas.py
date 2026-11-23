@@ -255,6 +255,20 @@ GO_ANNOTATIONS = pa.schema(
 
 
 # ---------------------------------------------------------------------------
+# GoCamAnnotation
+# Source:
+
+GO_CAM_ANNOTATION = pa.schema(
+    [
+        pa.field("urs_taxid", pa.string(), nullable=False),
+        pa.field(
+            "go_cam_id", pa.string()
+        ),  # Is nullable because not all annotation relate to CAMs yet
+    ]
+)
+
+
+# ---------------------------------------------------------------------------
 # GoTermAnnotation.writeable_publication_mappings() -> go_publication_mappings.parquet
 # Source: files/import-data/load/go-publication-mappings.ctl
 # go_term_publication_map has two NOT NULL columns (go_term_annotation_id,
