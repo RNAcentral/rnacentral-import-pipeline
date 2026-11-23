@@ -20,6 +20,11 @@ include { slack_closure } from './workflows/utils/slack'
 include { slack_message } from './workflows/utils/slack'
 
 process build_metadata {
+  // Joins every query output at once; the 1 GB cluster default OOM-kills it.
+  memory { 16.GB * task.attempt }
+  errorStrategy 'retry'
+  maxRetries 2
+
   input:
   path(urs_taxid)
   path(basic)

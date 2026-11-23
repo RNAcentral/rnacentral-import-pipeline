@@ -43,8 +43,12 @@ def directives_of(source: str, process: str) -> list[str]:
 
 
 def test_query_steps_grow_memory_and_retry():
-    # The 1 GB cluster default OOM-killed prev_query with no retry.
-    for source, process in [(QUERY, "query"), (PRECOMPUTE, "query_accession_range")]:
+    # The 1 GB cluster default OOM-killed prev_query, then build_metadata, with no retry.
+    for source, process in [
+        (QUERY, "query"),
+        (PRECOMPUTE, "query_accession_range"),
+        (PRECOMPUTE, "build_metadata"),
+    ]:
         directives = directives_of(source, process)
         memory = [d for d in directives if d.startswith("memory")]
 
