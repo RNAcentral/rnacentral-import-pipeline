@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 from .databases import *
 from .entry import *
 from .features import *
@@ -26,4 +25,3 @@ from .related import *
 from .ribovore import *
 from .rna_type import *
 from .secondary_structure import *
-from .trnascan import *

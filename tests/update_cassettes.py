@@ -35,7 +35,6 @@ Usage:
 """
 
 import argparse
-import base64
 import os
 import shutil
 import subprocess
@@ -55,8 +54,6 @@ PHYLOGENY_DIR = ROOT / "tests" / "data" / "phylogeny"
 # @pytest.mark.network and not cassetted. Don't add them here unless you also
 # arrange to store those recordings outside the repo.
 DEFAULT_TARGETS = [
-    "tests/databases/ncbi/gene",
-    "tests/databases/gtrnadb/urls_test.py",
     "tests/databases/pirbase/fetch_test.py",
     "tests/databases/ena/dr_test.py",
     "tests/databases/europepmc/xml_test.py",
@@ -66,34 +63,13 @@ DEFAULT_TARGETS = [
     "tests/databases/sequence_ontology/tree_test.py",
     "tests/databases/data/rna_type_test.py",
     "tests/cli/ols_test.py",
-    "tests/cli/europepmc_test.py",
 ]
 
 # Cassettes that cannot be recorded live because their upstream is gone, but for
 # which we have a real historical payload vendored in the repo. These are
 # (re)written after recording so that a --refresh does not leave them broken.
 # Maps the cassette key (filename without extension) -> a seeder callable.
-MANUAL_SEEDS = {
-    # http://trna.ucsc.edu/.../export2019/ now 301s to https which 403s; the real
-    # 2019 directory listing lives in data/gtrnadb/files.html.
-    "requests/913de0502f52e7438e0d0fae718645e6b79cce7106a97546a65b0b859b159384": (
-        lambda: _html_record(
-            "https://trna.ucsc.edu/download/RNAcentral/export2019/",
-            ROOT / "data" / "gtrnadb" / "files.html",
-        )
-    ),
-}
-
-
-def _html_record(url, html_path):
-    return {
-        "status_code": 200,
-        "url": url,
-        "reason": "OK",
-        "encoding": "UTF-8",
-        "headers": {"Content-Type": "text/html;charset=UTF-8"},
-        "content_b64": base64.b64encode(html_path.read_bytes()).decode("ascii"),
-    }
+MANUAL_SEEDS = {}
 
 
 def _apply_manual_seeds():

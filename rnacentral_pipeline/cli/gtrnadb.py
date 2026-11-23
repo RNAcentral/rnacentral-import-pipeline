@@ -16,11 +16,9 @@ limitations under the License.
 from pathlib import Path
 
 import click
-from furl import furl
 
-from rnacentral_pipeline.writers import entry_writer
-from rnacentral_pipeline.databases.gtrnadb import urls
 from rnacentral_pipeline.databases.gtrnadb import parser
+from rnacentral_pipeline.writers import entry_writer
 
 
 @click.group("gtrnadb")
@@ -28,15 +26,6 @@ def cli():
     """
     Commands for dealing with GtRNAdb data.
     """
-
-
-@cli.command("urls-for")
-@click.argument("url")
-@click.argument("output", default="-", type=click.File("w"))
-def urls_for(url, output):
-    for url in urls.urls_for(furl(url)):
-        output.write(url)
-        output.write("\n")
 
 
 @cli.command("parse")

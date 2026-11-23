@@ -54,7 +54,7 @@ def parse_model(handle, known_info) -> ModelInfo:
         line = line.strip()
         if line == "CM":
             break
-        key, value = re.split("\s+", line, maxsplit=1)
+        key, value = re.split(r"\s+", line, maxsplit=1)
 
         if key == "ACC":
             model_name = value

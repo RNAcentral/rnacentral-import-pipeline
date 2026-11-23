@@ -49,7 +49,7 @@ process stopfree_scan {
 
   script:
   """
-  PYTHONPATH="${workflow.launchDir}" python "${workflow.launchDir}/rnacentral_pipeline/stopfree/scan.py" "$sequences" . --max-probability ${params.stopfree.max_probability}
+  rnac stopfree scan "$sequences" . --max-probability ${params.stopfree.max_probability}
   """
 }
 

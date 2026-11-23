@@ -41,3 +41,32 @@ def test_connect_gives_up(monkeypatch):
     with pytest.raises(psycopg2.OperationalError):
         db.connect("postgres://example")
     assert len(calls) == 6
+
+
+def test_run_query_keeps_commit_flag_out_of_query_params(monkeypatch):
+    """commit_on_leave configures the connection; it must not reach execute()."""
+
+    seen = {}
+
+    class FakeCursor:
+        def execute(self, query, params):
+            seen["params"] = params
+
+        def __iter__(self):
+            return iter([(1,)])
+
+    from contextlib import contextmanager
+
+    @contextmanager
+    def fake_cursor(url, commit_on_leave=True):
+        seen["commit_on_leave"] = commit_on_leave
+        yield FakeCursor()
+
+    monkeypatch.setattr(db, "cursor", fake_cursor)
+
+    rows = list(
+        db.run_query("url", "SELECT 1 WHERE x LIKE 'a%'", commit_on_leave=False)
+    )
+
+    assert rows == [(1,)]
+    assert seen == {"commit_on_leave": False, "params": {}}

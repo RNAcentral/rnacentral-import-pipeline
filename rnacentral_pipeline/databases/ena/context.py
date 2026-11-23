@@ -100,10 +100,6 @@ class ContextBuilder:
         self.cache_filename = cache_filename
         return self
 
-    def with_dr_threshold(self, threshold_bytes: int):
-        self.dr_threshold_bytes = threshold_bytes
-        return self
-
     def context(self) -> Context:
         tpa_mapping = tpa.TpaMappings()
         if self.tpa_path:
@@ -118,7 +114,7 @@ class ContextBuilder:
         dr_ids = set()
         if self.dr_path:
             with self.dr_path.open("r") as raw:
-                for (record_id, dbrefs) in dr.mappings(raw):
+                for record_id, dbrefs in dr.mappings(raw):
                     dr_ids.add(record_id)
                     dr_map[record_id] = dbrefs
                 dr_map.commit()

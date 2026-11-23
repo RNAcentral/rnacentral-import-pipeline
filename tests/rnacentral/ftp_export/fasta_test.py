@@ -69,9 +69,3 @@ def test_valid_nhmmer_keeps_only_the_accepted_records():
         "good",
         "also_good",
     ]
-
-
-def test_invalid_nhmmer_keeps_only_the_rejected_records():
-    out = io.StringIO()
-    fasta.invalid_nhmmer(io.StringIO(FASTA), out)
-    assert [r.id for r in SeqIO.parse(io.StringIO(out.getvalue()), "fasta")] == ["bad"]

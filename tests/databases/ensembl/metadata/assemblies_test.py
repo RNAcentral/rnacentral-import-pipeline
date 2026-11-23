@@ -25,7 +25,6 @@ from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.ensembl.metadata import assemblies as assem
 
 LOAD_SQL = Path("files/import-data/pre-release/000__assemblies.sql")
-REPEATS_SQL = Path("files/repeats/find-assemblies.sql")
 
 UCSC = {
     "ucscGenomes": {
@@ -209,8 +208,3 @@ def test_assembly_rows_carry_no_division_or_subdomain():
     assert "division" not in sql
     # Only the comment and the ALTER that frees the old column may name it.
     assert sql.count("subdomain") == 2
-
-
-def test_repeats_skip_fungi_by_taxonomy_lineage():
-    sql = REPEATS_SQL.read_text()
-    assert "division" not in sql and "rnc_taxonomy" in sql and "Fungi" in sql

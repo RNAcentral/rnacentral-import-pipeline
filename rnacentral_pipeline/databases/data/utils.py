@@ -58,11 +58,6 @@ INSDC_SO_MAPPING = {
     "sRNA": "SO:0000655",
 }
 
-NORMALIZE_TO_INSDC = {
-    "sRNA": "other",
-    "bidirectional_promoter_lncrna": "lncRNA",
-    "3prime_overlapping_ncrna": "other",
-}
 
 SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
 SO_INSDC_MAPPING["SO:0000655"] = "ncRNA"

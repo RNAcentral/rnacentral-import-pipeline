@@ -14,15 +14,11 @@ limitations under the License.
 """
 
 import collections as coll
-import itertools as it
 import json
 import operator as op
 import re
-from datetime import datetime as dt
 from xml.sax.saxutils import escape
 
-import networkx as nx
-import obonet
 from lxml import etree
 
 from rnacentral_pipeline.databases.data import Database
@@ -147,26 +143,6 @@ def field(field_name, func, keys=None):
 def fields(field_name, func, keys=None):
     keys = keys or field_name
     return tags("field", func, attrib={"name": field_name}, keys=keys)
-
-
-def date_tag(date_name, func):
-    def fn(timestamps):
-        dates = []
-        for timestamp in timestamps:
-            format_str = "%Y-%m-%dT%H:%M:%S"
-            if "." in timestamp:
-                format_str += ".%f"
-            dates.append(dt.strptime(timestamp, format_str))
-        date = func(dates)
-
-        return {
-            "attrib": {
-                "value": date.strftime("%d %b %Y"),
-                "type": date_name,
-            },
-        }
-
-    return tag("date", fn, keys=date_name)
 
 
 def unique(values):

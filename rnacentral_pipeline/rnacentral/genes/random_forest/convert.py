@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import tempfile
 from pathlib import Path
 
@@ -50,18 +51,6 @@ insdc_so_lookup = {
     "autocatalytically_spliced_intron": "SO:0000588",
     "RNase_MRP_RNA": "SO:0000385",
 }
-
-
-def get_assembly(path: Path) -> str:
-    with path.open("r") as raw:
-        for line in raw:
-            if not line.startswith("#"):
-                break
-            if line.startswith("#!genome-version"):
-                parts = line.split(" ", 1)
-                return parts[1]
-
-    raise ValueError(f"Could not find assembly id in {path}")
 
 
 def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
