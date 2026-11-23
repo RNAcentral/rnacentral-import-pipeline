@@ -1,0 +1,223 @@
+ID   J02150; SV 1; linear; genomic RNA; STD; VRL; 890 BP.
+XX
+AC   J02150;
+XX
+DT   13-JAN-1992 (Rel. 30, Created)
+DT   31-MAY-2006 (Rel. 88, Last updated, Version 4)
+XX
+DE   Influenza A virus (A/Puerto Rico/8/34(H1N1)) segment 8, complete sequence.
+XX
+KW   complete genome.
+XX
+OS   Influenza A virus (A/Puerto Rico/8/1934(H1N1))
+OC   Viruses; Riboviria; Negarnaviricota; Polyploviricotina; Insthoviricetes;
+OC   Articulavirales; Orthomyxoviridae; Alphainfluenzavirus.
+XX
+RN   [1]
+RP   1-890
+RX   DOI; 10.1093/nar/8.23.5845.
+RX   PUBMED; 7465426.
+RA   Baez M., Taussig R., Zazra J.J., Young J.F., Palese P., Reisfeld A.,
+RA   Skalka A.M.;
+RT   "Complete nucleotide sequence of the influenza A/PR/8/34 virus NS gene and
+RT   comparison with the NS genes of the A/Udorn/72 and A/FPV/Rostock/34
+RT   strains";
+RL   Nucleic Acids Res. 8(23):5845-5858(1980).
+XX
+RN   [2]
+RP   6-131
+RX   DOI; 10.1016/0042-6822(80)90188-9.
+RX   PUBMED; 7385583.
+RA   Air G.M., Hackett J.A.;
+RT   "Gene 8 of influenza virus: sequences of cDNA transcribed from the 3' ends
+RT   of viral RNA of influenza A and B strains";
+RL   Virology 103(2):291-298(1980).
+XX
+RN   [3]
+RP   1-247
+RX   PUBMED; 7241645.
+RA   Hall R.M., Air G.M.;
+RT   "Variation in nucleotide sequences coding for the N-terminal regions of the
+RT   matrix and nonstructural proteins of influenza A viruses";
+RL   J. Virol. 38(1):1-7(1981).
+XX
+RN   [4]
+RP   1-890
+RX   DOI; 10.1093/nar/9.2.237.
+RX   PUBMED; 7208353.
+RA   Winter G., Fields S., Gait M.J., Brownlee G.G.;
+RT   "The use of synthetic oligodeoxynucleotide primers in cloning and
+RT   sequencing segment of 8 influenza virus (A/PR/8/34)";
+RL   Nucleic Acids Res. 9(2):237-245(1981).
+XX
+DR   MD5; 57151e6196306db5d9f33133572a5482.
+DR   EuropePMC; PMC2040185; 18784792.
+DR   EuropePMC; PMC2175529; 18197240.
+DR   EuropePMC; PMC2386737; 18411420.
+DR   EuropePMC; PMC2440663; 18400345.
+DR   EuropePMC; PMC2643796; 19052087.
+DR   EuropePMC; PMC3648185; 23468495.
+DR   EuropePMC; PMC4430168; 25969984.
+DR   RFAM; RF01099; PK-IAV.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..890
+FT                   /organism="Influenza A virus (A/Puerto Rico/8/1934(H1N1))"
+FT                   /segment="8"
+FT                   /strain="A/Puerto Rico/8/34"
+FT                   /serotype="H1N1"
+FT                   /mol_type="genomic RNA"
+FT                   /db_xref="taxon:211044"
+FT   CDS             join(27..56,529..864)
+FT                   /codon_start=1
+FT                   /product="nonstructural protein ns2"
+FT                   /db_xref="GOA:P03508"
+FT                   /db_xref="InterPro:IPR000968"
+FT                   /db_xref="PDB:1PD3"
+FT                   /db_xref="UniProtKB/Swiss-Prot:P03508"
+FT                   /protein_id="AAA43535.1"
+FT                   /translation="MDPNTVSSFQDILLRMSKMQLESSSEDLNGMITQFESLKLYRDSL
+FT                   GEAVMRMGDLHSLQNRNEKWREQLGQKFEEIRWLIEEVRHKLKVTENSFEQITFMQALH
+FT                   LLLEVEQEIRTFSFQLI"
+FT   CDS             27..719
+FT                   /codon_start=1
+FT                   /product="nonstructural protein ns1"
+FT                   /db_xref="GOA:P03496"
+FT                   /db_xref="InterPro:IPR000256"
+FT                   /db_xref="InterPro:IPR004208"
+FT                   /db_xref="InterPro:IPR009068"
+FT                   /db_xref="InterPro:IPR038064"
+FT                   /db_xref="PDB:2GX9"
+FT                   /db_xref="PDB:2ZKO"
+FT                   /db_xref="PDB:3L4Q"
+FT                   /db_xref="PDB:3O9Q"
+FT                   /db_xref="PDB:3O9R"
+FT                   /db_xref="PDB:3O9S"
+FT                   /db_xref="PDB:3O9T"
+FT                   /db_xref="PDB:3O9U"
+FT                   /db_xref="PDB:3RVC"
+FT                   /db_xref="PDB:5NT1"
+FT                   /db_xref="PDB:5NT2"
+FT                   /db_xref="UniProtKB/Swiss-Prot:P03496"
+FT                   /protein_id="AAA43536.1"
+FT                   /translation="MDPNTVSSFQVDCFLWHVRKRVADQELGDAPFLDRLRRDQKSLRG
+FT                   RGSTLGLDIETATRAGKQIVERILKEESDEALKMTMASVPASRYLTDMTLEEMSREWSM
+FT                   LIPKQKVAGPLCIRMDQAIMDKNIILKANFSVIFDRLETLILLRAFTEEGAIVGEISPL
+FT                   PSLPGHTAEDVKNAVGVLIGGLEWNDNTVRVSETLQRFAWRSSNENGRPPLTPKQKREM
+FT                   AGTIRSEV"
+XX
+SQ   Sequence 890 BP; 285 A; 179 C; 215 G; 211 T; 0 other;
+     agcaaaagca gggtgacaaa gacataatgg atccaaacac tgtgtcaagc tttcaggtag        60
+     attgctttct ttggcatgtc cgcaaacgag ttgcagacca agaactaggt gatgccccat       120
+     tccttgatcg gcttcgccga gatcagaaat ccctaagagg aaggggcagc actcttggtc       180
+     tggacatcga gacagccaca cgtgctggaa agcagatagt ggagcggatt ctgaaagaag       240
+     aatccgatga ggcacttaaa atgaccatgg cctctgtacc tgcgtcgcgt tacctaaccg       300
+     acatgactct tgaggaaatg tcaagggaat ggtccatgct catacccaag cagaaagtgg       360
+     caggccctct ttgtatcaga atggaccagg cgatcatgga taaaaacatc atactgaaag       420
+     cgaacttcag tgtgattttt gaccggctgg agactctaat attgctaagg gctttcaccg       480
+     aagagggagc aattgttggc gaaatttcac cattgccttc tcttccagga catactgctg       540
+     aggatgtcaa aaatgcagtt ggagtcctca tcggaggact tgaatggaat gataacacag       600
+     ttcgagtctc tgaaactcta cagagattcg cttggagaag cagtaatgag aatgggagac       660
+     ctccactcac tccaaaacag aaacgagaaa tggcgggaac aattaggtca gaagtttgaa       720
+     gaaataagat ggttgattga agaagtgaga cacaaactga aggtaacaga gaatagtttt       780
+     gagcaaataa catttatgca agccttacat ctattgcttg aagtggagca agagataaga       840
+     actttctcat ttcagcttat ttaataataa aaaacaccct tgtttctact                  890
+//
+ID   FJ969726; SV 1; linear; genomic RNA; STD; VRL; 1125 BP.
+XX
+AC   FJ969726;
+XX
+DT   09-JUN-2009 (Rel. 101, Created)
+DT   13-AUG-2009 (Rel. 101, Last updated, Version 2)
+XX
+DE   Bluetongue virus isolate South Africa serotype 1 segment 8, complete
+DE   sequence.
+XX
+KW   .
+XX
+OS   Bluetongue virus
+OC   Viruses; Riboviria; Reoviridae; Sedoreovirinae; Orbivirus.
+XX
+RN   [1]
+RP   1-1125
+RX   DOI; 10.1128/JVI.00808-08.
+RX   PUBMED; 18562540.
+RA   Boyce M., Celma C.C., Roy P.;
+RT   "Development of reverse genetics systems for bluetongue virus: recovery of
+RT   infectious virus from synthetic RNA transcripts";
+RL   J. Virol. 82(17):8339-8348(2008).
+XX
+RN   [2]
+RP   1-1125
+RX   DOI; 10.1128/JVI.00465-09.
+RX   PUBMED; 19553329.
+RA   Matsuo E., Roy P.;
+RT   "Bluetongue virus VP6 acts early in the replication cycle and can form the
+RT   basis of chimeric virus formation";
+RL   J. Virol. 83(17):8842-8848(2009).
+XX
+RN   [3]
+RP   1-1125
+RA   Boyce M., Celma C.C., Roy P.;
+RT   ;
+RL   Submitted (24-APR-2009) to the INSDC.
+RL   Infectious & Tropical Diseases, London School of Hygiene and Tropical
+RL   Medicine, Keppel Street, London WC1E 7HT, United Kingdom
+XX
+DR   MD5; 3ad498104d7391766ec1075af3963188.
+DR   EuropePMC; PMC2738189; 19553329.
+DR   EuropePMC; PMC3216989; 22110731.
+DR   EuropePMC; PMC4248921; 25142610.
+XX
+CC   GenBank Accession Numbers FJ969719-FJ969728 represent the complete
+CC   genome of Bluetongue virus isolate South Africa.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1125
+FT                   /organism="Bluetongue virus"
+FT                   /segment="8"
+FT                   /isolate="South Africa"
+FT                   /serotype="1"
+FT                   /mol_type="genomic RNA"
+FT                   /country="South Africa"
+FT                   /db_xref="taxon:40051"
+FT   CDS             20..1084
+FT                   /codon_start=1
+FT                   /product="NS2"
+FT                   /note="non-structural protein"
+FT                   /db_xref="GOA:C5IWW4"
+FT                   /db_xref="InterPro:IPR007602"
+FT                   /db_xref="InterPro:IPR037194"
+FT                   /db_xref="UniProtKB/TrEMBL:C5IWW4"
+FT                   /protein_id="ACR58465.1"
+FT                   /translation="MEQKQRRFTKNIFVLDANGKTLCGAIAKLSSQPYCQIKIGRVIAF
+FT                   KPVKNPEPKGYVLNVPGPGAYRIQDGQDIISLMLTPHGVEATTERWEEWKFEGVSVTPM
+FT                   ATRVQHNGVMVDAEIKYCKGMGIVQPYMRNDFDRNEMPDLPGVMRSNYDVRELRQKIKN
+FT                   ERESAPRLQVQSVAPREESRWMDDDEAKVDEEAKEMIPGTSRLEKLREARSNVFKEVEA
+FT                   GINWNLDEKDEEDRDEREDEEQVKTLSDDDEQGEDASDDEHPKTHITKEYIEKVAKQIK
+FT                   LKDERFMSLSSAMPQASGGFDRMIVTKKLKWQNVPLYCFDESSKRYELQCVGACERVAF
+FT                   VSKDMSLIILPVGV"
+XX
+SQ   Sequence 1125 BP; 354 A; 170 C; 335 G; 266 T; 0 other;
+     gttaaaaaat ccttgagtca tggagcaaaa gcaacgtaga tttactaaaa acatttttgt        60
+     tttggatgca aatggcaaaa cattatgcgg agcgatcgca aagttgagtt cgcaaccgta       120
+     ttgtcaaatt aaaattggaa gagtaatagc ttttaaacct gtcaaaaatc cggaacctaa       180
+     gggatacgtg ctgaatgttc caggacctgg tgcgtacaga attcaggatg ggcaggatat       240
+     catcagcctg atgttgacac cacatggggt tgaagcgaca acggaaaggt gggaagagtg       300
+     gaagtttgag ggtgtcagtg taacgccaat ggctactagg gtacaacata atggtgtaat       360
+     ggttgatgct gagattaagt attgtaaagg aatgggaata gtgcaaccat atatgcggaa       420
+     tgattttgat cggaacgaga tgcccgattt accaggtgtg atgaggtcaa actacgatgt       480
+     tcgtgaactg cggcaaaaga tcaaaaatga acgagaatca gcgccacggc ttcaagttca       540
+     aagcgtggcg ccaagggaag agtcacgctg gatggatgat gatgaagcaa aggtggacga       600
+     agaggctaaa gagatgattc cgggaaccag cagattggag aagctgcgtg aagcgagaag       660
+     caatgttttc aaggaggtgg aagctggaat caactggaat ctggatgaga aagatgaaga       720
+     ggatagagat gagcgggagg atgaggagca ggtgaagact ctgagtgacg atgatgaaca       780
+     aggtgaggat gcgagtgacg atgaacaccc aaaaactcat ataactaagg aatacattga       840
+     gaaggttgca aagcagatta aattaaagga tgaacggttc atgagtctat caagcgctat       900
+     gcctcaggcg agcggtggat ttgatcgtat gattgtcacg aagaagctta aatggcagaa       960
+     tgtgccatta tactgttttg atgagtcatc gaaaaggtat gagttacagt gtgtgggtgc      1020
+     gtgtgagcgt gttgcttttg tctctaagga catgagcttg atcatattgc cggtcggcgt      1080
+     ttaggcgctt gtgaccgcgt ggttaggggg ggattttaca cttac                      1125
+//

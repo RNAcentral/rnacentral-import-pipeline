@@ -1,0 +1,45 @@
+ID   AY654900; SV 1; circular; genomic DNA; ; FUN; 400 BP.
+XX
+AC   AY654900;
+XX
+DE   Kluyveromyces lactis mitochondrion, complete genome.
+XX
+OS   Kluyveromyces lactis
+OC   Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes;
+OC   Saccharomycetales; Saccharomycetaceae; Kluyveromyces.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..400
+FT                   /organism="Kluyveromyces lactis"
+FT                   /organelle="mitochondrion"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:28985"
+FT   gene            133..297
+FT                   /gene="ATP9"
+FT   CDS             133..297
+FT                   /codon_start=1
+FT                   /transl_table=4
+FT                   /gene="ATP9"
+FT                   /product="ATPase complex subunit 9"
+FT                   /EC_number="3.6.3.14"
+FT                   /db_xref="GOA:P92811"
+FT                   /db_xref="InterPro:IPR000454"
+FT                   /db_xref="InterPro:IPR002379"
+FT                   /db_xref="InterPro:IPR020537"
+FT                   /db_xref="InterPro:IPR035921"
+FT                   /db_xref="InterPro:IPR038662"
+FT                   /db_xref="UniProtKB/Swiss-Prot:P92811"
+FT                   /protein_id="AAT64949.1"
+FT                   /translation="MQLVLAAKYIGAGISTIGLLGAGIGIAIVFSALIQGVSRNPSLKD
+FT                   TLFPFAILG"
+XX
+SQ   Sequence 400 BP; 155 A; 39 C; 47 G; 159 T; 0 other;
+     taatatataa gatatatatt attttttttt aataatatat ataataaaat atatttatta        60
+     taaatattat agtatatttt acatatatta ttttataata tatttataat aaatatttat       120
+     aatataaata acatgcaatt agtattagca gctaaatata ttggagcagg tatctcaaca       180
+     attggattat taggagcagg tattggtatt gctatcgtat tctcagcctt aattcaagga       240
+     gtatcaagaa acccatcatt aaaagataca ttattcccat tcgcaatttt aggataaaga       300
+     gtgagtccta tttttcttat ttatcccata atcttattaa gattatggga tataattaga       360
+     atataaaatt gggtgaattg caagaaactc ctagtattta                             400
+//

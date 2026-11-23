@@ -8,13 +8,13 @@ COPY (
   join rna on rna.urs = pre.urs
   where
     pre.is_active = true
-    -- Whole Ensembl and SGD mRNAs (dbid 60, 61) are left out, their UTRs are kept. Read
+    -- Whole Ensembl, SGD and ENA mRNAs (dbid 60-62) are left out, their UTRs are kept. Read
     -- xref: precompute has not filled pre.databases for new sequences yet.
     AND NOT EXISTS (
       SELECT 1
       FROM xref
       JOIN rnc_accessions acc ON acc.accession = xref.ac
-      WHERE xref.dbid IN (60, 61)
+      WHERE xref.dbid IN (60, 61, 62)
         AND xref.deleted = 'N'
         AND xref.urs = pre.urs
         AND xref.taxid = pre.taxid

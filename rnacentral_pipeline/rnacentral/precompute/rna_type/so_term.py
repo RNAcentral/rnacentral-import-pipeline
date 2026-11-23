@@ -36,6 +36,7 @@ EXCLUDED_DATABASES = {
 ACCEPTED_DATABASES = {
     Database.circatlas,
     Database.circpedia,
+    Database.ena_coding,
     Database.ensembl_coding,
     Database.five_srrnadb,
     Database.flybase,

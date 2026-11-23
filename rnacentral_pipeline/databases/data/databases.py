@@ -100,6 +100,7 @@ class Database(enum.Enum):
     circpedia = DatabaseValue(57, "CIRCpedia", "CIRCPEDIA")
     ensembl_coding = DatabaseValue(60, "Ensembl coding", "ENSEMBL_CODING")
     sgd_coding = DatabaseValue(61, "SGD coding", "SGD_CODING")
+    ena_coding = DatabaseValue(62, "ENA coding", "ENA_CODING")
 
     @classmethod
     def build(cls, name: str) -> Database:
@@ -142,4 +143,6 @@ class Database(enum.Enum):
 
 
 # mRNAs and UTRs, kept below the ncRNAs in QA and search
-CODING_DATABASES = frozenset({Database.ensembl_coding, Database.sgd_coding})
+CODING_DATABASES = frozenset(
+    {Database.ensembl_coding, Database.sgd_coding, Database.ena_coding}
+)

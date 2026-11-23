@@ -159,6 +159,8 @@ def notes_can_parse_weird_notes():
         ["ENSEMBL_CODING"],
         ["SGD coding"],
         ["SGD_CODING"],
+        ["ENA coding"],
+        ["ENA_CODING"],
         ["Ensembl coding", "SGD coding"],
     ],
 )
@@ -172,7 +174,13 @@ def test_coding_only_entries_rank_below_any_active_ncrna(rna_type, dbs):
 
 # ZWD and Ensembl already provide UTR elements; those, and shared sequences, keep their rank.
 @pytest.mark.parametrize(
-    "dbs", [["ZWD"], ["Ensembl coding", "ZWD"], ["SGD_CODING", "SGD"]]
+    "dbs",
+    [
+        ["ZWD"],
+        ["Ensembl coding", "ZWD"],
+        ["SGD_CODING", "SGD"],
+        ["ENA_CODING", "ENA"],
+    ],
 )
 def test_utr_elements_from_other_databases_keep_their_rank(dbs):
     clean = {"has_issue": False}
