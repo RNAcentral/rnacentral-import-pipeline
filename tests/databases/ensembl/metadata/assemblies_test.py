@@ -15,11 +15,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import io
 import json
 import re
+import urllib.error
 from pathlib import Path
 
 import attr
+import pytest
 
 from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.ensembl.metadata import assemblies as assem
@@ -53,9 +56,13 @@ def genome(taxid, accession, name, common_name=None):
     }
 
 
-def rows(examples=None, known=(), **species):
+def rows(examples=None, known=(), failed=frozenset(), **species):
     data = {"species": species}
-    return list(assem.from_species_json(data, frozenset(), known, examples or {}, UCSC))
+    return list(
+        assem.from_species_json(
+            data, frozenset(), known, examples or {}, UCSC, failed=failed
+        )
+    )
 
 
 def test_builds_a_complete_row_for_a_reference_genome():
@@ -81,6 +88,12 @@ def test_bacteria_get_a_row_now_they_are_imported():
     ecoli = genome(511145, "GCA_000005845.2", "ASM584v2")
     [row] = rows(Escherichia_coli_str_K_12_substr_MG1655=ecoli)
     assert (row.assembly_id, row.assembly_ucsc) == ("ASM584v2", None)
+
+
+# The import skips these, so a row for one would point at a genome never loaded.
+def test_a_genome_that_failed_the_species_check_gets_no_row():
+    lacrimispora = genome(39029, "GCA_900618075.1", "NCTC11811")
+    assert rows(failed={"GCA_900618075.1"}, Lacrimispora_indolis=lacrimispora) == []
 
 
 def test_genomes_sharing_an_assembly_name_each_get_a_row():
@@ -208,3 +221,62 @@ def test_assembly_rows_carry_no_division_or_subdomain():
     assert "division" not in sql
     # Only the comment and the ALTER that frees the old column may name it.
     assert sql.count("subdomain") == 2
+
+
+class FakeResponse(io.BytesIO):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+
+def test_genome_uuid_is_read_from_ensembl(monkeypatch):
+    body = b'{"genome_uuid":"37771493-549a-4bde-9592-7a127a8eb300","genome_tag":"x"}'
+    monkeypatch.setattr(assem, "urlopen", lambda url, timeout: FakeResponse(body))
+    assert (
+        assem.genome_uuid("GCA_900458695.1") == "37771493-549a-4bde-9592-7a127a8eb300"
+    )
+
+
+# Every genome comes from Ensembl's own species.json, so a miss means something broke.
+def test_a_failed_genome_uuid_lookup_stops_the_step(monkeypatch):
+    monkeypatch.setattr("retry.api.time.sleep", lambda _: None)
+
+    def missing(url, timeout):
+        raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+
+    monkeypatch.setattr(assem, "urlopen", missing)
+    with pytest.raises(urllib.error.HTTPError):
+        assem.genome_uuid("GCA_999999999.1")
+
+
+def test_the_genome_uuid_is_written_and_loaded():
+    [row] = rows(Homo_sapiens=genome(9606, "GCA_000001405.29", "GRCh38.p14"))
+    row = attr.evolve(row, genome_uuid="59871324-7803-4234-856e-2a2bd96d7b3c")
+    assert row.writeable()[schemas.ASSEMBLIES.names.index("genome_uuid")] == (
+        "59871324-7803-4234-856e-2a2bd96d7b3c"
+    )
+    assert "genome_uuid" in Path("files/import-data/load/assemblies.ctl").read_text()
+    assert "genome_uuid" in Path("files/schema/create_load.sql").read_text()
+
+
+def test_loading_updates_the_genome_uuid():
+    assert "genome_uuid = EXCLUDED.genome_uuid" in LOAD_SQL.read_text()
+
+
+def test_a_genome_uuid_lookup_retries_a_network_error(monkeypatch):
+    calls = []
+
+    def flaky(url, timeout):
+        calls.append(url)
+        if len(calls) < 3:
+            raise urllib.error.URLError("connection reset")
+        return FakeResponse(b'{"genome_uuid":"59871324-7803-4234-856e-2a2bd96d7b3c"}')
+
+    monkeypatch.setattr(assem, "urlopen", flaky)
+    monkeypatch.setattr("retry.api.time.sleep", lambda _: None)
+    assert (
+        assem.genome_uuid("GCA_000001405.29") == "59871324-7803-4234-856e-2a2bd96d7b3c"
+    )
+    assert len(calls) == 3

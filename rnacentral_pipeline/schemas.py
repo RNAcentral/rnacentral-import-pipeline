@@ -574,6 +574,7 @@ ASSEMBLIES = pa.schema(
         pa.field("example_start", pa.int32()),
         pa.field("example_end", pa.int32()),
         pa.field("blat_mapping", pa.int32()),
+        pa.field("genome_uuid", pa.string()),
     ]
 )
 

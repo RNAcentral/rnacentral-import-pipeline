@@ -3,6 +3,9 @@ BEGIN;
 -- Ensembl dropped its subdomains, so new rows leave this blank.
 ALTER TABLE ensembl_assembly ALTER COLUMN subdomain DROP NOT NULL;
 
+-- Ensembl's site links a genome by this id, not its GCA.
+ALTER TABLE ensembl_assembly ADD COLUMN IF NOT EXISTS genome_uuid text;
+
 INSERT INTO ensembl_assembly (
   assembly_id,
   assembly_full_name,
@@ -14,7 +17,8 @@ INSERT INTO ensembl_assembly (
   blat_mapping,
   example_chromosome,
   example_end,
-  example_start
+  example_start,
+  genome_uuid
 ) (
 SELECT DISTINCT ON (assembly_id)
   assembly_id,
@@ -27,7 +31,8 @@ SELECT DISTINCT ON (assembly_id)
   blat_mapping,
   example_chromosome,
   example_end,
-  example_start
+  example_start,
+  genome_uuid
 FROM load_assemblies
 ) ON CONFLICT (assembly_id) DO UPDATE
 -- ensembl_url is never updated: species.json renamed species we already hold.
@@ -40,7 +45,8 @@ SET
   blat_mapping = EXCLUDED.blat_mapping,
   example_chromosome = EXCLUDED.example_chromosome,
   example_end = EXCLUDED.example_end,
-  example_start = EXCLUDED.example_start
+  example_start = EXCLUDED.example_start,
+  genome_uuid = EXCLUDED.genome_uuid
 ;
 
 DROP TABLE load_assemblies;

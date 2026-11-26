@@ -155,7 +155,8 @@ CREATE UNLOGGED TABLE load_assemblies (
   blat_mapping int4 NULL,
   example_chromosome varchar(20) NULL,
   example_end int4 NULL,
-  example_start int4 NULL
+  example_start int4 NULL,
+  genome_uuid text NULL
 );
 
 DROP TABLE IF EXISTS load_compara;

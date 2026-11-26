@@ -11,7 +11,8 @@ HAVING FIELDS (
     example_chromosome,
     example_start,
     example_end,
-    blat_mapping
+    blat_mapping,
+    genome_uuid
 )
 INTO {{PGDATABASE}}?load_assemblies
 TARGET COLUMNS (
@@ -25,7 +26,8 @@ TARGET COLUMNS (
     example_chromosome,
     example_start,
     example_end,
-    blat_mapping
+    blat_mapping,
+    genome_uuid
 )
 
 WITH
