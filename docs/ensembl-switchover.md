@@ -195,6 +195,59 @@ proper review and clean-up. Checked against species.json on 2026-10-30:
   (TAIR12) have newer genomes with better UTR coverage. Moving a species is a
   whole-species decision, ncRNAs included.
 
+## Genomes named as the wrong species
+
+Decided 2026-11-26: the import skips any bacterial or archaeal genome that NCBI's
+species check shows is not the species it is named as.
+
+**Why.** Some genomes in species.json carry the wrong species name, inherited from
+the original ENA submission. Ensembl's Lacrimispora indolis genome
+(`GCA_900618075.1`, strain NCTC11811) is the same sequence as its Staphylococcus
+nepalensis genome (`GCA_900458695.1`), so Staphylococcus rRNAs showed up in
+RNAcentral as Lacrimispora. NCBI compares every prokaryote genome against
+reference genomes of the named species (average nucleotide identity, ANI) and
+publishes the verdict as `OK`, `Inconclusive` or `Failed`, along with the genome's
+ANI to its named species and to its closest species. 95% ANI is the usual cutoff
+for two genomes being the same species.
+
+**The rule.**
+
+- `Failed` genomes are skipped.
+- So is any genome below 95% ANI to its named species and at 95% or more to
+  another, whatever NCBI's verdict. NCBI calls Lacrimispora indolis
+  `Inconclusive` at 82.76% to its own species and 99.99% to S. nepalensis.
+  Others caught this way include Mesorhizobium loti (99.98% Ensifer meliloti)
+  and Legionella oakridgensis and longbeachae, whose labels are swapped.
+- A skipped genome's species falls back to its next best genome, or is dropped if
+  it has no other.
+- Other `Inconclusive` genomes are kept. Most of them (2,478 of 3,022 selected on
+  2026-11-26) have no reference genome to compare against, including every
+  "sp." strain and models such as Synechocystis sp. PCC 6803 and Nostoc sp. PCC
+  7120. Keeping only `OK` would have dropped about 26% of prokaryote genomes.
+- Eukaryotes are never checked, so the rule doesn't touch them.
+- The 95% cutoff errs towards excluding. It also skips strains in groups whose
+  names ANI disputes, such as Bacillus cereus strains that match B. anthracis and
+  Pseudomonas syringae pathovars; we would rather lose some of those than import
+  mislabelled genomes.
+
+**Effect on 2026-11-26.** 933 of species.json's 25,844 genomes are skipped (616
+`Failed`, 317 closer to another species). The selection went from 17,047 species
+to 16,618: 429 species dropped because they had no other genome, and 79 moved to
+another genome. The dropped and moved genomes'
+entries are retired at the next release, because `source-diff` treats a geneset
+that has left the selection as gone.
+
+**Keeping the list current.** The skipped genomes are pinned in
+`files/import-data/ensembl/ani-failed.txt`, so a run never depends on NCBI being
+up. Regenerate it before each release (about six minutes; it checks every genome
+in species.json, not only the selected ones, so fallbacks are checked too):
+
+```sh
+rnac ensembl ani-failed files/import-data/ensembl/ani-failed.txt
+```
+
+Report mix-ups like Lacrimispora to Ensembl, so they can raise them with ENA.
+
 ## Decisions to confirm
 
 8. **Description weight for Ensembl bacteria and archaea is 10.** Ensembl never

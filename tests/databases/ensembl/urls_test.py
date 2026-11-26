@@ -43,10 +43,12 @@ def species(**assemblies):
     return {"taxid": 42, "assemblies": assemblies}
 
 
-def select(data, legacy=frozenset()):
+def select(data, legacy=frozenset(), failed=frozenset()):
     return {
         r.species: r
-        for r in urls.geneset_urls({"species": data}, base_url="B", legacy=legacy)
+        for r in urls.geneset_urls(
+            {"species": data}, base_url="B", legacy=legacy, failed=failed
+        )
     }
 
 
@@ -451,3 +453,25 @@ def test_the_assembly_id_list_covers_the_genomes_rnacentral_selects():
     known = dict(urls.known_assemblies())
     assert known["GCA_000001405.29"] == "GRCh38"
     assert known["GCA_000002765.3"] == "GCA000002765v3"
+
+
+def test_a_genome_ncbi_fails_falls_back_to_the_next_best():
+    data = {
+        "Sp": species(
+            GCA_1=assembly("chromosome", {"prokka": build("2026_01", "bad")}),
+            GCA_2=assembly("contig", {"prokka": build("2026_01", "good")}),
+        )
+    }
+    got = select(data, failed={"GCA_1"})["Sp"]
+    assert (got.accession, got.embl_url) == ("GCA_2", "B/good.embl.gz")
+
+
+def test_a_species_whose_only_genome_ncbi_fails_is_dropped():
+    data = {"Sp": species(GCA_1=assembly("contig", {"prokka": build("2026_01", "x")}))}
+    assert select(data, failed={"GCA_1"}) == {}
+
+
+def test_the_ani_failed_list_holds_exact_accessions():
+    failed = urls.failed_assemblies()
+    assert failed
+    assert all(re.fullmatch(r"GC[AF]_\d{9}\.\d+", a) for a in failed)

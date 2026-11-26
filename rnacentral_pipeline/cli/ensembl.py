@@ -22,6 +22,7 @@ import psycopg2
 
 from rnacentral_pipeline.databases import manifest
 from rnacentral_pipeline.databases.ensembl import (
+    ani,
     delta,
     homology,
     mrna,
@@ -58,6 +59,15 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
     writer = csv.writer(output, lineterminator="\n")
     rows = urls.urls_for(location)
     writer.writerows(row.writeable(kind=kind) for row in rows)
+
+
+@cli.command("ani-failed")
+@click.option("--location", default=urls.DEFAULT_JSON_URL)
+@click.argument("output", type=click.File("w", lazy=False))
+def ani_failed(output, location=urls.DEFAULT_JSON_URL):
+    """Write the species.json assemblies ANI says are not the species named, one per line."""
+    found = ani.reports(ani.assemblies(urls._load(location)))
+    output.writelines(f"{acc}\n" for acc in sorted(ani.failed(found)))
 
 
 @cli.command("source-diff")
