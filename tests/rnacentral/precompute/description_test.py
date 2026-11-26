@@ -108,11 +108,10 @@ pytestmark = pytest.mark.db
             "lncRNA",
             "Arabidopsis thaliana potential natural antisense gene, locus overlaps with AT1G44120 (AT1G44125)",
         ),
-        pytest.param(
+        (
             "URS0000A98E18_9606",
             "Y_RNA",
             "Homo sapiens (human) Y RNA (Y_RNA)",
-            marks=pytest.mark.xfail(reason="Weird data changes"),
         ),
         (
             "URS0000ABD87F_9606",
@@ -152,7 +151,7 @@ pytestmark = pytest.mark.db
         (
             "URS00006550DA_10090",
             "snoRNA",
-            "Mus musculus (mouse) small Cajal body-specific RNA 13 (ENSMUSG00002076601.1)",
+            "Mus musculus (mouse) small Cajal body-specific RNA 13 (Scarna13)",
         ),
         (
             "URS000060B496_10090",
@@ -162,7 +161,7 @@ pytestmark = pytest.mark.db
         (
             "URS00006B3271_10090",
             "snoRNA",
-            "Mus musculus (mouse) small Cajal body-specific RNA 2 (ENSMUSG00000088185.3)",
+            "Mus musculus (mouse) small Cajal body-specific RNA 2 (Scarna2)",
         ),
         ("URS0000661037_7955", "tRNA", "Danio rerio tRNA-Ser (AGA) (tRNA-Ser-AGA-9-1)"),
         pytest.param(

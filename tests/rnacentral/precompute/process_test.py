@@ -187,15 +187,15 @@ def load_data(upi):
         ("URS000061F377_559292", "25S ribosomal RNA"),
         (
             "URS00006550DA_10090",
-            "small Cajal body-specific RNA 13 (ENSMUSG00002076601.1)",
+            "small Cajal body-specific RNA 13 (Scarna13)",
         ),
         # ("URS0000661037_7955", "tRNA"),
         # ("URS000069D7FA_6239", "tRNA-His"),
         (
             "URS00006B3271_10090",
-            "small Cajal body-specific RNA 2 (ENSMUSG00000088185.3)",
+            "small Cajal body-specific RNA 2 (Scarna2)",
         ),
-        ("URS00006CE02F_9606", "U8 small nucleolar RNA (ENSG00000201809.1)"),
+        ("URS00006CE02F_9606", "U8 small nucleolar RNA"),
         # ("URS00006D80BC_9913", "microRNA bta-mir-497 precursor"),
         # ("URS00006DC8B9_6239", "tRNA-Undet"),
         # ("URS00007150F8_9913", "microRNA bta-mir-431 precursor"),
