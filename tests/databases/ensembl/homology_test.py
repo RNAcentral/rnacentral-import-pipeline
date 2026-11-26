@@ -24,10 +24,10 @@ HEADER = (
 )
 
 
-def mrna_line(transcript, gene, tags):
+def mrna_line(transcript, gene, tags, extra=""):
     return (
         f"1\thavana\tmRNA\t1\t9\t.\t+\t.\tID=transcript:{transcript};"
-        f"Parent=gene:{gene};biotype=protein_coding;tag={tags}\n"
+        f"Parent=gene:{gene};biotype=protein_coding;tag={tags}{extra}\n"
     )
 
 
@@ -55,3 +55,32 @@ def test_links_canonical_mrnas_of_homologous_genes_once(tmp_path):
 
     assert sorted(t for _, t in found) == ["ENSMUST1", "ENST1"]
     assert found[0][0] == found[1][0]
+
+
+def test_versioned_transcripts_are_written_without_their_version(tmp_path):
+    # 001__compara.sql matches on rnc_accessions.external_id, which has no version
+    human = tmp_path / "human.gff3"
+    human.write_text(
+        mrna_line(
+            "ENST00000646664",
+            "ENSG00000075624",
+            "Ensembl_canonical",
+            ";transcript_id=ENST00000646664;version=1",
+        )
+    )
+    mouse = tmp_path / "mouse.gff3"
+    mouse.write_text(
+        mrna_line(
+            "ENSMUST00000100497",
+            "ENSMUSG00000029580",
+            "Ensembl_canonical",
+            ";transcript_id=ENSMUST00000100497;version=11",
+        )
+    )
+    human_homology = tmp_path / "human.tsv.gz"
+    with gzip.open(human_homology, "wt") as out:
+        out.write(HEADER + pair("ENSMUSG00000029580", "ENSG00000075624"))
+
+    found = list(homology.rows([human_homology], [human, mouse]))
+
+    assert sorted(t for _, t in found) == ["ENSMUST00000100497", "ENST00000646664"]

@@ -26,9 +26,10 @@ def canonical(gff_file: Path) -> ty.Dict[str, str]:
     """
     Map each protein coding gene to its Ensembl canonical transcript.
     """
+    # The unversioned id, as stored in rnc_accessions.external_id that the load matches on
     return {
-        gene: transcript
-        for transcript, (gene, tags, _) in mrna.protein_coding(gff_file).items()
+        gene: gff_id
+        for gene, tags, gff_id in mrna.protein_coding(gff_file).values()
         if "Ensembl_canonical" in tags
     }
 
