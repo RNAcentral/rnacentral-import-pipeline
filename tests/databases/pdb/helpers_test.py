@@ -116,6 +116,32 @@ def test_description_omits_source_when_organism_name_is_missing():
     )
 
 
+def test_modifications_become_zero_based_features_for_their_chain():
+    info = ChainInfo(
+        pdb_id="1evv",
+        chain_id="A",
+        release_date=dt.datetime(2000, 1, 1),
+        experimental_method="X-ray diffraction",
+        entity_id=1,
+        taxids=[4932],
+        resolution=2.0,
+        title="tRNA-Phe",
+        sequence="GCGGAUUUAGCUCAG",
+        molecule_names=["tRNA-Phe"],
+        molecule_type="RNA",
+        organism_scientific_name=None,
+    )
+    residue = {"residue_number": 10, "chem_comp_id": "2MG", "chem_comp_name": "x"}
+    mapping = {("1evv", "A", 1): [residue], ("1evv", "B", 1): [residue]}
+
+    features = helpers.modifications(info, mapping)
+
+    assert len(features) == 1
+    assert features[0].feature_type == "modification"
+    assert features[0].location == [9, 10]
+    assert features[0].metadata == {"modification": "2MG", "fullName": "x", "index": 9}
+
+
 def publication(**overrides):
     """A PDBe publication record, as fetch.py hands it to as_reference."""
     row = {

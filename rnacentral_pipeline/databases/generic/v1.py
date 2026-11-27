@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import collections as coll
-import hashlib
 import itertools as it
 import logging
 
@@ -179,7 +178,8 @@ def add_organism_preifx(ncrna, suffix):
 
 
 def features(record):
-    if not record.get("sequenceFeatures", None):
+    guided = [r for r in record.get("relatedSequences", []) if r.get("modifications")]
+    if not record.get("sequenceFeatures", None) and not guided:
         return []
     features = []
     provider = record.get("database")
@@ -192,7 +192,7 @@ def features(record):
     if provider is None:
         raise ValueError("Missing provider: expected database or primaryId prefix")
 
-    def modification_features(modifications):
+    def modification_features(modifications, target=None):
         if not isinstance(modifications, list):
             LOGGER.warning(
                 "Skipping sequence feature modifications due to unexpected type %s",
@@ -200,10 +200,6 @@ def features(record):
             )
             return
 
-        sequence = record.get("sequence", "")
-        if not sequence:
-            raise ValueError("Missing sequence: cannot compute modification accession")
-        accession = f"{hashlib.md5(sequence.encode('utf-8')).hexdigest()}_modomics"
         for raw in modifications:
             if not isinstance(raw, dict):
                 LOGGER.warning(
@@ -225,6 +221,14 @@ def features(record):
                 continue
 
             position = int(position)
+            metadata = {
+                "modification": str(modification),
+                "index": position,
+                "RNAmodsCode": raw.get("RNAmodsCode"),
+                "fullName": raw.get("fullName"),
+            }
+            if target:
+                metadata["target"] = target
             features.append(
                 data.SequenceFeature(
                     name="modification",
@@ -232,17 +236,11 @@ def features(record):
                     location=[position, position + 1],
                     sequence=str(modification),
                     provider=provider,
-                    metadata={
-                        "accession": accession,
-                        "modification": str(modification),
-                        "index": position,
-                        "RNAmodsCode": raw.get("RNAmodsCode"),
-                        "fullName": raw.get("fullName"),
-                    },
+                    metadata=metadata,
                 )
             )
 
-    for key, feature in record["sequenceFeatures"].items():
+    for key, feature in record.get("sequenceFeatures", {}).items():
         if key == "modifications":
             modification_features(feature)
             continue
@@ -274,6 +272,17 @@ def features(record):
                 provider=provider,
             )
         )
+
+    for related in guided:
+        target = related["sequenceId"]
+        # A position only has meaning on one exact sequence, so require a URS
+        if not target.startswith("RNACENTRAL:"):
+            LOGGER.warning(
+                "Skipping guided modifications on %s: target must be an RNACENTRAL id",
+                target,
+            )
+            continue
+        modification_features(related["modifications"], target=target.split(":", 1)[1])
     return features
 
 

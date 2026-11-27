@@ -78,9 +78,34 @@ BEGIN
         from load_rnc_sequence_features load
         join xref on xref.ac = load.accession
         where xref.dbid = ANY(%L::int[])
+          and load.metadata->>'target' is null
         ) ON CONFLICT (urs, taxid, accession, start, stop, feature_name) DO NOTHING
     $q$, v_dbids);
 END $$;
+
+-- Guided modifications (e.g. snoDB) belong on the target named in metadata
+-- (a urs_taxid), not on the guide whose accession the row carries.
+INSERT INTO rnc_sequence_features (
+  urs,
+  taxid,
+  accession,
+  start,
+  stop,
+  feature_name,
+  metadata
+) (
+select
+  rna.urs,
+  split_part(load.metadata->>'target', '_', 2)::int,
+  load.accession,
+  load.start,
+  load.stop,
+  load.feature_name,
+  load.metadata
+from load_rnc_sequence_features load
+join rna on rna.urs = split_part(load.metadata->>'target', '_', 1)
+where load.metadata->>'target' is not null
+) ON CONFLICT (urs, taxid, accession, start, stop, feature_name) DO NOTHING;
 
 -- NB: this join has never filtered on xref.deleted = 'N', unlike every sibling
 -- query in this directory. Left as-is because changing it changes which rows

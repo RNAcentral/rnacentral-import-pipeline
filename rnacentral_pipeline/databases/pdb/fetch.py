@@ -26,7 +26,11 @@ from retry import retry
 from throttler import throttle
 
 from rnacentral_pipeline.databases.pdb import helpers
-from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
+from rnacentral_pipeline.databases.pdb.data import (
+    ChainInfo,
+    ModificationMapping,
+    ReferenceMapping,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -198,7 +202,11 @@ async def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ReferenceMapping
     mapping = coll.defaultdict(list)
     for subset in chunked(pdb_ids, 200):
         post_data = ",".join(subset)
-        response = requests.post(url, data=post_data)
+        response = requests.post(
+            url,
+            data=post_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
         response.raise_for_status()
         for pdb_id, refs in response.json().items():
             for ref in refs:
@@ -216,3 +224,23 @@ def references(chain_info: ty.Iterable[ChainInfo]) -> ReferenceMapping:
     }
     """
     return asyncio.run(fetch_pdbe_publications({c.pdb_id for c in chain_info}))
+
+
+def modified_residues(pdb_ids: ty.Iterable[str]) -> ModificationMapping:
+    url = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/modified_AA_or_NA/"
+    mapping = coll.defaultdict(list)
+    for subset in chunked(sorted({p.lower() for p in pdb_ids}), 200):
+        response = requests.post(
+            url,
+            data=",".join(subset),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        # PDBe answers 404 when no entry in the batch has a modified residue
+        if response.status_code == 404:
+            continue
+        response.raise_for_status()
+        for pdb_id, residues in response.json().items():
+            for residue in residues:
+                key = (pdb_id.lower(), residue["chain_id"], residue["entity_id"])
+                mapping[key].append(residue)
+    return dict(mapping)

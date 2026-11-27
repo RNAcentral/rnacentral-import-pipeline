@@ -25,6 +25,7 @@ from attr.validators import optional
 from rnacentral_pipeline.databases.data import AnyReference
 
 ReferenceMapping = ty.Dict[str, ty.List[AnyReference]]
+ModificationMapping = ty.Dict[ty.Tuple[str, str, int], ty.List[dict]]
 
 
 def first_or_none(value):
