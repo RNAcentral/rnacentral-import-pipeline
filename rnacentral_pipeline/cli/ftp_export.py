@@ -15,7 +15,6 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.db import connection
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
 from rnacentral_pipeline.rnacentral.ftp_export import (
     fasta,
@@ -67,15 +66,6 @@ def export_sequences():
     pass
 
 
-@export_sequences.command("parquet")
-@click.argument("query", type=str)
-@click.argument("output", type=click.Path(writable=True))
-@click.option("--db-url", envvar="PGDATABASE")
-def sequences_parquet(query, output, db_url):
-    with connection(db_url) as conn:
-        parquet.copy_query_2_parquet(query, conn, output)
-
-
 @export_sequences.command("parquet-from-json")
 @click.argument("json_file", type=click.Path(exists=True, dir_okay=False))
 @click.argument("output", type=click.Path(writable=True))
@@ -94,13 +84,6 @@ def sequences_valid_nhmmer(active, output):
     fasta.valid_nhmmer(active, output)
 
 
-@export_sequences.command("invalid-nhmmer")
-@click.argument("active", type=click.File("r"))
-@click.argument("output", default="-", type=click.File("w"))
-def sequences_invalid_nhmmer(active, output):
-    fasta.invalid_nhmmer(active, output)
-
-
 @cli.command("ensembl")
 @click.argument("raw", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
@@ -116,6 +99,19 @@ def export_ensembl(raw, output, schema=None):
     expected schema.
     """
     ensembl_json.generate_file(raw, output, schema_file=schema)
+
+
+@cli.command("ensembl-ranges")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("max_rna", type=int)
+@click.argument("max_xrefs", type=int)
+@click.argument("output", default="-", type=click.File("w"))
+def ensembl_ranges(max_rna, max_xrefs, output, db_url=None):
+    """
+    Cut rna ids into ranges of at most MAX_RNA sequences and, where a single
+    sequence allows, MAX_XREFS xrefs, so each Ensembl chunk does similar work.
+    """
+    ensembl_json.write_ranges(output, max_rna, max_xrefs, db_url=db_url)
 
 
 @cli.command("rfam-go-annotations")

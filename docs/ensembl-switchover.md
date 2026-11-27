@@ -37,19 +37,11 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
    `selected_genome = true` that aren't listed there. Decide whether to set
    those rows to `false`.
 
-## Search
-
-5. **Ask EBI Search to add `kingdom` as a facet** on the RNAcentral index. The
-   export writes the field (bacteria, archaea, viruses, plants, fungi,
-   vertebrates, metazoa, environmental or protists, the same split as the FTP
-   folders), but facets and their labels are set in EBI Search's configuration.
-   Until they add it, the field can be searched but won't appear as a facet.
-
 ## Website (`rnacentral-webcode`, branch `feature/ensembl-unified-database`)
 
 6. **Deploy the webcode branch in the same release.** It archives the four
-   division entries, redirects their pages to the Ensembl page, describes Ensembl
-   as covering every kingdom, and adds the kingdom facet.
+   division entries, redirects their pages to the Ensembl page, and describes
+   Ensembl as covering every kingdom.
 7. **Set the Ensembl `version`** in `portal/config/expert_databases.py`. It still
    says `116`, and species.json has no release number. One option is the
    species.json `last_updated` date.
@@ -148,6 +140,29 @@ load is FULL. That release seeds `pipeline_tracking_import` for ENSEMBL, ENSEMBL
     to them, mRNAs typed `mRNA` and UTRs typed `ncRNA`. Their import may assume
     everything in it is a non-coding RNA.
 
+## SGD coding (`SGD_CODING`, branch `update/SGD-coding`)
+
+19. **Create the database row and xref partitions for dbid 61.** Use this row, then
+    item 10's partition SQL with `61` in place of `60`. Item 11's link types are
+    shared.
+
+    ```sql
+    INSERT INTO rnacen.rnc_database (id, timestamp, userstamp, descr, alive, display_name, full_descr, description, url, reference)
+    VALUES (61, now(), 'RNACEN', 'SGD_CODING', 'Y', 'SGD coding', 'SGD coding',
+      ': budding yeast mRNAs and their 5'' and 3'' UTRs from the Saccharomyces Genome Database',
+      'https://www.yeastgenome.org',
+      '[{"title":"Saccharomyces Genome Database: the genomics resource of budding yeast","authors":"Cherry JM, Hong EL, Amundsen C, et al.","journal":"Nucleic Acids Research, 2012","pubmed_id":"22110037"},{"title":"Extensive transcriptional heterogeneity revealed by isoform profiling","authors":"Pelechano V, Wei W, Steinmetz LM","journal":"Nature, 2013","pubmed_id":"23615609"}]'::jsonb);
+    ```
+20. **Run the import with `databases.sgd_coding.run = true`.** It reads SGD's GFF,
+    which carries the Pelechano 2013 transcript ends and the genome sequence.
+    Dubious ORFs are left out.
+21. **Ask EBI Search to accept the `expert_db` value "SGD coding"** and the
+    `SGD_CODING` cross-reference name, with item 17's values. As with Ensembl
+    coding, entries only in SGD coding rank below every ncRNA in search and stay
+    out of gene building. SGD mRNAs feed the yeast IGV gene-model track (item 14),
+    and LitScan searches them by systematic ORF name (e.g. YAL001C), so expect
+    protein papers.
+
 ## Assemblies: review before the first production run
 
 The import now keeps each species on the exact assembly RNAcentral selects today
@@ -179,6 +194,59 @@ proper review and clean-up. Checked against species.json on 2026-10-30:
 - **Newer references not taken up.** Zebrafish (GRCz12tu) and Arabidopsis
   (TAIR12) have newer genomes with better UTR coverage. Moving a species is a
   whole-species decision, ncRNAs included.
+
+## Genomes named as the wrong species
+
+Decided 2026-11-26: the import skips any bacterial or archaeal genome that NCBI's
+species check shows is not the species it is named as.
+
+**Why.** Some genomes in species.json carry the wrong species name, inherited from
+the original ENA submission. Ensembl's Lacrimispora indolis genome
+(`GCA_900618075.1`, strain NCTC11811) is the same sequence as its Staphylococcus
+nepalensis genome (`GCA_900458695.1`), so Staphylococcus rRNAs showed up in
+RNAcentral as Lacrimispora. NCBI compares every prokaryote genome against
+reference genomes of the named species (average nucleotide identity, ANI) and
+publishes the verdict as `OK`, `Inconclusive` or `Failed`, along with the genome's
+ANI to its named species and to its closest species. 95% ANI is the usual cutoff
+for two genomes being the same species.
+
+**The rule.**
+
+- `Failed` genomes are skipped.
+- So is any genome below 95% ANI to its named species and at 95% or more to
+  another, whatever NCBI's verdict. NCBI calls Lacrimispora indolis
+  `Inconclusive` at 82.76% to its own species and 99.99% to S. nepalensis.
+  Others caught this way include Mesorhizobium loti (99.98% Ensifer meliloti)
+  and Legionella oakridgensis and longbeachae, whose labels are swapped.
+- A skipped genome's species falls back to its next best genome, or is dropped if
+  it has no other.
+- Other `Inconclusive` genomes are kept. Most of them (2,478 of 3,022 selected on
+  2026-11-26) have no reference genome to compare against, including every
+  "sp." strain and models such as Synechocystis sp. PCC 6803 and Nostoc sp. PCC
+  7120. Keeping only `OK` would have dropped about 26% of prokaryote genomes.
+- Eukaryotes are never checked, so the rule doesn't touch them.
+- The 95% cutoff errs towards excluding. It also skips strains in groups whose
+  names ANI disputes, such as Bacillus cereus strains that match B. anthracis and
+  Pseudomonas syringae pathovars; we would rather lose some of those than import
+  mislabelled genomes.
+
+**Effect on 2026-11-26.** 933 of species.json's 25,844 genomes are skipped (616
+`Failed`, 317 closer to another species). The selection went from 17,047 species
+to 16,618: 429 species dropped because they had no other genome, and 79 moved to
+another genome. The dropped and moved genomes'
+entries are retired at the next release, because `source-diff` treats a geneset
+that has left the selection as gone.
+
+**Keeping the list current.** The skipped genomes are pinned in
+`files/import-data/ensembl/ani-failed.txt`, so a run never depends on NCBI being
+up. Regenerate it before each release (about six minutes; it checks every genome
+in species.json, not only the selected ones, so fallbacks are checked too):
+
+```sh
+rnac ensembl ani-failed files/import-data/ensembl/ani-failed.txt
+```
+
+Report mix-ups like Lacrimispora to Ensembl, so they can raise them with ENA.
 
 ## Decisions to confirm
 

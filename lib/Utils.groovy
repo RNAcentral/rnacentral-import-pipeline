@@ -21,8 +21,7 @@ static def must_release(to_import, databases) {
   };
 }
 
-// Flags derived from params.databases. Shared because main.nf and
-// import-data.nf are both entry points and need the same values.
+// Flags derived from params.databases, shared by the entry points.
 static def will_run(db) {
   return db instanceof Map && db.get('run', false);
 }

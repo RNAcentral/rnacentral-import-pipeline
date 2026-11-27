@@ -8,22 +8,15 @@ rust:
 	cargo build --release
 	mv -f target/release/json2fasta bin
 	mv -f target/release/split-ena bin
-	mv -f target/release/precompute bin
 	mv -f target/release/search-export bin
 	mv -f target/release/ftp-export bin
-	mv -f target/release/json2dfasta bin
-	# For local Python extension development, run: cd utils/genes-preprocessing && maturin develop
-	@echo "Note: genes-preprocessing wheel is built in Docker (rust-utils container)"
-	@echo "For local dev, run: cd utils/genes-preprocessing && maturin develop"
 
 
 clean:
 	rm bin/json2fasta
 	rm bin/split-ena
-	rm bin/precompute
 	rm bin/search-export
 	rm bin/ftp-export
-	rm bin/json2dfasta
 	cargo clean
 
 docker: Dockerfile

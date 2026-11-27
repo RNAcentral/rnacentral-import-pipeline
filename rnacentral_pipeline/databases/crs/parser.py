@@ -13,11 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import csv
+import itertools as it
 import json
 import operator as op
-import itertools as it
+import re
 
 import attr
 from attr.validators import instance_of as is_a

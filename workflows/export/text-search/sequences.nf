@@ -2,7 +2,6 @@
 
 nextflow.enable.dsl=2
 
-include { query as accession_query } from './utils'
 include { query as base_query } from './utils'
 include { query as crs_query } from './utils'
 include { query as feeback_query } from './utils'
@@ -12,10 +11,8 @@ include { query as rnas_query } from './utils'
 include { query as precompute_query } from './utils'
 include { query as qa_query } from './utils'
 include { query as r2dt_query } from './utils'
-include { query as ref_query } from './utils'
 include { query as rfam_query } from './utils'
 include { query as orf_query } from './utils'
-include { query as locus_query } from './utils'
 include { fetch_schema } from './utils'
 include { build_search_accessions } from './build-accession-table'
 
@@ -179,8 +176,9 @@ process editing_events {
 
 process as_xml {
   tag { "$min-$max" }
+  // SLURM kills carry no exit status, so retry on the attempt count and grow memory.
   memory { params.export.search.memory * task.attempt }
-  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
+  errorStrategy { task.attempt <= 3 ? 'retry' : 'finish' }
   maxRetries 3
 
   input:

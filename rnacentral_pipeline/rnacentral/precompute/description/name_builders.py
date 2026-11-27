@@ -141,8 +141,14 @@ def select_with_several_genes(
 
 class DatabaseSpecificNameBuilder(object):
     def ensembl(self, accessions: ty.List[Accession], _) -> str:
+        # Ensembl's gene is its stable id; the symbol, if any, is the locus_tag
         return select_with_several_genes(
-            accessions, "genes", r"\(%s\)$", description_items="gene", max_items=5
+            accessions,
+            "genes",
+            r"\(%s\)$",
+            attribute="locus_tag",
+            description_items="locus_tag",
+            max_items=5,
         )
 
     def flybase(self, accessions: ty.List[Accession], _) -> str:

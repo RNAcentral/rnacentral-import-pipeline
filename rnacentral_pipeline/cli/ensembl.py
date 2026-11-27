@@ -14,22 +14,19 @@ limitations under the License.
 """
 
 import csv
-import itertools as it
 import logging
-import operator as op
 from pathlib import Path
 
 import click
 import psycopg2
 
-from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases import manifest
 from rnacentral_pipeline.databases.ensembl import (
+    ani,
     delta,
     homology,
     mrna,
     parser,
-    pseudogenes,
     urls,
 )
 from rnacentral_pipeline.databases.ensembl.metadata import (
@@ -38,8 +35,6 @@ from rnacentral_pipeline.databases.ensembl.metadata import (
     proteins,
 )
 from rnacentral_pipeline.output_format import format_option
-from rnacentral_pipeline.parquet_writers import row_writer
-from rnacentral_pipeline.rnacentral.notify import slack
 from rnacentral_pipeline.writers import entry_writer
 
 LOGGER = logging.getLogger(__name__)
@@ -66,6 +61,15 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
     writer.writerows(row.writeable(kind=kind) for row in rows)
 
 
+@cli.command("ani-failed")
+@click.option("--location", default=urls.DEFAULT_JSON_URL)
+@click.argument("output", type=click.File("w", lazy=False))
+def ani_failed(output, location=urls.DEFAULT_JSON_URL):
+    """Write the species.json assemblies ANI says are not the species named, one per line."""
+    found = ani.reports(ani.assemblies(urls._load(location)))
+    output.writelines(f"{acc}\n" for acc in sorted(ani.failed(found)))
+
+
 @cli.command("source-diff")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.option(
@@ -79,7 +83,8 @@ def vert_url(output, kind=None, location=urls.DEFAULT_JSON_URL):
 @click.option("--database", default="ENSEMBL", help="Whose stored signatures to use.")
 @click.argument("species_csv", type=click.Path(exists=True))
 @click.argument("to_fetch", type=click.File("w"))
-@click.argument("scanned", type=click.File("w"))
+# Not lazy: an unchanged run writes nothing here, and Nextflow still needs the file.
+@click.argument("scanned", type=click.File("w", lazy=False))
 @click.argument("sources_csv", type=click.File("w"))
 def source_diff(
     species_csv,
@@ -307,14 +312,3 @@ def ensembl_compara(fasta, output):
     homologous.
     """
     compara.write(fasta, output)
-
-
-@cli.command("pseudogenes")
-@click.argument("embl_file", type=click.File("r"))
-@click.argument("output", default="ensembl-pseudogenes.csv", type=click.Path())
-@format_option
-def ensembl_pseudogenes(embl_file, output):
-    genes = pseudogenes.parse(embl_file)
-    genes = it.chain.from_iterable(g.writeable() for g in genes)
-    with row_writer(Path(output), schemas.ENSEMBL_PSEUDOGENES) as writer:
-        writer.writerows(genes)

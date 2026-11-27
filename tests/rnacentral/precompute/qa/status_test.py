@@ -143,18 +143,20 @@ def test_mrna_only_sequences_are_not_qa_checked():
         "RF00177", "SO:0000650", sequence_completeness=0.3, model_domain="Bacteria"
     )
     mrna = builders.sequence(
-        accessions=[builders.accession("ENSEMBL_CODING", "SO:0000204")],
+        accessions=[builders.accession("ENSEMBL_CODING", "SO:0000234")],
         rfam_hits=[hit],
     )
     status = qa.status(builders.context(), mrna, "ncRNA")
     fields = attr.fields(type(status))
-    assert [getattr(status, f.name).has_issue for f in fields] == [None] * 7
+    assert [getattr(status, f.name).has_issue for f in fields] == [False] * 4 + [
+        None
+    ] * 3
     assert not status.has_issue
 
     shared = builders.sequence(
         accessions=[
-            builders.accession("ENSEMBL_CODING", "SO:0000204"),
-            builders.accession("ENA", "SO:0000204"),
+            builders.accession("ENSEMBL_CODING", "SO:0000234"),
+            builders.accession("ENA", "SO:0000234"),
         ],
         rfam_hits=[hit],
     )
@@ -172,3 +174,78 @@ def test_sequences_without_active_accessions_are_still_qa_checked():
     retired = builders.sequence(accessions=[], rfam_hits=[hit])
     status = qa.status(builders.context(), retired, "rRNA")
     assert status.incomplete_sequence.has_issue is not None
+
+
+def test_repetitive_region_is_always_reported_ok():
+    # The column is NOT NULL in the QA table; the check itself was removed.
+    from .. import builders
+
+    status = qa.status(builders.context(), builders.sequence(), "rRNA")
+    assert status.from_repetitive_region.has_issue is False
+
+
+@pytest.mark.parametrize("database", ["SGD_CODING", "ENA_CODING", "REGULONDB"])
+def test_coding_only_mrnas_are_not_qa_checked(database):
+    from .. import builders
+
+    mrna = builders.sequence(accessions=[builders.accession(database, "SO:0000234")])
+    status = qa.status(builders.context(), mrna, "ncRNA")
+    assert not any(getattr(status, f.name).has_issue for f in attr.fields(type(status)))
+
+
+def test_unchecked_coding_sequences_can_be_written(tmp_path):
+    # Release-29 process_range died on every range: "Cannot interpret '' as bool".
+    from rnacentral_pipeline import schemas
+    from rnacentral_pipeline.parquet_writers import typed_parquet_writer
+
+    from .. import builders
+
+    mrna = builders.sequence(
+        accessions=[builders.accession("ENSEMBL_CODING", "SO:0000234")]
+    )
+    status = qa.status(builders.context(), mrna, "ncRNA")
+    with typed_parquet_writer(tmp_path / "qa.parquet", schemas.PRECOMPUTE_QA) as out:
+        out.writerow(status.writeable("URS0000000001", 9606))
+
+
+def test_utrs_from_a_coding_database_are_qa_checked():
+    from .. import builders
+
+    hit = builders.rfam_hit(
+        "RF00177", "SO:0000650", sequence_completeness=0.3, model_domain="Bacteria"
+    )
+    utr = builders.sequence(
+        accessions=[builders.accession("ENSEMBL_CODING", "SO:0000205")], rfam_hits=[hit]
+    )
+    status = qa.status(builders.context(), utr, "ncRNA")
+    assert status.possible_contamination.has_issue
+
+
+def test_ncrnas_from_a_coding_database_are_still_qa_checked():
+    from .. import builders
+
+    hit = builders.rfam_hit(
+        "RF00177", "SO:0000650", sequence_completeness=0.3, model_domain="Bacteria"
+    )
+    srna = builders.sequence(
+        accessions=[builders.accession("REGULONDB", "SO:0000655")], rfam_hits=[hit]
+    )
+    status = qa.status(builders.context(), srna, "ncRNA")
+    assert status.possible_contamination.has_issue
+
+
+def test_utrs_from_a_coding_database_get_no_orf_flags():
+    # Release-29: ORF checks alone put QA warnings on 64k coding-database UTRs.
+    from .. import builders
+
+    utr = builders.sequence(
+        accessions=[builders.accession("ENSEMBL_CODING", "SO:0000205")],
+        possible_orf=True,
+        possible_orf_stopfree=True,
+        possible_orf_tcode=True,
+    )
+    status = qa.status(builders.context(), utr, "ncRNA")
+    assert status.possible_orf.has_issue is None
+    assert status.possible_orf_stopfree.has_issue is None
+    assert status.possible_orf_tcode.has_issue is None
+    assert not status.has_issue

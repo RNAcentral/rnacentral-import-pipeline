@@ -21,19 +21,6 @@ process fetch_taxids {
   """
 }
 
-process fetch_rf_model {
-  input:
-    val(_flag)
-
-  output:
-    path("genes_model.pkl")
-
-  script:
-  """
-  wget -O genes_model.pkl ${params.genes.rf_model_url}
-  """
-}
-
 process fetch_so_model{
   input:
     val(_flag)
@@ -58,182 +45,164 @@ process fetch_transcripts {
     val(taxid)
 
   output:
-    tuple val(taxid), path("transcripts.pq")
-
+    // one parquet per assembly; none at all for a taxon with no transcripts
+    tuple val(taxid), path("transcripts/transcripts__*.pq", arity: '0..*')
 
   script:
   """
-  rnac genes infer fetch --taxid ${taxid} --output transcripts.pq
+  rnac genes utils fetch --taxid ${taxid} --output_dir transcripts
   """
 }
 
 
-process preprocess_transcripts {
-  memory '256 GB'
-  tag { taxid }
-
-  input:
-    tuple val(taxid), path(transcripts), path(so_model)
-
-  output:
-    tuple val(taxid), path('features.pq'), path(transcripts)
-
-  script:
-  """
-  rnac genes infer preprocess --transcripts_file ${transcripts} --output features.pq --so_model_path ${so_model}
-  """
-}
-
-
-process classify_transcripts {
-  memory { 64.GB * task.attempt }
+// GNN inference (ghcr.io/rnacentral/rnacentral-gene-gnn-inference) on a GPU. Each job
+// takes a batch of transcripts__<taxid>__<assembly>.pq files (many taxa) and writes
+// assignments__<taxid>__<assembly>.pq (region_name, gene_id) for each; regions not in
+// a gene are left out, since single-member clusters are never genes.
+// Mirrors gnn_genes in rnacentral-genes-history/main_replay.nf, which built the history.
+process infer_genes {
+  tag { "${transcripts.size()} files" }
+  container params.genes.gnn.image
+  // the image is rooted at /app and /opt, so bind the launch dir only (cf. r2dt_container)
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir --nv"
+  // the accelerator directive gave no --gres on Codon (jobs landed on CPU nodes), so ask SLURM directly
+  clusterOptions "--gres=gpu:${params.genes.gnn.gpu_type}:1"
+  cpus params.genes.gnn.cpus       // window feature building is threaded
+  memory { "${params.genes.gnn.memory_gb * task.attempt} GB" }
+  time { "${params.genes.gnn.hours * task.attempt}h" }  // for the whole batch
+  // ponytail: a retry reruns the whole batch; skip finished files if retries get costly
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
-  maxRetries 4
-  tag { taxid }
+  maxRetries 2
 
   input:
-    tuple val(taxid), path(features), path(transcripts), path(model)
+    path(transcripts)
+    path(so_model)
 
   output:
-    tuple val(taxid), path("*.json")
+    path("assignments__*.pq")
 
   script:
   """
-  rnac genes infer classify --features_file ${features} --transcripts_file ${transcripts} --model_path ${model} --taxid ${taxid} --output_dir .
+  set -euo pipefail
+  for f in transcripts__*.pq; do
+    echo "== \$f"
+    GNN_CHECKPOINT=${params.genes.gnn.checkpoint} rnacentral-gene-gnn \
+      --input "\$f" \
+      --rnac-so-embeddings ${so_model} \
+      --device gpu \
+      --dtype ${params.genes.gnn.dtype} \
+      --threshold ${params.genes.gnn.threshold} \
+      --output "assignments__\${f#transcripts__}"
+  done
   """
-
 }
 
 
-process fetch_previous_genes {
+process make_clusters {
+  tag { "${taxid} ${assembly}" }
+  memory '16 GB'
+
+  input:
+    tuple val(taxid), val(assembly), path(transcripts), path(assignments)
+
+  output:
+    // named by assembly: the files of all assemblies are staged together for the plan
+    tuple val(taxid), path("clusters__${assembly}.pq")
+
+  script:
+  """
+  rnac genes utils clusters \
+    --transcripts ${transcripts} \
+    --assignments ${assignments} \
+    --output clusters__${assembly}.pq
+  """
+}
+
+
+process fetch_state {
   maxForks 15
   tag { taxid }
-  memory '8 GB'
-
-  input:
-    tuple val(taxid), path(this_release)
-
-  output:
-    tuple val(taxid), path(this_release), path('previous.json'), path('prev_release.txt')
-
-  script:
-  """
-  rnac genes utils fetch-stored --taxid ${taxid} --output previous.json --release_output prev_release.txt
-  """
-}
-
-
-process forward_merge {
   memory '16 GB'
-  tag { taxid }
 
   input:
-    tuple val(taxid), path(this_release), path(previous), val(prev_release)
+    val(taxid)
 
   output:
-    tuple val(taxid), path("merged_${taxid}.json")
+    tuple val(taxid), path("state.pq"), path("meta.json")
 
   script:
   """
-  rnac genes utils merge \
-    --previous_genes ${previous} \
-    --next_genes ${this_release} \
-    --output merged_${taxid}.json \
-    --prev_release_number ${prev_release} \
-    --next_release_number ${params.release}
+  rnac genes utils fetch-state --taxid ${taxid} --output state.pq --meta meta.json
   """
 }
 
 
-process init_genes {
-
+// Pure: no database access. clusters is empty for a taxon that has lost all its
+// transcripts, and then --allow_empty retires its genes.
+process plan_genes {
   tag { taxid }
-
-  input:
-    tuple val(taxid), path(this_release)
-
-  output:
-    tuple val(taxid), path("merged_${taxid}.json")
-
-  script:
-  """
-  rnac genes utils init \
-    --genes ${this_release} \
-    --output merged_${taxid}.json \
-    --release_number ${params.release}
-  """
-}
-
-
-process store_genes {
-
-  tag { taxid }
-  maxForks 1
-  memory { 16.GB * task.attempt }
+  memory { 32.GB * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 3
 
   input:
-    tuple val(taxid), path(merged)
+    tuple val(taxid), path(state), path(meta), path(clusters), val(allow_empty)
 
   output:
-    tuple val(taxid), path(merged)
+    tuple val(taxid), path("plan")
 
   script:
+  // a single staged file is a Path, which Groovy iterates by segment: wrap it
+  def cluster_args = [clusters].flatten().collect { f -> "--clusters ${f}" }.join(' ')
+  def empty_arg = allow_empty ? '--allow_empty' : ''
   """
-  rnac genes utils store-genes ${merged} --taxid ${taxid}
+  rnac genes utils plan \
+    --state ${state} \
+    --meta ${meta} \
+    ${cluster_args} \
+    ${empty_arg} \
+    --release ${params.release} \
+    --out_dir plan
   """
 }
 
 
-process deactivate_discarded {
-  memory 4.GB
+process compute_metadata {
   tag { taxid }
-  maxForks 1
-
-  input:
-    tuple val(taxid), path(merged)
-
-  output:
-    tuple val(taxid), path(merged)
-
-  script:
-  """
-  rnac genes utils deactivate-discarded --merged ${merged} --taxid ${taxid}
-  """
-}
-
-
-process process_metadata {
   memory '16 GB'
-  tag { taxid }
 
   input:
-    tuple val(taxid), path(merged)
+    tuple val(taxid), path(plan)
 
   output:
-    tuple val(taxid), path("metadata_${taxid}.json")
+    tuple val(taxid), path(plan), path("metadata.pq")
 
   script:
   """
-  rnac genes utils process-metadata ${merged} metadata_${taxid}.json
+  rnac genes utils metadata --genes ${plan}/genes.parquet --taxid ${taxid} --output metadata.pq
   """
 }
 
 
-process store_metadata {
-
+// One transaction per taxon, one taxon at a time.
+process apply_genes {
   tag { taxid }
   maxForks 1
+  memory '16 GB'
 
   input:
-    tuple val(taxid), path(metadata)
+    tuple val(taxid), path(plan), path(metadata)
 
   output:
     val(taxid)
 
   script:
   """
-  rnac genes utils store-metadata ${metadata}
+  rnac genes utils apply \
+    --plan_dir ${plan} \
+    --metadata ${metadata} \
+    --taxid ${taxid} \
+    --release ${params.release}
   """
 }
 
@@ -246,46 +215,72 @@ workflow genes {
 
   main:
   channel.of(true) | fetch_so_model | set { so_model }
-  channel.of(true) | fetch_rf_model | set { rf_model }
-  channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
 
-  taxa \
+  channel.fromPath(params.genes.taxa_query) \
+  | fetch_taxids \
   | splitCsv \
   | map { row -> row[0] } \
-  | fetch_transcripts \
-  | filter {_taxid, transcripts -> transcripts.size() > 0 } \
-  | combine( so_model ) \
-  | preprocess_transcripts \
-  | combine( rf_model ) \
-  | classify_transcripts \
-  | filter {_taxid, genes -> genes.size() > 2 } \
-  | fetch_previous_genes \
-  | branch { row ->
-      existing:  row[3].text.trim() != ''
-      new_taxon: true
+  | set { taxids }
+
+  taxids | fetch_transcripts | set { fetched }
+  taxids | fetch_state | set { state }
+
+  // Transcripts present: one file per (taxid, assembly), keyed by "<taxid>__<assembly>".
+  fetched \
+  | filter { _taxid, files -> files } \
+  | flatMap { taxid, files ->
+      [files].flatten().collect { f ->
+        def key = f.name.replaceFirst(/^transcripts__/, '').replaceFirst(/\.pq$/, '')
+        [key, taxid, key.substring("${taxid}__".length()), f]
+      }
     } \
-  | set { previous_genes }
+  | set { transcripts }
 
-  // Existing taxon: forward-merge this release onto the stored genes.
-  previous_genes.existing \
-  | map { taxid, this_release, previous, prev_release ->
-      [taxid, this_release, previous, prev_release.text.trim()]
+  // Pool every taxon's files into a fixed number of GPU jobs, largest file first onto
+  // the least-loaded batch, so one big genome does not leave the other GPUs idle.
+  transcripts \
+  | map { _key, _taxid, _assembly, f -> f } \
+  | collect \
+  | flatMap { files ->
+      def n = params.genes.gnn.gpu_jobs as int
+      def batches = (0..<n).collect { [] }
+      def load = [0L] * n
+      files.sort(false) { f -> -f.size() }.each { f ->
+        def i = load.indexOf(load.min())
+        batches[i] << f
+        load[i] += f.size()
+      }
+      batches.findAll { b -> b }
     } \
-  | forward_merge \
-  | set { merged_existing }
+  | set { batches }
 
-  // New taxon: nothing to merge, just initialise version tracking.
-  previous_genes.new_taxon \
-  | map { taxid, this_release, _previous, _prev_release -> [taxid, this_release] } \
-  | init_genes \
-  | set { merged_new }
+  infer_genes(batches, so_model.first())
 
-  // Store, then deactivate genes the merge dropped, then metadata.
-  merged_existing.mix( merged_new ) \
-  | store_genes \
-  | deactivate_discarded \
-  | process_metadata \
-  | store_metadata \
+  // Back to one (taxid, assembly) per item; a file without assignments is an error.
+  infer_genes.out \
+  | flatten \
+  | map { a -> [a.name.replaceFirst(/^assignments__/, '').replaceFirst(/\.pq$/, ''), a] } \
+  | set { assigned }
+
+  transcripts \
+  | join( assigned, failOnMismatch: true ) \
+  | map { _key, taxid, assembly, f, a -> [taxid, assembly, f, a] } \
+  | make_clusters \
+  | groupTuple \
+  | map { taxid, clusters -> [taxid, clusters, false] } \
+  | set { with_genes }
+
+  // No transcripts: the plan is empty on purpose and retires the taxon's genes.
+  fetched \
+  | filter { _taxid, files -> !files } \
+  | map { taxid, _files -> [taxid, [], true] } \
+  | set { without_genes }
+
+  state \
+  | join( with_genes.mix( without_genes ) ) \
+  | plan_genes \
+  | compute_metadata \
+  | apply_genes \
   | set { done }
 
   // QC: summarise genes created/updated this run once every taxon is stored.

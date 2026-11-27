@@ -155,7 +155,8 @@ CREATE UNLOGGED TABLE load_assemblies (
   blat_mapping int4 NULL,
   example_chromosome varchar(20) NULL,
   example_end int4 NULL,
-  example_start int4 NULL
+  example_start int4 NULL,
+  genome_uuid text NULL
 );
 
 DROP TABLE IF EXISTS load_compara;
@@ -223,16 +224,6 @@ CREATE UNLOGGED TABLE load_interactions (
   interacting_id text NOT NULL,
   names JSONB NOT NULL,
   taxid int NOT NULL
-);
-
-DROP TABLE IF EXISTS load_rnc_coordinates;
-CREATE UNLOGGED TABLE load_rnc_coordinates (
-    accession varchar(200) NULL,
-    local_start int8 NULL,
-    local_end int8 NULL,
-    chromosome varchar(100) NULL,
-    strand int8 NULL,
-    assembly_id varchar(255) NULL
 );
 
 DROP TABLE IF EXISTS load_ontology_terms;
@@ -380,18 +371,6 @@ CREATE UNLOGGED TABLE load_secondary_layout_models (
     model_source text not null,
     model_length int,
     model_basepair_count int
-);
-
-DROP TABLE IF EXISTS load_ensembl_pseudogenes;
-create UNLOGGED table load_ensembl_pseudogenes (
-    gene text not null,
-    region_name text not null,
-    chromosome text not null,
-    strand int4 not null,
-    exon_start int4 not null,
-    exon_stop int4 not null,
-    assembly_id varchar(255) not null,
-    exon_count int not null
 );
 
 DROP TABLE IF EXISTS load_stopfree;

@@ -36,6 +36,7 @@ EXCLUDED_DATABASES = {
 ACCEPTED_DATABASES = {
     Database.circatlas,
     Database.circpedia,
+    Database.ena_coding,
     Database.ensembl_coding,
     Database.five_srrnadb,
     Database.flybase,
@@ -47,7 +48,9 @@ ACCEPTED_DATABASES = {
     Database.pirbase,
     Database.plncdb,
     Database.pombase,
+    Database.regulondb,
     # Database.sgd, This is excluded because they tend ot use things like rRNA_gene, which we don't like as much as the transcript terms
+    Database.sgd_coding,
     Database.snodb,
     Database.snopy,
     Database.snorna_database,
@@ -65,24 +68,6 @@ DEFERRING_TIERS = [
     {Database.circatlas, Database.circpedia},
     {Database.pirbase},
 ]
-
-MODEL_GROUPS = {
-    "SO:0000209": {
-        "RF02543",
-        "RF00002",
-        "RF01960",
-        "RF02546",
-        "RF02543",
-        "RF02541",
-        "RF02540",
-        "RF01959",
-        "RF00177",
-        "RF01960",
-        "RF02542",
-        "RF02542",
-        "RF00957",
-    },
-}
 
 
 @enum.unique
@@ -171,9 +156,6 @@ class RnaTypeAnnotation:
     @classmethod
     def from_rfam(cls, context: context.Context, hit) -> "RnaTypeAnnotation":
         return cls.build(context, hit.model_rna_type, Source.from_rfam(hit))
-
-    def equivalent(self, other: "RnaTypeAnnotation") -> bool:
-        return self.path == other.path
 
     def is_parent_of(self, other: "RnaTypeAnnotation") -> bool:
         if len(self.path) >= len(other.path):

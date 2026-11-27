@@ -35,10 +35,6 @@ COPY pyproject.toml .
 COPY uv.lock .
 RUN uv sync --no-editable --frozen --no-install-project
 
-# Copy and install maturin wheel from rust-utils
-COPY --from=rust-utils /rna/wheels/*.whl /tmp/wheels/
-RUN uv pip install /tmp/wheels/*.whl
-
 # Download NLTK data
 RUN /app/.venv/bin/python3 -m nltk.downloader -d /app/.venv/nltk_data words punkt punkt_tab
 
@@ -143,7 +139,7 @@ COPY --from=python-builder /app/.venv $RNA/venv
 COPY --from=rust-utils /rna/bin/* $RNACENTRAL_IMPORT_PIPELINE/bin/
 
 # Package metadata - required for module imports
-COPY pyproject.toml setup-env $RNACENTRAL_IMPORT_PIPELINE/
+COPY pyproject.toml $RNACENTRAL_IMPORT_PIPELINE/
 
 WORKDIR $RNA
 # Setup environmental variables

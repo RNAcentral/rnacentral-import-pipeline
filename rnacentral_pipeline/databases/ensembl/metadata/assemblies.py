@@ -19,10 +19,12 @@ import logging
 import re
 import typing as ty
 from pathlib import Path
+from urllib.request import urlopen
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
+from retry import retry
 
 from rnacentral_pipeline import schemas
 from rnacentral_pipeline.databases.ensembl import urls
@@ -44,6 +46,8 @@ BLAT_GENOMES = {
 }
 
 LOGGER = logging.getLogger(__name__)
+
+GENOME_ID_API = "https://www.ensembl.org/api/metadata/genomeid?assembly_accession_id={}"
 
 
 def reconcile_taxids(taxid):
@@ -77,6 +81,7 @@ class AssemblyInfo(object):
     ensembl_url = attr.ib(validator=is_a(str))
     blat_mapping = attr.ib(validator=is_a(bool), converter=bool)
     example = attr.ib(validator=optional(is_a(AssemblyExample)))
+    genome_uuid = attr.ib(validator=optional(is_a(str)), default=None)
 
     def writeable(self):
         chromosome = None
@@ -99,7 +104,16 @@ class AssemblyInfo(object):
             start,
             end,
             int(self.blat_mapping),
+            self.genome_uuid,
         ]
+
+
+# One call per genome, ~16,600 a run; a blip shouldn't cost the whole step
+@retry(OSError, tries=5, delay=2, backoff=2)
+def genome_uuid(accession: str) -> str:
+    """Ensembl's id for the genome, which its site's links need."""
+    with urlopen(GENOME_ID_API.format(accession), timeout=60) as handle:
+        return json.load(handle)["genome_uuid"]
 
 
 def ucsc_aliases(ucsc: dict) -> ty.Dict[str, str]:
@@ -130,13 +144,16 @@ def from_species_json(
     known: ty.Iterable[ty.Tuple[str, str]],
     examples: dict,
     ucsc: dict,
+    failed: ty.AbstractSet[str] = frozenset(),
 ) -> ty.Iterable[AssemblyInfo]:
     """
     One row per geneset the import selects, keyed by the assembly id the selection
     gives it, which the parser also puts on every coordinate.
     """
     aliases = ucsc_aliases(ucsc)
-    selections = list(urls.geneset_urls(data, legacy=legacy, known=known))
+    selections = list(
+        urls.geneset_urls(data, legacy=legacy, known=known, failed=failed)
+    )
     names = ensembl_urls(s.species for s in selections)
     seen = set()
     for selected in selections:
@@ -183,6 +200,10 @@ def write(location, example_file, ucsc_file, output):
         urls.known_assemblies(),
         json.load(example_file),
         json.load(ucsc_file),
+        failed=urls.failed_assemblies(),
     )
     with row_writer(Path(output), schemas.ASSEMBLIES) as writer:
-        writer.writerows(row.writeable() for row in rows)
+        writer.writerows(
+            attr.evolve(row, genome_uuid=genome_uuid(row.gca_accession)).writeable()
+            for row in rows
+        )

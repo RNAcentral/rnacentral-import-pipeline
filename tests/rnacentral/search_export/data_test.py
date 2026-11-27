@@ -149,49 +149,58 @@ def notes_can_parse_weird_notes():
     assert refs
 
 
-# Same split as the FTP export's per-kingdom folders, so the facet and the downloads agree.
+MRNA_TREE = [("SO:0000673", "transcript"), ("SO:0000234", "mRNA")]
+UTR_TREE = [("SO:0000836", "mRNA_region"), ("SO:0000204", "five_prime_UTR")]
+NCRNA_TREE = [("SO:0000655", "ncRNA")]
+
+
+# RNAcentral is an ncRNA database: entries only in coding databases rank below every ncRNA.
+# Precompute has stored both display names and descr, so either must demote.
+@pytest.mark.parametrize("rna_type,tree", [("mRNA", MRNA_TREE), ("ncRNA", UTR_TREE)])
 @pytest.mark.parametrize(
-    "tax_string,expected",
+    "dbs",
     [
-        ("Eukaryota; Metazoa; Chordata; Vertebrata; Homo sapiens", "vertebrates"),
-        ("Eukaryota; Metazoa; Arthropoda; Insecta; Drosophila melanogaster", "metazoa"),
-        ("Eukaryota; Viridiplantae; Streptophyta; Arabidopsis thaliana", "plants"),
-        ("Eukaryota; Fungi; Ascomycota; Saccharomyces cerevisiae", "fungi"),
-        ("Bacteria; Pseudomonadota; Escherichia coli", "bacteria"),
-        ("Archaea; Euryarchaeota; Methanococcus", "archaea"),
-        ("Viruses; Riboviria; Influenza A virus", "viruses"),
-        (
-            "unclassified entries; environmental samples; marine metagenome",
-            "environmental",
-        ),
-        ("Eukaryota; Apicomplexa; Plasmodium falciparum", "protists"),
+        ["Ensembl coding"],
+        ["ENSEMBL_CODING"],
+        ["SGD coding"],
+        ["SGD_CODING"],
+        ["ENA coding"],
+        ["ENA_CODING"],
+        ["RegulonDB"],
+        ["REGULONDB"],
+        ["Ensembl coding", "SGD coding"],
     ],
 )
-def test_kingdom_follows_the_lineage(tax_string, expected):
-    assert data.kingdoms([tax_string]) == [expected]
-
-
-def test_kingdoms_are_deduplicated():
-    assert data.kingdoms(["Bacteria; A", "Bacteria; B"]) == ["bacteria"]
-
-
-# RNAcentral is an ncRNA database: entries only in Ensembl coding rank below every ncRNA.
-@pytest.mark.parametrize("rna_type", ["mRNA", "ncRNA"])
-def test_coding_only_entries_rank_below_any_active_ncrna(rna_type):
+def test_coding_only_entries_rank_below_any_active_ncrna(rna_type, tree, dbs):
     clean = {"has_issue": False}
     flagged = {"has_issue": True}
-    human_mrna = data.boost(9606, ["N"], [rna_type], ["Ensembl coding"], clean)
-    worst_ncrna = data.boost(1, ["N"], ["misc_RNA"], ["ENA"], flagged)
+    human_mrna = data.boost(9606, ["N"], [rna_type], tree, dbs, clean)
+    worst_ncrna = data.boost(1, ["N"], ["misc_RNA"], NCRNA_TREE, ["ENA"], flagged)
     assert float(human_mrna) < float(worst_ncrna)
 
 
 # ZWD and Ensembl already provide UTR elements; those, and shared sequences, keep their rank.
-@pytest.mark.parametrize("dbs", [["ZWD"], ["Ensembl coding", "ZWD"]])
+@pytest.mark.parametrize(
+    "dbs",
+    [
+        ["ZWD"],
+        ["Ensembl coding", "ZWD"],
+        ["SGD_CODING", "SGD"],
+        ["ENA_CODING", "ENA"],
+    ],
+)
 def test_utr_elements_from_other_databases_keep_their_rank(dbs):
     clean = {"has_issue": False}
-    assert data.boost(9606, ["N"], ["ncRNA"], dbs, clean) == "3"
+    assert data.boost(9606, ["N"], ["ncRNA"], UTR_TREE, dbs, clean) == "3"
+
+
+def test_ncrnas_from_a_coding_database_keep_their_rank():
+    clean = {"has_issue": False}
+    srna = data.boost(511145, ["N"], ["ncRNA"], NCRNA_TREE, ["RegulonDB"], clean)
+    assert srna == data.boost(511145, ["N"], ["ncRNA"], NCRNA_TREE, ["ENA"], clean)
 
 
 def test_ncrna_boost_is_unchanged():
     clean = {"has_issue": False}
-    assert data.boost(9606, ["N"], ["lncRNA"], ["Ensembl"], clean) == "3"
+    tree = NCRNA_TREE + [("SO:0001877", "lncRNA")]
+    assert data.boost(9606, ["N"], ["lncRNA"], tree, ["Ensembl"], clean) == "3"

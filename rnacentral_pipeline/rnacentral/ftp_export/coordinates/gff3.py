@@ -30,9 +30,17 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
     """
 
     for raw_region in regions:
-        if raw_region.start is None or raw_region.stop is None or raw_region.stop <= raw_region.start:
-            LOGGER.warning("Skipping region %s: invalid coordinates start=%s stop=%s",
-                           raw_region.region_id, raw_region.start, raw_region.stop)
+        if (
+            raw_region.start is None
+            or raw_region.stop is None
+            or raw_region.stop <= raw_region.start
+        ):
+            LOGGER.warning(
+                "Skipping region %s: invalid coordinates start=%s stop=%s",
+                raw_region.region_id,
+                raw_region.start,
+                raw_region.stop,
+            )
             continue
         region = raw_region.as_one_based()
         attributes = OrderedDict(
@@ -61,7 +69,7 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
         yield Feature(
             seqid=region.chromosome,
             source="RNAcentral",
-            featuretype="predicted_gene" if region.is_gene else "transcript",
+            featuretype="predicted_ncRNA_gene" if region.is_gene else "transcript",
             start=region.start,
             end=region.stop,
             strand=region.string_strand(),
@@ -97,10 +105,6 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
                 frame=".",
                 attributes=exon_attributes,
             )
-
-
-def parse(iterable):
-    return regions_as_features(coord.parse(iterable))
 
 
 def write_gff_text(features, output, allow_no_features=False, header=True) -> bool:

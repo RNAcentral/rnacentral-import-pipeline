@@ -14,7 +14,3 @@ limitations under the License.
 """
 
 from . import helpers
-
-
-def lookup_terms(handle, output):
-    helpers.process_term_file(handle, output)

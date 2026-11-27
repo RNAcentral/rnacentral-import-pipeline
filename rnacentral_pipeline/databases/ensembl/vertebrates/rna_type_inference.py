@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import logging
+import re
 
 from rnacentral_pipeline.databases.rfam import utils as rfutil
 
@@ -52,10 +52,6 @@ MGI_TYPES = {
     "Rn7s6": "SRP_RNA",
     "Nkx2-2os": "lncRNA",
 }
-
-
-class UnknownRnaTypeException(Exception):
-    pass
 
 
 class RnaTypeInference(object):

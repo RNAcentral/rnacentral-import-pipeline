@@ -65,8 +65,8 @@ from rnacentral_pipeline.cli import (
     r2dt,
     rediportal,
     refseq,
+    regulondb,
     release,
-    repeats,
     rfam,
     rgd,
     ribocentre,
@@ -158,9 +158,9 @@ cli.add_command(quickgo.cli)
 cli.add_command(r2dt.cli)
 cli.add_command(rediportal.cli)
 cli.add_command(refseq.cli)
+cli.add_command(regulondb.cli)
 cli.add_command(release.cli)
 cli.add_command(rgd.cli)
-cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
 cli.add_command(ribovision.cli)
 cli.add_command(ribocentre.cli)

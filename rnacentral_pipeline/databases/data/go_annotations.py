@@ -65,11 +65,6 @@ class GoTermAnnotation:
         yield [self.term_id]
         yield [self.evidence_code]
 
-    def writeable_refs(self):
-        for publication in self.publications:
-            for ref in publication.writeable_id():
-                yield ref
-
     def writeable_publication_mappings(self):
         for publication in self.publications:
             yield [

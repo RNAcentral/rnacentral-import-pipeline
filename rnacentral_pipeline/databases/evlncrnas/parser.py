@@ -14,10 +14,6 @@ limitations under the License.
 """
 
 import io
-import operator as op
-import re
-from functools import partial
-from operator import is_not
 from pathlib import Path
 
 import numpy as np
@@ -28,8 +24,6 @@ from bs4 import BeautifulSoup
 from furl import furl
 from tqdm import tqdm
 
-from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.rnacentral import lookup

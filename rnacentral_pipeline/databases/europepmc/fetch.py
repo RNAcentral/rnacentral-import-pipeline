@@ -12,9 +12,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import asyncio
 import logging
-import re
 from functools import lru_cache
 
 import requests
@@ -24,7 +24,7 @@ from throttler import throttle
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.utils import cacheable
 
-from .utils import clean_title, pretty_location, write_lookup
+from .utils import clean_title, pretty_location
 
 LOGGER = logging.getLogger(__name__)
 
@@ -144,14 +144,4 @@ def lookup(id_reference):
         pmid=pmid,
         doi=data.get("doi", None),
         pmcid=data.get("pmcid", None),
-    )
-
-
-def write_file_lookup(handle, output, column=0, ignore_missing=False):
-    write_lookup(
-        lookup,
-        handle,
-        output,
-        column=column,
-        ignore_errors=ignore_missing,
     )

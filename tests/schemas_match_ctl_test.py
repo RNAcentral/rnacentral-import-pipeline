@@ -24,7 +24,6 @@ CTL_DIR = Path(__file__).resolve().parents[1] / "files" / "import-data" / "load"
 CASES = [
     ("ASSEMBLIES", "assemblies"),
     ("PROTEINS", "proteins"),
-    ("ENSEMBL_PSEUDOGENES", "ensembl-pseudogenes"),
     ("RFAM_FAMILIES", "rfam-families"),
     ("RFAM_CLANS", "rfam-clans"),
     ("ONTOLOGY_TERMS", "ontology-terms"),

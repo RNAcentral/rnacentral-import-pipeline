@@ -65,6 +65,8 @@ CURRENT_ASSEMBLIES = LEGACY_ASSEMBLIES.with_name("current-assemblies.txt")
 # gca<TAB>assembly_id for every ensembl_assembly row, selected rows first; regenerate
 # from production before a run, as Ensembl's own names collide across genomes
 ASSEMBLY_IDS = LEGACY_ASSEMBLIES.with_name("assembly-ids.tsv")
+# Genomes NCBI's ANI check says carry the wrong species name; `rnac ensembl ani-failed`
+ANI_FAILED = LEGACY_ASSEMBLIES.with_name("ani-failed.txt")
 
 
 @attr.s()
@@ -104,6 +106,10 @@ def legacy_assemblies(
     path: Path = LEGACY_ASSEMBLIES, current: Path = CURRENT_ASSEMBLIES
 ) -> ty.FrozenSet[str]:
     return frozenset(path.read_text().split() + current.read_text().split())
+
+
+def failed_assemblies(path: Path = ANI_FAILED) -> ty.FrozenSet[str]:
+    return frozenset(path.read_text().split())
 
 
 def known_assemblies(path: Path = ASSEMBLY_IDS) -> ty.List[ty.Tuple[str, str]]:
@@ -169,7 +175,11 @@ def _candidate_key(
 
 
 def _select_geneset(
-    species: str, info: dict, base_url: str, legacy: ty.AbstractSet[str]
+    species: str,
+    info: dict,
+    base_url: str,
+    legacy: ty.AbstractSet[str],
+    failed: ty.AbstractSet[str] = frozenset(),
 ) -> ty.Optional[ty.Tuple[tuple, GenesetUrls]]:
     """
     Pick the single geneset to import for one species: the most preferred
@@ -179,6 +189,8 @@ def _select_geneset(
 
     best = None
     for accession, assembly in info.get("assemblies", {}).items():
+        if accession in failed:
+            continue
         is_legacy = accession.split(".")[0] in legacy
         for provider, releases in assembly.get("genebuild_providers", {}).items():
             key = _candidate_key(
@@ -253,10 +265,11 @@ def geneset_urls(
     base_url: str = BASE_URL,
     legacy: ty.AbstractSet[str] = frozenset(),
     known: ty.Iterable[ty.Tuple[str, str]] = (),
+    failed: ty.AbstractSet[str] = frozenset(),
 ) -> ty.Iterable[GenesetUrls]:
     selections = []
     for species, info in data["species"].items():
-        selected = _select_geneset(species, info, base_url, legacy)
+        selected = _select_geneset(species, info, base_url, legacy, failed)
         if selected is not None:
             selections.append(selected)
     # A few species are listed twice, under one taxid or one name in another case.
@@ -278,4 +291,5 @@ def urls_for(
         base_url=base_url,
         legacy=legacy_assemblies(),
         known=known_assemblies(),
+        failed=failed_assemblies(),
     )

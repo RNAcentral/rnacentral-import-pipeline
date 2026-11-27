@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pickle
-
 from .. import builders as b
 
 RRNA = "SO:0000252"
@@ -26,24 +24,6 @@ def test_so_term_for_builds_a_matching_rna_type():
     context = b.context()
     result = context.so_term_for("tRNA")
     assert result.so_term.so_id == TRNA
-
-
-def test_validate_delegates_to_repeats(monkeypatch):
-    context = b.context()
-    called = []
-    monkeypatch.setattr(context.repeats, "validate", lambda: called.append(True))
-    context.validate()
-    assert called == [True]
-
-
-def test_dump_writes_a_loadable_pickle(tmp_path):
-    context = b.context()
-    out = tmp_path / "context.pickle"
-    context.dump(out)
-
-    with out.open("rb") as raw:
-        data = pickle.load(raw)
-    assert data == {"repeats": context.repeats}
 
 
 def test_term_is_a_true_for_the_same_term():

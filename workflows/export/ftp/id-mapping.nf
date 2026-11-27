@@ -64,6 +64,7 @@ process database_mapping {
 }
 
 workflow id_mapping {
+  main:
   channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql') | set { id_query }
   channel.fromPath('files/ftp-export/id-mapping/readme.txt') | set { readme_template }
 
@@ -76,4 +77,6 @@ workflow id_mapping {
   merge_id_mapping(chunks, readme_template)
 
   merge_id_mapping.out.mapping | database_mapping
+
+  emit: database_mapping.out
 }

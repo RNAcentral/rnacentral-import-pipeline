@@ -2,6 +2,7 @@ include { circatlas } from './databases/circatlas'
 include { circpedia } from './databases/circpedia'
 include { crw } from './databases/crw'
 include { ena } from './databases/ena'
+include { ena_coding } from './databases/ena_coding'
 include { ensembl } from './databases/ensembl'
 include { ensembl_mrna } from './databases/ensembl_mrna'
 include { evlncrnas } from './databases/evlncrnas'
@@ -30,10 +31,12 @@ include { pombase } from './databases/pombase'
 include { psicquic } from './databases/psicquic'
 include { quickgo } from './databases/quickgo'
 include { refseq } from './databases/refseq'
+include { regulondb } from './databases/regulondb'
 include { rfam } from './databases/rfam'
 include { rgd } from './databases/rgd'
 include { ribovision } from './databases/ribovision'
 include { sgd } from './databases/sgd'
+include { sgd_coding } from './databases/sgd_coding'
 include { silva } from './databases/silva'
 include { snodb } from './databases/snodb'
 include { snorna_database } from './databases/snorna_database'
@@ -78,6 +81,7 @@ workflow parse_databases {
       crw(),
       five_s_rrnadb(),
       ena(),
+      ena_coding(),
       ensembl(),
       ensembl_mrna(),
       evlncrnas(),
@@ -105,11 +109,13 @@ workflow parse_databases {
       psicquic(),
       quickgo(),
       refseq(),
+      regulondb(),
       rfam(),
       rgd(),
       ribovision(),
       ribocentre(),
       sgd(),
+      sgd_coding(),
       silva(context),
       snodb(),
       snorna_database(),

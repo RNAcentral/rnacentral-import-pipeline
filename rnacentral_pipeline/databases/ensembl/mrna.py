@@ -51,7 +51,9 @@ UTRS = {
 }
 
 
-def protein_coding(gff_file: Path) -> ty.Dict[str, ty.Tuple[str, ty.List[str]]]:
+def protein_coding(
+    gff_file: Path,
+) -> ty.Dict[str, ty.Tuple[str, ty.List[str], ty.Optional[str]]]:
     """
     Map each protein_coding transcript to its gene and kept tags. The EMBL mRNA
     features carry no biotype, and also cover NMD and non-stop decay
@@ -70,16 +72,17 @@ def protein_coding(gff_file: Path) -> ty.Dict[str, ty.Tuple[str, ty.List[str]]]:
                 has_mrnas |= parts[2] == "mRNA"
             elif parts[2] == "gene":
                 gene = attrs["ID"].split(":", 1)[1]
-                genes[gene] = (gene, [])
+                genes[gene] = (gene, [], None)
             else:
                 has_mrnas = True
                 tags = [t for t in attrs.get("tag", "").split(",") if t in TAGS]
                 gene = attrs["Parent"].split(":", 1)[1]
                 # Matched against the EMBL's full id: Plasmodium's ids carry a dot
-                transcript = attrs.get("transcript_id", attrs["ID"].split(":", 1)[1])
+                gff_id = attrs.get("transcript_id", attrs["ID"].split(":", 1)[1])
+                transcript = gff_id
                 if "version" in attrs:
                     transcript = f"{transcript}.{attrs['version']}"
-                transcripts[transcript] = (gene, sorted(tags))
+                transcripts[transcript] = (gene, sorted(tags), gff_id)
     # Some genomes list only genes in the GFF3, so their EMBL mRNAs are found by gene
     return transcripts if has_mrnas else genes
 
@@ -120,21 +123,20 @@ def utr_locations(record, mrna, cds):
     return {FIVE_PRIME_UTR: upstream, THREE_PRIME_UTR: downstream}
 
 
-def as_entry(record, gene, feature, accession, rna_type, label, gca) -> data.Entry:
+def as_entry(record, gene, feature, accession, rna_type, label, gca, pid) -> data.Entry:
     species, common_name = helpers.organism_naming(record)
     name = embl.locus_tag(gene) or embl.gene(gene).split(".")[0]
     organism = f"{species} ({common_name})" if common_name else species
-    transcript = helpers.accession(feature)
     return data.Entry(
-        primary_id=helpers.primary_id(feature),
+        primary_id=pid,
         accession=accession,
         ncbi_tax_id=embl.taxid(record),
         database="ENSEMBL_CODING",
         sequence=embl.sequence(record, feature),
         regions=common.regions(record, feature),
         rna_type=rna_type,
-        url=URL.format(accession=gca, transcript=helpers.primary_id(feature)),
-        seq_version=transcript.split(".", 1)[1] if "." in transcript else "1",
+        url=URL.format(accession=gca, transcript=pid),
+        seq_version=helpers.seq_version(feature),
         chromosome=helpers.chromosome(record),
         parent_accession=record.id,
         gene=embl.gene(gene),
@@ -146,9 +148,11 @@ def as_entry(record, gene, feature, accession, rna_type, label, gca) -> data.Ent
     )
 
 
-def transcript_entries(record, gene, mrna, cds, tags, gca) -> ty.Iterable[data.Entry]:
+def transcript_entries(
+    record, gene, mrna, cds, tags, gca, pid
+) -> ty.Iterable[data.Entry]:
     accession = helpers.unique_accession(helpers.accession(mrna), gca)
-    entry = as_entry(record, gene, mrna, accession, MRNA, "mRNA", gca)
+    entry = as_entry(record, gene, mrna, accession, MRNA, "mRNA", gca, pid)
     # 1-based inclusive genomic span, so the export can draw the CDS exactly
     # even where a UTR was too short to import
     note = {"cds": [int(cds.location.start) + 1, int(cds.location.end)]}
@@ -168,7 +172,7 @@ def transcript_entries(record, gene, mrna, cds, tags, gca) -> ty.Iterable[data.E
         suffix, _, label = UTRS[rna_type]
         feature = SeqFeature(location, type=suffix, qualifiers=mrna.qualifiers)
         utr = as_entry(
-            record, gene, feature, f"{accession}:{suffix}", rna_type, label, gca
+            record, gene, feature, f"{accession}:{suffix}", rna_type, label, gca, pid
         )
         if utr.is_valid():
             utrs.append(utr)
@@ -201,6 +205,8 @@ def parse(raw: ty.IO, gff_file: Path) -> ty.Iterable[data.Entry]:
                 if found and pid in mrnas:
                     mrna_gene, mrna = mrnas.pop(pid)
                     tags = found[1]
+                    # The GFF3's own id, as the ncRNA parser uses: SPAC1002.05c.1's dots are not a version
+                    gff_id = found[2] or helpers.primary_id(mrna)
                     yield from transcript_entries(
-                        record, mrna_gene, mrna, feature, tags, gca
+                        record, mrna_gene, mrna, feature, tags, gca, gff_id
                     )

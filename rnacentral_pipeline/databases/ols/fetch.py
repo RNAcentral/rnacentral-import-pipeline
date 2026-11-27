@@ -24,14 +24,15 @@ from throttler import throttle
 
 from rnacentral_pipeline.databases.data import OntologyTerm
 
-BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
 OLS4_BASE = "https://www.ebi.ac.uk/ols4/api/ontologies"
 TRANSIENT_STATUS_CODES = {429, 500, 502, 503, 504}
 MAX_RETRIES = 5
 
 
 def is_transient_error(err: requests.RequestException) -> bool:
-    status_code: Optional[int] = getattr(getattr(err, "response", None), "status_code", None)
+    status_code: Optional[int] = getattr(
+        getattr(err, "response", None), "status_code", None
+    )
     request_url = getattr(getattr(err, "response", None), "url", "") or ""
     if status_code == 404 and "/terms/" in request_url:
         return True

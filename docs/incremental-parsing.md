@@ -90,7 +90,7 @@ parse's partial staging table and retire everything that was not re-parsed.
 The pipeline-level switch is `params.force_full_import`:
 
 ```sh
-nextflow run main.nf --force_full_import
+nextflow run import-data.nf --force_full_import
 ```
 
 It ignores the stored manifest in every delta parse (so every record is parsed and
@@ -176,7 +176,7 @@ manifest from `manifest.csv`.
 2. Second run with only a few records changed → the parse should map only those
    records (watch the `HGNC delta: N new, M changed, ...` log line), the load runs as
    `D`, and untouched HGNC xrefs stay active. Confirm with the row counts / timings.
-3. `nextflow run main.nf --force_full_import` still does the old thing end to end.
+3. `nextflow run import-data.nf --force_full_import` still does the old thing end to end.
 
 Until the manifest exists the system safely degrades to full-parse-every-time +
 incremental load (correct, just not sped up), so partial wiring cannot corrupt data.

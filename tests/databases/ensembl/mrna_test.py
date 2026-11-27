@@ -109,7 +109,7 @@ def test_only_protein_coding_transcripts_are_kept_with_their_tags(tmp_path):
         "biotype=protein_coding\n"
     )
     assert mrna.protein_coding(gff) == {
-        "ENST1": ("ENSG1", ["Ensembl_canonical", "MANE_Select"])
+        "ENST1": ("ENSG1", ["Ensembl_canonical", "MANE_Select"], "ENST1")
     }
 
 
@@ -119,7 +119,7 @@ def test_genes_stand_in_only_when_the_gff3_has_no_transcripts(tmp_path):
         "1\tena\tgene\t1\t9\t.\t+\t.\tID=gene:G1;biotype=protein_coding\n"
         "1\tena\tgene\t1\t9\t.\t+\t.\tID=gene:G2;biotype=nontranslating_CDS\n"
     )
-    assert mrna.protein_coding(gff) == {"G1": ("G1", [])}
+    assert mrna.protein_coding(gff) == {"G1": ("G1", [], None)}
     with gff.open("a") as raw:
         raw.write(
             "1\tena\tmRNA\t1\t9\t.\t+\t.\tID=transcript:T1;Parent=gene:G1;"
@@ -204,3 +204,26 @@ def test_keeps_isoforms_whose_ids_contain_a_dot():
     for entry in mrnas.values():
         links = {r.relationship for r in entry.related_sequences}
         assert links == {"five_prime_utr", "three_prime_utr"}
+
+
+def test_ids_with_several_dots_get_a_default_version(tmp_path):
+    # Fission yeast and worm transcripts look like SPAC1002.05c.1
+    files = {}
+    for ext in ("embl", "gff3"):
+        text = open(f"test-data/ensembl/Plasmodium_falciparum_3D7.mrna.{ext}").read()
+        files[ext] = tmp_path / f"genes.{ext}"
+        files[ext].write_text(text.replace("PF3D7_0206900.1", "PF3D7_0206900.05c.1"))
+    with open(files["embl"]) as raw:
+        found = {e.accession: e for e in mrna.parse(raw, files["gff3"])}
+    assert found["GCA_000002765.3:PF3D7_0206900.05c.1"].seq_version == "1"
+    assert found["GCA_000002765.3:PF3D7_0206900.2"].seq_version == "2"
+
+
+def test_ids_whose_dot_is_not_a_version_are_kept_whole():
+    gff = Path("test-data/ensembl/Plasmodium_falciparum_3D7.mrna.gff3")
+    with open("test-data/ensembl/Plasmodium_falciparum_3D7.mrna.embl", "r") as raw:
+        found = {e.accession: e for e in mrna.parse(raw, gff)}
+    for suffix in ("", ":five_prime_UTR"):
+        entry = found[f"GCA_000002765.3:PF3D7_0206900.2{suffix}"]
+        assert entry.primary_id == "PF3D7_0206900.2"
+        assert entry.url.endswith("transcript:PF3D7_0206900.2")

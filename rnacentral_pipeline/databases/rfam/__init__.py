@@ -13,11 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from . import data
-from . import cross_references
-from . import parser
-from . import infernal_results
-from . import helpers
-from . import utils
-from . import clans
-from . import families
+from . import (
+    clans,
+    cross_references,
+    data,
+    families,
+    helpers,
+    infernal_results,
+    parser,
+    utils,
+)

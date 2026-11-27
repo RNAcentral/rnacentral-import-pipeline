@@ -1,6 +1,6 @@
 nextflow.enable.dsl=2
 
-// Databases with run=true this run (mirrors main.nf), normalised for matching
+// Databases with run=true this run, normalised for matching
 // rnc_database.descr/display_name in SQL.
 def running_databases() {
   def out = []
@@ -259,6 +259,7 @@ process qc_export_report {
 
   script:
   def pubdir = params.export?.ftp?.publish ?: ''
+  def dump = params.export?.update_public?.run ? 'database_files/database_files.tar' : ''
   def notify = params.get('notify', false)
   def fence = '```'
   def slack = notify ? """
@@ -288,7 +289,8 @@ process qc_export_report {
       md5/md5.tsv.gz \\
       rfam/rfam_annotations.tsv.gz \\
       go_annotations/rnacentral_rfam_annotations.tsv.gz \\
-      gpi/rnacentral.gpi.gz ; do
+      gpi/rnacentral.gpi.gz \\
+      ${dump} ; do
       p="\$pubdir/\$f"
       if [ ! -e "\$p" ]; then st=MISSING
       elif [ ! -s "\$p" ]; then st=EMPTY
