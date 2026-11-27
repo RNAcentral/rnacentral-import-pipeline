@@ -197,6 +197,7 @@ def store_file_signatures(
     ensure_table(conn)
     dropped = list(dropped)
     with conn.cursor() as cur:
+        lock_database(cur, database)
         if dropped:
             # The records go with the source. Leaving them would strand rows whose
             # signature still matches, so a source that came back would be recognised
@@ -230,6 +231,13 @@ def store_file_signatures(
             page_size=5000,
         )
     conn.commit()
+
+
+def lock_database(cur, database: str) -> None:
+    # apply_manifest and apply_sources run at once after a release and would deadlock
+    cur.execute(
+        "SELECT pg_advisory_xact_lock(hashtext(%s))", (f"{MANIFEST_TABLE}:{database}",)
+    )
 
 
 def ensure_partition(conn, database: str) -> None:
@@ -393,6 +401,7 @@ def apply_artifacts(
     for database in databases:
         ensure_partition(conn, database)
         with conn.cursor() as cur:
+            lock_database(cur, database)
             cur.execute(
                 f"""
                 INSERT INTO {FILES_TABLE} (database, path, signature)
